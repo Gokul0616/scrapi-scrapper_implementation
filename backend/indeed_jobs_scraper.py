@@ -258,10 +258,28 @@ class IndeedJobsScraper(BaseScraper):
                     
                     if not job_cards:
                         logger.warning(f"No job cards found on page {page_num + 1}")
-                        # Log sample HTML for debugging
-                        sample_html = content[:2000] if len(content) > 2000 else content
+                        # Save full HTML for debugging
+                        try:
+                            debug_file = f"/tmp/indeed_debug_page{page_num + 1}.html"
+                            with open(debug_file, 'w', encoding='utf-8') as f:
+                                f.write(content)
+                            logger.info(f"💾 Saved HTML sample to {debug_file} for debugging")
+                            await self._log_progress(f"💾 Saved HTML sample to {debug_file} for debugging", progress_callback)
+                        except Exception as save_error:
+                            logger.error(f"Failed to save HTML sample: {save_error}")
+                        
+                        # Log sample HTML in logs as well
+                        sample_html = content[:3000] if len(content) > 3000 else content
                         logger.debug(f"Sample HTML: {sample_html}")
-                        break
+                        
+                        # If page 1 has no jobs, it's likely a detection issue - continue trying more pages
+                        if page_num == 0:
+                            logger.warning("Page 1 failed, trying with longer wait time...")
+                            await self._log_progress("⚠️ Page 1 detection failed, retrying with longer wait...", progress_callback)
+                            await asyncio.sleep(5)  # Longer wait for anti-bot
+                            continue  # Try next page
+                        else:
+                            break
                     
                     page_jobs = []
                     for card in job_cards:
