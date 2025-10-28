@@ -8,7 +8,7 @@ import json
 import re
 
 # Get backend URL from environment
-BACKEND_URL = "https://scraper-debug-5.preview.emergentagent.com/api"
+BACKEND_URL = "https://frontend-curl-test.preview.emergentagent.com/api"
 
 def test_run_creation():
     # Authenticate
