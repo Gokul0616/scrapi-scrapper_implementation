@@ -229,29 +229,31 @@ class IndeedJobsScraper(BaseScraper):
                     content = await page.content()
                     soup = BeautifulSoup(content, 'html.parser')
                     
-                    # Try multiple selectors for job cards (Indeed changes these frequently)
-                    job_cards = []
+                    # Use the correct 2024-2025 Indeed selector
+                    job_cards = soup.select('.job_seen_beacon')
                     
-                    # Try different selector patterns
-                    selectors = [
-                        'div[data-testid="slider_item"]',  # New Indeed selector
-                        'div.job_seen_beacon',
-                        'div.cardOutline',
-                        'div[class*="job"]',
-                        'a[id^="job_"]',
-                        'div[data-jk]'
-                    ]
-                    
-                    for selector in selectors:
-                        job_cards = soup.select(selector)
-                        if job_cards:
-                            logger.info(f"Found {len(job_cards)} jobs using selector: {selector}")
-                            break
+                    if not job_cards:
+                        # Fallback selectors if primary fails
+                        fallback_selectors = [
+                            'div[data-testid="slider_item"]',
+                            'div.cardOutline',
+                            'div[data-jk]',
+                            'div.jobsearch-ResultsList > li',
+                            'td.resultContent'
+                        ]
+                        
+                        for selector in fallback_selectors:
+                            job_cards = soup.select(selector)
+                            if job_cards:
+                                logger.info(f"Found {len(job_cards)} jobs using fallback selector: {selector}")
+                                break
+                    else:
+                        logger.info(f"Found {len(job_cards)} jobs using primary selector: .job_seen_beacon")
                     
                     if not job_cards:
                         logger.warning(f"No job cards found on page {page_num + 1}")
                         # Log sample HTML for debugging
-                        sample_html = content[:1000] if len(content) > 1000 else content
+                        sample_html = content[:2000] if len(content) > 2000 else content
                         logger.debug(f"Sample HTML: {sample_html}")
                         break
                     
