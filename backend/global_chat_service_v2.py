@@ -840,10 +840,12 @@ Then FUNCTION_CALL: {"name": "view_run_details", "arguments": {"run_id": "<first
             logger.error(f"Error getting page context: {str(e)}")
             return {"error": str(e)}
     
-    async def fill_and_start_scraper(self, actor_name: str, search_terms: List[str], 
-                                      location: str = None, max_results: int = 20,
+    async def fill_and_start_scraper(self, actor_name: str, search_terms: List[str] = None,
+                                      search_keywords: List[str] = None, location: str = None, 
+                                      max_results: int = 20, extract_reviews: bool = False,
+                                      min_rating: float = 0, max_price: float = 0,
                                       navigate_to_actor: bool = False) -> Dict[str, Any]:
-        """Fill scraper form and start run - returns commands for full automation."""
+        """Fill scraper form and start run - supports both Google Maps and Amazon scrapers."""
         try:
             # Find actor
             actor = await self.db.actors.find_one(
@@ -857,7 +859,31 @@ Then FUNCTION_CALL: {"name": "view_run_details", "arguments": {"run_id": "<first
             if not actor:
                 return {"error": f"Actor '{actor_name}' not found"}
             
-            # Create the run first
+            # Determine scraper type and build appropriate input_data
+            is_amazon = "amazon" in actor["name"].lower()
+            
+            if is_amazon:
+                # Amazon Product Scraper format
+                input_data = {
+                    "search_keywords": search_keywords or search_terms or [],
+                    "max_results": max_results,
+                    "extract_reviews": extract_reviews,
+                    "min_rating": min_rating,
+                    "max_price": max_price
+                }
+                keywords_display = ', '.join(search_keywords or search_terms or [])
+                message_suffix = f" for {keywords_display}"
+            else:
+                # Google Maps Scraper format
+                input_data = {
+                    "search_terms": search_keywords or search_terms or [],
+                    "location": location,
+                    "max_results": max_results
+                }
+                keywords_display = ', '.join(search_keywords or search_terms or [])
+                message_suffix = f" for {keywords_display}{' in ' + location if location else ''}"
+            
+            # Create the run
             run_id = str(__import__('uuid').uuid4())
             run_doc = {
                 "id": run_id,
@@ -865,11 +891,7 @@ Then FUNCTION_CALL: {"name": "view_run_details", "arguments": {"run_id": "<first
                 "actor_id": actor["id"],
                 "actor_name": actor["name"],
                 "status": "queued",
-                "input_data": {
-                    "search_terms": search_terms,
-                    "location": location,
-                    "max_results": max_results
-                },
+                "input_data": input_data,
                 "started_at": None,
                 "finished_at": None,
                 "duration_seconds": None,
@@ -897,12 +919,8 @@ Then FUNCTION_CALL: {"name": "view_run_details", "arguments": {"run_id": "<first
                 "actor_id": actor["id"],
                 "actor_name": actor["name"],
                 "navigate_to_actor": navigate_to_actor,
-                "form_data": {
-                    "search_terms": search_terms,
-                    "location": location,
-                    "max_results": max_results
-                },
-                "message": f"🤖 Starting {actor['name']} for {', '.join(search_terms)}{' in ' + location if location else ''}..."
+                "form_data": input_data,
+                "message": f"🤖 Starting {actor['name']}{message_suffix} with {max_results} results..."
             }
         except Exception as e:
             logger.error(f"Error in fill_and_start_scraper: {str(e)}")
