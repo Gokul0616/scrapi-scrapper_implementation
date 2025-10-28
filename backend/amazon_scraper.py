@@ -413,6 +413,69 @@ class AmazonProductScraper(BaseScraper):
             if desc_elem:
                 product_data['description'] = desc_elem.text.strip()[:500]  # Limit length
             
+            # Brand - extract from multiple possible locations
+            brand = None
+            brand_elem = soup.find('a', {'id': 'bylineInfo'})
+            if brand_elem:
+                brand_text = brand_elem.text.strip()
+                if 'Visit the' in brand_text:
+                    brand = brand_text.replace('Visit the', '').replace('Store', '').strip()
+                elif 'Brand:' in brand_text:
+                    brand = brand_text.replace('Brand:', '').strip()
+                else:
+                    brand = brand_text
+            product_data['brand'] = brand
+            
+            # Dimensions and weight
+            dimensions = {}
+            detail_bullets = soup.find('div', {'id': 'detailBullets_feature_div'})
+            if detail_bullets:
+                items = detail_bullets.find_all('li')
+                for item in items:
+                    text = item.text.strip()
+                    if 'Product Dimensions' in text or 'Package Dimensions' in text:
+                        dim_match = re.search(r':\s*(.+)', text)
+                        if dim_match:
+                            dimensions['size'] = dim_match.group(1).strip()
+                    elif 'Item Weight' in text:
+                        weight_match = re.search(r':\s*(.+)', text)
+                        if weight_match:
+                            dimensions['weight'] = weight_match.group(1).strip()
+            product_data['dimensions'] = dimensions
+            
+            # Color and size variants
+            color = None
+            size = None
+            variation_elem = soup.find('div', {'id': 'variation_color_name'})
+            if variation_elem:
+                selected_color = variation_elem.find('span', {'class': 'selection'})
+                if selected_color:
+                    color = selected_color.text.strip()
+            
+            variation_size = soup.find('div', {'id': 'variation_size_name'})
+            if variation_size:
+                selected_size = variation_size.find('span', {'class': 'selection'})
+                if selected_size:
+                    size = selected_size.text.strip()
+            
+            product_data['color'] = color
+            product_data['size'] = size
+            
+            # Stock quantity (if available)
+            stock_elem = soup.find('span', {'class': 'a-size-medium a-color-success'})
+            if stock_elem:
+                stock_text = stock_elem.text.strip()
+                stock_match = re.search(r'(\d+)\s*in stock', stock_text, re.IGNORECASE)
+                if stock_match:
+                    product_data['stock'] = int(stock_match.group(1))
+            
+            # Shipping info
+            shipping_elem = soup.find('div', {'id': 'deliveryBlockMessage'})
+            if not shipping_elem:
+                shipping_elem = soup.find('div', {'id': 'mir-layout-DELIVERY_BLOCK'})
+            if shipping_elem:
+                product_data['shipping'] = shipping_elem.text.strip()[:200]
+            
             # Seller info
             seller_elem = soup.find('a', {'id': 'sellerProfileTriggerId'})
             if seller_elem:
