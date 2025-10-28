@@ -1291,8 +1291,15 @@ const DatasetV2 = () => {
                       }`}
                     >
                       {media.type === 'video' ? (
-                        <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-                          <Play className="w-5 h-5 text-white" />
+                        <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center relative">
+                          {/* Try to show video thumbnail */}
+                          <video
+                            src={media.url}
+                            className="w-full h-full object-cover opacity-40"
+                            preload="metadata"
+                            muted
+                          />
+                          <Play className="w-6 h-6 text-white absolute z-10" />
                         </div>
                       ) : (
                         <img
