@@ -119,6 +119,60 @@ All results include: business name, address, phone (verified), email, rating, re
         doc['updated_at'] = doc['updated_at'].isoformat()
         await db.actors.insert_one(doc)
         logger.info("Created default Google Maps Scraper V2 actor")
+    
+    # Check if Amazon Product Scraper exists
+    existing_amazon = await db.actors.find_one({"name": "Amazon Product Scraper"})
+    if not existing_amazon:
+        from datetime import datetime, timezone
+        actor = Actor(
+            user_id="system",
+            name="Amazon Product Scraper",
+            description="Extract products, prices, reviews, ratings, and seller info from Amazon search results and product pages",
+            icon="📦",
+            category="E-commerce",
+            type="prebuilt",
+            is_public=True,
+            status="published",
+            visibility="public",
+            tags=["amazon", "ecommerce", "products", "prices", "reviews", "shopping"],
+            author_name="Scrapi",
+            author_id="system",
+            is_verified=True,
+            is_featured=True,
+            readme="""# Amazon Product Scraper
+
+Complete Amazon product data extraction for e-commerce intelligence.
+
+## Features
+- 🛒 **Product Data**: Title, ASIN, pricing, discounts, availability
+- ⭐ **Reviews & Ratings**: Average rating, review count, review text
+- 📸 **Images**: High-resolution product images
+- 🏪 **Seller Info**: Seller name, Prime eligibility, shipping details
+- 📊 **Rankings**: Best Sellers Rank and category info
+- 🔍 **Specifications**: Product features, technical specs
+
+## Use Cases
+- Price monitoring and comparison
+- Product research for dropshipping
+- Competitor analysis
+- Review sentiment analysis
+- Market trend identification
+
+## Output Fields
+Includes: ASIN, title, price, original price, discount %, rating, review count, availability, Prime status, images, description, features, specifications, seller info, BSR, and reviews (optional).""",
+            input_schema={
+                "search_keywords": {"type": "array", "description": "List of product keywords to search"},
+                "max_results": {"type": "integer", "default": 50},
+                "extract_reviews": {"type": "boolean", "default": False},
+                "min_rating": {"type": "number", "default": 0},
+                "max_price": {"type": "number", "default": None}
+            }
+        )
+        doc = actor.model_dump()
+        doc['created_at'] = doc['created_at'].isoformat()
+        doc['updated_at'] = doc['updated_at'].isoformat()
+        await db.actors.insert_one(doc)
+        logger.info("Created Amazon Product Scraper actor")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
