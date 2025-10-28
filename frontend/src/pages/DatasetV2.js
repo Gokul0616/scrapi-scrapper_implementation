@@ -1547,13 +1547,7 @@ const DatasetV2 = () => {
                 </button>
               )}
 
-              {/* Media Type Indicator */}
-              {getAllMedia(selectedProduct)[currentImageIndex]?.type === 'video' && (
-                <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded text-xs flex items-center gap-1 shadow-md">
-                  <Play className="w-3 h-3" />
-                  Playing Video
-                </div>
-              )}
+              {/* Media Type Indicator - Removed */}
             </div>
             
             {/* Thumbnail Gallery - Combined Images and Videos */}
