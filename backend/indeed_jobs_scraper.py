@@ -257,44 +257,63 @@ class IndeedJobsScraper(BaseScraper):
                 
                 try:
                     # Navigate to search page
-                    await page.goto(search_url, wait_until="networkidle", timeout=30000)
-                    await asyncio.sleep(3)  # Wait for dynamic content to load
+                    await page.goto(search_url, wait_until="domcontentloaded", timeout=45000)
+                    
+                    # Wait for job results to load - try multiple selectors
+                    try:
+                        await page.wait_for_selector('.job_seen_beacon, [data-testid="slider_item"], .jobsearch-ResultsList', timeout=10000)
+                    except:
+                        logger.warning("Job selector not found within timeout, proceeding anyway")
+                    
+                    # Additional wait for dynamic content
+                    await asyncio.sleep(4)
+                    
+                    # Scroll the page to trigger lazy loading
+                    await page.evaluate("window.scrollTo(0, document.body.scrollHeight / 2)")
+                    await asyncio.sleep(1)
                     
                     # Extract job URLs from page
                     content = await page.content()
                     
                     # Check for blocking/captcha
-                    if 'captcha' in content.lower() or 'blocked' in content.lower():
+                    if 'captcha' in content.lower() or 'blocked' in content.lower() or 'unusual traffic' in content.lower():
                         logger.error("⚠️ Detected CAPTCHA or blocking on Indeed")
                         await self._log_progress("⚠️ CAPTCHA/blocking detected - Indeed may be rate-limiting", progress_callback)
                         consecutive_failures += 1
                         if consecutive_failures >= max_consecutive_failures:
                             break
-                        await asyncio.sleep(10)  # Wait longer before retry
+                        await asyncio.sleep(15)  # Wait longer before retry
                         continue
                     
                     soup = BeautifulSoup(content, 'html.parser')
                     
-                    # Use the correct 2024-2025 Indeed selector
-                    job_cards = soup.select('.job_seen_beacon')
+                    # Try multiple selector strategies for 2024-2025 Indeed
+                    job_cards = []
+                    selector_strategies = [
+                        # Strategy 1: Primary 2024-2025 selector
+                        ('.job_seen_beacon', 'Primary 2024-2025 selector'),
+                        # Strategy 2: Data attribute based
+                        ('[data-testid="slider_item"]', 'Slider item selector'),
+                        # Strategy 3: Card outline
+                        ('.cardOutline', 'Card outline selector'),
+                        # Strategy 4: Job key data attribute
+                        ('[data-jk]', 'Data-jk selector'),
+                        # Strategy 5: Results list items
+                        ('.jobsearch-ResultsList > li', 'Results list selector'),
+                        # Strategy 6: Alternative structure
+                        ('td.resultContent', 'Result content selector'),
+                        # Strategy 7: Job container
+                        ('.job-container', 'Job container selector'),
+                        # Strategy 8: Mosaic provider
+                        ('.mosaic-provider-jobcards ul li', 'Mosaic provider selector'),
+                    ]
                     
-                    if not job_cards:
-                        # Fallback selectors if primary fails
-                        fallback_selectors = [
-                            'div[data-testid="slider_item"]',
-                            'div.cardOutline',
-                            'div[data-jk]',
-                            'div.jobsearch-ResultsList > li',
-                            'td.resultContent'
-                        ]
-                        
-                        for selector in fallback_selectors:
-                            job_cards = soup.select(selector)
-                            if job_cards:
-                                logger.info(f"Found {len(job_cards)} jobs using fallback selector: {selector}")
-                                break
-                    else:
-                        logger.info(f"Found {len(job_cards)} jobs using primary selector: .job_seen_beacon")
+                    for selector, strategy_name in selector_strategies:
+                        job_cards = soup.select(selector)
+                        if job_cards and len(job_cards) > 0:
+                            logger.info(f"✅ Found {len(job_cards)} jobs using: {strategy_name} ({selector})")
+                            await self._log_progress(f"✅ Found {len(job_cards)} job cards using {strategy_name}", progress_callback)
+                            break
                     
                     if not job_cards:
                         consecutive_failures += 1
