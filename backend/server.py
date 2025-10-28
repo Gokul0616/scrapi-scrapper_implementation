@@ -212,37 +212,44 @@ Includes: ASIN, title, price, original price, discount %, rating, review count, 
         await db.actors.insert_one(doc)
         logger.info("Created Amazon Product Scraper actor")
     
-    # Check if Indeed Jobs Scraper exists
-    existing_indeed = await db.actors.find_one({"name": "Indeed Jobs Scraper"})
+    # Check if Indeed Jobs Scraper V2 exists
+    existing_indeed = await db.actors.find_one({"name": "Indeed Jobs Scraper V2"})
     if not existing_indeed:
         from datetime import datetime, timezone
         actor = Actor(
             user_id="system",
-            name="Indeed Jobs Scraper",
-            description="Extract job listings, salaries, company info, and full descriptions from Indeed.com",
+            name="Indeed Jobs Scraper V2",
+            description="Advanced job scraper with Cloudflare bypass - Extract job listings from Indeed.com",
             icon="💼",
             category="Jobs & Careers",
             type="prebuilt",
             is_public=True,
             status="published",
             visibility="public",
-            tags=["indeed", "jobs", "careers", "employment", "hiring", "salary"],
+            tags=["indeed", "jobs", "careers", "employment", "hiring", "salary", "cloudflare-bypass"],
             author_name="Scrapi",
             author_id="system",
             is_verified=True,
             is_featured=True,
-            readme="""# Indeed Jobs Scraper
+            readme="""# Indeed Jobs Scraper V2 - With Anti-Bot Bypass
 
-Extract comprehensive job data from Indeed.com for recruitment and market analysis.
+Extract comprehensive job data from Indeed.com with advanced Cloudflare Turnstile bypass.
 
 ## Features
 - 💼 **Job Listings**: Title, company, location, salary information
+- 🛡️ **Anti-Bot Protection**: Advanced Cloudflare Turnstile bypass
 - 📝 **Full Descriptions**: Complete job requirements and responsibilities
 - 📅 **Posting Dates**: Track when jobs were posted
 - ⭐ **Company Ratings**: Company reviews and ratings
 - 🎯 **Job Types**: Full-time, Part-time, Contract, Remote
 - 💰 **Salary Data**: Hourly/yearly compensation ranges
 - 🏢 **Benefits**: Extracted benefit information
+
+## Anti-Detection Features
+- Advanced stealth mode with browser fingerprint randomization
+- Human-like behavior simulation (mouse movements, scrolling)
+- Automatic Cloudflare challenge bypass
+- Smart retry mechanisms
 
 ## Use Cases
 - Job market research and trends
@@ -268,19 +275,19 @@ Includes: job ID, title, company name, location, salary, job URL, posted date, f
                     "location": {
                         "type": "string",
                         "title": "Location",
-                        "description": "City, state or 'Remote' (leave empty for all locations)",
+                        "description": "City, state or 'Remote' (leave empty for all locations). Examples: 'New York, NY', 'Chennai, Tamil Nadu', 'London, UK'",
                         "editor": "textfield",
                         "default": "",
-                        "example": "New York, NY"
+                        "example": "Chennai, Tamil Nadu"
                     },
                     "max_pages": {
                         "type": "integer",
                         "title": "Maximum Pages",
-                        "description": "Number of pages to scrape (each page ~15 jobs)",
+                        "description": "Number of pages to scrape (each page ~15 jobs, max 50 to avoid detection)",
                         "editor": "number",
-                        "default": 5,
+                        "default": 3,
                         "minimum": 1,
-                        "maximum": 100
+                        "maximum": 50
                     }
                 }
             }
@@ -289,7 +296,7 @@ Includes: job ID, title, company name, location, salary, job URL, posted date, f
         doc['created_at'] = doc['created_at'].isoformat()
         doc['updated_at'] = doc['updated_at'].isoformat()
         await db.actors.insert_one(doc)
-        logger.info("Created Indeed Jobs Scraper actor")
+        logger.info("Created Indeed Jobs Scraper V2 actor")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
