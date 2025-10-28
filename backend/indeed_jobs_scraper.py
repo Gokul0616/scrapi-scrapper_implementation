@@ -317,78 +317,96 @@ class IndeedJobsScraper(BaseScraper):
                     
                     if not job_cards:
                         consecutive_failures += 1
-                        logger.warning(f"No job cards found on page {page_num + 1} (consecutive failures: {consecutive_failures})")
+                        logger.warning(f"❌ No job cards found on page {page_num + 1} (consecutive failures: {consecutive_failures})")
                         
                         # Save full HTML for debugging
                         try:
                             debug_file = f"/tmp/indeed_debug_page{page_num + 1}.html"
                             with open(debug_file, 'w', encoding='utf-8') as f:
                                 f.write(content)
-                            logger.info(f"💾 Saved HTML sample to {debug_file} for debugging")
-                            await self._log_progress(f"💾 Saved HTML to {debug_file} for debugging", progress_callback)
+                            logger.info(f"💾 Saved full HTML to {debug_file} for debugging")
+                            await self._log_progress(f"💾 Saved HTML to {debug_file}", progress_callback)
+                            
+                            # Log first 5000 chars of HTML for inspection
+                            logger.debug(f"HTML preview (first 5000 chars):\n{content[:5000]}")
                         except Exception as save_error:
                             logger.error(f"Failed to save HTML sample: {save_error}")
-                        
-                        # Log sample HTML in logs as well
-                        sample_html = content[:3000] if len(content) > 3000 else content
-                        logger.debug(f"Sample HTML: {sample_html}")
                         
                         # If too many consecutive failures, stop scraping
                         if consecutive_failures >= max_consecutive_failures:
                             logger.error(f"❌ {consecutive_failures} consecutive page failures, stopping scraper")
-                            await self._log_progress(f"❌ {consecutive_failures} consecutive page failures detected", progress_callback)
+                            await self._log_progress(f"❌ Stopping after {consecutive_failures} consecutive failures", progress_callback)
                             break
                         
-                        # If page 1 has no jobs, it's likely a detection issue - try with longer wait
+                        # If page 1 has no jobs, it's likely a detection issue
                         if page_num == 0:
-                            logger.warning("Page 1 failed, trying with longer wait time...")
-                            await self._log_progress("⚠️ Page 1 detection failed, retrying with longer wait...", progress_callback)
-                            await asyncio.sleep(5)  # Longer wait for anti-bot
-                            continue  # Try next page
+                            logger.warning("⚠️ Page 1 failed - possible anti-bot detection, retrying...")
+                            await self._log_progress("⚠️ Page 1 failed - retrying with longer wait...", progress_callback)
+                            await asyncio.sleep(8)
+                            continue
                         else:
-                            # Continue to next page in case this page is empty
                             continue
                     else:
                         # Reset failure counter on success
                         consecutive_failures = 0
                     
+                    # Extract job URLs from cards
                     page_jobs = []
                     for card in job_cards:
-                        # Extract job ID from data attribute (primary method)
-                        job_id = card.get('data-jk')
+                        job_url = None
                         
+                        # Method 1: Extract from data-jk attribute
+                        job_id = card.get('data-jk')
                         if job_id:
-                            # Build proper Indeed job URL
                             job_url = f"{self.base_url}/viewjob?jk={job_id}"
                             page_jobs.append(job_url)
-                        else:
-                            # Fallback: Try to find link within card
-                            link = None
-                            link_selectors = [
-                                'a.jcs-JobTitle',
-                                'h2.jobTitle a',
-                                'a[id^="job_"]',
-                                'a[href*="/viewjob"]',
-                                'a[href*="/rc/clk"]'
-                            ]
-                            
-                            for link_selector in link_selectors:
-                                link = card.select_one(link_selector)
-                                if link and link.get('href'):
+                            continue
+                        
+                        # Method 2: Find job ID in onclick or data attributes
+                        for attr in ['onclick', 'data-mobtk', 'data-jk', 'id']:
+                            attr_value = card.get(attr, '')
+                            if attr_value:
+                                jk_match = re.search(r'jk=([a-f0-9]+)', attr_value)
+                                if not jk_match:
+                                    jk_match = re.search(r'([a-f0-9]{16})', attr_value)
+                                if jk_match:
+                                    job_id = jk_match.group(1)
+                                    job_url = f"{self.base_url}/viewjob?jk={job_id}"
+                                    page_jobs.append(job_url)
                                     break
-                            
+                        
+                        if job_url:
+                            continue
+                        
+                        # Method 3: Find link within card using multiple selectors
+                        link_selectors = [
+                            'a.jcs-JobTitle',
+                            'h2.jobTitle a',
+                            'a[id^="job_"]',
+                            'a[href*="/viewjob"]',
+                            'a[href*="/rc/clk"]',
+                            'a[href*="jk="]',
+                            'a.job-title',
+                            'h2 a'
+                        ]
+                        
+                        for link_selector in link_selectors:
+                            link = card.select_one(link_selector)
                             if link and link.get('href'):
-                                job_url = link['href']
+                                href = link['href']
                                 
                                 # Convert relative URLs to absolute
-                                if job_url.startswith('/'):
-                                    job_url = self.base_url + job_url
-                                elif not job_url.startswith('http'):
-                                    job_url = self.base_url + '/' + job_url
+                                if href.startswith('/'):
+                                    job_url = self.base_url + href
+                                elif not href.startswith('http'):
+                                    job_url = self.base_url + '/' + href
+                                else:
+                                    job_url = href
                                 
                                 # Only add if it's a valid job URL
-                                if '/viewjob' in job_url or '/rc/clk' in job_url or '/pagead' in job_url or 'jk=' in job_url:
+                                if any(pattern in job_url for pattern in ['/viewjob', '/rc/clk', '/pagead', 'jk=']):
                                     page_jobs.append(job_url)
+                                    break
                     
                     # Deduplicate and add to results
                     new_jobs = [url for url in page_jobs if url not in job_urls]
