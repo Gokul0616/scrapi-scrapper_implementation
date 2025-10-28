@@ -9,7 +9,7 @@ import time
 import re
 
 # Get backend URL from environment
-BACKEND_URL = "https://quick-deploy-44.preview.emergentagent.com/api"
+BACKEND_URL = "https://media-viewer-37.preview.emergentagent.com/api"
 
 def authenticate():
     """Authenticate and return headers"""

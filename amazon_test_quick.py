@@ -7,7 +7,7 @@ import requests
 import json
 
 # Get backend URL from environment
-BACKEND_URL = "https://quick-deploy-44.preview.emergentagent.com/api"
+BACKEND_URL = "https://media-viewer-37.preview.emergentagent.com/api"
 
 def test_amazon_scraper():
     print("🚀 Quick Amazon Product Scraper Test")
