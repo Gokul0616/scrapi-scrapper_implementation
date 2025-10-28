@@ -297,18 +297,6 @@ const CustomVideoPlayer = ({ videoUrl, isHLS }) => {
           </button>
         </div>
       </div>
-
-      {/* Open in new tab link */}
-      <a 
-        href={videoUrl} 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className="absolute top-2 right-2 bg-black/70 hover:bg-black/90 text-white px-2 py-1 rounded text-xs flex items-center gap-1 transition-colors z-10"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <ExternalLink className="w-3 h-3" />
-        Open
-      </a>
     </div>
   );
 };
