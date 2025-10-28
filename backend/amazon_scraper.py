@@ -344,18 +344,58 @@ class AmazonProductScraper(BaseScraper):
             prime_elem = soup.find('i', {'class': 'a-icon-prime'})
             product_data['prime'] = prime_elem is not None
             
-            # Images
+            # Images - Extract both product images and videos
             images = []
+            videos = []
+            
+            # Try main product image first (high quality)
+            main_image = soup.find('img', {'id': 'landingImage'})
+            if main_image and main_image.get('src'):
+                main_src = main_image.get('src', '')
+                if 'amazon.com' in main_src:
+                    # Get highest resolution
+                    high_res = main_src.replace('._AC_SX355_', '._AC_SL1500_').replace('._AC_SY355_', '._AC_SL1500_')
+                    images.append(high_res)
+            
+            # Get additional images from image block
             image_block = soup.find('div', {'id': 'altImages'})
             if image_block:
                 img_tags = image_block.find_all('img')
                 for img in img_tags:
                     src = img.get('src', '')
-                    if src and 'amazon.com' in src:
+                    if src and 'amazon.com' in src and src not in images:
                         # Get high-res version
-                        high_res = src.replace('_SS40_', '_SL1500_')
-                        images.append(high_res)
-            product_data['images'] = images[:5]  # Limit to 5 images
+                        high_res = src.replace('_SS40_', '_SL1500_').replace('_US40_', '_SL1500_')
+                        if high_res not in images:
+                            images.append(high_res)
+            
+            # Extract video if present
+            video_block = soup.find('div', {'id': 'ivVideoBlock'})
+            if video_block:
+                video_tags = video_block.find_all('video')
+                for video in video_tags:
+                    video_src = video.get('src', '')
+                    if video_src:
+                        videos.append(video_src)
+            
+            # Also check for video in image carousel
+            video_scripts = soup.find_all('script', {'type': 'text/javascript'})
+            for script in video_scripts:
+                if script.string and '"videos"' in script.string:
+                    # Try to extract video URL from JSON
+                    try:
+                        import json
+                        match = re.search(r'"videos"\s*:\s*(\[.*?\])', script.string)
+                        if match:
+                            video_data = json.loads(match.group(1))
+                            for vid in video_data:
+                                if isinstance(vid, dict) and 'url' in vid:
+                                    videos.append(vid['url'])
+                    except:
+                        pass
+            
+            product_data['images'] = images[:10]  # Limit to 10 images
+            product_data['videos'] = videos[:3]  # Limit to 3 videos
             
             # Features
             features = []
