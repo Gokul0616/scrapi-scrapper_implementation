@@ -36,6 +36,7 @@ const DatasetV2 = () => {
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [videoThumbnails, setVideoThumbnails] = useState({});
   const [visibleColumns, setVisibleColumns] = useState({
     number: true,
     title: true,
