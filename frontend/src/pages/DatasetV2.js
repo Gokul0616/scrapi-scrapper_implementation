@@ -303,18 +303,42 @@ const DatasetV2 = () => {
     setCurrentImageIndex(0);
   };
 
+  // Combine images and videos into a single media array
+  const getAllMedia = (product) => {
+    if (!product) return [];
+    const media = [];
+    
+    // Add all images
+    if (product.images && Array.isArray(product.images)) {
+      product.images.forEach(img => {
+        media.push({ type: 'image', url: img });
+      });
+    }
+    
+    // Add all videos
+    if (product.videos && Array.isArray(product.videos)) {
+      product.videos.forEach(video => {
+        media.push({ type: 'video', url: video });
+      });
+    }
+    
+    return media;
+  };
+
   const nextImage = () => {
-    if (selectedProduct && selectedProduct.images) {
+    if (selectedProduct) {
+      const allMedia = getAllMedia(selectedProduct);
       setCurrentImageIndex((prev) => 
-        prev < selectedProduct.images.length - 1 ? prev + 1 : 0
+        prev < allMedia.length - 1 ? prev + 1 : 0
       );
     }
   };
 
   const previousImage = () => {
-    if (selectedProduct && selectedProduct.images) {
+    if (selectedProduct) {
+      const allMedia = getAllMedia(selectedProduct);
       setCurrentImageIndex((prev) => 
-        prev > 0 ? prev - 1 : selectedProduct.images.length - 1
+        prev > 0 ? prev - 1 : allMedia.length - 1
       );
     }
   };
