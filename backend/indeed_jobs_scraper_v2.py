@@ -438,12 +438,27 @@ class IndeedJobsScraperV2(BaseScraper):
                     
                     if not job_cards:
                         logger.warning(f"No jobs found on page {page_num + 1}")
+                        
+                        # Save debug HTML on first page failure
                         if page_num == 0:
-                            # Save debug HTML
                             debug_file = f"/tmp/indeed_v2_debug_page1.html"
                             with open(debug_file, 'w', encoding='utf-8') as f:
                                 f.write(content)
                             logger.info(f"💾 Saved debug HTML to {debug_file}")
+                            
+                            # Check what we got
+                            if 'cloudflare' in content.lower() or 'turnstile' in content.lower():
+                                logger.error("🚫 Cloudflare Turnstile challenge still active")
+                                await self._log_progress(
+                                    "🚫 Cloudflare Turnstile blocking - CAPTCHA solving required", 
+                                    progress_callback
+                                )
+                            elif 'captcha' in content.lower():
+                                logger.error("🚫 CAPTCHA detected")
+                                await self._log_progress("🚫 CAPTCHA detected", progress_callback)
+                            else:
+                                logger.warning("⚠️ Unknown blocking mechanism")
+                        
                         continue
                     
                     # Extract URLs from cards
