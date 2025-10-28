@@ -222,49 +222,78 @@ class AmazonProductScraper(BaseScraper):
         max_results: int,
         progress_callback: Optional[Callable] = None
     ) -> List[str]:
-        """Search Amazon and extract product ASINs."""
+        """Search Amazon and extract product ASINs with pagination support."""
         
         page = await context.new_page()
         asins = []
+        current_page = 1
+        max_pages = 20  # Limit to prevent infinite loops
         
         try:
-            # Build search URL
-            search_url = f"{self.base_url}/s?k={keyword.replace(' ', '+')}"
-            
-            await page.goto(search_url, wait_until="domcontentloaded", timeout=30000)
-            await asyncio.sleep(2)
-            
-            # Scroll to load products
-            for _ in range(3):
-                await page.evaluate("window.scrollBy(0, window.innerHeight)")
-                await asyncio.sleep(0.5)
-            
-            # Extract product ASINs from search results
-            content = await page.content()
-            soup = BeautifulSoup(content, 'html.parser')
-            
-            # Find product containers
-            product_divs = soup.find_all('div', {'data-asin': True})
-            
-            for div in product_divs:
-                asin = div.get('data-asin')
-                if asin and asin.strip() and len(asin) == 10:  # Valid ASIN
-                    if asin not in asins:
-                        asins.append(asin)
-                        if len(asins) >= max_results:
-                            break
-            
-            # Try alternate selector if needed
-            if len(asins) < 5:
-                links = soup.find_all('a', href=re.compile(r'/dp/[A-Z0-9]{10}'))
-                for link in links:
-                    match = re.search(r'/dp/([A-Z0-9]{10})', link['href'])
-                    if match:
-                        asin = match.group(1)
+            while len(asins) < max_results and current_page <= max_pages:
+                # Build search URL with pagination
+                search_url = f"{self.base_url}/s?k={keyword.replace(' ', '+')}&page={current_page}"
+                
+                await self._log_progress(
+                    f"🔍 Searching page {current_page} for '{keyword}' (found {len(asins)}/{max_results})",
+                    progress_callback
+                )
+                
+                await page.goto(search_url, wait_until="domcontentloaded", timeout=30000)
+                await asyncio.sleep(2)
+                
+                # Scroll to load products
+                for _ in range(3):
+                    await page.evaluate("window.scrollBy(0, window.innerHeight)")
+                    await asyncio.sleep(0.5)
+                
+                # Extract product ASINs from search results
+                content = await page.content()
+                soup = BeautifulSoup(content, 'html.parser')
+                
+                # Find product containers
+                product_divs = soup.find_all('div', {'data-asin': True})
+                
+                page_asins_found = 0
+                for div in product_divs:
+                    asin = div.get('data-asin')
+                    if asin and asin.strip() and len(asin) == 10:  # Valid ASIN
                         if asin not in asins:
                             asins.append(asin)
+                            page_asins_found += 1
                             if len(asins) >= max_results:
                                 break
+                
+                # Try alternate selector if few products found on first page
+                if current_page == 1 and page_asins_found < 5:
+                    links = soup.find_all('a', href=re.compile(r'/dp/[A-Z0-9]{10}'))
+                    for link in links:
+                        match = re.search(r'/dp/([A-Z0-9]{10})', link['href'])
+                        if match:
+                            asin = match.group(1)
+                            if asin not in asins:
+                                asins.append(asin)
+                                page_asins_found += 1
+                                if len(asins) >= max_results:
+                                    break
+                
+                # If no products found on this page, break (reached end of results)
+                if page_asins_found == 0:
+                    await self._log_progress(
+                        f"⚠️ No more products found at page {current_page}. Total found: {len(asins)}",
+                        progress_callback
+                    )
+                    break
+                
+                # Move to next page if we haven't reached max_results yet
+                if len(asins) < max_results:
+                    current_page += 1
+                    await asyncio.sleep(1)  # Small delay between pages
+            
+            await self._log_progress(
+                f"✅ Completed search for '{keyword}': {len(asins)} products found",
+                progress_callback
+            )
             
         except Exception as e:
             logger.error(f"Search error for '{keyword}': {e}")
