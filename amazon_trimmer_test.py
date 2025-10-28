@@ -238,10 +238,15 @@ class AmazonTrimmerTester:
                     title = data.get("title", "N/A")
                     price = data.get("price", "N/A")
                     asin = data.get("asin", "N/A")
-                    self.log(f"  {i+1}. {title} - ${price} (ASIN: {asin})")
+                    rating = data.get("rating", "N/A")
+                    self.log(f"  {i+1}. {title}")
+                    self.log(f"      Price: ${price} | ASIN: {asin} | Rating: {rating}")
                 return True
+            elif isinstance(items, list):
+                self.log("⚠️ Dataset is empty (0 items)")
+                return False
             else:
-                self.log("⚠️ No items in dataset (empty results)")
+                self.log(f"❌ Unexpected dataset format: {type(items)}")
                 return False
         else:
             self.log(f"❌ Failed to retrieve dataset: {response.status_code if response else 'No response'}")
