@@ -1181,7 +1181,10 @@ const DatasetV2 = () => {
                   {selectedProduct.title}
                 </div>
                 <div className="text-xs text-gray-500 mt-0.5">
-                  {currentImageIndex + 1} / {selectedProduct.images?.length || 0}
+                  {currentImageIndex + 1} / {getAllMedia(selectedProduct).length}
+                  {getAllMedia(selectedProduct)[currentImageIndex]?.type === 'video' && (
+                    <span className="ml-1 text-red-600 font-semibold">• VIDEO</span>
+                  )}
                 </div>
               </div>
               <button 
@@ -1192,51 +1195,77 @@ const DatasetV2 = () => {
               </button>
             </div>
             
-            {/* Main Image Display with Navigation */}
+            {/* Main Media Display with Navigation */}
             <div className="relative bg-gray-50">
               <div className="flex items-center justify-center p-3" style={{ height: '280px' }}>
-                {selectedProduct.images && selectedProduct.images.length > 0 ? (
-                  <img
-                    src={selectedProduct.images[currentImageIndex]}
-                    alt={`Product ${currentImageIndex + 1}`}
-                    className="max-w-full max-h-full object-contain"
-                    onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/250?text=No+Image';
-                    }}
-                  />
-                ) : (
-                  <div className="text-gray-400 text-center">
-                    <div className="text-3xl mb-2">📦</div>
-                    <p className="text-xs">No image</p>
-                  </div>
-                )}
+                {(() => {
+                  const allMedia = getAllMedia(selectedProduct);
+                  const currentMedia = allMedia[currentImageIndex];
+                  
+                  if (!currentMedia) {
+                    return (
+                      <div className="text-gray-400 text-center">
+                        <div className="text-3xl mb-2">📦</div>
+                        <p className="text-xs">No media</p>
+                      </div>
+                    );
+                  }
+                  
+                  if (currentMedia.type === 'video') {
+                    return (
+                      <video
+                        key={currentMedia.url}
+                        className="max-w-full max-h-full object-contain rounded"
+                        controls
+                        autoPlay
+                        preload="metadata"
+                      >
+                        <source src={currentMedia.url} type="video/mp4" />
+                        <source src={currentMedia.url} type="video/webm" />
+                        <source src={currentMedia.url} type="video/ogg" />
+                        Your browser does not support the video tag.
+                      </video>
+                    );
+                  }
+                  
+                  return (
+                    <img
+                      src={currentMedia.url}
+                      alt={`Product ${currentImageIndex + 1}`}
+                      className="max-w-full max-h-full object-contain"
+                      onError={(e) => {
+                        e.target.src = 'https://via.placeholder.com/250?text=No+Image';
+                      }}
+                    />
+                  );
+                })()}
               </div>
 
               {/* Previous Button */}
-              {selectedProduct.images && selectedProduct.images.length > 1 && (
+              {getAllMedia(selectedProduct).length > 1 && (
                 <button
                   onClick={previousImage}
-                  className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white hover:bg-gray-100 text-gray-800 rounded-full p-1.5 shadow-md transition-all"
+                  className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white hover:bg-gray-100 text-gray-800 rounded-full p-1.5 shadow-md transition-all z-10"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
               )}
 
               {/* Next Button */}
-              {selectedProduct.images && selectedProduct.images.length > 1 && (
+              {getAllMedia(selectedProduct).length > 1 && (
                 <button
                   onClick={nextImage}
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white hover:bg-gray-100 text-gray-800 rounded-full p-1.5 shadow-md transition-all"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white hover:bg-gray-100 text-gray-800 rounded-full p-1.5 shadow-md transition-all z-10"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
               )}
 
-              {/* Video Indicator */}
-              {selectedProduct.videos && selectedProduct.videos.length > 0 && (
-                <div className="absolute top-2 right-2 bg-red-600 text-white px-1.5 py-0.5 rounded text-xs flex items-center gap-1">
-                  <Play className="w-2.5 h-2.5" />
-                  Video
+              {/* Media Type Indicator */}
+              {getAllMedia(selectedProduct)[currentImageIndex]?.type === 'video' && (
+                <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded text-xs flex items-center gap-1 shadow-md">
+                  <Play className="w-3 h-3" />
+                  Playing Video
                 </div>
               )}
             </div>
