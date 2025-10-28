@@ -83,9 +83,9 @@ class GoogleMapsScraperV3(BaseScraper):
         """
         search_terms = config.get('search_terms', [])
         location = config.get('location', '')
-        max_results = config.get('max_results', 100)
-        extract_reviews = config.get('extract_reviews', False)
-        extract_images = config.get('extract_images', False)
+        max_results = int(config.get('max_results', 100))  # Convert to int
+        extract_reviews = bool(config.get('extract_reviews', False))  # Convert to bool
+        extract_images = bool(config.get('extract_images', False))  # Convert to bool
         
         all_results = []
         context = await self.engine.create_context(use_proxy=True)
