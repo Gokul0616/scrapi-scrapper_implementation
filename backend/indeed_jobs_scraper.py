@@ -295,10 +295,24 @@ class IndeedJobsScraper(BaseScraper):
                     # Extract job URLs from page
                     content = await page.content()
                     
+                    # Log page title for debugging
+                    page_title = await page.title()
+                    logger.info(f"📄 Page title: {page_title}")
+                    
                     # Check for blocking/captcha
                     if 'captcha' in content.lower() or 'blocked' in content.lower() or 'unusual traffic' in content.lower():
                         logger.error("⚠️ Detected CAPTCHA or blocking on Indeed")
-                        await self._log_progress("⚠️ CAPTCHA/blocking detected - Indeed may be rate-limiting", progress_callback)
+                        await self._log_progress(f"⚠️ CAPTCHA/blocking detected on page {page_num + 1} - Trying stealth techniques", progress_callback)
+                        
+                        # Save debug HTML
+                        try:
+                            debug_file = f"/tmp/indeed_captcha_page{page_num + 1}.html"
+                            with open(debug_file, 'w', encoding='utf-8') as f:
+                                f.write(content)
+                            logger.info(f"💾 Saved CAPTCHA page to {debug_file}")
+                        except Exception as e:
+                            logger.error(f"Failed to save CAPTCHA HTML: {e}")
+                        
                         consecutive_failures += 1
                         if consecutive_failures >= max_consecutive_failures:
                             break
