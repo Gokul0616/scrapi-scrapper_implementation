@@ -507,40 +507,6 @@ const DatasetV2 = () => {
                           {(page - 1) * limit + index + 1}
                         </td>
                         
-                        {/* Title */}
-                        <td className="px-4 py-4 text-sm max-w-xs">
-                          <div className="font-medium text-gray-900 line-clamp-2" title={product.title}>
-                            {product.title || '-'}
-                          </div>
-                        </td>
-                        
-                        {/* ASIN */}
-                        <td className="px-4 py-4 text-sm text-gray-700">
-                          <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
-                            {product.asin || '-'}
-                          </code>
-                        </td>
-                        
-                        {/* Brand */}
-                        <td className="px-4 py-4 text-sm text-gray-700">
-                          {product.seller || product.soldBy || '-'}
-                        </td>
-                        
-                        {/* Stars */}
-                        <td className="px-4 py-4 text-sm">
-                          {product.rating ? (
-                            <div className="flex items-center gap-1">
-                              <span className="text-yellow-500">⭐</span>
-                              <span className="font-medium text-gray-900">{product.rating}</span>
-                            </div>
-                          ) : '-'}
-                        </td>
-                        
-                        {/* Reviews Count */}
-                        <td className="px-4 py-4 text-sm text-gray-700">
-                          {product.reviewCount ? product.reviewCount.toLocaleString() : '-'}
-                        </td>
-                        
                         {/* Picture */}
                         <td className="px-4 py-4">
                           {product.images && product.images.length > 0 ? (
@@ -571,18 +537,23 @@ const DatasetV2 = () => {
                           )}
                         </td>
                         
-                        {/* Categories */}
-                        <td className="px-4 py-4 text-sm text-gray-700 max-w-xs">
-                          <div className="line-clamp-2" title={product.category}>
-                            {product.category || '-'}
+                        {/* Title */}
+                        <td className="px-4 py-4 text-sm max-w-xs">
+                          <div className="font-medium text-gray-900 line-clamp-2" title={product.title}>
+                            {product.title || '-'}
                           </div>
                         </td>
                         
-                        {/* Description */}
-                        <td className="px-4 py-4 text-sm text-gray-600 max-w-xs">
-                          <div className="line-clamp-2" title={product.description}>
-                            {product.description || '-'}
-                          </div>
+                        {/* ASIN */}
+                        <td className="px-4 py-4 text-sm text-gray-700">
+                          <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
+                            {product.asin || '-'}
+                          </code>
+                        </td>
+                        
+                        {/* Brand */}
+                        <td className="px-4 py-4 text-sm text-gray-700">
+                          {product.brand || product.seller || product.soldBy || '-'}
                         </td>
                         
                         {/* Price */}
@@ -593,12 +564,12 @@ const DatasetV2 = () => {
                                 ${product.price.toFixed(2)}
                               </span>
                               {product.originalPrice && product.originalPrice > product.price && (
-                                <span className="text-xs text-gray-500 line-through">
-                                  ${product.originalPrice.toFixed(2)}
-                                </span>
-                              )}
-                              {product.discount && product.discount > 0 && (
-                                <span className="text-xs text-green-600">
+                                <>
+                                  <span className="text-xs text-gray-500 line-through">
+                                    ${product.originalPrice.toFixed(2)}
+                                  </span>
+                                  {product.discount && product.discount > 0 && (
+                                    <span className="text-xs text-green-600">
                                   -{product.discount.toFixed(0)}%
                                 </span>
                               )}
