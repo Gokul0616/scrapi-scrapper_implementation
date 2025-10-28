@@ -349,10 +349,12 @@ class IndeedJobsScraper(BaseScraper):
             # Extract location
             location = None
             location_selectors = [
+                '[data-testid="inlineHeader-companyLocation"]',
                 'div[data-testid="inlineHeader-companyLocation"]',
                 'div.jobsearch-JobInfoHeader-subtitle div',
                 'div.jobsearch-InlineCompanyRating + div',
-                'span.jobsearch-JobMetadataHeader-iconLabel'
+                'span.jobsearch-JobMetadataHeader-iconLabel',
+                '[data-testid="job-location"]'
             ]
             for selector in location_selectors:
                 location_elem = soup.select_one(selector)
@@ -365,11 +367,20 @@ class IndeedJobsScraper(BaseScraper):
             
             # Extract salary
             salary = None
-            salary_elem = soup.select_one('#salaryInfoAndJobType, div.jobsearch-JobMetadataHeader-item, .salary-snippet, .metadata.salary-snippet-container')
-            if salary_elem:
-                salary_text = salary_elem.get_text(strip=True)
-                if '$' in salary_text or 'hour' in salary_text.lower() or 'year' in salary_text.lower():
-                    salary = salary_text
+            salary_selectors = [
+                '[data-testid="inlineHeader-salary"]',
+                '#salaryInfoAndJobType',
+                'div.jobsearch-JobMetadataHeader-item',
+                '.salary-snippet',
+                '.metadata.salary-snippet-container'
+            ]
+            for selector in salary_selectors:
+                salary_elem = soup.select_one(selector)
+                if salary_elem:
+                    salary_text = salary_elem.get_text(strip=True)
+                    if '$' in salary_text or 'hour' in salary_text.lower() or 'year' in salary_text.lower():
+                        salary = salary_text
+                        break
             
             # Extract posted date
             posted_date = None
