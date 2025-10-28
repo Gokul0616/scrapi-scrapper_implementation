@@ -64,6 +64,18 @@ const DatasetV2 = () => {
     }
   }, [selectedLead]);
 
+  const fetchRunDetails = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/runs/${runId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setRunDetails(response.data);
+    } catch (error) {
+      console.error('Failed to fetch run details:', error);
+    }
+  };
+
   const fetchDataset = async () => {
     try {
       const token = localStorage.getItem('token');
