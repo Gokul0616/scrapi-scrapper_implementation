@@ -41,8 +41,13 @@ class IndeedJobsScraper(BaseScraper):
         """Determine the correct Indeed domain based on location."""
         location_lower = location.lower()
         
-        # India domains
-        if any(city in location_lower for city in ['chennai', 'bangalore', 'mumbai', 'delhi', 'hyderabad', 'pune', 'kolkata', 'india']):
+        # India domains - Added more Indian states and cities
+        india_locations = [
+            'chennai', 'bangalore', 'mumbai', 'delhi', 'hyderabad', 'pune', 'kolkata', 
+            'india', 'tamilnadu', 'tamil nadu', 'karnataka', 'maharashtra', 'gujarat',
+            'rajasthan', 'kerala', 'telangana', 'west bengal', 'uttar pradesh'
+        ]
+        if any(loc in location_lower for loc in india_locations):
             return "https://in.indeed.com"
         
         # UK domain
