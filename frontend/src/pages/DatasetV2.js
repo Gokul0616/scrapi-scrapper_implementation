@@ -16,6 +16,7 @@ const DatasetV2 = () => {
   const { runId } = useParams();
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
+  const [runDetails, setRunDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
@@ -53,6 +54,7 @@ const DatasetV2 = () => {
   const [showColumnSettings, setShowColumnSettings] = useState(false);
 
   useEffect(() => {
+    fetchRunDetails();
     fetchDataset();
   }, [runId, page, limit, searchQuery]);
 
