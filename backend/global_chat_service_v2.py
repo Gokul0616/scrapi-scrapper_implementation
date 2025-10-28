@@ -521,11 +521,14 @@ Then FUNCTION_CALL: {"name": "view_run_details", "arguments": {"run_id": "<first
             logger.error(f"Error getting actors: {str(e)}")
             return {"error": str(e)}
     
-    async def create_scraping_run(self, actor_name: str, search_terms: List[str], 
-                                   location: str = None, max_results: int = 20) -> Dict[str, Any]:
-        """Create a new scraping run."""
+    async def create_scraping_run(self, actor_name: str, search_terms: List[str] = None, 
+                                   search_keywords: List[str] = None, location: str = None, 
+                                   max_results: int = 20, extract_reviews: bool = False,
+                                   min_rating: float = 0, max_price: float = 0) -> Dict[str, Any]:
+        """Create a new scraping run. Supports both Google Maps and Amazon scrapers."""
         try:
-            # Find actor by name (case-insensitive)
+            # Find actor by name (case-insensitive, flexible matching)
+            # Support "Amazon", "Amazon Product Scraper", "Google Maps", "Google Maps Scraper"
             actor = await self.db.actors.find_one(
                 {
                     "$or": [{"user_id": self.user_id}, {"is_public": True}],
@@ -537,6 +540,26 @@ Then FUNCTION_CALL: {"name": "view_run_details", "arguments": {"run_id": "<first
             if not actor:
                 return {"error": f"Actor '{actor_name}' not found"}
             
+            # Determine scraper type and build appropriate input_data
+            is_amazon = "amazon" in actor["name"].lower()
+            
+            if is_amazon:
+                # Amazon Product Scraper format
+                input_data = {
+                    "search_keywords": search_keywords or search_terms or [],
+                    "max_results": max_results,
+                    "extract_reviews": extract_reviews,
+                    "min_rating": min_rating,
+                    "max_price": max_price
+                }
+            else:
+                # Google Maps Scraper format
+                input_data = {
+                    "search_terms": search_keywords or search_terms or [],
+                    "location": location,
+                    "max_results": max_results
+                }
+            
             # Create run
             run_id = str(__import__('uuid').uuid4())
             run_doc = {
@@ -545,11 +568,7 @@ Then FUNCTION_CALL: {"name": "view_run_details", "arguments": {"run_id": "<first
                 "actor_id": actor["id"],
                 "actor_name": actor["name"],
                 "status": "queued",
-                "input_data": {
-                    "search_terms": search_terms,
-                    "location": location,
-                    "max_results": max_results
-                },
+                "input_data": input_data,
                 "started_at": None,
                 "finished_at": None,
                 "duration_seconds": None,
@@ -573,7 +592,9 @@ Then FUNCTION_CALL: {"name": "view_run_details", "arguments": {"run_id": "<first
             return {
                 "success": True,
                 "run_id": run_id,
+                "actor_id": actor["id"],
                 "actor_name": actor["name"],
+                "input_data": input_data,
                 "message": f"Scraping run created successfully! Run ID: {run_id}"
             }
         except Exception as e:
