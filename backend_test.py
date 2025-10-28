@@ -4318,7 +4318,7 @@ class ScrapiAPITester:
             self.log("CRITICAL TESTING: Indeed Jobs Scraper - User Reported Parameters")
             self.log("Testing with: keyword='python developer', location='tamilnadu', max_pages=5")
             self.log("=" * 80)
-            indeed_success = self.test_indeed_jobs_scraper_user_reported_issue()
+            indeed_success = self.test_indeed_jobs_scraper_comprehensive()
             
             if indeed_success:
                 self.log("🎉 INDEED JOBS SCRAPER USER REPORTED ISSUE TEST COMPLETED!")
