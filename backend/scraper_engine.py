@@ -20,9 +20,9 @@ class ScraperEngine:
         self.playwright = await async_playwright().start()
         
         # Launch browser with anti-detection settings
-        # Use headless=False for better Cloudflare bypass
+        # Use new headless mode (headless="new") for better bypass
         self.browser = await self.playwright.chromium.launch(
-            headless=False,  # Non-headless mode bypasses more detection
+            headless=True,  # Keep headless for Docker environment
             args=[
                 '--disable-blink-features=AutomationControlled',
                 '--disable-dev-shm-usage',
@@ -30,12 +30,13 @@ class ScraperEngine:
                 '--disable-setuid-sandbox',
                 '--disable-web-security',
                 '--disable-features=IsolateOrigins,site-per-process',
-                '--disable-blink-features=AutomationControlled',
                 '--no-first-run',
                 '--no-default-browser-check',
                 '--disable-background-timer-throttling',
                 '--disable-backgrounding-occluded-windows',
                 '--disable-renderer-backgrounding',
+                '--window-size=1920,1080',
+                '--start-maximized',
             ]
         )
         logger.info("Scraper engine initialized with enhanced anti-detection")
