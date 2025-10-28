@@ -292,7 +292,11 @@ const ActorDetail = () => {
               placeholder={fieldConfig.placeholder || `Enter items (one per line)`}
               value={Array.isArray(formData[fieldName]) ? formData[fieldName].join('\n') : ''}
               onChange={(e) => {
-                const items = e.target.value.split('\n').filter(item => item.trim());
+                // Split by newlines, trim each item, and filter out empty strings
+                const items = e.target.value
+                  .split('\n')
+                  .map(item => item.trim())
+                  .filter(item => item.length > 0);
                 setFormData({ ...formData, [fieldName]: items });
               }}
               className="h-32"
