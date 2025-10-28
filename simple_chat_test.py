@@ -7,7 +7,7 @@ import requests
 import json
 
 # Backend URL
-BACKEND_URL = "https://session-resume-4.preview.emergentagent.com/api"
+BACKEND_URL = "https://mega-scrape-engine.preview.emergentagent.com/api"
 
 def test_basic_chat():
     print("=== Testing Global Chat Assistant ===")
