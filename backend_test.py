@@ -1071,16 +1071,17 @@ class ScrapiAPITester:
         
         return True
 
-    def test_indeed_jobs_scraper_user_reported_issue(self):
-        """Test Indeed Jobs Scraper with exact parameters reported by user"""
-        self.log("=== TESTING INDEED JOBS SCRAPER - USER REPORTED PARAMETERS ===")
+    def test_indeed_jobs_scraper_comprehensive(self):
+        """Test Indeed Jobs Scraper with COMPREHENSIVE validation as requested in review"""
+        self.log("=== COMPREHENSIVE INDEED JOBS SCRAPER TESTING ===")
+        self.log("Test Parameters: keyword='python developer', location='tamilnadu', max_pages=5")
         
         # Add indeed_scraper to test results if not exists
         if "indeed_scraper" not in self.test_results:
             self.test_results["indeed_scraper"] = {"passed": 0, "failed": 0, "errors": []}
         
         # Step 1: Authentication with test credentials as requested
-        self.log("Step 1: Authenticating with test credentials (username: test, password: test)...")
+        self.log("Step 1: Authentication with test credentials (username: test, password: test)...")
         
         # Try login with test credentials first
         login_data = {
@@ -1094,7 +1095,7 @@ class ScrapiAPITester:
             if "access_token" in data and "user" in data:
                 self.auth_token = data["access_token"]
                 self.user_data = data["user"]
-                self.log("✅ Login successful with test credentials")
+                self.log("✅ Authentication: Login successful with test credentials")
                 self.test_results["indeed_scraper"]["passed"] += 1
             else:
                 self.log("❌ Login response missing required fields")
@@ -1117,7 +1118,7 @@ class ScrapiAPITester:
                 if "access_token" in data and "user" in data:
                     self.auth_token = data["access_token"]
                     self.user_data = data["user"]
-                    self.log("✅ Registration successful with test credentials")
+                    self.log("✅ Authentication: Registration successful with test credentials")
                     self.test_results["indeed_scraper"]["passed"] += 1
                 else:
                     self.log("❌ Registration response missing required fields")
@@ -1130,8 +1131,8 @@ class ScrapiAPITester:
                 self.test_results["indeed_scraper"]["errors"].append("Both registration and login failed")
                 return False
         
-        # Step 2: Find Indeed Jobs Scraper actor
-        self.log("Step 2: Finding Indeed Jobs Scraper actor...")
+        # Step 2: Actor Verification - Find Indeed Jobs Scraper actor
+        self.log("Step 2: Actor Verification - Finding Indeed Jobs Scraper actor...")
         response = self.make_request("GET", "/actors")
         if response and response.status_code == 200:
             actors = response.json()
@@ -1143,13 +1144,15 @@ class ScrapiAPITester:
                     break
             
             if indeed_actor:
-                self.log(f"✅ Found Indeed Jobs Scraper actor: {indeed_actor_id}")
+                self.log(f"✅ Actor Verification: Found Indeed Jobs Scraper actor")
+                self.log(f"   Actor ID: {indeed_actor_id}")
                 self.log(f"   Icon: {indeed_actor.get('icon', 'N/A')}")
                 self.log(f"   Category: {indeed_actor.get('category', 'N/A')}")
                 self.log(f"   Description: {indeed_actor.get('description', 'N/A')}")
+                self.log(f"   Configuration: {indeed_actor.get('input_schema', {})}")
                 self.test_results["indeed_scraper"]["passed"] += 1
             else:
-                self.log("❌ Indeed Jobs Scraper actor not found")
+                self.log("❌ Actor Verification: Indeed Jobs Scraper actor not found")
                 self.test_results["indeed_scraper"]["failed"] += 1
                 self.test_results["indeed_scraper"]["errors"].append("Indeed Jobs Scraper actor not found")
                 return False
@@ -1159,7 +1162,7 @@ class ScrapiAPITester:
             self.test_results["indeed_scraper"]["errors"].append("Failed to get actors")
             return False
         
-        # Step 3: Create scraping run with exact user-reported parameters
+        # Step 3: Run Creation & Execution with exact user-reported parameters
         self.log("Step 3: Creating scraping run with user-reported parameters...")
         self.log("   Keyword: 'python developer'")
         self.log("   Location: 'tamilnadu'")
