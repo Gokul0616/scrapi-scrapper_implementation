@@ -300,6 +300,7 @@ const RunsV3 = () => {
     // Detect scraper type and format accordingly
     const actorName = run.actor_name || '';
     const isAmazonScraper = actorName.toLowerCase().includes('amazon');
+    const isIndeedScraper = actorName.toLowerCase().includes('indeed');
     
     if (isAmazonScraper) {
       // Amazon Product Scraper: Show product keywords
@@ -310,6 +311,23 @@ const RunsV3 = () => {
       if (maxResults) {
         taskDescription += ` (max ${maxResults})`;
       }
+      return taskDescription;
+    } else if (isIndeedScraper) {
+      // Indeed Jobs Scraper: Show keyword + location
+      const keyword = run.input_data?.keyword || 'N/A';
+      const location = run.input_data?.location || '';
+      const maxPages = run.input_data?.max_pages || '';
+      
+      let taskDescription = `Jobs: ${keyword}`;
+      
+      if (location) {
+        taskDescription += ` in ${location}`;
+      }
+      
+      if (maxPages) {
+        taskDescription += ` (${maxPages} pages)`;
+      }
+      
       return taskDescription;
     } else {
       // Google Maps Scraper: Show search terms + location
