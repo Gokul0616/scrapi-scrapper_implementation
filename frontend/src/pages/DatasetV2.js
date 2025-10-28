@@ -33,6 +33,9 @@ const DatasetV2 = () => {
   const [showLinksModal, setShowLinksModal] = useState(false);
   const [selectedLinksItem, setSelectedLinksItem] = useState(null);
   const [linksModalPosition, setLinksModalPosition] = useState({ x: 0, y: 0 });
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [visibleColumns, setVisibleColumns] = useState({
     number: true,
     title: true,
