@@ -315,10 +315,13 @@ class IndeedJobsScraper(BaseScraper):
             # Extract job title
             job_title = None
             title_selectors = [
+                'h1[data-testid="jobsearch-JobInfoHeader-title"]',
                 'h1.jobsearch-JobInfoHeader-title',
                 'h1[class*="jobTitle"]',
+                'h2.jobTitle span',
+                'h2.jobTitle',
                 'h1.icl-u-xs-mb--xs',
-                'h2.jobTitle'
+                '[data-testid="job-title"]'
             ]
             for selector in title_selectors:
                 title_elem = soup.select_one(selector)
@@ -329,10 +332,13 @@ class IndeedJobsScraper(BaseScraper):
             # Extract company name
             company = None
             company_selectors = [
+                '[data-testid="inlineHeader-companyName"]',
                 'div[data-company-name="true"]',
-                'div.jobsearch-InlineCompanyRating div.icl-u-lg-mr--sm',
+                '[data-testid="company-name"]',
+                'div.jobsearch-InlineCompanyRating div',
                 'div.jobsearch-CompanyInfoContainer a',
-                'a[data-tn-element="companyName"]'
+                'a[data-tn-element="companyName"]',
+                'span[data-testid="company-name"]'
             ]
             for selector in company_selectors:
                 company_elem = soup.select_one(selector)
