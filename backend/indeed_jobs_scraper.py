@@ -307,7 +307,7 @@ class IndeedJobsScraper(BaseScraper):
                     
                     # Wait for job results to load - try multiple selectors
                     try:
-                        await page.wait_for_selector('.job_seen_beacon, [data-testid="slider_item"], .jobsearch-ResultsList, .mosaic-provider-jobcards', timeout=20000)
+                        await page.wait_for_selector('.job_seen_beacon, [data-testid="slider_item"], .jobsearch-ResultsList, .mosaic-provider-jobcards', timeout=25000)
                         await self._log_progress("✅ Job listings loaded successfully", progress_callback)
                     except:
                         logger.warning("Job selector not found within timeout, proceeding anyway")
@@ -318,10 +318,6 @@ class IndeedJobsScraper(BaseScraper):
                     
                     # Extract job URLs from page
                     content = await page.content()
-                    
-                    # Log page title for debugging
-                    page_title = await page.title()
-                    logger.info(f"📄 Page title: {page_title}")
                     
                     # Check for blocking/captcha
                     if 'captcha' in content.lower() or 'blocked' in content.lower() or 'unusual traffic' in content.lower():
