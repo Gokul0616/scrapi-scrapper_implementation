@@ -181,6 +181,8 @@ const ActorDetail = () => {
         }
       );
 
+      console.log('✅ Run created successfully:', response.data);
+
       toast({
         title: 'Run started!',
         description: `${actor.name} is now running. Check the Runs tab for progress.`
