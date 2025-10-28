@@ -162,14 +162,14 @@ Complete Amazon product data extraction for e-commerce intelligence.
 Includes: ASIN, title, price, original price, discount %, rating, review count, availability, Prime status, images, description, features, specifications, seller info, BSR, and reviews (optional).""",
             input_schema={
                 "type": "object",
+                "required": ["search_keywords"],
                 "properties": {
                     "search_keywords": {
                         "type": "array",
                         "title": "Search Keywords",
                         "description": "Enter product keywords to search (e.g., 'wireless headphones', 'laptop stand')",
                         "editor": "stringList",
-                        "example": ["wireless headphones", "bluetooth speaker"],
-                        "required": True
+                        "example": ["wireless headphones", "bluetooth speaker"]
                     },
                     "max_results": {
                         "type": "integer",
@@ -178,16 +178,14 @@ Includes: ASIN, title, price, original price, discount %, rating, review count, 
                         "editor": "number",
                         "default": 50,
                         "minimum": 1,
-                        "maximum": 200,
-                        "required": False
+                        "maximum": 200
                     },
                     "extract_reviews": {
                         "type": "boolean",
                         "title": "Extract Reviews",
                         "description": "Extract review text from product pages (slower but more detailed)",
                         "editor": "checkbox",
-                        "default": False,
-                        "required": False
+                        "default": False
                     },
                     "min_rating": {
                         "type": "number",
@@ -196,17 +194,14 @@ Includes: ASIN, title, price, original price, discount %, rating, review count, 
                         "editor": "number",
                         "default": 0,
                         "minimum": 0,
-                        "maximum": 5,
-                        "required": False
+                        "maximum": 5
                     },
                     "max_price": {
                         "type": "number",
                         "title": "Maximum Price (USD)",
                         "description": "Filter products by maximum price in USD (optional)",
                         "editor": "number",
-                        "default": None,
-                        "minimum": 0,
-                        "required": False
+                        "minimum": 0
                     }
                 }
             }
