@@ -315,11 +315,12 @@ class IndeedJobsScraperV2(BaseScraper):
             
             if not job_urls:
                 error_msg = (
-                    f"❌ No jobs found for '{keyword}' in '{location or 'Any Location'}'. "
-                    "Cloudflare Turnstile may still be blocking. Try again in a few minutes."
+                    f"❌ Failed to extract jobs for '{keyword}' in '{location or 'Any Location'}'. "
+                    "Cloudflare Turnstile is blocking access. This scraper requires a CAPTCHA solving service like 2captcha to work. "
+                    "See documentation for integration options."
                 )
                 await self._log_progress(error_msg, progress_callback)
-                return all_jobs  # Return empty list instead of raising error
+                raise ValueError(error_msg)  # Raise error instead of returning empty list
             
             # Extract job details in parallel
             batch_size = 5
