@@ -301,6 +301,11 @@ const DatasetV2 = () => {
     setPage(1); // Reset to first page on search
   };
 
+  // Helper function to detect if this is an Amazon scraper run
+  const isAmazonScraper = () => {
+    return runDetails?.actor_name?.toLowerCase().includes('amazon') || false;
+  };
+
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center bg-white min-h-screen">
