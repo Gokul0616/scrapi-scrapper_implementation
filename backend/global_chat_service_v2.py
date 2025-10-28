@@ -1141,6 +1141,23 @@ You: FUNCTION_CALL: {{"name": "fill_and_start_scraper", "arguments": {{"actor_na
 FUNCTION_CALL: {{"name": "fill_and_start_scraper", "arguments": {{"actor_name": "Google Maps", "search_terms": ["pizza places"], "location": "Chicago, IL", "max_results": 5}}}}
 FUNCTION_CALL: {{"name": "fill_and_start_scraper", "arguments": {{"actor_name": "Google Maps", "search_terms": ["bakeries"], "location": "Miami, FL", "max_results": 2}}}}
 
+**AMAZON SCRAPER EXAMPLES:**
+User: "run 100 for trimmer in amazon scraper"
+You: FUNCTION_CALL: {{"name": "fill_and_start_scraper", "arguments": {{"actor_name": "Amazon", "search_keywords": ["trimmer"], "max_results": 100}}}}
+
+User: "scrape wireless headphones from amazon"
+You: FUNCTION_CALL: {{"name": "fill_and_start_scraper", "arguments": {{"actor_name": "Amazon", "search_keywords": ["wireless headphones"], "max_results": 20}}}}
+
+User: "get 50 laptop stands in amazon"
+You: FUNCTION_CALL: {{"name": "fill_and_start_scraper", "arguments": {{"actor_name": "Amazon", "search_keywords": ["laptop stands"], "max_results": 50}}}}
+
+User: "run amazon scraper for gaming mouse"
+You: FUNCTION_CALL: {{"name": "fill_and_start_scraper", "arguments": {{"actor_name": "Amazon", "search_keywords": ["gaming mouse"], "max_results": 20}}}}
+
+User: "scrape 200 bluetooth speakers and wireless earbuds from amazon"
+You: FUNCTION_CALL: {{"name": "fill_and_start_scraper", "arguments": {{"actor_name": "Amazon", "search_keywords": ["bluetooth speakers"], "max_results": 200}}}}
+FUNCTION_CALL: {{"name": "fill_and_start_scraper", "arguments": {{"actor_name": "Amazon", "search_keywords": ["wireless earbuds"], "max_results": 200}}}}
+
 **CRITICAL FOR LEADS/DATASET NAVIGATION:**
 User: "show leads" or "navigate to first completed dataset" or "view my data"
 You: FUNCTION_CALL: {{"name": "list_recent_runs", "arguments": {{"limit": 10, "status_filter": "succeeded"}}}}
