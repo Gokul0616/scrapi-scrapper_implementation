@@ -9,7 +9,7 @@ import time
 import re
 
 # Get backend URL from environment
-BACKEND_URL = "https://scraper-debug-6.preview.emergentagent.com/api"
+BACKEND_URL = "https://data-retrieval-2.preview.emergentagent.com/api"
 
 def authenticate():
     """Authenticate and return headers"""
