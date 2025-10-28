@@ -8,7 +8,7 @@ import json
 import re
 
 # Get backend URL from environment
-BACKEND_URL = "https://mega-scrape-engine.preview.emergentagent.com/api"
+BACKEND_URL = "https://amazon-scraper-3.preview.emergentagent.com/api"
 
 def test_run_creation():
     # Authenticate

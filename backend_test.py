@@ -12,7 +12,7 @@ import os
 from datetime import datetime
 
 # Get backend URL from environment
-BACKEND_URL = "https://mega-scrape-engine.preview.emergentagent.com/api"
+BACKEND_URL = "https://amazon-scraper-3.preview.emergentagent.com/api"
 
 class ScrapiAPITester:
     def __init__(self):

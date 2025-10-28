@@ -15,7 +15,7 @@ from datetime import datetime
 import asyncio
 
 # Get backend URL from environment
-BACKEND_URL = "https://mega-scrape-engine.preview.emergentagent.com/api"
+BACKEND_URL = "https://amazon-scraper-3.preview.emergentagent.com/api"
 
 class CriticalFixesTester:
     def __init__(self):
