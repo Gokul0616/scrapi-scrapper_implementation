@@ -163,6 +163,13 @@ const ActorDetail = () => {
     try {
       const token = localStorage.getItem('token');
 
+      // Log the data being sent to backend for debugging
+      console.log('🚀 Creating run with data:', {
+        actor_id: actorId,
+        actor_name: actor.name,
+        input_data: formData
+      });
+
       const response = await axios.post(
         `${API}/runs`,
         {
