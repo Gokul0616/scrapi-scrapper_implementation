@@ -394,10 +394,18 @@ async def create_run(
     current_user: dict = Depends(get_current_user)
 ):
     """Create and start a new scraping run with parallel execution."""
+    # Log incoming request for debugging
+    logger.info(f"🚀 Creating run for user {current_user['id']}")
+    logger.info(f"   Actor ID: {run_data.actor_id}")
+    logger.info(f"   Input data: {run_data.input_data}")
+    
     # Get actor
     actor = await db.actors.find_one({"id": run_data.actor_id})
     if not actor:
+        logger.error(f"❌ Actor not found: {run_data.actor_id}")
         raise HTTPException(status_code=404, detail="Actor not found")
+    
+    logger.info(f"   Actor name: {actor['name']}")
     
     # Create run
     run = Run(
@@ -411,6 +419,8 @@ async def create_run(
     doc = run.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
     await db.runs.insert_one(doc)
+    
+    logger.info(f"✅ Run created: {run.id}")
     
     # Start scraping in parallel using task manager
     await task_manager.start_task(
