@@ -961,6 +961,127 @@ const DatasetV2 = () => {
                 </tbody>
               </table>
             </div>
+          ) : isIndeedScraper() ? (
+            // Indeed Jobs Table
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b border-gray-200 bg-gray-50">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">#</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Job Title</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Company</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Location</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Salary</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Job Type</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Posted Date</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Rating</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Description</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">URL</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-100">
+                  {items.map((item, index) => {
+                    const job = item.data;
+                    return (
+                      <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                        {/* # */}
+                        <td className="px-4 py-4 text-sm text-gray-900 font-medium">
+                          {(page - 1) * limit + index + 1}
+                        </td>
+                        
+                        {/* Job Title */}
+                        <td className="px-4 py-4 text-sm max-w-xs">
+                          <div className="font-medium text-gray-900 line-clamp-2" title={job.jobTitle}>
+                            {job.jobTitle || '-'}
+                          </div>
+                          {job.jobId && (
+                            <div className="text-xs text-gray-500 mt-1">
+                              ID: {job.jobId.substring(0, 10)}...
+                            </div>
+                          )}
+                        </td>
+                        
+                        {/* Company */}
+                        <td className="px-4 py-4 text-sm text-gray-700">
+                          <div className="flex flex-col">
+                            <span className="font-medium">{job.company || '-'}</span>
+                            {job.rating && job.rating !== 'N/A' && (
+                              <span className="text-xs text-yellow-600 flex items-center gap-1 mt-1">
+                                ⭐ {job.rating}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        
+                        {/* Location */}
+                        <td className="px-4 py-4 text-sm text-gray-700">
+                          {job.location || '-'}
+                        </td>
+                        
+                        {/* Salary */}
+                        <td className="px-4 py-4 text-sm">
+                          {job.salary && job.salary !== 'Not specified' ? (
+                            <span className="font-medium text-green-700">
+                              {job.salary}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">Not specified</span>
+                          )}
+                        </td>
+                        
+                        {/* Job Type */}
+                        <td className="px-4 py-4 text-sm">
+                          {job.jobType && job.jobType !== 'Not specified' ? (
+                            <span className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
+                              {job.jobType}
+                            </span>
+                          ) : '-'}
+                        </td>
+                        
+                        {/* Posted Date */}
+                        <td className="px-4 py-4 text-sm text-gray-600">
+                          {job.postedDate && job.postedDate !== 'N/A' ? job.postedDate : '-'}
+                        </td>
+                        
+                        {/* Company Rating */}
+                        <td className="px-4 py-4 text-sm">
+                          {job.rating && job.rating !== 'N/A' ? (
+                            <div className="flex items-center gap-1">
+                              <span className="text-yellow-500">⭐</span>
+                              <span className="font-medium text-gray-900">{job.rating}</span>
+                            </div>
+                          ) : '-'}
+                        </td>
+                        
+                        {/* Description Preview */}
+                        <td className="px-4 py-4 text-sm text-gray-600 max-w-xs">
+                          {job.description && job.description !== 'N/A' ? (
+                            <div className="line-clamp-3" title={job.description}>
+                              {job.description.substring(0, 150)}...
+                            </div>
+                          ) : '-'}
+                        </td>
+                        
+                        {/* URL */}
+                        <td className="px-4 py-4 text-sm">
+                          {job.jobUrl ? (
+                            <a 
+                              href={job.jobUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline flex items-center gap-1"
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                              Apply
+                            </a>
+                          ) : '-'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           ) : (
             // Google Maps Table (existing code)
             <div className="overflow-x-auto">
