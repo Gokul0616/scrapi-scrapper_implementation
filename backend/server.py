@@ -161,11 +161,54 @@ Complete Amazon product data extraction for e-commerce intelligence.
 ## Output Fields
 Includes: ASIN, title, price, original price, discount %, rating, review count, availability, Prime status, images, description, features, specifications, seller info, BSR, and reviews (optional).""",
             input_schema={
-                "search_keywords": {"type": "array", "description": "List of product keywords to search"},
-                "max_results": {"type": "integer", "default": 50},
-                "extract_reviews": {"type": "boolean", "default": False},
-                "min_rating": {"type": "number", "default": 0},
-                "max_price": {"type": "number", "default": None}
+                "type": "object",
+                "properties": {
+                    "search_keywords": {
+                        "type": "array",
+                        "title": "Search Keywords",
+                        "description": "Enter product keywords to search (e.g., 'wireless headphones', 'laptop stand')",
+                        "editor": "stringList",
+                        "example": ["wireless headphones", "bluetooth speaker"],
+                        "required": True
+                    },
+                    "max_results": {
+                        "type": "integer",
+                        "title": "Maximum Results",
+                        "description": "Maximum number of products to scrape per keyword",
+                        "editor": "number",
+                        "default": 50,
+                        "minimum": 1,
+                        "maximum": 200,
+                        "required": False
+                    },
+                    "extract_reviews": {
+                        "type": "boolean",
+                        "title": "Extract Reviews",
+                        "description": "Extract review text from product pages (slower but more detailed)",
+                        "editor": "checkbox",
+                        "default": False,
+                        "required": False
+                    },
+                    "min_rating": {
+                        "type": "number",
+                        "title": "Minimum Rating",
+                        "description": "Filter products by minimum rating (0-5 stars)",
+                        "editor": "number",
+                        "default": 0,
+                        "minimum": 0,
+                        "maximum": 5,
+                        "required": False
+                    },
+                    "max_price": {
+                        "type": "number",
+                        "title": "Maximum Price (USD)",
+                        "description": "Filter products by maximum price in USD (optional)",
+                        "editor": "number",
+                        "default": None,
+                        "minimum": 0,
+                        "required": False
+                    }
+                }
             }
         )
         doc = actor.model_dump()
