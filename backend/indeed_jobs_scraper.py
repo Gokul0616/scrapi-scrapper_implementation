@@ -267,14 +267,16 @@ class IndeedJobsScraper(BaseScraper):
                         logger.info(f"Found {len(job_cards)} jobs using primary selector: .job_seen_beacon")
                     
                     if not job_cards:
-                        logger.warning(f"No job cards found on page {page_num + 1}")
+                        consecutive_failures += 1
+                        logger.warning(f"No job cards found on page {page_num + 1} (consecutive failures: {consecutive_failures})")
+                        
                         # Save full HTML for debugging
                         try:
                             debug_file = f"/tmp/indeed_debug_page{page_num + 1}.html"
                             with open(debug_file, 'w', encoding='utf-8') as f:
                                 f.write(content)
                             logger.info(f"💾 Saved HTML sample to {debug_file} for debugging")
-                            await self._log_progress(f"💾 Saved HTML sample to {debug_file} for debugging", progress_callback)
+                            await self._log_progress(f"💾 Saved HTML to {debug_file} for debugging", progress_callback)
                         except Exception as save_error:
                             logger.error(f"Failed to save HTML sample: {save_error}")
                         
@@ -282,14 +284,24 @@ class IndeedJobsScraper(BaseScraper):
                         sample_html = content[:3000] if len(content) > 3000 else content
                         logger.debug(f"Sample HTML: {sample_html}")
                         
-                        # If page 1 has no jobs, it's likely a detection issue - continue trying more pages
+                        # If too many consecutive failures, stop scraping
+                        if consecutive_failures >= max_consecutive_failures:
+                            logger.error(f"❌ {consecutive_failures} consecutive page failures, stopping scraper")
+                            await self._log_progress(f"❌ {consecutive_failures} consecutive page failures detected", progress_callback)
+                            break
+                        
+                        # If page 1 has no jobs, it's likely a detection issue - try with longer wait
                         if page_num == 0:
                             logger.warning("Page 1 failed, trying with longer wait time...")
                             await self._log_progress("⚠️ Page 1 detection failed, retrying with longer wait...", progress_callback)
                             await asyncio.sleep(5)  # Longer wait for anti-bot
                             continue  # Try next page
                         else:
-                            break
+                            # Continue to next page in case this page is empty
+                            continue
+                    else:
+                        # Reset failure counter on success
+                        consecutive_failures = 0
                     
                     page_jobs = []
                     for card in job_cards:
