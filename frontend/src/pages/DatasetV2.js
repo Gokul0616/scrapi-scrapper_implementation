@@ -1212,48 +1212,34 @@ const DatasetV2 = () => {
                   }
                   
                   if (currentMedia.type === 'video') {
-                    // Check if it's a direct video URL or an embeddable URL
                     const videoUrl = currentMedia.url;
                     
-                    // If the video URL is from Amazon customer images, it should work with video tag
                     return (
-                      <div className="w-full h-full flex items-center justify-center bg-black">
+                      <div className="w-full h-full flex flex-col items-center justify-center bg-black p-2">
                         <video
                           key={videoUrl}
-                          className="max-w-full max-h-full object-contain rounded"
+                          className="max-w-full max-h-full object-contain"
                           controls
-                          controlsList="nodownload"
-                          preload="auto"
+                          preload="metadata"
                           playsInline
-                          style={{ backgroundColor: '#000' }}
+                          src={videoUrl}
+                          style={{ maxHeight: '250px' }}
                           onError={(e) => {
-                            console.error('Video load error:', videoUrl, e);
-                            // Try to show error message
-                            e.target.style.display = 'none';
-                            const errorDiv = e.target.nextSibling;
-                            if (errorDiv) errorDiv.style.display = 'flex';
-                          }}
-                          onLoadedData={() => {
-                            console.log('Video loaded successfully:', videoUrl);
+                            console.error('Video load error:', videoUrl);
                           }}
                         >
-                          <source src={videoUrl} type="video/mp4" />
-                          <source src={videoUrl} type="video/webm" />
                           Your browser does not support the video tag.
                         </video>
-                        <div 
-                          className="hidden flex-col items-center justify-center text-white text-sm gap-2 p-4"
-                          style={{ display: 'none' }}
-                        >
-                          <Play className="w-8 h-8 text-gray-400" />
-                          <p>Video cannot be played</p>
+                        <div className="mt-2 flex gap-2">
                           <a 
                             href={videoUrl} 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            className="text-blue-400 underline text-xs"
+                            className="text-blue-400 hover:text-blue-300 underline text-xs flex items-center gap-1"
+                            onClick={(e) => e.stopPropagation()}
                           >
-                            Open in new tab
+                            <ExternalLink className="w-3 h-3" />
+                            Open video
                           </a>
                         </div>
                       </div>
