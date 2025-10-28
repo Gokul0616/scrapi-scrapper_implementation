@@ -141,7 +141,8 @@ class IndeedJobsScraper(BaseScraper):
         await self._log_progress(f"🔍 Starting Indeed job search: '{keyword}' in '{location or 'Any Location'}'", progress_callback)
         
         all_jobs = []
-        context = await self.engine.create_context(use_proxy=True)
+        # Create context with stealth mode enabled
+        context = await self.engine.create_context(use_proxy=False)  # Disable proxy for better success rate
         
         try:
             # Step 1: Collect all job URLs from search pages
