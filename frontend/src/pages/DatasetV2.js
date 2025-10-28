@@ -13,6 +13,129 @@ import { toast } from '../hooks/use-toast';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// HLS Video Player Component
+const HLSVideoPlayer = ({ videoUrl, isHLS }) => {
+  const videoRef = useRef(null);
+  const hlsRef = useRef(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (isHLS) {
+      console.log('[HLS PLAYER] Initializing HLS for:', videoUrl);
+      
+      if (Hls.isSupported()) {
+        // Use hls.js for browsers that don't support HLS natively
+        const hls = new Hls({
+          enableWorker: true,
+          lowLatencyMode: true,
+          backBufferLength: 90
+        });
+        
+        hls.loadSource(videoUrl);
+        hls.attachMedia(video);
+        
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          console.log('[HLS PLAYER] Manifest parsed successfully');
+        });
+        
+        hls.on(Hls.Events.ERROR, (event, data) => {
+          console.error('[HLS PLAYER] Error:', data);
+          if (data.fatal) {
+            switch (data.type) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                console.log('[HLS PLAYER] Fatal network error, trying to recover');
+                hls.startLoad();
+                break;
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                console.log('[HLS PLAYER] Fatal media error, trying to recover');
+                hls.recoverMediaError();
+                break;
+              default:
+                console.log('[HLS PLAYER] Cannot recover from error, destroying HLS');
+                hls.destroy();
+                break;
+            }
+          }
+        });
+        
+        hlsRef.current = hls;
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        // Native HLS support (Safari)
+        console.log('[HLS PLAYER] Using native HLS support');
+        video.src = videoUrl;
+      } else {
+        console.error('[HLS PLAYER] HLS not supported in this browser');
+      }
+    } else {
+      // Standard video formats (mp4, webm, ogg)
+      console.log('[VIDEO PLAYER] Using standard video player for:', videoUrl);
+      video.src = videoUrl;
+    }
+
+    return () => {
+      if (hlsRef.current) {
+        console.log('[HLS PLAYER] Cleaning up HLS instance');
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
+  }, [videoUrl, isHLS]);
+
+  return (
+    <div className="w-full h-full flex flex-col items-center justify-center bg-black p-2">
+      <video
+        ref={videoRef}
+        className="max-w-full max-h-full object-contain rounded"
+        controls
+        controlsList="nodownload"
+        playsInline
+        style={{ maxHeight: '250px', backgroundColor: '#000' }}
+        onLoadedMetadata={(e) => {
+          console.log('[VIDEO PLAYER] Metadata loaded:', {
+            duration: e.target.duration,
+            videoWidth: e.target.videoWidth,
+            videoHeight: e.target.videoHeight
+          });
+        }}
+        onCanPlay={() => {
+          console.log('[VIDEO PLAYER] Can play video');
+        }}
+        onError={(e) => {
+          console.error('[VIDEO PLAYER] Error:', {
+            url: videoUrl,
+            error: e.target.error,
+            code: e.target.error?.code,
+            message: e.target.error?.message
+          });
+        }}
+      >
+        {!isHLS && (
+          <>
+            <source src={videoUrl} type="video/mp4" />
+            <source src={videoUrl} type="video/webm" />
+            <source src={videoUrl} type="video/ogg" />
+          </>
+        )}
+        Your browser does not support the video tag.
+      </video>
+      <div className="mt-2 flex gap-2">
+        <a 
+          href={videoUrl} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-blue-400 hover:text-blue-300 underline text-xs flex items-center gap-1"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ExternalLink className="w-3 h-3" />
+          Open in new tab
+        </a>
+      </div>
+    </div>
+  );
+};
+
 const DatasetV2 = () => {
   const { runId } = useParams();
   const navigate = useNavigate();
