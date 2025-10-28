@@ -128,6 +128,11 @@ class IndeedJobsScraper(BaseScraper):
         if not keyword:
             raise ValueError("Keyword is required for Indeed job search")
         
+        # Set the correct Indeed domain based on location
+        if location:
+            self.base_url = self._get_indeed_domain(location)
+            await self._log_progress(f"🌍 Using {self.base_url} for location: {location}", progress_callback)
+        
         await self._log_progress(f"🔍 Starting Indeed job search: '{keyword}' in '{location or 'Any Location'}'", progress_callback)
         
         all_jobs = []
