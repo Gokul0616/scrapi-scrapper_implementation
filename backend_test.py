@@ -888,6 +888,186 @@ class ScrapiAPITester:
         
         self.log("Data isolation testing completed")
 
+    def test_amazon_scraper_trimmer_issue(self):
+        """Test Amazon Product Scraper with specific 'trimmer' keyword and max_results 5 as reported by user"""
+        self.log("=== TESTING AMAZON SCRAPER WITH 'TRIMMER' KEYWORD (USER REPORTED ISSUE) ===")
+        
+        # Add amazon_scraper_trimmer to test results if not exists
+        if "amazon_scraper_trimmer" not in self.test_results:
+            self.test_results["amazon_scraper_trimmer"] = {"passed": 0, "failed": 0, "errors": []}
+        
+        # Step 1: Authentication
+        self.log("Step 1: Getting authentication token...")
+        if not self.auth_token:
+            if not self.test_auth_flow():
+                self.log("❌ Authentication failed - cannot proceed with Amazon scraper test")
+                self.test_results["amazon_scraper_trimmer"]["failed"] += 1
+                self.test_results["amazon_scraper_trimmer"]["errors"].append("Authentication failed")
+                return False
+        
+        # Step 2: Get Amazon Product Scraper actor ID
+        self.log("Step 2: Getting Amazon Product Scraper actor ID...")
+        response = self.make_request("GET", "/actors")
+        if response and response.status_code == 200:
+            actors = response.json()
+            amazon_actor = None
+            for actor in actors:
+                if actor.get("name") == "Amazon Product Scraper":
+                    amazon_actor = actor
+                    amazon_actor_id = actor["id"]
+                    break
+            
+            if amazon_actor:
+                self.log(f"✅ Found Amazon Product Scraper actor: {amazon_actor_id}")
+                self.test_results["amazon_scraper_trimmer"]["passed"] += 1
+            else:
+                self.log("❌ Amazon Product Scraper actor not found")
+                self.test_results["amazon_scraper_trimmer"]["failed"] += 1
+                self.test_results["amazon_scraper_trimmer"]["errors"].append("Amazon actor not found")
+                return False
+        else:
+            self.log(f"❌ Failed to get actors: {response.status_code if response else 'No response'}")
+            self.test_results["amazon_scraper_trimmer"]["failed"] += 1
+            self.test_results["amazon_scraper_trimmer"]["errors"].append("Failed to get actors")
+            return False
+        
+        # Step 3: Create scraping run with exact parameters from user report
+        self.log("Step 3: Creating scraping run with user-reported parameters...")
+        self.log("  - search_keywords: ['trimmer'] (single keyword array)")
+        self.log("  - max_results: 5")
+        self.log("  - extract_reviews: false")
+        self.log("  - min_rating: 0")
+        
+        run_data = {
+            "actor_id": amazon_actor_id,
+            "input_data": {
+                "search_keywords": ["trimmer"],
+                "max_results": 5,
+                "extract_reviews": False,
+                "min_rating": 0
+            }
+        }
+        
+        self.log(f"REQUEST JSON: {json.dumps(run_data, indent=2)}")
+        
+        response = self.make_request("POST", "/runs", run_data)
+        
+        self.log(f"RESPONSE STATUS: {response.status_code if response else 'No response'}")
+        if response:
+            try:
+                response_json = response.json()
+                self.log(f"RESPONSE JSON: {json.dumps(response_json, indent=2)}")
+            except:
+                self.log(f"RESPONSE TEXT: {response.text}")
+        
+        if response and response.status_code == 200:
+            run = response.json()
+            if "id" in run:
+                run_id = run["id"]
+                self.log(f"✅ Run created successfully: {run_id}")
+                self.log(f"✅ Initial status: {run.get('status', 'unknown')}")
+                self.test_results["amazon_scraper_trimmer"]["passed"] += 1
+                
+                # Step 4: Monitor run status
+                self.log("Step 4: Monitoring run status...")
+                max_wait_time = 180  # 3 minutes
+                check_interval = 10  # 10 seconds
+                elapsed_time = 0
+                
+                while elapsed_time < max_wait_time:
+                    response = self.make_request("GET", f"/runs/{run_id}")
+                    if response and response.status_code == 200:
+                        run_status = response.json()
+                        status = run_status.get("status", "unknown")
+                        error_message = run_status.get("error_message")
+                        
+                        self.log(f"Run status: {status} (elapsed: {elapsed_time}s)")
+                        
+                        if error_message:
+                            self.log(f"Error message: {error_message}")
+                        
+                        if status == "succeeded":
+                            results_count = run_status.get("results_count", 0)
+                            self.log(f"✅ Run completed successfully with {results_count} results")
+                            self.test_results["amazon_scraper_trimmer"]["passed"] += 1
+                            
+                            # Step 5: Check results
+                            if results_count > 0:
+                                self.log("Step 5: Checking dataset results...")
+                                dataset_response = self.make_request("GET", f"/datasets/{run_id}/items")
+                                if dataset_response and dataset_response.status_code == 200:
+                                    items = dataset_response.json()
+                                    self.log(f"✅ Retrieved {len(items)} items from dataset")
+                                    self.test_results["amazon_scraper_trimmer"]["passed"] += 1
+                                    
+                                    if len(items) > 0:
+                                        sample_item = items[0]
+                                        self.log(f"Sample product: {sample_item.get('data', {}).get('title', 'N/A')}")
+                                        self.test_results["amazon_scraper_trimmer"]["passed"] += 1
+                                else:
+                                    self.log("❌ Failed to retrieve dataset items")
+                                    self.test_results["amazon_scraper_trimmer"]["failed"] += 1
+                                    self.test_results["amazon_scraper_trimmer"]["errors"].append("Failed to retrieve dataset")
+                            break
+                            
+                        elif status == "failed":
+                            self.log(f"❌ Run failed: {error_message or 'Unknown error'}")
+                            self.test_results["amazon_scraper_trimmer"]["failed"] += 1
+                            self.test_results["amazon_scraper_trimmer"]["errors"].append(f"Run failed: {error_message}")
+                            
+                            # This is the key finding - identify WHY it failed
+                            if error_message:
+                                if "JSON" in error_message or "format" in error_message:
+                                    self.log("🔍 ISSUE IDENTIFIED: JSON format problem in frontend or backend processing")
+                                elif "keyword" in error_message or "search" in error_message:
+                                    self.log("🔍 ISSUE IDENTIFIED: Problem with search keyword processing")
+                                elif "timeout" in error_message or "connection" in error_message:
+                                    self.log("🔍 ISSUE IDENTIFIED: Network/connection issue")
+                                else:
+                                    self.log(f"🔍 ISSUE IDENTIFIED: Other error - {error_message}")
+                            break
+                            
+                        elif status in ["queued", "running"]:
+                            time.sleep(check_interval)
+                            elapsed_time += check_interval
+                        else:
+                            self.log(f"❌ Unknown status: {status}")
+                            self.test_results["amazon_scraper_trimmer"]["failed"] += 1
+                            self.test_results["amazon_scraper_trimmer"]["errors"].append(f"Unknown status: {status}")
+                            break
+                    else:
+                        self.log(f"❌ Failed to get run status: {response.status_code if response else 'No response'}")
+                        self.test_results["amazon_scraper_trimmer"]["failed"] += 1
+                        self.test_results["amazon_scraper_trimmer"]["errors"].append("Failed to get run status")
+                        break
+                
+                if elapsed_time >= max_wait_time:
+                    self.log("❌ Run did not complete within timeout")
+                    self.test_results["amazon_scraper_trimmer"]["failed"] += 1
+                    self.test_results["amazon_scraper_trimmer"]["errors"].append("Run timeout")
+                    
+            else:
+                self.log("❌ Run creation response missing ID")
+                self.test_results["amazon_scraper_trimmer"]["failed"] += 1
+                self.test_results["amazon_scraper_trimmer"]["errors"].append("Run creation response missing ID")
+        else:
+            self.log(f"❌ Failed to create run: {response.status_code if response else 'No response'}")
+            if response:
+                try:
+                    error_details = response.json()
+                    self.log(f"Error details: {error_details}")
+                    self.test_results["amazon_scraper_trimmer"]["errors"].append(f"Run creation failed: {error_details}")
+                except:
+                    self.log(f"Error text: {response.text}")
+                    self.test_results["amazon_scraper_trimmer"]["errors"].append(f"Run creation failed: {response.text}")
+            else:
+                self.test_results["amazon_scraper_trimmer"]["errors"].append("No response from server")
+            
+            self.test_results["amazon_scraper_trimmer"]["failed"] += 1
+            return False
+        
+        return True
+
     def test_amazon_scraper_comprehensive(self):
         """Test Amazon Product Scraper backend functionality comprehensively as requested in review"""
         self.log("=== COMPREHENSIVE AMAZON PRODUCT SCRAPER TESTING ===")
