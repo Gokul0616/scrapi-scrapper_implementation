@@ -1217,12 +1217,18 @@ const DatasetV2 = () => {
                         key={currentMedia.url}
                         className="max-w-full max-h-full object-contain rounded"
                         controls
-                        autoPlay
-                        preload="metadata"
+                        controlsList="nodownload"
+                        preload="auto"
+                        playsInline
+                        crossOrigin="anonymous"
+                        onError={(e) => {
+                          console.error('Video load error:', e);
+                        }}
+                        onLoadedData={() => {
+                          console.log('Video loaded successfully');
+                        }}
                       >
                         <source src={currentMedia.url} type="video/mp4" />
-                        <source src={currentMedia.url} type="video/webm" />
-                        <source src={currentMedia.url} type="video/ogg" />
                         Your browser does not support the video tag.
                       </video>
                     );
