@@ -77,7 +77,7 @@ class GoogleMapsScraperV3(BaseScraper):
             "socialMedia": "object - Social media links"
         }
     
-    async def scrape(self, config: Dict[str, Any], progress_callback=None) -> List[Dict[str, Any]]:
+    async def scrape(self, config: Dict[str, Any], progress_callback: Optional[Callable] = None) -> List[Dict[str, Any]]:
         """
         Main scraping method with enhanced performance.
         """
