@@ -279,18 +279,37 @@ class IndeedJobsScraper(BaseScraper):
                     # Navigate to search page
                     await page.goto(search_url, wait_until="domcontentloaded", timeout=45000)
                     
+                    # Random delay to appear more human (2-4 seconds)
+                    import random
+                    human_delay = 2 + random.random() * 2
+                    await asyncio.sleep(human_delay)
+                    
+                    # Simulate human mouse movement and scrolling
+                    try:
+                        # Move mouse randomly
+                        await page.mouse.move(random.randint(100, 800), random.randint(100, 600))
+                        await asyncio.sleep(0.5)
+                        
+                        # Scroll down gradually like a human
+                        for scroll_step in range(3):
+                            scroll_amount = random.randint(200, 400)
+                            await page.evaluate(f"window.scrollBy(0, {scroll_amount})")
+                            await asyncio.sleep(0.5 + random.random() * 0.5)
+                        
+                        # Scroll back up a bit
+                        await page.evaluate("window.scrollTo(0, 100)")
+                        await asyncio.sleep(0.5)
+                    except Exception as e:
+                        logger.warning(f"Mouse/scroll simulation failed: {e}")
+                    
                     # Wait for job results to load - try multiple selectors
                     try:
-                        await page.wait_for_selector('.job_seen_beacon, [data-testid="slider_item"], .jobsearch-ResultsList', timeout=10000)
+                        await page.wait_for_selector('.job_seen_beacon, [data-testid="slider_item"], .jobsearch-ResultsList, .mosaic-provider-jobcards', timeout=15000)
                     except:
                         logger.warning("Job selector not found within timeout, proceeding anyway")
                     
                     # Additional wait for dynamic content
-                    await asyncio.sleep(4)
-                    
-                    # Scroll the page to trigger lazy loading
-                    await page.evaluate("window.scrollTo(0, document.body.scrollHeight / 2)")
-                    await asyncio.sleep(1)
+                    await asyncio.sleep(2)
                     
                     # Extract job URLs from page
                     content = await page.content()
