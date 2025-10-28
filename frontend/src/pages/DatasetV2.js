@@ -544,14 +544,26 @@ const DatasetV2 = () => {
                         {/* Picture */}
                         <td className="px-4 py-4">
                           {product.images && product.images.length > 0 ? (
-                            <img 
-                              src={product.images[0]} 
-                              alt={product.title}
-                              className="w-16 h-16 object-cover rounded border border-gray-200"
-                              onError={(e) => {
-                                e.target.style.display = 'none';
-                              }}
-                            />
+                            <div className="relative group cursor-pointer" onClick={() => openImageModal(product)}>
+                              <img 
+                                src={product.images[0]} 
+                                alt={product.title}
+                                className="w-16 h-16 object-cover rounded border border-gray-200 group-hover:border-blue-500 transition-all"
+                                onError={(e) => {
+                                  e.target.src = 'https://via.placeholder.com/64?text=No+Image';
+                                }}
+                              />
+                              {product.images.length > 1 && (
+                                <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-xs px-1 rounded-tl">
+                                  +{product.images.length - 1}
+                                </div>
+                              )}
+                              {product.videos && product.videos.length > 0 && (
+                                <div className="absolute top-0 right-0 bg-red-600 text-white p-1 rounded-bl">
+                                  <Play className="w-3 h-3" />
+                                </div>
+                              )}
+                            </div>
                           ) : (
                             <div className="w-16 h-16 bg-gray-100 rounded border border-gray-200 flex items-center justify-center text-gray-400 text-xs">
                               No image
