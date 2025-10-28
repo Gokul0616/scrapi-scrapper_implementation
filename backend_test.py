@@ -3552,27 +3552,27 @@ class ScrapiAPITester:
             self.test_results["global_chat"]["errors"].append("LLM integration test failed")
             
     def run_all_tests(self):
-        """Run backend API tests with priority on review request"""
-        self.log("🚀 Starting Backend API Testing - PRIORITY: Country Code Extraction Review")
+        """Run backend API tests with priority on Amazon Product Scraper review request"""
+        self.log("🚀 Starting Backend API Testing - PRIORITY: Amazon Product Scraper Review")
         self.log(f"Backend URL: {self.base_url}")
         
         try:
-            # Run the specific review request test first
+            # Run the specific review request test first - Amazon Product Scraper
             self.log("=" * 80)
-            self.log("PRIORITY: Running Review Request Test - Country Code Extraction")
+            self.log("PRIORITY: Running Review Request Test - Amazon Product Scraper")
             self.log("=" * 80)
-            review_success = self.test_country_code_extraction_review()
+            amazon_success = self.test_amazon_scraper_comprehensive()
             
-            if review_success:
-                self.log("🎉 REVIEW REQUEST TEST COMPLETED SUCCESSFULLY!")
+            if amazon_success:
+                self.log("🎉 AMAZON PRODUCT SCRAPER REVIEW TEST COMPLETED SUCCESSFULLY!")
             else:
-                self.log("❌ REVIEW REQUEST TEST FAILED!")
+                self.log("❌ AMAZON PRODUCT SCRAPER REVIEW TEST FAILED!")
             
             self.log("\n" + "=" * 80)
             self.log("ADDITIONAL TESTS: Running other backend tests")
             self.log("=" * 80)
             
-            # Test the new /api/actors-used endpoint as requested in review
+            # Test the new /api/actors-used endpoint as requested in previous review
             self.test_actors_used_endpoint()
             
         except Exception as e:
