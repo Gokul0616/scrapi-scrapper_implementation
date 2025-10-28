@@ -405,28 +405,44 @@ class AmazonProductScraper(BaseScraper):
                         if high_res not in images:
                             images.append(high_res)
             
-            # Extract video if present
+            # Extract video if present - Multiple methods for better coverage
+            
+            # Method 1: Check video block
             video_block = soup.find('div', {'id': 'ivVideoBlock'})
             if video_block:
                 video_tags = video_block.find_all('video')
                 for video in video_tags:
                     video_src = video.get('src', '')
-                    if video_src:
+                    if video_src and video_src not in videos:
                         videos.append(video_src)
             
-            # Also check for video in image carousel
+            # Method 2: Check for video in image carousel scripts
             video_scripts = soup.find_all('script', {'type': 'text/javascript'})
             for script in video_scripts:
                 if script.string and '"videos"' in script.string:
-                    # Try to extract video URL from JSON
                     try:
                         import json
+                        # Try to extract video URL from JSON
                         match = re.search(r'"videos"\s*:\s*(\[.*?\])', script.string)
                         if match:
                             video_data = json.loads(match.group(1))
                             for vid in video_data:
                                 if isinstance(vid, dict) and 'url' in vid:
-                                    videos.append(vid['url'])
+                                    video_url = vid['url']
+                                    if video_url and video_url not in videos:
+                                        videos.append(video_url)
+                    except:
+                        pass
+            
+            # Method 3: Look for image/video data in imageBlock scripts
+            for script in video_scripts:
+                if script.string and 'colorImages' in script.string:
+                    try:
+                        # Look for video URLs in the main image data object
+                        video_url_matches = re.findall(r'"(https://[^"]*\.mp4[^"]*)"', script.string or '')
+                        for video_url in video_url_matches:
+                            if video_url and video_url not in videos:
+                                videos.append(video_url)
                     except:
                         pass
             
