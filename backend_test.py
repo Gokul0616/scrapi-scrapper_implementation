@@ -1071,6 +1071,312 @@ class ScrapiAPITester:
         
         return True
 
+    def test_indeed_jobs_scraper_user_reported_issue(self):
+        """Test Indeed Jobs Scraper with exact parameters reported by user"""
+        self.log("=== TESTING INDEED JOBS SCRAPER - USER REPORTED PARAMETERS ===")
+        
+        # Add indeed_scraper to test results if not exists
+        if "indeed_scraper" not in self.test_results:
+            self.test_results["indeed_scraper"] = {"passed": 0, "failed": 0, "errors": []}
+        
+        # Step 1: Authentication with test credentials as requested
+        self.log("Step 1: Authenticating with test credentials (username: test, password: test)...")
+        
+        # Try login with test credentials first
+        login_data = {
+            "username": "test",
+            "password": "test"
+        }
+        
+        response = self.make_request("POST", "/auth/login", login_data)
+        if response and response.status_code == 200:
+            data = response.json()
+            if "access_token" in data and "user" in data:
+                self.auth_token = data["access_token"]
+                self.user_data = data["user"]
+                self.log("✅ Login successful with test credentials")
+                self.test_results["indeed_scraper"]["passed"] += 1
+            else:
+                self.log("❌ Login response missing required fields")
+                self.test_results["indeed_scraper"]["failed"] += 1
+                self.test_results["indeed_scraper"]["errors"].append("Login response missing access_token or user")
+                return False
+        else:
+            # Try registration if login fails
+            self.log("Login failed, trying registration with test credentials...")
+            register_data = {
+                "username": "test",
+                "email": "test@example.com", 
+                "password": "test",
+                "organization_name": "Test Organization"
+            }
+            
+            response = self.make_request("POST", "/auth/register", register_data)
+            if response and response.status_code == 200:
+                data = response.json()
+                if "access_token" in data and "user" in data:
+                    self.auth_token = data["access_token"]
+                    self.user_data = data["user"]
+                    self.log("✅ Registration successful with test credentials")
+                    self.test_results["indeed_scraper"]["passed"] += 1
+                else:
+                    self.log("❌ Registration response missing required fields")
+                    self.test_results["indeed_scraper"]["failed"] += 1
+                    self.test_results["indeed_scraper"]["errors"].append("Registration response missing access_token or user")
+                    return False
+            else:
+                self.log(f"❌ Authentication failed: {response.status_code if response else 'No response'}")
+                self.test_results["indeed_scraper"]["failed"] += 1
+                self.test_results["indeed_scraper"]["errors"].append("Both registration and login failed")
+                return False
+        
+        # Step 2: Find Indeed Jobs Scraper actor
+        self.log("Step 2: Finding Indeed Jobs Scraper actor...")
+        response = self.make_request("GET", "/actors")
+        if response and response.status_code == 200:
+            actors = response.json()
+            indeed_actor = None
+            for actor in actors:
+                if actor.get("name") == "Indeed Jobs Scraper":
+                    indeed_actor = actor
+                    indeed_actor_id = actor["id"]
+                    break
+            
+            if indeed_actor:
+                self.log(f"✅ Found Indeed Jobs Scraper actor: {indeed_actor_id}")
+                self.log(f"   Icon: {indeed_actor.get('icon', 'N/A')}")
+                self.log(f"   Category: {indeed_actor.get('category', 'N/A')}")
+                self.log(f"   Description: {indeed_actor.get('description', 'N/A')}")
+                self.test_results["indeed_scraper"]["passed"] += 1
+            else:
+                self.log("❌ Indeed Jobs Scraper actor not found")
+                self.test_results["indeed_scraper"]["failed"] += 1
+                self.test_results["indeed_scraper"]["errors"].append("Indeed Jobs Scraper actor not found")
+                return False
+        else:
+            self.log(f"❌ Failed to get actors: {response.status_code if response else 'No response'}")
+            self.test_results["indeed_scraper"]["failed"] += 1
+            self.test_results["indeed_scraper"]["errors"].append("Failed to get actors")
+            return False
+        
+        # Step 3: Create scraping run with exact user-reported parameters
+        self.log("Step 3: Creating scraping run with user-reported parameters...")
+        self.log("   Keyword: 'python developer'")
+        self.log("   Location: 'tamilnadu'")
+        self.log("   Max pages: 5")
+        
+        run_data = {
+            "actor_id": indeed_actor_id,
+            "input_data": {
+                "keyword": "python developer",
+                "location": "tamilnadu",
+                "max_pages": 5
+            }
+        }
+        
+        self.log(f"REQUEST JSON: {json.dumps(run_data, indent=2)}")
+        
+        response = self.make_request("POST", "/runs", run_data)
+        
+        self.log(f"RESPONSE STATUS: {response.status_code if response else 'No response'}")
+        if response:
+            try:
+                response_json = response.json()
+                self.log(f"RESPONSE JSON: {json.dumps(response_json, indent=2)}")
+            except:
+                self.log(f"RESPONSE TEXT: {response.text}")
+        
+        if response and response.status_code == 200:
+            run = response.json()
+            if "id" in run:
+                run_id = run["id"]
+                self.log(f"✅ Indeed scraping run created successfully: {run_id}")
+                self.log(f"✅ Initial status: {run.get('status', 'unknown')}")
+                self.test_results["indeed_scraper"]["passed"] += 1
+                
+                # Step 4: Monitor run status and collect debugging information
+                self.log("Step 4: Monitoring run status and collecting debugging information...")
+                max_wait_time = 300  # 5 minutes max wait
+                check_interval = 15  # 15 seconds
+                elapsed_time = 0
+                
+                while elapsed_time < max_wait_time:
+                    response = self.make_request("GET", f"/runs/{run_id}")
+                    if response and response.status_code == 200:
+                        run_status = response.json()
+                        status = run_status.get("status", "unknown")
+                        error_message = run_status.get("error_message")
+                        logs = run_status.get("logs", [])
+                        
+                        # Show latest progress logs for debugging
+                        if logs:
+                            latest_logs = logs[-3:] if len(logs) >= 3 else logs
+                            for log_entry in latest_logs:
+                                self.log(f"Progress: {log_entry}")
+                        
+                        self.log(f"Run status: {status} (elapsed: {elapsed_time}s)")
+                        
+                        if error_message:
+                            self.log(f"Error message: {error_message}")
+                        
+                        if status == "succeeded":
+                            results_count = run_status.get("results_count", 0)
+                            self.log(f"✅ Indeed scraping completed successfully!")
+                            self.log(f"✅ Results found: {results_count} jobs")
+                            self.test_results["indeed_scraper"]["passed"] += 1
+                            
+                            # Check for domain selection message in logs
+                            domain_logs = [log for log in logs if "indeed.com" in log.lower() or "domain" in log.lower()]
+                            if domain_logs:
+                                self.log("✅ Domain selection logs found:")
+                                for domain_log in domain_logs:
+                                    self.log(f"   {domain_log}")
+                                self.test_results["indeed_scraper"]["passed"] += 1
+                            
+                            # Check for CSS selector success messages
+                            selector_logs = [log for log in logs if "selector" in log.lower() or "found" in log.lower()]
+                            if selector_logs:
+                                self.log("✅ CSS selector logs found:")
+                                for selector_log in selector_logs[-3:]:  # Show last 3
+                                    self.log(f"   {selector_log}")
+                                self.test_results["indeed_scraper"]["passed"] += 1
+                            
+                            # Step 5: Verify dataset contains actual job listings
+                            if results_count > 0:
+                                self.log("Step 5: Verifying dataset contains actual job listings...")
+                                dataset_response = self.make_request("GET", f"/datasets/{run_id}/items")
+                                if dataset_response and dataset_response.status_code == 200:
+                                    items = dataset_response.json()
+                                    self.log(f"✅ Retrieved {len(items)} items from dataset")
+                                    self.test_results["indeed_scraper"]["passed"] += 1
+                                    
+                                    if isinstance(items, list) and len(items) > 0:
+                                        # Verify job data structure
+                                        sample_job = items[0]
+                                        if "data" in sample_job:
+                                            job_data = sample_job["data"]
+                                            
+                                            # Check required fields
+                                            required_fields = ["jobTitle", "company", "location", "jobUrl", "description"]
+                                            found_fields = []
+                                            missing_fields = []
+                                            
+                                            for field in required_fields:
+                                                if field in job_data and job_data[field]:
+                                                    found_fields.append(field)
+                                                else:
+                                                    missing_fields.append(field)
+                                            
+                                            self.log(f"✅ Sample job data verification:")
+                                            self.log(f"   Job Title: {job_data.get('jobTitle', 'N/A')}")
+                                            self.log(f"   Company: {job_data.get('company', 'N/A')}")
+                                            self.log(f"   Location: {job_data.get('location', 'N/A')}")
+                                            self.log(f"   Salary: {job_data.get('salary', 'N/A')}")
+                                            self.log(f"   Job URL: {job_data.get('jobUrl', 'N/A')}")
+                                            
+                                            if len(found_fields) >= 4:  # At least 4 out of 5 required fields
+                                                self.log(f"✅ Job data structure valid ({len(found_fields)}/5 required fields)")
+                                                self.test_results["indeed_scraper"]["passed"] += 1
+                                            else:
+                                                self.log(f"❌ Job data structure incomplete ({len(found_fields)}/5 required fields)")
+                                                self.log(f"   Missing fields: {missing_fields}")
+                                                self.test_results["indeed_scraper"]["failed"] += 1
+                                                self.test_results["indeed_scraper"]["errors"].append(f"Incomplete job data: missing {missing_fields}")
+                                            
+                                            # Verify it's actually python developer jobs
+                                            job_title = job_data.get('jobTitle', '').lower()
+                                            job_desc = job_data.get('description', '').lower()
+                                            
+                                            python_keywords = ['python', 'developer', 'software', 'programming']
+                                            found_keywords = [kw for kw in python_keywords if kw in job_title or kw in job_desc]
+                                            
+                                            if found_keywords:
+                                                self.log(f"✅ Job relevance confirmed - found keywords: {found_keywords}")
+                                                self.test_results["indeed_scraper"]["passed"] += 1
+                                            else:
+                                                self.log("⚠️ Job relevance unclear - no python/developer keywords found")
+                                        else:
+                                            self.log("❌ Job item missing data field")
+                                            self.test_results["indeed_scraper"]["failed"] += 1
+                                            self.test_results["indeed_scraper"]["errors"].append("Job item missing data field")
+                                    else:
+                                        self.log("❌ No job items found in dataset")
+                                        self.test_results["indeed_scraper"]["failed"] += 1
+                                        self.test_results["indeed_scraper"]["errors"].append("No job items in dataset")
+                                else:
+                                    self.log("❌ Failed to retrieve dataset items")
+                                    self.test_results["indeed_scraper"]["failed"] += 1
+                                    self.test_results["indeed_scraper"]["errors"].append("Failed to retrieve dataset")
+                            else:
+                                self.log("⚠️ No results found - this could indicate:")
+                                self.log("   1. No python developer jobs in Tamil Nadu")
+                                self.log("   2. Anti-bot detection by Indeed")
+                                self.log("   3. CSS selector issues")
+                                self.log("   4. Network/connectivity problems")
+                            break
+                            
+                        elif status == "failed":
+                            self.log(f"❌ Indeed scraping run failed: {error_message or 'Unknown error'}")
+                            self.test_results["indeed_scraper"]["failed"] += 1
+                            
+                            # Analyze failure reason for debugging
+                            if error_message:
+                                error_lower = error_message.lower()
+                                if "anti-bot" in error_lower or "captcha" in error_lower:
+                                    self.log("🔍 FAILURE REASON: Anti-bot detection or CAPTCHA")
+                                elif "selector" in error_lower or "html" in error_lower:
+                                    self.log("🔍 FAILURE REASON: CSS selector or HTML structure issue")
+                                elif "timeout" in error_lower or "connection" in error_lower:
+                                    self.log("🔍 FAILURE REASON: Network timeout or connection issue")
+                                elif "domain" in error_lower:
+                                    self.log("🔍 FAILURE REASON: Domain selection or URL issue")
+                                else:
+                                    self.log(f"🔍 FAILURE REASON: Other - {error_message}")
+                            
+                            self.test_results["indeed_scraper"]["errors"].append(f"Run failed: {error_message}")
+                            break
+                            
+                        elif status in ["queued", "running"]:
+                            time.sleep(check_interval)
+                            elapsed_time += check_interval
+                        else:
+                            self.log(f"❌ Unknown status: {status}")
+                            self.test_results["indeed_scraper"]["failed"] += 1
+                            self.test_results["indeed_scraper"]["errors"].append(f"Unknown status: {status}")
+                            break
+                    else:
+                        self.log(f"❌ Failed to get run status: {response.status_code if response else 'No response'}")
+                        self.test_results["indeed_scraper"]["failed"] += 1
+                        self.test_results["indeed_scraper"]["errors"].append("Failed to get run status")
+                        break
+                
+                if elapsed_time >= max_wait_time:
+                    self.log("❌ Run did not complete within timeout")
+                    self.test_results["indeed_scraper"]["failed"] += 1
+                    self.test_results["indeed_scraper"]["errors"].append("Run timeout")
+                    
+            else:
+                self.log("❌ Run creation response missing ID")
+                self.test_results["indeed_scraper"]["failed"] += 1
+                self.test_results["indeed_scraper"]["errors"].append("Run creation response missing ID")
+        else:
+            self.log(f"❌ Failed to create Indeed scraping run: {response.status_code if response else 'No response'}")
+            if response:
+                try:
+                    error_details = response.json()
+                    self.log(f"Error details: {error_details}")
+                    self.test_results["indeed_scraper"]["errors"].append(f"Run creation failed: {error_details}")
+                except:
+                    self.log(f"Error text: {response.text}")
+                    self.test_results["indeed_scraper"]["errors"].append(f"Run creation failed: {response.text}")
+            else:
+                self.test_results["indeed_scraper"]["errors"].append("No response from server")
+            
+            self.test_results["indeed_scraper"]["failed"] += 1
+            return False
+        
+        return True
+
     def test_amazon_scraper_comprehensive(self):
         """Test Amazon Product Scraper backend functionality comprehensively as requested in review"""
         self.log("=== COMPREHENSIVE AMAZON PRODUCT SCRAPER TESTING ===")
