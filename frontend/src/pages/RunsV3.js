@@ -297,22 +297,38 @@ const RunsV3 = () => {
   };
 
   const formatTaskDescription = (run) => {
-    // Show search terms (keywords) + location + max results
-    const searchTerms = run.input_data?.search_terms?.join(', ') || 'N/A';
-    const location = run.input_data?.location || '';
-    const maxResults = run.input_data?.max_results || '';
+    // Detect scraper type and format accordingly
+    const actorName = run.actor_name || '';
+    const isAmazonScraper = actorName.toLowerCase().includes('amazon');
     
-    let taskDescription = searchTerms;
-    
-    if (location) {
-      taskDescription += ` in ${location}`;
+    if (isAmazonScraper) {
+      // Amazon Product Scraper: Show product keywords
+      const keywords = run.input_data?.search_keywords?.join(', ') || 'N/A';
+      const maxResults = run.input_data?.max_results || '';
+      
+      let taskDescription = `Products: ${keywords}`;
+      if (maxResults) {
+        taskDescription += ` (max ${maxResults})`;
+      }
+      return taskDescription;
+    } else {
+      // Google Maps Scraper: Show search terms + location
+      const searchTerms = run.input_data?.search_terms?.join(', ') || 'N/A';
+      const location = run.input_data?.location || '';
+      const maxResults = run.input_data?.max_results || '';
+      
+      let taskDescription = searchTerms;
+      
+      if (location) {
+        taskDescription += ` in ${location}`;
+      }
+      
+      if (maxResults) {
+        taskDescription += ` (max ${maxResults})`;
+      }
+      
+      return taskDescription;
     }
-    
-    if (maxResults) {
-      taskDescription += ` (max ${maxResults})`;
-    }
-    
-    return taskDescription;
   };
 
   const formatTaskWithWrapping = (text) => {
