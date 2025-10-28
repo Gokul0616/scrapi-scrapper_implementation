@@ -1584,32 +1584,37 @@ const DatasetV2 = () => {
                     >
                       {media.type === 'video' ? (
                         <div className="w-full h-full relative">
-                          {media.url.includes('.m3u8') ? (
-                            // HLS video - show gradient background with play icon
-                            <div className="w-full h-full bg-gradient-to-br from-red-900 via-red-800 to-red-900 flex items-center justify-center">
+                          {/* Video thumbnail with first frame */}
+                          <video
+                            className="w-full h-full object-cover"
+                            preload="metadata"
+                            muted
+                            playsInline
+                            onLoadedMetadata={(e) => {
+                              // Seek to 1 second to show first frame
+                              e.target.currentTime = 1;
+                            }}
+                          >
+                            {media.url.includes('.m3u8') ? (
+                              // For HLS, we can't show thumbnail easily, use poster or gradient
+                              <></>
+                            ) : (
+                              <source src={`${media.url}#t=1`} type="video/mp4" />
+                            )}
+                          </video>
+                          {/* Play icon overlay - only for videos */}
+                          <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center pointer-events-none">
+                            <Play className="w-6 h-6 text-white drop-shadow-lg" />
+                          </div>
+                          {/* HLS gradient fallback if video thumbnail fails */}
+                          {media.url.includes('.m3u8') && (
+                            <div className="absolute inset-0 bg-gradient-to-br from-red-900 via-red-800 to-red-900 flex items-center justify-center -z-10">
                               <Play className="w-7 h-7 text-white drop-shadow-lg" />
                             </div>
-                          ) : (
-                            // Regular video - try to show thumbnail
-                            <>
-                              <video
-                                className="w-full h-full object-cover"
-                                preload="metadata"
-                                muted
-                                playsInline
-                                onLoadedData={(e) => {
-                                  e.target.currentTime = 1;
-                                }}
-                              >
-                                <source src={`${media.url}#t=1`} type="video/mp4" />
-                              </video>
-                              <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center pointer-events-none">
-                                <Play className="w-6 h-6 text-white drop-shadow-lg" />
-                              </div>
-                            </>
                           )}
                         </div>
                       ) : (
+                        // Regular image - no play icon
                         <img
                           src={media.url}
                           alt={`${index + 1}`}
