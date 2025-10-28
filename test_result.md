@@ -537,7 +537,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Google Maps Scraper V4 Enhanced (SUPER FAST)"
+    - "Amazon Product Scraper - Complete Implementation"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
