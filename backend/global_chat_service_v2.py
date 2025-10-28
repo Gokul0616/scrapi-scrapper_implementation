@@ -191,30 +191,35 @@ Then FUNCTION_CALL: {"name": "view_run_details", "arguments": {"run_id": "<first
             },
             {
                 "name": "create_scraping_run",
-                "description": "Create and start a new scraping run. Use this when user wants to scrape data.",
+                "description": "Create and start a new scraping run. Supports Google Maps and Amazon scrapers.",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "actor_name": {
                             "type": "string",
-                            "description": "Name of the scraper (e.g., 'Google Maps Scraper')"
+                            "description": "Name of scraper: 'Google Maps' for businesses OR 'Amazon' for products"
                         },
                         "search_terms": {
                             "type": "array",
                             "items": {"type": "string"},
-                            "description": "Keywords to search for (e.g., ['Hotels', 'Restaurants'])"
+                            "description": "For Google Maps: Keywords to search"
+                        },
+                        "search_keywords": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "For Amazon: Product keywords"
                         },
                         "location": {
                             "type": "string",
-                            "description": "Location to search in (e.g., 'New York, NY')"
+                            "description": "For Google Maps: Location (not for Amazon)"
                         },
                         "max_results": {
                             "type": "integer",
-                            "description": "Maximum number of results to scrape",
+                            "description": "Maximum results to scrape",
                             "default": 20
                         }
                     },
-                    "required": ["actor_name", "search_terms"]
+                    "required": ["actor_name"]
                 }
             },
             {
