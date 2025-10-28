@@ -1519,7 +1519,7 @@ const DatasetV2 = () => {
                     console.log('[VIDEO PLAYER] Loading video:', videoUrl, 'HLS:', isHLS);
                     
                     return (
-                      <HLSVideoPlayer 
+                      <CustomVideoPlayer 
                         videoUrl={videoUrl} 
                         isHLS={isHLS}
                       />
