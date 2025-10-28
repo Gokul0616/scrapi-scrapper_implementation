@@ -1,7 +1,8 @@
 import asyncio
 import logging
 import re
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Callable
+from base_scraper import BaseScraper
 from scraper_engine import ScraperEngine
 from playwright.async_api import Page, TimeoutError as PlaywrightTimeoutError
 from bs4 import BeautifulSoup
@@ -9,7 +10,7 @@ import aiohttp
 
 logger = logging.getLogger(__name__)
 
-class GoogleMapsScraperV3:
+class GoogleMapsScraperV3(BaseScraper):
     """
     Enhanced Google Maps scraper with Apify-like performance:
     - Parallel detail extraction
