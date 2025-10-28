@@ -221,7 +221,7 @@ class IndeedJobsScraper(BaseScraper):
         page = await context.new_page()
         
         # Apply playwright-stealth to make automation undetectable
-        await stealth_async(page)
+        await stealth(page)
         await self._log_progress("🥷 Applied stealth mode to avoid detection", progress_callback)
         
         # Set realistic user agent and headers to avoid detection
