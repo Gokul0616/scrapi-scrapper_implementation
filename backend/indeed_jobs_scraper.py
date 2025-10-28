@@ -265,22 +265,39 @@ class IndeedJobsScraper(BaseScraper):
                     
                     if "just a moment" in page_title.lower() or "challenge" in page_title.lower():
                         await self._log_progress(f"🔐 Cloudflare challenge detected, waiting to auto-solve...", progress_callback)
-                        logger.info("⏳ Waiting 20 seconds for Cloudflare challenge to auto-solve...")
+                        logger.info("⏳ Waiting for Cloudflare challenge to auto-solve...")
                         
-                        # Wait for Cloudflare to auto-solve (can take 10-20 seconds)
-                        for wait_iteration in range(4):  # Wait up to 40 seconds total
+                        # Wait for Cloudflare to auto-solve (can take 10-30 seconds)
+                        max_wait_iterations = 6  # Wait up to 60 seconds total
+                        for wait_iteration in range(max_wait_iterations):
                             await asyncio.sleep(10)
-                            page_title = await page.title()
-                            logger.info(f"🔄 Check {wait_iteration + 1}/4: Page title = {page_title}")
+                            
+                            # Check page title again
+                            try:
+                                page_title = await page.title()
+                                logger.info(f"🔄 Check {wait_iteration + 1}/{max_wait_iterations}: Page title = {page_title}")
+                            except Exception as e:
+                                logger.warning(f"Error checking page title: {e}")
+                                continue
                             
                             if "just a moment" not in page_title.lower() and "challenge" not in page_title.lower():
-                                await self._log_progress(f"✅ Cloudflare challenge passed!", progress_callback)
-                                logger.info("✅ Successfully bypassed Cloudflare challenge")
+                                await self._log_progress(f"✅ Cloudflare challenge passed after {(wait_iteration + 1) * 10}s!", progress_callback)
+                                logger.info(f"✅ Successfully bypassed Cloudflare challenge in {(wait_iteration + 1) * 10} seconds")
                                 break
                         else:
-                            # Still on challenge page after 40 seconds
-                            await self._log_progress(f"⚠️ Cloudflare challenge not auto-solved, trying manual wait...", progress_callback)
-                            logger.warning("⚠️ Cloudflare challenge still present after 40s")
+                            # Still on challenge page after max wait
+                            await self._log_progress(f"⚠️ Cloudflare challenge not resolved after {max_wait_iterations * 10}s", progress_callback)
+                            logger.warning(f"⚠️ Cloudflare challenge still present after {max_wait_iterations * 10}s")
+                            
+                            # Save debug HTML
+                            try:
+                                debug_content = await page.content()
+                                debug_file = f"/tmp/indeed_cloudflare_stuck.html"
+                                with open(debug_file, 'w', encoding='utf-8') as f:
+                                    f.write(debug_content)
+                                logger.info(f"💾 Saved stuck Cloudflare page to {debug_file}")
+                            except Exception as e:
+                                logger.error(f"Failed to save debug HTML: {e}")
                     
                     # Random delay to appear more human (2-4 seconds)
                     import random
