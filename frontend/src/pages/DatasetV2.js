@@ -1129,254 +1129,157 @@ const DatasetV2 = () => {
         </>
       )}
 
-      {/* Amazon Product Image Modal */}
+      {/* Amazon Product Image Modal - Compact Style like Social Links */}
       {showImageModal && selectedProduct && (
-        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
-          <div className="relative w-full h-full max-w-7xl max-h-screen p-4 md:p-8">
-            {/* Close Button */}
-            <button
-              onClick={closeImageModal}
-              className="absolute top-4 right-4 z-10 bg-white hover:bg-gray-100 text-gray-800 rounded-full p-2 shadow-lg transition-all"
-            >
-              <X className="w-6 h-6" />
-            </button>
-
-            {/* Modal Content */}
-            <div className="bg-white rounded-lg shadow-2xl h-full flex flex-col overflow-hidden">
-              {/* Product Title Header */}
-              <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
+        <>
+          {/* Transparent overlay to close on click outside */}
+          <div 
+            className="fixed inset-0 z-40" 
+            onClick={closeImageModal}
+          />
+          
+          {/* Compact image popup */}
+          <div 
+            className="fixed z-50 bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden"
+            style={{
+              left: '50%',
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '500px',
+              maxWidth: '90vw'
+            }}
+          >
+            {/* Header with product name */}
+            <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-gray-900 text-sm truncate">
                   {selectedProduct.title}
-                </h3>
-                <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+                </div>
+                <div className="text-xs text-gray-500 mt-0.5">
+                  {currentImageIndex + 1} of {selectedProduct.images?.length || 0} images
+                </div>
+              </div>
+              <button 
+                onClick={closeImageModal}
+                className="ml-2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            {/* Main Image Display with Navigation */}
+            <div className="relative bg-gray-50">
+              <div className="aspect-square flex items-center justify-center p-4">
+                {selectedProduct.images && selectedProduct.images.length > 0 ? (
+                  <img
+                    src={selectedProduct.images[currentImageIndex]}
+                    alt={`${selectedProduct.title} - Image ${currentImageIndex + 1}`}
+                    className="max-w-full max-h-full object-contain"
+                    onError={(e) => {
+                      e.target.src = 'https://via.placeholder.com/400?text=Image+Not+Available';
+                    }}
+                  />
+                ) : (
+                  <div className="text-gray-400 text-center">
+                    <div className="text-4xl mb-2">📦</div>
+                    <p className="text-sm">No image available</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Previous Button */}
+              {selectedProduct.images && selectedProduct.images.length > 1 && (
+                <button
+                  onClick={previousImage}
+                  className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white hover:bg-gray-100 text-gray-800 rounded-full p-2 shadow-lg transition-all"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+              )}
+
+              {/* Next Button */}
+              {selectedProduct.images && selectedProduct.images.length > 1 && (
+                <button
+                  onClick={nextImage}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white hover:bg-gray-100 text-gray-800 rounded-full p-2 shadow-lg transition-all"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              )}
+
+              {/* Video Indicator */}
+              {selectedProduct.videos && selectedProduct.videos.length > 0 && (
+                <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded text-xs flex items-center gap-1">
+                  <Play className="w-3 h-3" />
+                  Video Available
+                </div>
+              )}
+            </div>
+            
+            {/* Thumbnail Gallery */}
+            {selectedProduct.images && selectedProduct.images.length > 1 && (
+              <div className="px-4 py-3 border-t border-gray-200 bg-white">
+                <div className="flex gap-2 overflow-x-auto">
+                  {selectedProduct.images.map((img, index) => (
+                    <button
+                      key={index}
+                      onClick={() => selectThumbnail(index)}
+                      className={`flex-shrink-0 w-16 h-16 rounded overflow-hidden border-2 transition-all ${
+                        index === currentImageIndex
+                          ? 'border-blue-500 ring-2 ring-blue-200'
+                          : 'border-gray-200 hover:border-gray-400'
+                      }`}
+                    >
+                      <img
+                        src={img}
+                        alt={`Thumb ${index + 1}`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.src = 'https://via.placeholder.com/64?text=N/A';
+                        }}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Product Info Footer */}
+            <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-3">
                   {selectedProduct.brand && (
-                    <span>Brand: <strong>{selectedProduct.brand}</strong></span>
+                    <span className="text-gray-600">
+                      <strong className="text-gray-900">{selectedProduct.brand}</strong>
+                    </span>
                   )}
                   {selectedProduct.price && (
                     <span className="text-green-600 font-semibold">
                       ${selectedProduct.price.toFixed(2)}
                     </span>
                   )}
-                </div>
-              </div>
-
-              {/* Main Content Area */}
-              <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-                {/* Main Image Display */}
-                <div className="flex-1 flex items-center justify-center bg-gray-50 p-8 relative">
-                  {selectedProduct.images && selectedProduct.images.length > 0 ? (
-                    <>
-                      <img
-                        src={selectedProduct.images[currentImageIndex]}
-                        alt={`${selectedProduct.title} - Image ${currentImageIndex + 1}`}
-                        className="max-w-full max-h-full object-contain"
-                        onError={(e) => {
-                          e.target.src = 'https://via.placeholder.com/400?text=Image+Not+Available';
-                        }}
-                      />
-
-                      {/* Previous Button */}
-                      {selectedProduct.images.length > 1 && (
-                        <button
-                          onClick={previousImage}
-                          className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white hover:bg-gray-100 text-gray-800 rounded-full p-3 shadow-lg transition-all"
-                        >
-                          <ChevronLeft className="w-6 h-6" />
-                        </button>
-                      )}
-
-                      {/* Next Button */}
-                      {selectedProduct.images.length > 1 && (
-                        <button
-                          onClick={nextImage}
-                          className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white hover:bg-gray-100 text-gray-800 rounded-full p-3 shadow-lg transition-all"
-                        >
-                          <ChevronRight className="w-6 h-6" />
-                        </button>
-                      )}
-
-                      {/* Image Counter */}
-                      <div className="absolute bottom-4 right-4 bg-black bg-opacity-60 text-white px-3 py-1 rounded-full text-sm">
-                        {currentImageIndex + 1} / {selectedProduct.images.length}
-                      </div>
-                    </>
-                  ) : (
-                    <div className="text-gray-400 text-center">
-                      <div className="text-6xl mb-4">📦</div>
-                      <p>No images available</p>
-                    </div>
+                  {selectedProduct.rating && (
+                    <span className="flex items-center gap-1">
+                      <span className="text-yellow-500">⭐</span>
+                      <span className="font-medium">{selectedProduct.rating}</span>
+                    </span>
                   )}
                 </div>
-
-                {/* Right Sidebar - Product Details */}
-                <div className="w-full md:w-80 border-l border-gray-200 overflow-y-auto bg-white">
-                  {/* Thumbnail Gallery */}
-                  {selectedProduct.images && selectedProduct.images.length > 1 && (
-                    <div className="p-4 border-b border-gray-200">
-                      <h4 className="text-sm font-semibold text-gray-700 mb-3">All Images</h4>
-                      <div className="grid grid-cols-4 gap-2">
-                        {selectedProduct.images.map((img, index) => (
-                          <button
-                            key={index}
-                            onClick={() => selectThumbnail(index)}
-                            className={`relative aspect-square rounded overflow-hidden border-2 transition-all ${
-                              index === currentImageIndex
-                                ? 'border-blue-500 ring-2 ring-blue-200'
-                                : 'border-gray-200 hover:border-gray-400'
-                            }`}
-                          >
-                            <img
-                              src={img}
-                              alt={`Thumbnail ${index + 1}`}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                e.target.src = 'https://via.placeholder.com/80?text=N/A';
-                              }}
-                            />
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Video Section */}
-                  {selectedProduct.videos && selectedProduct.videos.length > 0 && (
-                    <div className="p-4 border-b border-gray-200">
-                      <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                        <Play className="w-4 h-4 text-red-600" />
-                        Product Videos
-                      </h4>
-                      <div className="space-y-2">
-                        {selectedProduct.videos.map((video, index) => (
-                          <div key={index} className="relative aspect-video bg-black rounded overflow-hidden">
-                            <video
-                              src={video}
-                              controls
-                              className="w-full h-full"
-                            >
-                              Your browser does not support the video tag.
-                            </video>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Product Details */}
-                  <div className="p-4 space-y-4">
-                    {/* ASIN */}
-                    {selectedProduct.asin && (
-                      <div>
-                        <div className="text-xs text-gray-500 uppercase mb-1">ASIN</div>
-                        <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
-                          {selectedProduct.asin}
-                        </code>
-                      </div>
-                    )}
-
-                    {/* Rating & Reviews */}
-                    {selectedProduct.rating && (
-                      <div>
-                        <div className="text-xs text-gray-500 uppercase mb-1">Rating</div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-yellow-500">⭐</span>
-                          <span className="font-semibold">{selectedProduct.rating}</span>
-                          {selectedProduct.reviewCount && (
-                            <span className="text-gray-500 text-sm">
-                              ({selectedProduct.reviewCount.toLocaleString()} reviews)
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Availability */}
-                    {selectedProduct.availability && (
-                      <div>
-                        <div className="text-xs text-gray-500 uppercase mb-1">Availability</div>
-                        <div className="text-sm text-gray-900">{selectedProduct.availability}</div>
-                      </div>
-                    )}
-
-                    {/* Prime Badge */}
-                    {selectedProduct.prime && (
-                      <div>
-                        <span className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded">
-                          Amazon Prime ✓
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Color & Size */}
-                    {(selectedProduct.color || selectedProduct.size) && (
-                      <div className="flex gap-4">
-                        {selectedProduct.color && (
-                          <div>
-                            <div className="text-xs text-gray-500 uppercase mb-1">Color</div>
-                            <div className="text-sm text-gray-900">{selectedProduct.color}</div>
-                          </div>
-                        )}
-                        {selectedProduct.size && (
-                          <div>
-                            <div className="text-xs text-gray-500 uppercase mb-1">Size</div>
-                            <div className="text-sm text-gray-900">{selectedProduct.size}</div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Dimensions */}
-                    {selectedProduct.dimensions && Object.keys(selectedProduct.dimensions).length > 0 && (
-                      <div>
-                        <div className="text-xs text-gray-500 uppercase mb-1">Dimensions</div>
-                        <div className="text-sm text-gray-900 space-y-1">
-                          {selectedProduct.dimensions.size && (
-                            <div>Size: {selectedProduct.dimensions.size}</div>
-                          )}
-                          {selectedProduct.dimensions.weight && (
-                            <div>Weight: {selectedProduct.dimensions.weight}</div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Category */}
-                    {selectedProduct.category && (
-                      <div>
-                        <div className="text-xs text-gray-500 uppercase mb-1">Category</div>
-                        <div className="text-sm text-gray-900">{selectedProduct.category}</div>
-                      </div>
-                    )}
-
-                    {/* Features */}
-                    {selectedProduct.features && selectedProduct.features.length > 0 && (
-                      <div>
-                        <div className="text-xs text-gray-500 uppercase mb-1">Key Features</div>
-                        <ul className="text-sm text-gray-900 space-y-1 list-disc list-inside">
-                          {selectedProduct.features.slice(0, 5).map((feature, index) => (
-                            <li key={index} className="line-clamp-2">{feature}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {/* View on Amazon Button */}
-                    {selectedProduct.url && (
-                      <a
-                        href={selectedProduct.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block w-full bg-blue-600 hover:bg-blue-700 text-white text-center py-2 px-4 rounded transition-colors"
-                      >
-                        View on Amazon
-                      </a>
-                    )}
-                  </div>
-                </div>
+                {selectedProduct.url && (
+                  <a
+                    href={selectedProduct.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-700 flex items-center gap-1 font-medium"
+                  >
+                    View on Amazon
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* Column Settings Modal */}
