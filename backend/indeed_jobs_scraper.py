@@ -240,6 +240,25 @@ class IndeedJobsScraper(BaseScraper):
         # Set viewport to realistic desktop size
         await page.set_viewport_size({"width": 1920, "height": 1080})
         
+        # Add stealth JavaScript to avoid detection
+        await page.add_init_script("""
+            // Override navigator properties to avoid detection
+            Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+            Object.defineProperty(navigator, 'plugins', {get: () => [1, 2, 3, 4, 5]});
+            Object.defineProperty(navigator, 'languages', {get: () => ['en-US', 'en']});
+            
+            // Override chrome runtime
+            window.chrome = {runtime: {}};
+            
+            // Override permissions
+            const originalQuery = window.navigator.permissions.query;
+            window.navigator.permissions.query = (parameters) => (
+                parameters.name === 'notifications' ?
+                    Promise.resolve({state: Notification.permission}) :
+                    originalQuery(parameters)
+            );
+        """)
+        
         consecutive_failures = 0  # Track consecutive page failures
         max_consecutive_failures = 2  # Stop after 2 consecutive failures
         
