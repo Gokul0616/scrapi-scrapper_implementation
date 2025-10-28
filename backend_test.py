@@ -3737,16 +3737,26 @@ class ScrapiAPITester:
         self.log(f"Backend URL: {self.base_url}")
         
         try:
-            # Run the specific review request test first - Amazon Product Scraper
+            # Run the specific review request test first - Amazon Product Scraper with 'trimmer' keyword
             self.log("=" * 80)
-            self.log("PRIORITY: Running Review Request Test - Amazon Product Scraper")
+            self.log("PRIORITY: Running Review Request Test - Amazon Product Scraper 'trimmer' Issue")
+            self.log("=" * 80)
+            trimmer_success = self.test_amazon_scraper_trimmer_issue()
+            
+            if trimmer_success:
+                self.log("🎉 AMAZON PRODUCT SCRAPER 'TRIMMER' TEST COMPLETED SUCCESSFULLY!")
+            else:
+                self.log("❌ AMAZON PRODUCT SCRAPER 'TRIMMER' TEST FAILED!")
+            
+            self.log("\n" + "=" * 80)
+            self.log("ADDITIONAL TESTS: Running comprehensive Amazon scraper tests")
             self.log("=" * 80)
             amazon_success = self.test_amazon_scraper_comprehensive()
             
             if amazon_success:
-                self.log("🎉 AMAZON PRODUCT SCRAPER REVIEW TEST COMPLETED SUCCESSFULLY!")
+                self.log("🎉 AMAZON PRODUCT SCRAPER COMPREHENSIVE TEST COMPLETED SUCCESSFULLY!")
             else:
-                self.log("❌ AMAZON PRODUCT SCRAPER REVIEW TEST FAILED!")
+                self.log("❌ AMAZON PRODUCT SCRAPER COMPREHENSIVE TEST FAILED!")
             
             self.log("\n" + "=" * 80)
             self.log("ADDITIONAL TESTS: Running other backend tests")
