@@ -888,6 +888,396 @@ class ScrapiAPITester:
         
         self.log("Data isolation testing completed")
 
+    def test_amazon_scraper_comprehensive(self):
+        """Test Amazon Product Scraper backend functionality comprehensively as requested in review"""
+        self.log("=== COMPREHENSIVE AMAZON PRODUCT SCRAPER TESTING ===")
+        
+        # Add amazon_scraper to test results if not exists
+        if "amazon_scraper" not in self.test_results:
+            self.test_results["amazon_scraper"] = {"passed": 0, "failed": 0, "errors": []}
+        
+        # Step 1: Authentication
+        self.log("Step 1: Authenticating...")
+        if not self.test_auth_flow():
+            self.log("❌ Authentication failed - cannot proceed with Amazon scraper test")
+            self.test_results["amazon_scraper"]["failed"] += 1
+            self.test_results["amazon_scraper"]["errors"].append("Authentication failed")
+            return False
+        
+        # Step 2: Actor Verification
+        self.log("Step 2: Verifying Amazon Product Scraper actor exists in database...")
+        response = self.make_request("GET", "/actors")
+        if response and response.status_code == 200:
+            actors = response.json()
+            amazon_actor = None
+            for actor in actors:
+                if actor.get("name") == "Amazon Product Scraper":
+                    amazon_actor = actor
+                    self.amazon_actor_id = actor["id"]
+                    break
+            
+            if amazon_actor:
+                self.log("✅ Amazon Product Scraper actor found in database")
+                self.test_results["amazon_scraper"]["passed"] += 1
+                
+                # Verify actor properties
+                expected_properties = {
+                    "icon": "📦",
+                    "category": "E-commerce",
+                    "tags": ["amazon", "ecommerce", "products", "prices", "reviews", "shopping"]
+                }
+                
+                for prop, expected_value in expected_properties.items():
+                    actual_value = amazon_actor.get(prop)
+                    if actual_value == expected_value:
+                        self.log(f"✅ Actor {prop}: {actual_value}")
+                        self.test_results["amazon_scraper"]["passed"] += 1
+                    else:
+                        self.log(f"❌ Actor {prop} mismatch - expected: {expected_value}, got: {actual_value}")
+                        self.test_results["amazon_scraper"]["failed"] += 1
+                        self.test_results["amazon_scraper"]["errors"].append(f"Actor {prop} mismatch")
+                
+                # Verify input schema
+                input_schema = amazon_actor.get("input_schema", {})
+                required_fields = ["search_keywords", "max_results", "extract_reviews", "min_rating", "max_price"]
+                
+                if isinstance(input_schema, dict) and "properties" in input_schema:
+                    schema_props = input_schema["properties"]
+                    for field in required_fields:
+                        if field in schema_props:
+                            self.log(f"✅ Input schema has {field}: {schema_props[field].get('type', 'unknown')}")
+                            self.test_results["amazon_scraper"]["passed"] += 1
+                        else:
+                            self.log(f"❌ Input schema missing field: {field}")
+                            self.test_results["amazon_scraper"]["failed"] += 1
+                            self.test_results["amazon_scraper"]["errors"].append(f"Input schema missing {field}")
+                else:
+                    self.log("❌ Actor input_schema format invalid")
+                    self.test_results["amazon_scraper"]["failed"] += 1
+                    self.test_results["amazon_scraper"]["errors"].append("Invalid input_schema format")
+            else:
+                self.log("❌ Amazon Product Scraper actor not found in database")
+                self.test_results["amazon_scraper"]["failed"] += 1
+                self.test_results["amazon_scraper"]["errors"].append("Amazon actor not found")
+                return False
+        else:
+            self.log("❌ Failed to get actors list")
+            self.test_results["amazon_scraper"]["failed"] += 1
+            self.test_results["amazon_scraper"]["errors"].append("Failed to get actors list")
+            return False
+        
+        # Step 3: Create Scraping Run
+        self.log("Step 3: Creating Amazon scraping run with test parameters...")
+        self.log("  - Search keywords: ['wireless headphones', 'bluetooth speaker']")
+        self.log("  - Max results: 10")
+        self.log("  - Min rating: 4")
+        self.log("  - Extract reviews: false")
+        
+        run_data = {
+            "actor_id": self.amazon_actor_id,
+            "input_data": {
+                "search_keywords": ["wireless headphones", "bluetooth speaker"],
+                "max_results": 10,
+                "extract_reviews": False,
+                "min_rating": 4
+            }
+        }
+        
+        response = self.make_request("POST", "/runs", run_data)
+        if response and response.status_code == 200:
+            run = response.json()
+            if "id" in run and run.get("status") == "queued":
+                self.amazon_run_id = run["id"]
+                self.log(f"✅ Amazon scraping run created: {self.amazon_run_id}")
+                self.log(f"✅ Run status: {run.get('status')}")
+                self.test_results["amazon_scraper"]["passed"] += 1
+                
+                # Verify input data was stored correctly
+                stored_input = run.get("input_data", {})
+                if stored_input.get("search_keywords") == ["wireless headphones", "bluetooth speaker"]:
+                    self.log("✅ Input data stored correctly")
+                    self.test_results["amazon_scraper"]["passed"] += 1
+                else:
+                    self.log("❌ Input data not stored correctly")
+                    self.test_results["amazon_scraper"]["failed"] += 1
+                    self.test_results["amazon_scraper"]["errors"].append("Input data storage issue")
+            else:
+                self.log("❌ Run creation response invalid")
+                self.test_results["amazon_scraper"]["failed"] += 1
+                self.test_results["amazon_scraper"]["errors"].append("Invalid run creation response")
+                return False
+        else:
+            self.log(f"❌ Failed to create Amazon scraping run: {response.status_code if response else 'No response'}")
+            self.test_results["amazon_scraper"]["failed"] += 1
+            self.test_results["amazon_scraper"]["errors"].append("Failed to create run")
+            return False
+        
+        # Step 4: Execute Scraping (Real Run) - Monitor Status Transitions
+        self.log("Step 4: Monitoring Amazon scraping execution (may take 2-3 minutes)...")
+        max_wait_time = 300  # 5 minutes max wait for Amazon scraping
+        check_interval = 15  # 15 seconds
+        elapsed_time = 0
+        start_time = time.time()
+        
+        status_transitions = []
+        
+        while elapsed_time < max_wait_time:
+            response = self.make_request("GET", f"/runs/{self.amazon_run_id}")
+            if response and response.status_code == 200:
+                run = response.json()
+                status = run.get("status", "unknown")
+                logs = run.get("logs", [])
+                
+                # Track status transitions
+                if not status_transitions or status_transitions[-1] != status:
+                    status_transitions.append(status)
+                    self.log(f"📊 Status transition: {' -> '.join(status_transitions)}")
+                
+                # Show latest progress logs
+                if logs:
+                    latest_logs = logs[-3:] if len(logs) >= 3 else logs
+                    for log_entry in latest_logs:
+                        if "🔍" in log_entry or "✅" in log_entry or "📊" in log_entry:
+                            self.log(f"Progress: {log_entry}")
+                
+                self.log(f"Run status: {status} (elapsed: {elapsed_time}s)")
+                
+                if status == "succeeded":
+                    end_time = time.time()
+                    duration = end_time - start_time
+                    results_count = run.get("results_count", 0)
+                    self.log(f"✅ Amazon scraping completed successfully in {duration:.1f} seconds")
+                    self.log(f"✅ Results count: {results_count}")
+                    self.test_results["amazon_scraper"]["passed"] += 1
+                    
+                    # Verify status transitions
+                    expected_transitions = ["queued", "running", "succeeded"]
+                    if status_transitions == expected_transitions:
+                        self.log("✅ Status transitions correct: queued -> running -> succeeded")
+                        self.test_results["amazon_scraper"]["passed"] += 1
+                    else:
+                        self.log(f"⚠️ Status transitions: {status_transitions} (expected: {expected_transitions})")
+                    
+                    # Verify results count > 0
+                    if results_count > 0:
+                        self.log(f"✅ Scraping produced {results_count} results")
+                        self.test_results["amazon_scraper"]["passed"] += 1
+                    else:
+                        self.log("❌ No results produced by scraping")
+                        self.test_results["amazon_scraper"]["failed"] += 1
+                        self.test_results["amazon_scraper"]["errors"].append("No results produced")
+                    
+                    break
+                elif status == "failed":
+                    error_msg = run.get("error_message", "Unknown error")
+                    self.log(f"❌ Amazon scraping run failed: {error_msg}")
+                    self.test_results["amazon_scraper"]["failed"] += 1
+                    self.test_results["amazon_scraper"]["errors"].append(f"Scraping failed: {error_msg}")
+                    return False
+                elif status in ["queued", "running"]:
+                    time.sleep(check_interval)
+                    elapsed_time += check_interval
+                else:
+                    self.log(f"❌ Unknown run status: {status}")
+                    self.test_results["amazon_scraper"]["failed"] += 1
+                    self.test_results["amazon_scraper"]["errors"].append(f"Unknown status: {status}")
+                    return False
+            else:
+                self.log(f"❌ Failed to get run status: {response.status_code if response else 'No response'}")
+                self.test_results["amazon_scraper"]["failed"] += 1
+                self.test_results["amazon_scraper"]["errors"].append("Failed to get run status")
+                return False
+        
+        if elapsed_time >= max_wait_time:
+            self.log("❌ Amazon scraping did not complete within timeout period")
+            self.test_results["amazon_scraper"]["failed"] += 1
+            self.test_results["amazon_scraper"]["errors"].append("Scraping timeout")
+            return False
+        
+        # Step 5: Dataset Verification
+        self.log("Step 5: Verifying Amazon product dataset...")
+        response = self.make_request("GET", f"/datasets/{self.amazon_run_id}/items")
+        if response and response.status_code == 200:
+            items = response.json()
+            if isinstance(items, list) and len(items) > 0:
+                self.log(f"✅ Retrieved {len(items)} Amazon products from dataset")
+                self.test_results["amazon_scraper"]["passed"] += 1
+                
+                # Verify at least 5 products were scraped
+                if len(items) >= 5:
+                    self.log(f"✅ At least 5 products scraped ({len(items)} found)")
+                    self.test_results["amazon_scraper"]["passed"] += 1
+                else:
+                    self.log(f"⚠️ Only {len(items)} products scraped (expected at least 5)")
+                
+                # Verify product data quality
+                self.log("=== Verifying Amazon Product Data Quality ===")
+                
+                required_fields = {
+                    "asin": "Amazon Standard Identification Number (10 characters)",
+                    "title": "Product name",
+                    "price": "Current price (number)",
+                    "rating": "Product rating (0-5 stars)",
+                    "reviewCount": "Number of reviews",
+                    "url": "Amazon product URL",
+                    "images": "Array of image URLs",
+                    "category": "Product category",
+                    "seller": "Brand/seller name (soldBy field)"
+                }
+                
+                valid_products = 0
+                total_fields_found = 0
+                total_fields_expected = len(required_fields) * len(items)
+                
+                for i, item in enumerate(items[:5]):  # Check first 5 products
+                    if "data" in item:
+                        data = item["data"]
+                        self.log(f"\n--- Product #{i+1} Verification ---")
+                        self.log(f"Product: {data.get('title', 'N/A')[:50]}...")
+                        
+                        product_fields_found = 0
+                        critical_fields_missing = []
+                        
+                        for field, description in required_fields.items():
+                            value = data.get(field)
+                            
+                            # Special handling for different field types
+                            if field == "asin":
+                                if value and len(str(value)) == 10:
+                                    self.log(f"✅ {field}: {value} (valid 10-char ASIN)")
+                                    product_fields_found += 1
+                                    total_fields_found += 1
+                                else:
+                                    self.log(f"❌ {field}: Invalid ASIN - {value}")
+                                    critical_fields_missing.append(field)
+                            elif field in ["price", "rating", "reviewCount"]:
+                                if isinstance(value, (int, float)) and value >= 0:
+                                    self.log(f"✅ {field}: {value}")
+                                    product_fields_found += 1
+                                    total_fields_found += 1
+                                else:
+                                    self.log(f"❌ {field}: Invalid number - {value}")
+                                    critical_fields_missing.append(field)
+                            elif field == "images":
+                                if isinstance(value, list) and len(value) > 0:
+                                    valid_urls = sum(1 for url in value if isinstance(url, str) and url.startswith('http'))
+                                    self.log(f"✅ {field}: {len(value)} images ({valid_urls} valid URLs)")
+                                    product_fields_found += 1
+                                    total_fields_found += 1
+                                else:
+                                    self.log(f"❌ {field}: No valid images - {value}")
+                                    critical_fields_missing.append(field)
+                            elif field == "url":
+                                if value and "amazon.com" in str(value):
+                                    self.log(f"✅ {field}: Valid Amazon URL")
+                                    product_fields_found += 1
+                                    total_fields_found += 1
+                                else:
+                                    self.log(f"❌ {field}: Invalid URL - {value}")
+                                    critical_fields_missing.append(field)
+                            elif field == "seller":
+                                # Check both 'seller' and 'soldBy' fields
+                                seller_value = data.get('seller') or data.get('soldBy')
+                                if seller_value:
+                                    self.log(f"✅ {field}: {seller_value}")
+                                    product_fields_found += 1
+                                    total_fields_found += 1
+                                else:
+                                    self.log(f"❌ {field}: Missing seller/soldBy")
+                                    critical_fields_missing.append(field)
+                            else:
+                                if value:
+                                    self.log(f"✅ {field}: {str(value)[:30]}...")
+                                    product_fields_found += 1
+                                    total_fields_found += 1
+                                else:
+                                    self.log(f"❌ {field}: Missing")
+                                    critical_fields_missing.append(field)
+                        
+                        # Product quality assessment
+                        completeness = (product_fields_found / len(required_fields)) * 100
+                        self.log(f"Product #{i+1} completeness: {completeness:.1f}% ({product_fields_found}/{len(required_fields)} fields)")
+                        
+                        if completeness >= 70:  # At least 70% of fields present
+                            valid_products += 1
+                        
+                        if critical_fields_missing:
+                            self.log(f"⚠️ Critical fields missing: {', '.join(critical_fields_missing)}")
+                
+                # Overall data quality assessment
+                overall_completeness = (total_fields_found / total_fields_expected) * 100
+                self.log(f"\n=== Overall Data Quality Assessment ===")
+                self.log(f"✅ Valid products: {valid_products}/{min(5, len(items))}")
+                self.log(f"✅ Overall field completeness: {overall_completeness:.1f}%")
+                
+                if valid_products >= 3:  # At least 3 out of 5 products should be valid
+                    self.log("✅ Data quality acceptable (at least 3 valid products)")
+                    self.test_results["amazon_scraper"]["passed"] += 1
+                else:
+                    self.log("❌ Data quality poor (less than 3 valid products)")
+                    self.test_results["amazon_scraper"]["failed"] += 1
+                    self.test_results["amazon_scraper"]["errors"].append("Poor data quality")
+                
+                if overall_completeness >= 60:  # At least 60% field completeness
+                    self.log("✅ Field completeness acceptable")
+                    self.test_results["amazon_scraper"]["passed"] += 1
+                else:
+                    self.log("❌ Field completeness too low")
+                    self.test_results["amazon_scraper"]["failed"] += 1
+                    self.test_results["amazon_scraper"]["errors"].append("Low field completeness")
+                
+            else:
+                self.log("❌ No Amazon products found in dataset")
+                self.test_results["amazon_scraper"]["failed"] += 1
+                self.test_results["amazon_scraper"]["errors"].append("No products in dataset")
+                return False
+        else:
+            self.log(f"❌ Failed to get Amazon dataset: {response.status_code if response else 'No response'}")
+            self.test_results["amazon_scraper"]["failed"] += 1
+            self.test_results["amazon_scraper"]["errors"].append("Failed to get dataset")
+            return False
+        
+        # Step 6: Error Handling Test
+        self.log("Step 6: Testing error handling with invalid input...")
+        
+        invalid_run_data = {
+            "actor_id": self.amazon_actor_id,
+            "input_data": {
+                "search_keywords": [],  # Empty keywords should cause error
+                "max_results": 10
+            }
+        }
+        
+        response = self.make_request("POST", "/runs", invalid_run_data)
+        if response and response.status_code == 200:
+            run = response.json()
+            invalid_run_id = run["id"]
+            
+            # Wait for run to fail
+            time.sleep(30)  # Wait 30 seconds
+            
+            response = self.make_request("GET", f"/runs/{invalid_run_id}")
+            if response and response.status_code == 200:
+                run = response.json()
+                status = run.get("status")
+                
+                if status == "failed":
+                    error_msg = run.get("error_message", "")
+                    if "search_keywords" in error_msg or "required" in error_msg.lower():
+                        self.log("✅ Error handling working - proper error message for invalid input")
+                        self.test_results["amazon_scraper"]["passed"] += 1
+                    else:
+                        self.log(f"⚠️ Error message unclear: {error_msg}")
+                else:
+                    self.log(f"⚠️ Run with invalid input has status: {status}")
+            else:
+                self.log("⚠️ Could not check invalid run status")
+        else:
+            self.log("⚠️ Could not create invalid run for error testing")
+        
+        self.log("Amazon Product Scraper comprehensive testing completed!")
+        return True
+
     def test_country_code_extraction_review(self):
         """Test the specific review request: Google Maps Scraper with country code extraction"""
         self.log("=== REVIEW REQUEST: Testing Google Maps Scraper with Country Code Extraction ===")
