@@ -291,6 +291,38 @@ const DatasetV2 = () => {
     setSelectedLinksItem(null);
   };
 
+  const openImageModal = (product) => {
+    setSelectedProduct(product);
+    setCurrentImageIndex(0);
+    setShowImageModal(true);
+  };
+
+  const closeImageModal = () => {
+    setShowImageModal(false);
+    setSelectedProduct(null);
+    setCurrentImageIndex(0);
+  };
+
+  const nextImage = () => {
+    if (selectedProduct && selectedProduct.images) {
+      setCurrentImageIndex((prev) => 
+        prev < selectedProduct.images.length - 1 ? prev + 1 : 0
+      );
+    }
+  };
+
+  const previousImage = () => {
+    if (selectedProduct && selectedProduct.images) {
+      setCurrentImageIndex((prev) => 
+        prev > 0 ? prev - 1 : selectedProduct.images.length - 1
+      );
+    }
+  };
+
+  const selectThumbnail = (index) => {
+    setCurrentImageIndex(index);
+  };
+
   const getSocialMediaLinks = (socialMedia) => {
     if (!socialMedia) return [];
     return Object.entries(socialMedia).map(([platform, url]) => ({
