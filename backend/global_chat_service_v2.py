@@ -336,27 +336,47 @@ Then FUNCTION_CALL: {"name": "view_run_details", "arguments": {"run_id": "<first
             },
             {
                 "name": "fill_and_start_scraper",
-                "description": "Automatically fill scraper form and start a scraping run. Use this when user wants to scrape something.",
+                "description": "Automatically fill scraper form and start a scraping run. Supports Google Maps and Amazon scrapers.",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "actor_name": {
                             "type": "string",
-                            "description": "Name of the scraper actor (e.g., 'Google Maps Scraper')"
+                            "description": "Name of the scraper: 'Google Maps' for local businesses OR 'Amazon' for products"
                         },
                         "search_terms": {
                             "type": "array",
                             "items": {"type": "string"},
-                            "description": "Keywords to search for (e.g., ['Hotels', 'Restaurants'])"
+                            "description": "For Google Maps: Keywords to search (e.g., ['Hotels', 'Restaurants'])"
+                        },
+                        "search_keywords": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "For Amazon: Product keywords to search (e.g., ['trimmer', 'wireless headphones'])"
                         },
                         "location": {
                             "type": "string",
-                            "description": "Location to search in (e.g., 'New York, NY')"
+                            "description": "For Google Maps: Location to search in (e.g., 'New York, NY'). Not used for Amazon."
                         },
                         "max_results": {
                             "type": "integer",
                             "description": "Maximum number of results to scrape",
                             "default": 20
+                        },
+                        "extract_reviews": {
+                            "type": "boolean",
+                            "description": "For Amazon: Whether to extract product reviews",
+                            "default": False
+                        },
+                        "min_rating": {
+                            "type": "number",
+                            "description": "For Amazon: Minimum product rating (0-5)",
+                            "default": 0
+                        },
+                        "max_price": {
+                            "type": "number",
+                            "description": "For Amazon: Maximum product price",
+                            "default": 0
                         },
                         "navigate_to_actor": {
                             "type": "boolean",
@@ -364,7 +384,7 @@ Then FUNCTION_CALL: {"name": "view_run_details", "arguments": {"run_id": "<first
                             "default": False
                         }
                     },
-                    "required": ["actor_name", "search_terms"]
+                    "required": ["actor_name"]
                 }
             },
             {
