@@ -310,19 +310,28 @@ async def execute_scraping_job(run_id: str, actor_id: str, user_id: str, input_d
             
             results = []
             
-            # Execute based on actor type
-            if actor and actor.get('name') == 'Google Maps Scraper V2':
-                # Use V3 scraper
-                scraper = GoogleMapsScraperV3(engine)
-                
-                async def progress_callback(message: str):
-                    await db.runs.update_one(
-                        {"id": run_id},
-                        {"$push": {"logs": f"{datetime.now(timezone.utc).isoformat()}: {message}"}}
-                    )
-                    logger.info(f"Run {run_id}: {message}")
-                
-                results = await scraper.scrape(input_data, progress_callback)
+            # Get scraper dynamically from registry based on actor name
+            scraper_registry = get_scraper_registry()
+            actor_name = actor.get('name') if actor else None
+            
+            if not actor_name:
+                raise ValueError("Actor not found or has no name")
+            
+            scraper = scraper_registry.get_scraper(actor_name, engine)
+            
+            if not scraper:
+                raise ValueError(f"No scraper registered for actor: {actor_name}")
+            
+            # Progress callback for logging
+            async def progress_callback(message: str):
+                await db.runs.update_one(
+                    {"id": run_id},
+                    {"$push": {"logs": f"{datetime.now(timezone.utc).isoformat()}: {message}"}}
+                )
+                logger.info(f"Run {run_id}: {message}")
+            
+            # Execute scraper
+            results = await scraper.scrape(input_data, progress_callback)
             
             # Create dataset and store results
             from models import Dataset
