@@ -366,11 +366,9 @@ const DatasetV2 = () => {
             </div>
             <div className="ml-3 flex-1">
               <p className="text-sm text-green-800">
-                <strong>Scraping finished.</strong> You can view all scraped places laid out on a map on:{' '}
-                <a href="#" className="text-blue-600 hover:underline">
-                  View results map
-                </a>
-                . It can take some time to fully load for large datasets.
+                <strong>Scraping finished.</strong> {isAmazonScraper() 
+                  ? 'You can view all scraped products with detailed information.' 
+                  : 'You can view all scraped places laid out on a map.'}
               </p>
             </div>
           </div>
