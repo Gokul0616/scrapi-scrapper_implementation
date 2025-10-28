@@ -151,8 +151,14 @@ class IndeedJobsScraper(BaseScraper):
             await self._log_progress(f"✅ Found {len(job_urls)} job listings", progress_callback)
             
             if not job_urls:
-                await self._log_progress("⚠️ No jobs found for this search", progress_callback)
-                return []
+                error_msg = (
+                    f"❌ Failed to find any jobs for '{keyword}' in '{location or 'Any Location'}'. "
+                    "This could be due to: (1) Indeed's anti-bot detection, (2) No jobs available for this search, "
+                    "(3) Incorrect location format, or (4) HTML structure changes. "
+                    "Check backend logs for HTML samples and selector debugging info."
+                )
+                await self._log_progress(error_msg, progress_callback)
+                raise ValueError(error_msg)
             
             # Step 2: Extract details from each job (parallel batches)
             batch_size = 5  # Process 5 jobs at once
