@@ -13,11 +13,22 @@ import { toast } from '../hooks/use-toast';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// HLS Video Player Component
-const HLSVideoPlayer = ({ videoUrl, isHLS }) => {
+// Custom Video Player Component with Controls
+const CustomVideoPlayer = ({ videoUrl, isHLS }) => {
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showControls, setShowControls] = useState(true);
+  const [buffered, setBuffered] = useState(0);
+  const controlsTimeoutRef = useRef(null);
+  const containerRef = useRef(null);
 
+  // Initialize video (HLS or standard)
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -26,7 +37,6 @@ const HLSVideoPlayer = ({ videoUrl, isHLS }) => {
       console.log('[HLS PLAYER] Initializing HLS for:', videoUrl);
       
       if (Hls.isSupported()) {
-        // Use hls.js for browsers that don't support HLS natively
         const hls = new Hls({
           enableWorker: true,
           lowLatencyMode: true,
@@ -62,54 +72,129 @@ const HLSVideoPlayer = ({ videoUrl, isHLS }) => {
         
         hlsRef.current = hls;
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        // Native HLS support (Safari)
         console.log('[HLS PLAYER] Using native HLS support');
         video.src = videoUrl;
-      } else {
-        console.error('[HLS PLAYER] HLS not supported in this browser');
       }
     } else {
-      // Standard video formats (mp4, webm, ogg)
-      console.log('[VIDEO PLAYER] Using standard video player for:', videoUrl);
       video.src = videoUrl;
     }
 
     return () => {
       if (hlsRef.current) {
-        console.log('[HLS PLAYER] Cleaning up HLS instance');
         hlsRef.current.destroy();
         hlsRef.current = null;
       }
     };
   }, [videoUrl, isHLS]);
 
+  // Update time and buffer progress
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleTimeUpdate = () => setCurrentTime(video.currentTime);
+    const handleDurationChange = () => setDuration(video.duration);
+    const handleProgress = () => {
+      if (video.buffered.length > 0) {
+        setBuffered((video.buffered.end(0) / video.duration) * 100);
+      }
+    };
+
+    video.addEventListener('timeupdate', handleTimeUpdate);
+    video.addEventListener('durationchange', handleDurationChange);
+    video.addEventListener('progress', handleProgress);
+
+    return () => {
+      video.removeEventListener('timeupdate', handleTimeUpdate);
+      video.removeEventListener('durationchange', handleDurationChange);
+      video.removeEventListener('progress', handleProgress);
+    };
+  }, []);
+
+  // Fullscreen change listener
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  // Auto-hide controls
+  const resetControlsTimeout = () => {
+    setShowControls(true);
+    if (controlsTimeoutRef.current) {
+      clearTimeout(controlsTimeoutRef.current);
+    }
+    if (isPlaying) {
+      controlsTimeoutRef.current = setTimeout(() => {
+        setShowControls(false);
+      }, 3000);
+    }
+  };
+
+  const togglePlay = () => {
+    const video = videoRef.current;
+    if (video.paused) {
+      video.play();
+      setIsPlaying(true);
+    } else {
+      video.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  const handleSeek = (e) => {
+    const video = videoRef.current;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pos = (e.clientX - rect.left) / rect.width;
+    video.currentTime = pos * duration;
+  };
+
+  const handleVolumeChange = (e) => {
+    const newVolume = parseFloat(e.target.value);
+    videoRef.current.volume = newVolume;
+    setVolume(newVolume);
+    setIsMuted(newVolume === 0);
+  };
+
+  const toggleMute = () => {
+    const video = videoRef.current;
+    video.muted = !video.muted;
+    setIsMuted(!isMuted);
+  };
+
+  const toggleFullscreen = () => {
+    const container = containerRef.current;
+    if (!document.fullscreenElement) {
+      container.requestFullscreen();
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
+  const formatTime = (time) => {
+    if (isNaN(time)) return '0:00';
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center bg-black p-2">
+    <div 
+      ref={containerRef}
+      className="relative w-full h-full bg-black group"
+      onMouseMove={resetControlsTimeout}
+      onMouseEnter={() => setShowControls(true)}
+      onMouseLeave={() => isPlaying && setShowControls(false)}
+    >
       <video
         ref={videoRef}
-        className="max-w-full max-h-full object-contain rounded"
-        controls
-        controlsList="nodownload"
+        className="w-full h-full object-contain"
         playsInline
-        style={{ maxHeight: '250px', backgroundColor: '#000' }}
-        onLoadedMetadata={(e) => {
-          console.log('[VIDEO PLAYER] Metadata loaded:', {
-            duration: e.target.duration,
-            videoWidth: e.target.videoWidth,
-            videoHeight: e.target.videoHeight
-          });
-        }}
-        onCanPlay={() => {
-          console.log('[VIDEO PLAYER] Can play video');
-        }}
-        onError={(e) => {
-          console.error('[VIDEO PLAYER] Error:', {
-            url: videoUrl,
-            error: e.target.error,
-            code: e.target.error?.code,
-            message: e.target.error?.message
-          });
-        }}
+        onClick={togglePlay}
+        style={{ maxHeight: isFullscreen ? '100vh' : '250px' }}
       >
         {!isHLS && (
           <>
@@ -118,20 +203,112 @@ const HLSVideoPlayer = ({ videoUrl, isHLS }) => {
             <source src={videoUrl} type="video/ogg" />
           </>
         )}
-        Your browser does not support the video tag.
       </video>
-      <div className="mt-2 flex gap-2">
-        <a 
-          href={videoUrl} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="text-blue-400 hover:text-blue-300 underline text-xs flex items-center gap-1"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <ExternalLink className="w-3 h-3" />
-          Open in new tab
-        </a>
+
+      {/* Custom Controls */}
+      <div
+        className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 transition-opacity duration-300 ${
+          showControls ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        {/* Progress Bar */}
+        <div className="mb-3">
+          <div 
+            className="relative h-1 bg-gray-600 rounded-full cursor-pointer hover:h-2 transition-all"
+            onClick={handleSeek}
+          >
+            {/* Buffered */}
+            <div 
+              className="absolute h-full bg-gray-500 rounded-full"
+              style={{ width: `${buffered}%` }}
+            />
+            {/* Current Progress */}
+            <div 
+              className="absolute h-full bg-red-600 rounded-full"
+              style={{ width: `${(currentTime / duration) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Controls Row */}
+        <div className="flex items-center gap-3 text-white">
+          {/* Play/Pause */}
+          <button
+            onClick={togglePlay}
+            className="hover:text-red-500 transition-colors"
+          >
+            {isPlaying ? (
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+              </svg>
+            ) : (
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            )}
+          </button>
+
+          {/* Time */}
+          <div className="text-sm font-mono">
+            {formatTime(currentTime)} / {formatTime(duration)}
+          </div>
+
+          {/* Volume */}
+          <div className="flex items-center gap-2 ml-auto">
+            <button onClick={toggleMute} className="hover:text-red-500 transition-colors">
+              {isMuted || volume === 0 ? (
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+                </svg>
+              )}
+            </button>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              value={volume}
+              onChange={handleVolumeChange}
+              className="w-20 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+              style={{
+                background: `linear-gradient(to right, #ef4444 0%, #ef4444 ${volume * 100}%, #4b5563 ${volume * 100}%, #4b5563 100%)`
+              }}
+            />
+          </div>
+
+          {/* Fullscreen */}
+          <button
+            onClick={toggleFullscreen}
+            className="hover:text-red-500 transition-colors"
+          >
+            {isFullscreen ? (
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+              </svg>
+            )}
+          </button>
+        </div>
       </div>
+
+      {/* Open in new tab link */}
+      <a 
+        href={videoUrl} 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="absolute top-2 right-2 bg-black/70 hover:bg-black/90 text-white px-2 py-1 rounded text-xs flex items-center gap-1 transition-colors z-10"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <ExternalLink className="w-3 h-3" />
+        Open
+      </a>
     </div>
   );
 };
