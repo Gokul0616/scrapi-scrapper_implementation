@@ -9,7 +9,7 @@ import json
 import time
 from datetime import datetime
 
-BACKEND_URL = "https://media-viewer-37.preview.emergentagent.com/api"
+BACKEND_URL = "https://multicrawler.preview.emergentagent.com/api"
 
 def log(message):
     print(f"[{datetime.now().strftime('%H:%M:%S')}] {message}")

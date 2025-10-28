@@ -7,7 +7,7 @@ import requests
 import json
 import time
 
-BACKEND_URL = "https://media-viewer-37.preview.emergentagent.com/api"
+BACKEND_URL = "https://multicrawler.preview.emergentagent.com/api"
 
 def test_actor_update_issue():
     """Debug the actor update 404 issue"""

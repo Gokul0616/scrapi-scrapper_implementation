@@ -10,7 +10,7 @@ import time
 import sys
 from datetime import datetime
 
-BACKEND_URL = "https://media-viewer-37.preview.emergentagent.com/api"
+BACKEND_URL = "https://multicrawler.preview.emergentagent.com/api"
 
 class EdgeCaseTester:
     def __init__(self):
