@@ -302,8 +302,8 @@ class IndeedJobsScraper(BaseScraper):
         
         try:
             # Navigate to job page
-            await page.goto(job_url, wait_until="domcontentloaded", timeout=20000)
-            await asyncio.sleep(1)
+            await page.goto(job_url, wait_until="networkidle", timeout=20000)
+            await asyncio.sleep(2)  # Increased wait time
             
             content = await page.content()
             soup = BeautifulSoup(content, 'html.parser')
