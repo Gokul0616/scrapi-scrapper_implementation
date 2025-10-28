@@ -44,3 +44,4 @@ openai
 fastuuid
 pyyaml
 jinja2
+distro==1.9.0
