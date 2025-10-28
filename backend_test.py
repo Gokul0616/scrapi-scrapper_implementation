@@ -3999,24 +3999,24 @@ class ScrapiAPITester:
         self.log("Indeed Jobs Scraper zero results fix testing completed")
         return True
     def run_all_tests(self):
-        """Run backend API tests with priority on Amazon Product Scraper review request"""
-        self.log("🚀 Starting Backend API Testing - PRIORITY: Amazon Product Scraper Review")
+        """Run backend API tests with priority on Indeed Jobs Scraper Zero Results Fix"""
+        self.log("🚀 Starting Backend API Testing - PRIORITY: Indeed Jobs Scraper Zero Results Fix")
         self.log(f"Backend URL: {self.base_url}")
         
         try:
-            # Run the specific review request test first - Amazon Product Scraper with 'trimmer' keyword
+            # Run the specific review request test first - Indeed Jobs Scraper Zero Results Fix
             self.log("=" * 80)
-            self.log("PRIORITY: Running Review Request Test - Amazon Product Scraper 'trimmer' Issue")
+            self.log("CRITICAL TESTING: Indeed Jobs Scraper Zero Results Fix")
             self.log("=" * 80)
-            trimmer_success = self.test_amazon_scraper_trimmer_issue()
+            indeed_success = self.test_indeed_jobs_scraper_zero_results_fix()
             
-            if trimmer_success:
-                self.log("🎉 AMAZON PRODUCT SCRAPER 'TRIMMER' TEST COMPLETED SUCCESSFULLY!")
+            if indeed_success:
+                self.log("🎉 INDEED JOBS SCRAPER ZERO RESULTS FIX TEST COMPLETED!")
             else:
-                self.log("❌ AMAZON PRODUCT SCRAPER 'TRIMMER' TEST FAILED!")
+                self.log("❌ INDEED JOBS SCRAPER ZERO RESULTS FIX TEST FAILED!")
             
             self.log("\n" + "=" * 80)
-            self.log("ADDITIONAL TESTS: Running comprehensive Amazon scraper tests")
+            self.log("ADDITIONAL TESTS: Running other backend tests if needed")
             self.log("=" * 80)
             amazon_success = self.test_amazon_scraper_comprehensive()
             
