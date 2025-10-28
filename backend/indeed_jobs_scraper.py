@@ -259,48 +259,41 @@ class IndeedJobsScraper(BaseScraper):
                     
                     page_jobs = []
                     for card in job_cards:
-                        # Try multiple selectors for job links
-                        link = None
+                        # Extract job ID from data attribute (primary method)
+                        job_id = card.get('data-jk')
                         
-                        # Try different link patterns
-                        link_selectors = [
-                            'a[id^="job_"]',
-                            'a.jcs-JobTitle',
-                            'a[data-jk]',
-                            'h2.jobTitle a',
-                            'a[href*="/viewjob"]',
-                            'a[href*="/rc/clk"]',
-                            'a[href*="/pagead"]'
-                        ]
-                        
-                        for link_selector in link_selectors:
-                            link = card.select_one(link_selector) if hasattr(card, 'select_one') else card.find('a')
+                        if job_id:
+                            # Build proper Indeed job URL
+                            job_url = f"{self.base_url}/viewjob?jk={job_id}"
+                            page_jobs.append(job_url)
+                        else:
+                            # Fallback: Try to find link within card
+                            link = None
+                            link_selectors = [
+                                'a.jcs-JobTitle',
+                                'h2.jobTitle a',
+                                'a[id^="job_"]',
+                                'a[href*="/viewjob"]',
+                                'a[href*="/rc/clk"]'
+                            ]
+                            
+                            for link_selector in link_selectors:
+                                link = card.select_one(link_selector)
+                                if link and link.get('href'):
+                                    break
+                            
                             if link and link.get('href'):
-                                break
-                        
-                        # If card itself is a link
-                        if not link and card.name == 'a' and card.get('href'):
-                            link = card
-                        
-                        if link and link.get('href'):
-                            job_url = link['href']
-                            
-                            # Extract job ID from data attribute if available
-                            job_id = card.get('data-jk') or link.get('data-jk')
-                            
-                            # Convert relative URLs to absolute
-                            if job_url.startswith('/'):
-                                job_url = self.base_url + job_url
-                            elif not job_url.startswith('http'):
-                                job_url = self.base_url + '/' + job_url
-                            
-                            # Build proper job URL with job ID if available
-                            if job_id:
-                                job_url = f"{self.base_url}/viewjob?jk={job_id}"
-                            
-                            # Extract job ID from URL if not already found
-                            if job_url not in job_urls and ('/viewjob' in job_url or '/rc/clk' in job_url or '/pagead' in job_url):
-                                page_jobs.append(job_url)
+                                job_url = link['href']
+                                
+                                # Convert relative URLs to absolute
+                                if job_url.startswith('/'):
+                                    job_url = self.base_url + job_url
+                                elif not job_url.startswith('http'):
+                                    job_url = self.base_url + '/' + job_url
+                                
+                                # Only add if it's a valid job URL
+                                if '/viewjob' in job_url or '/rc/clk' in job_url or '/pagead' in job_url or 'jk=' in job_url:
+                                    page_jobs.append(job_url)
                     
                     # Deduplicate and add to results
                     new_jobs = [url for url in page_jobs if url not in job_urls]
