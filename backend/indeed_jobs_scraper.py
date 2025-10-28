@@ -33,7 +33,32 @@ class IndeedJobsScraper(BaseScraper):
     
     def __init__(self, scraper_engine: ScraperEngine):
         super().__init__(scraper_engine)
-        self.base_url = "https://www.indeed.com"
+        self.base_url = "https://www.indeed.com"  # Default to US
+        self.email_pattern = re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b')
+        self.phone_pattern = re.compile(r'[\+\(]?[1-9][0-9 .\-\(\)]{8,}[0-9]')
+    
+    def _get_indeed_domain(self, location: str) -> str:
+        """Determine the correct Indeed domain based on location."""
+        location_lower = location.lower()
+        
+        # India domains
+        if any(city in location_lower for city in ['chennai', 'bangalore', 'mumbai', 'delhi', 'hyderabad', 'pune', 'kolkata', 'india']):
+            return "https://in.indeed.com"
+        
+        # UK domain
+        elif any(city in location_lower for city in ['london', 'manchester', 'birmingham', 'uk', 'united kingdom']):
+            return "https://uk.indeed.com"
+        
+        # Canada domain
+        elif any(city in location_lower for city in ['toronto', 'vancouver', 'montreal', 'canada']):
+            return "https://ca.indeed.com"
+        
+        # Australia domain
+        elif any(city in location_lower for city in ['sydney', 'melbourne', 'brisbane', 'australia']):
+            return "https://au.indeed.com"
+        
+        # Default to US
+        return "https://www.indeed.com"
         
     @classmethod
     def get_name(cls) -> str:
