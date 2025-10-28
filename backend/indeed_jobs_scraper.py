@@ -406,10 +406,13 @@ class IndeedJobsScraper(BaseScraper):
             # Extract full job description
             description = None
             desc_selectors = [
+                '#jobDescriptionText',
                 'div#jobDescriptionText',
+                '[data-testid="jobsearch-JobComponent-description"]',
                 'div.jobsearch-jobDescriptionText',
                 'div[class*="jobDescription"]',
-                'div.job-description'
+                'div.job-description',
+                'div[id*="jobDescription"]'
             ]
             for selector in desc_selectors:
                 desc_elem = soup.select_one(selector)
