@@ -724,6 +724,8 @@ const DatasetV2 = () => {
               <p className="text-sm text-green-800">
                 <strong>Scraping finished.</strong> {isAmazonScraper() 
                   ? 'You can view all scraped products with detailed information.' 
+                  : isIndeedScraper()
+                  ? 'You can view all scraped job listings with full details.'
                   : 'You can view all scraped places laid out on a map.'}
               </p>
             </div>
