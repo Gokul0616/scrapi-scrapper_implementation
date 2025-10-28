@@ -211,6 +211,85 @@ Includes: ASIN, title, price, original price, discount %, rating, review count, 
         doc['updated_at'] = doc['updated_at'].isoformat()
         await db.actors.insert_one(doc)
         logger.info("Created Amazon Product Scraper actor")
+    
+    # Check if Indeed Jobs Scraper exists
+    existing_indeed = await db.actors.find_one({"name": "Indeed Jobs Scraper"})
+    if not existing_indeed:
+        from datetime import datetime, timezone
+        actor = Actor(
+            user_id="system",
+            name="Indeed Jobs Scraper",
+            description="Extract job listings, salaries, company info, and full descriptions from Indeed.com",
+            icon="💼",
+            category="Jobs & Careers",
+            type="prebuilt",
+            is_public=True,
+            status="published",
+            visibility="public",
+            tags=["indeed", "jobs", "careers", "employment", "hiring", "salary"],
+            author_name="Scrapi",
+            author_id="system",
+            is_verified=True,
+            is_featured=True,
+            readme="""# Indeed Jobs Scraper
+
+Extract comprehensive job data from Indeed.com for recruitment and market analysis.
+
+## Features
+- 💼 **Job Listings**: Title, company, location, salary information
+- 📝 **Full Descriptions**: Complete job requirements and responsibilities
+- 📅 **Posting Dates**: Track when jobs were posted
+- ⭐ **Company Ratings**: Company reviews and ratings
+- 🎯 **Job Types**: Full-time, Part-time, Contract, Remote
+- 💰 **Salary Data**: Hourly/yearly compensation ranges
+- 🏢 **Benefits**: Extracted benefit information
+
+## Use Cases
+- Job market research and trends
+- Salary benchmarking
+- Recruitment lead generation
+- Competitive intelligence
+- Employment data analysis
+- Career planning and research
+
+## Output Fields
+Includes: job ID, title, company name, location, salary, job URL, posted date, full description, job type, benefits list, company rating.""",
+            input_schema={
+                "type": "object",
+                "required": ["keyword"],
+                "properties": {
+                    "keyword": {
+                        "type": "string",
+                        "title": "Job Search Keyword",
+                        "description": "Enter job title or keyword (e.g., 'python developer', 'sales manager', 'data analyst')",
+                        "editor": "textfield",
+                        "example": "software engineer"
+                    },
+                    "location": {
+                        "type": "string",
+                        "title": "Location",
+                        "description": "City, state or 'Remote' (leave empty for all locations)",
+                        "editor": "textfield",
+                        "default": "",
+                        "example": "New York, NY"
+                    },
+                    "max_pages": {
+                        "type": "integer",
+                        "title": "Maximum Pages",
+                        "description": "Number of pages to scrape (each page ~15 jobs)",
+                        "editor": "number",
+                        "default": 5,
+                        "minimum": 1,
+                        "maximum": 100
+                    }
+                }
+            }
+        )
+        doc = actor.model_dump()
+        doc['created_at'] = doc['created_at'].isoformat()
+        doc['updated_at'] = doc['updated_at'].isoformat()
+        await db.actors.insert_one(doc)
+        logger.info("Created Indeed Jobs Scraper actor")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
