@@ -537,7 +537,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Amazon Product Scraper - Complete Implementation"
+    - "Indeed Jobs Scraper - Complete Implementation"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
