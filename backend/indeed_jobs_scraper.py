@@ -192,18 +192,37 @@ class IndeedJobsScraper(BaseScraper):
                 
                 try:
                     # Navigate to search page
-                    await page.goto(search_url, wait_until="domcontentloaded", timeout=30000)
-                    await asyncio.sleep(2)  # Wait for dynamic content
+                    await page.goto(search_url, wait_until="networkidle", timeout=30000)
+                    await asyncio.sleep(3)  # Wait for dynamic content to load
                     
                     # Extract job URLs from page
                     content = await page.content()
                     soup = BeautifulSoup(content, 'html.parser')
                     
-                    # Find all job cards
-                    job_cards = soup.select('div.job_seen_beacon, div.cardOutline, a.jcs-JobTitle')
+                    # Try multiple selectors for job cards (Indeed changes these frequently)
+                    job_cards = []
+                    
+                    # Try different selector patterns
+                    selectors = [
+                        'div[data-testid="slider_item"]',  # New Indeed selector
+                        'div.job_seen_beacon',
+                        'div.cardOutline',
+                        'div[class*="job"]',
+                        'a[id^="job_"]',
+                        'div[data-jk]'
+                    ]
+                    
+                    for selector in selectors:
+                        job_cards = soup.select(selector)
+                        if job_cards:
+                            logger.info(f"Found {len(job_cards)} jobs using selector: {selector}")
+                            break
                     
                     if not job_cards:
                         logger.warning(f"No job cards found on page {page_num + 1}")
+                        # Log sample HTML for debugging
+                        sample_html = content[:1000] if len(content) > 1000 else content
+                        logger.debug(f"Sample HTML: {sample_html}")
                         break
                     
                     page_jobs = []
