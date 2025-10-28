@@ -9,12 +9,11 @@ from models import (
 from auth import create_access_token, get_current_user, hash_password, verify_password
 from proxy_manager import get_proxy_manager
 from scraper_engine import ScraperEngine
-from google_maps_scraper_v3 import GoogleMapsScraperV3
+from scraper_registry import get_scraper_registry  # New: Dynamic scraper management
 from chat_service import LeadChatService
 from global_chat_service import GlobalChatService
 from global_chat_service_v2 import EnhancedGlobalChatService
 from task_manager import get_task_manager
-# Removed scraper_templates import - marketplace feature removed
 import logging
 import asyncio
 
