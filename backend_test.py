@@ -1000,10 +1000,13 @@ class ScrapiAPITester:
                                     self.log(f"✅ Retrieved {len(items)} items from dataset")
                                     self.test_results["amazon_scraper_trimmer"]["passed"] += 1
                                     
-                                    if len(items) > 0:
+                                    if isinstance(items, list) and len(items) > 0:
                                         sample_item = items[0]
                                         self.log(f"Sample product: {sample_item.get('data', {}).get('title', 'N/A')}")
                                         self.test_results["amazon_scraper_trimmer"]["passed"] += 1
+                                    else:
+                                        self.log("⚠️ No items in dataset (empty results)")
+                                        self.test_results["amazon_scraper_trimmer"]["errors"].append("Empty dataset results")
                                 else:
                                     self.log("❌ Failed to retrieve dataset items")
                                     self.test_results["amazon_scraper_trimmer"]["failed"] += 1
