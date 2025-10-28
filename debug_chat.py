@@ -7,7 +7,7 @@ import requests
 import json
 
 # Get backend URL from environment
-BACKEND_URL = "https://multicrawler.preview.emergentagent.com/api"
+BACKEND_URL = "https://indeed-fix.preview.emergentagent.com/api"
 
 def test_chat_response():
     # First authenticate
