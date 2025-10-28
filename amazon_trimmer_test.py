@@ -228,8 +228,16 @@ class AmazonTrimmerTester:
         
         response = self.make_request("GET", f"/datasets/{run_id}/items")
         if response and response.status_code == 200:
-            items = response.json()
-            self.log(f"✅ Retrieved {len(items)} items from dataset")
+            dataset_response = response.json()
+            
+            # Handle paginated response
+            if isinstance(dataset_response, dict) and "items" in dataset_response:
+                items = dataset_response["items"]
+                total = dataset_response.get("total", len(items))
+                self.log(f"✅ Retrieved {len(items)} items from dataset (total: {total})")
+            else:
+                items = dataset_response
+                self.log(f"✅ Retrieved {len(items)} items from dataset")
             
             if isinstance(items, list) and len(items) > 0:
                 self.log("Sample products:")
