@@ -255,6 +255,9 @@ class IndeedJobsScraper(BaseScraper):
                     # Navigate to search page
                     await page.goto(search_url, wait_until="domcontentloaded", timeout=45000)
                     
+                    # Wait for page to fully render
+                    await asyncio.sleep(3)
+                    
                     # Random delay to appear more human (2-4 seconds)
                     import random
                     human_delay = 2 + random.random() * 2
@@ -280,12 +283,14 @@ class IndeedJobsScraper(BaseScraper):
                     
                     # Wait for job results to load - try multiple selectors
                     try:
-                        await page.wait_for_selector('.job_seen_beacon, [data-testid="slider_item"], .jobsearch-ResultsList, .mosaic-provider-jobcards', timeout=15000)
+                        await page.wait_for_selector('.job_seen_beacon, [data-testid="slider_item"], .jobsearch-ResultsList, .mosaic-provider-jobcards', timeout=20000)
+                        await self._log_progress("✅ Job listings loaded successfully", progress_callback)
                     except:
                         logger.warning("Job selector not found within timeout, proceeding anyway")
+                        await self._log_progress("⚠️ Job selector timeout, checking page content...", progress_callback)
                     
                     # Additional wait for dynamic content
-                    await asyncio.sleep(2)
+                    await asyncio.sleep(3)
                     
                     # Extract job URLs from page
                     content = await page.content()
