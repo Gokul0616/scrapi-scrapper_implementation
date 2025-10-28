@@ -443,7 +443,144 @@ const DatasetV2 = () => {
               <Search className="w-16 h-16 mx-auto mb-4 text-gray-300" />
               <p className="text-lg">No results found</p>
             </div>
+          ) : isAmazonScraper() ? (
+            // Amazon Product Table
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b border-gray-200 bg-gray-50">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">#</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Title</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">ASIN</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Brand</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Stars</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Reviews</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Picture</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Categories</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Description</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Price</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">URL</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-100">
+                  {items.map((item, index) => {
+                    const product = item.data;
+                    return (
+                      <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                        {/* # */}
+                        <td className="px-4 py-4 text-sm text-gray-900 font-medium">
+                          {(page - 1) * limit + index + 1}
+                        </td>
+                        
+                        {/* Title */}
+                        <td className="px-4 py-4 text-sm max-w-xs">
+                          <div className="font-medium text-gray-900 line-clamp-2" title={product.title}>
+                            {product.title || '-'}
+                          </div>
+                        </td>
+                        
+                        {/* ASIN */}
+                        <td className="px-4 py-4 text-sm text-gray-700">
+                          <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
+                            {product.asin || '-'}
+                          </code>
+                        </td>
+                        
+                        {/* Brand */}
+                        <td className="px-4 py-4 text-sm text-gray-700">
+                          {product.seller || product.soldBy || '-'}
+                        </td>
+                        
+                        {/* Stars */}
+                        <td className="px-4 py-4 text-sm">
+                          {product.rating ? (
+                            <div className="flex items-center gap-1">
+                              <span className="text-yellow-500">⭐</span>
+                              <span className="font-medium text-gray-900">{product.rating}</span>
+                            </div>
+                          ) : '-'}
+                        </td>
+                        
+                        {/* Reviews Count */}
+                        <td className="px-4 py-4 text-sm text-gray-700">
+                          {product.reviewCount ? product.reviewCount.toLocaleString() : '-'}
+                        </td>
+                        
+                        {/* Picture */}
+                        <td className="px-4 py-4">
+                          {product.images && product.images.length > 0 ? (
+                            <img 
+                              src={product.images[0]} 
+                              alt={product.title}
+                              className="w-16 h-16 object-cover rounded border border-gray-200"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <div className="w-16 h-16 bg-gray-100 rounded border border-gray-200 flex items-center justify-center text-gray-400 text-xs">
+                              No image
+                            </div>
+                          )}
+                        </td>
+                        
+                        {/* Categories */}
+                        <td className="px-4 py-4 text-sm text-gray-700 max-w-xs">
+                          <div className="line-clamp-2" title={product.category}>
+                            {product.category || '-'}
+                          </div>
+                        </td>
+                        
+                        {/* Description */}
+                        <td className="px-4 py-4 text-sm text-gray-600 max-w-xs">
+                          <div className="line-clamp-2" title={product.description}>
+                            {product.description || '-'}
+                          </div>
+                        </td>
+                        
+                        {/* Price */}
+                        <td className="px-4 py-4 text-sm">
+                          {product.price ? (
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-gray-900">
+                                ${product.price.toFixed(2)}
+                              </span>
+                              {product.originalPrice && product.originalPrice > product.price && (
+                                <span className="text-xs text-gray-500 line-through">
+                                  ${product.originalPrice.toFixed(2)}
+                                </span>
+                              )}
+                              {product.discount && product.discount > 0 && (
+                                <span className="text-xs text-green-600">
+                                  -{product.discount.toFixed(0)}%
+                                </span>
+                              )}
+                            </div>
+                          ) : '-'}
+                        </td>
+                        
+                        {/* URL */}
+                        <td className="px-4 py-4 text-sm">
+                          {product.url ? (
+                            <a 
+                              href={product.url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline flex items-center gap-1"
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                              View
+                            </a>
+                          ) : '-'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           ) : (
+            // Google Maps Table (existing code)
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
