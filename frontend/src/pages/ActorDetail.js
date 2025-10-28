@@ -126,7 +126,12 @@ const ActorDetail = () => {
         navigate('/runs');
       }, 1500);
     } catch (error) {
-      console.error('Failed to start run:', error);
+      console.error('❌ Failed to start run:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
       toast({
         title: 'Failed to start run',
         description: error.response?.data?.detail || 'An error occurred',
@@ -193,7 +198,12 @@ const ActorDetail = () => {
         navigate('/runs');
       }, 1500);
     } catch (error) {
-      console.error('Failed to start run:', error);
+      console.error('❌ Failed to start run:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
       toast({
         title: 'Failed to start run',
         description: error.response?.data?.detail || 'An error occurred',
