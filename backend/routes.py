@@ -289,6 +289,10 @@ async def get_actors_used(current_user: dict = Depends(get_current_user)):
 async def execute_scraping_job(run_id: str, actor_id: str, user_id: str, input_data: dict):
     """Background task to execute scraping."""
     try:
+        logger.info(f"🔧 Executing scraping job for run {run_id}")
+        logger.info(f"   Input data type: {type(input_data)}")
+        logger.info(f"   Input data: {input_data}")
+        
         # Update run status to running
         await db.runs.update_one(
             {"id": run_id},
@@ -317,10 +321,15 @@ async def execute_scraping_job(run_id: str, actor_id: str, user_id: str, input_d
             if not actor_name:
                 raise ValueError("Actor not found or has no name")
             
+            logger.info(f"   Looking for scraper: {actor_name}")
             scraper = scraper_registry.get_scraper(actor_name, engine)
             
             if not scraper:
+                logger.error(f"❌ No scraper found for: {actor_name}")
                 raise ValueError(f"No scraper registered for actor: {actor_name}")
+            
+            logger.info(f"✅ Found scraper: {type(scraper).__name__}")
+            logger.info(f"   Calling scraper.scrape() with input_data: {input_data}")
             
             # Progress callback for logging
             async def progress_callback(message: str):
