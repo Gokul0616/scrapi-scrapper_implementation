@@ -254,10 +254,33 @@ class IndeedJobsScraper(BaseScraper):
                 
                 try:
                     # Navigate to search page
-                    await page.goto(search_url, wait_until="domcontentloaded", timeout=45000)
+                    await page.goto(search_url, wait_until="domcontentloaded", timeout=60000)
                     
                     # Wait for page to fully render
-                    await asyncio.sleep(3)
+                    await asyncio.sleep(5)
+                    
+                    # Check if we hit Cloudflare challenge
+                    page_title = await page.title()
+                    logger.info(f"📄 Page title: {page_title}")
+                    
+                    if "just a moment" in page_title.lower() or "challenge" in page_title.lower():
+                        await self._log_progress(f"🔐 Cloudflare challenge detected, waiting to auto-solve...", progress_callback)
+                        logger.info("⏳ Waiting 20 seconds for Cloudflare challenge to auto-solve...")
+                        
+                        # Wait for Cloudflare to auto-solve (can take 10-20 seconds)
+                        for wait_iteration in range(4):  # Wait up to 40 seconds total
+                            await asyncio.sleep(10)
+                            page_title = await page.title()
+                            logger.info(f"🔄 Check {wait_iteration + 1}/4: Page title = {page_title}")
+                            
+                            if "just a moment" not in page_title.lower() and "challenge" not in page_title.lower():
+                                await self._log_progress(f"✅ Cloudflare challenge passed!", progress_callback)
+                                logger.info("✅ Successfully bypassed Cloudflare challenge")
+                                break
+                        else:
+                            # Still on challenge page after 40 seconds
+                            await self._log_progress(f"⚠️ Cloudflare challenge not auto-solved, trying manual wait...", progress_callback)
+                            logger.warning("⚠️ Cloudflare challenge still present after 40s")
                     
                     # Random delay to appear more human (2-4 seconds)
                     import random
