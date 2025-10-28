@@ -1145,18 +1145,19 @@ const DatasetV2 = () => {
               left: '50%',
               top: '50%',
               transform: 'translate(-50%, -50%)',
-              width: '500px',
-              maxWidth: '90vw'
+              width: '380px',
+              maxWidth: '90vw',
+              maxHeight: '85vh'
             }}
           >
             {/* Header with product name */}
-            <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+            <div className="px-3 py-2 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
               <div className="flex-1 min-w-0">
-                <div className="font-semibold text-gray-900 text-sm truncate">
+                <div className="font-semibold text-gray-900 text-xs truncate">
                   {selectedProduct.title}
                 </div>
                 <div className="text-xs text-gray-500 mt-0.5">
-                  {currentImageIndex + 1} of {selectedProduct.images?.length || 0} images
+                  {currentImageIndex + 1} / {selectedProduct.images?.length || 0}
                 </div>
               </div>
               <button 
@@ -1169,20 +1170,20 @@ const DatasetV2 = () => {
             
             {/* Main Image Display with Navigation */}
             <div className="relative bg-gray-50">
-              <div className="aspect-square flex items-center justify-center p-4">
+              <div className="flex items-center justify-center p-3" style={{ height: '280px' }}>
                 {selectedProduct.images && selectedProduct.images.length > 0 ? (
                   <img
                     src={selectedProduct.images[currentImageIndex]}
-                    alt={`${selectedProduct.title} - Image ${currentImageIndex + 1}`}
+                    alt={`Product ${currentImageIndex + 1}`}
                     className="max-w-full max-h-full object-contain"
                     onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/400?text=Image+Not+Available';
+                      e.target.src = 'https://via.placeholder.com/250?text=No+Image';
                     }}
                   />
                 ) : (
                   <div className="text-gray-400 text-center">
-                    <div className="text-4xl mb-2">📦</div>
-                    <p className="text-sm">No image available</p>
+                    <div className="text-3xl mb-2">📦</div>
+                    <p className="text-xs">No image</p>
                   </div>
                 )}
               </div>
@@ -1191,9 +1192,9 @@ const DatasetV2 = () => {
               {selectedProduct.images && selectedProduct.images.length > 1 && (
                 <button
                   onClick={previousImage}
-                  className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white hover:bg-gray-100 text-gray-800 rounded-full p-2 shadow-lg transition-all"
+                  className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white hover:bg-gray-100 text-gray-800 rounded-full p-1.5 shadow-md transition-all"
                 >
-                  <ChevronLeft className="w-5 h-5" />
+                  <ChevronLeft className="w-4 h-4" />
                 </button>
               )}
 
@@ -1201,41 +1202,41 @@ const DatasetV2 = () => {
               {selectedProduct.images && selectedProduct.images.length > 1 && (
                 <button
                   onClick={nextImage}
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white hover:bg-gray-100 text-gray-800 rounded-full p-2 shadow-lg transition-all"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white hover:bg-gray-100 text-gray-800 rounded-full p-1.5 shadow-md transition-all"
                 >
-                  <ChevronRight className="w-5 h-5" />
+                  <ChevronRight className="w-4 h-4" />
                 </button>
               )}
 
               {/* Video Indicator */}
               {selectedProduct.videos && selectedProduct.videos.length > 0 && (
-                <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded text-xs flex items-center gap-1">
-                  <Play className="w-3 h-3" />
-                  Video Available
+                <div className="absolute top-2 right-2 bg-red-600 text-white px-1.5 py-0.5 rounded text-xs flex items-center gap-1">
+                  <Play className="w-2.5 h-2.5" />
+                  Video
                 </div>
               )}
             </div>
             
             {/* Thumbnail Gallery */}
             {selectedProduct.images && selectedProduct.images.length > 1 && (
-              <div className="px-4 py-3 border-t border-gray-200 bg-white">
-                <div className="flex gap-2 overflow-x-auto">
+              <div className="px-3 py-2 border-t border-gray-200 bg-white overflow-y-auto" style={{ maxHeight: '120px' }}>
+                <div className="flex gap-1.5 flex-wrap">
                   {selectedProduct.images.map((img, index) => (
                     <button
                       key={index}
                       onClick={() => selectThumbnail(index)}
-                      className={`flex-shrink-0 w-16 h-16 rounded overflow-hidden border-2 transition-all ${
+                      className={`flex-shrink-0 w-12 h-12 rounded overflow-hidden border-2 transition-all ${
                         index === currentImageIndex
-                          ? 'border-blue-500 ring-2 ring-blue-200'
+                          ? 'border-blue-500 ring-1 ring-blue-200'
                           : 'border-gray-200 hover:border-gray-400'
                       }`}
                     >
                       <img
                         src={img}
-                        alt={`Thumb ${index + 1}`}
+                        alt={`${index + 1}`}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          e.target.src = 'https://via.placeholder.com/64?text=N/A';
+                          e.target.src = 'https://via.placeholder.com/48?text=?';
                         }}
                       />
                     </button>
@@ -1245,38 +1246,40 @@ const DatasetV2 = () => {
             )}
 
             {/* Product Info Footer */}
-            <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
-              <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-3">
-                  {selectedProduct.brand && (
-                    <span className="text-gray-600">
-                      <strong className="text-gray-900">{selectedProduct.brand}</strong>
-                    </span>
-                  )}
-                  {selectedProduct.price && (
-                    <span className="text-green-600 font-semibold">
-                      ${selectedProduct.price.toFixed(2)}
-                    </span>
-                  )}
-                  {selectedProduct.rating && (
-                    <span className="flex items-center gap-1">
-                      <span className="text-yellow-500">⭐</span>
-                      <span className="font-medium">{selectedProduct.rating}</span>
+            <div className="px-3 py-2 border-t border-gray-200 bg-gray-50">
+              <div className="flex items-center justify-between text-xs mb-2">
+                {selectedProduct.brand && (
+                  <span className="text-gray-600 truncate flex-1 mr-2">
+                    {selectedProduct.brand}
+                  </span>
+                )}
+                {selectedProduct.price && (
+                  <span className="text-green-600 font-semibold whitespace-nowrap">
+                    ${selectedProduct.price.toFixed(2)}
+                  </span>
+                )}
+              </div>
+              {selectedProduct.rating && (
+                <div className="flex items-center gap-1 text-xs mb-2">
+                  <span className="text-yellow-500">⭐</span>
+                  <span className="font-medium">{selectedProduct.rating}</span>
+                  {selectedProduct.reviewCount && (
+                    <span className="text-gray-500">
+                      ({selectedProduct.reviewCount.toLocaleString()})
                     </span>
                   )}
                 </div>
-                {selectedProduct.url && (
-                  <a
-                    href={selectedProduct.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-700 flex items-center gap-1 font-medium"
-                  >
-                    View on Amazon
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                )}
-              </div>
+              )}
+              {selectedProduct.url && (
+                <a
+                  href={selectedProduct.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white py-1.5 px-3 rounded text-xs font-medium transition-colors"
+                >
+                  View on Amazon
+                </a>
+              )}
             </div>
           </div>
         </>
