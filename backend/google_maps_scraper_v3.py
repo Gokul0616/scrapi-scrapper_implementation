@@ -20,7 +20,7 @@ class GoogleMapsScraperV3(BaseScraper):
     """
     
     def __init__(self, scraper_engine: ScraperEngine):
-        self.engine = scraper_engine
+        super().__init__(scraper_engine)
         self.base_url = "https://www.google.com/maps"
         self.email_pattern = re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b')
         self.phone_pattern = re.compile(r'[\+\(]?[1-9][0-9 .\-\(\)]{8,}[0-9]')
@@ -33,6 +33,48 @@ class GoogleMapsScraperV3(BaseScraper):
             'linkedin': re.compile(r'(?:https?://)?(?:www\.)?linkedin\.com/(?:company|in)/[\w\-]+', re.I),
             'youtube': re.compile(r'(?:https?://)?(?:www\.)?youtube\.com/(?:channel|c|user)/[\w\-]+', re.I),
             'tiktok': re.compile(r'(?:https?://)?(?:www\.)?tiktok\.com/@[\w\-\.]+', re.I)
+        }
+    
+    @classmethod
+    def get_name(cls) -> str:
+        return "Google Maps Scraper V2"
+    
+    @classmethod
+    def get_description(cls) -> str:
+        return "Extract businesses, places, reviews from Google Maps with powerful scraping engine"
+    
+    @classmethod
+    def get_category(cls) -> str:
+        return "Maps & Location"
+    
+    @classmethod
+    def get_icon(cls) -> str:
+        return "🗺️"
+    
+    @classmethod
+    def get_tags(cls) -> List[str]:
+        return ["maps", "google", "business", "leads", "local"]
+    
+    def get_input_schema(self) -> Dict[str, Any]:
+        return {
+            "search_terms": {"type": "array", "description": "List of search terms"},
+            "location": {"type": "string", "description": "Location to search in"},
+            "max_results": {"type": "integer", "default": 100},
+            "extract_reviews": {"type": "boolean", "default": False},
+            "extract_images": {"type": "boolean", "default": False}
+        }
+    
+    def get_output_schema(self) -> Dict[str, Any]:
+        return {
+            "title": "string - Business name",
+            "address": "string - Full address",
+            "phone": "string - Phone number",
+            "email": "string - Email address",
+            "website": "string - Website URL",
+            "rating": "number - Rating score",
+            "reviewsCount": "number - Number of reviews",
+            "category": "string - Business category",
+            "socialMedia": "object - Social media links"
         }
     
     async def scrape(self, config: Dict[str, Any], progress_callback=None) -> List[Dict[str, Any]]:
