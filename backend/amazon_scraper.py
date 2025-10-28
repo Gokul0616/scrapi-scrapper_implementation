@@ -121,10 +121,14 @@ class AmazonProductScraper(BaseScraper):
         """Main scraping method for Amazon products."""
         
         search_keywords = config.get('search_keywords', [])
-        max_results = config.get('max_results', 50)
+        max_results = int(config.get('max_results', 50))  # Convert to int
         extract_reviews = config.get('extract_reviews', False)
-        min_rating = config.get('min_rating', 0)
+        min_rating = float(config.get('min_rating', 0))  # Convert to float
         max_price = config.get('max_price', None)
+        if max_price is not None and max_price != 0:
+            max_price = float(max_price)  # Convert to float
+        else:
+            max_price = None  # Treat 0 as no max price
         
         if not search_keywords:
             raise ValueError("search_keywords is required")
