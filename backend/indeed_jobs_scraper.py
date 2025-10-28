@@ -412,27 +412,37 @@ class IndeedJobsScraper(BaseScraper):
                     new_jobs = [url for url in page_jobs if url not in job_urls]
                     job_urls.extend(new_jobs)
                     
+                    logger.info(f"📊 Page {page_num + 1}: Found {len(new_jobs)} new jobs (Total: {len(job_urls)})")
                     await self._log_progress(f"✅ Page {page_num + 1}: Found {len(new_jobs)} jobs (Total: {len(job_urls)})", progress_callback)
                     
                     # If no new jobs found on this page but we found some on previous pages, we've reached the end
                     if not new_jobs and len(job_urls) > 0:
-                        logger.info(f"No new jobs found on page {page_num + 1}, reached end of results (total: {len(job_urls)})")
+                        logger.info(f"📍 No new jobs on page {page_num + 1}, reached end (total: {len(job_urls)})")
                         await self._log_progress(f"📍 Reached end of results at page {page_num + 1}", progress_callback)
                         break
                     elif not new_jobs and len(job_urls) == 0:
                         # No jobs found at all - continue to next page in case of issues
-                        logger.warning(f"No jobs on page {page_num + 1} and still 0 total jobs, trying next page...")
+                        logger.warning(f"⚠️ No jobs on page {page_num + 1} and still 0 total, trying next page...")
                         continue
                     
-                    # Respectful delay between pages
-                    await asyncio.sleep(2)
+                    # Respectful delay between pages (3-5 seconds to avoid detection)
+                    delay = 3 + (page_num % 3)  # Variable delay: 3, 4, or 5 seconds
+                    await asyncio.sleep(delay)
                     
                 except PlaywrightTimeoutError:
-                    logger.error(f"Timeout on page {page_num + 1}")
-                    break
+                    logger.error(f"⏱️ Timeout on page {page_num + 1}")
+                    await self._log_progress(f"⏱️ Timeout on page {page_num + 1}", progress_callback)
+                    consecutive_failures += 1
+                    if consecutive_failures >= max_consecutive_failures:
+                        break
+                    continue
                 except Exception as e:
-                    logger.error(f"Error on page {page_num + 1}: {e}")
-                    break
+                    logger.error(f"❌ Error on page {page_num + 1}: {e}")
+                    await self._log_progress(f"❌ Error on page {page_num + 1}: {str(e)}", progress_callback)
+                    consecutive_failures += 1
+                    if consecutive_failures >= max_consecutive_failures:
+                        break
+                    continue
         
         finally:
             await page.close()
