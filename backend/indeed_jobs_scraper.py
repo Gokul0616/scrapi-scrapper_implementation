@@ -243,6 +243,17 @@ class IndeedJobsScraper(BaseScraper):
                     
                     # Extract job URLs from page
                     content = await page.content()
+                    
+                    # Check for blocking/captcha
+                    if 'captcha' in content.lower() or 'blocked' in content.lower():
+                        logger.error("⚠️ Detected CAPTCHA or blocking on Indeed")
+                        await self._log_progress("⚠️ CAPTCHA/blocking detected - Indeed may be rate-limiting", progress_callback)
+                        consecutive_failures += 1
+                        if consecutive_failures >= max_consecutive_failures:
+                            break
+                        await asyncio.sleep(10)  # Wait longer before retry
+                        continue
+                    
                     soup = BeautifulSoup(content, 'html.parser')
                     
                     # Use the correct 2024-2025 Indeed selector
