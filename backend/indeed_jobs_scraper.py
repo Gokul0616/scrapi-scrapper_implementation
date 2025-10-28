@@ -213,6 +213,16 @@ class IndeedJobsScraper(BaseScraper):
         job_urls = []
         page = await context.new_page()
         
+        # Set realistic user agent to avoid detection
+        await page.set_extra_http_headers({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        })
+        
+        consecutive_failures = 0  # Track consecutive page failures
+        max_consecutive_failures = 2  # Stop after 2 consecutive failures
+        
         try:
             for page_num in range(max_pages):
                 start = page_num * 10  # Indeed uses 'start' parameter for pagination
