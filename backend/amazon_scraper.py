@@ -414,7 +414,12 @@ class AmazonProductScraper(BaseScraper):
                 for video in video_tags:
                     video_src = video.get('src', '')
                     if video_src and video_src not in videos:
-                        videos.append(video_src)
+                        # Ensure it's a full URL
+                        if not video_src.startswith('http'):
+                            video_src = 'https:' + video_src if video_src.startswith('//') else video_src
+                        if video_src.startswith('http'):
+                            videos.append(video_src)
+                            print(f"[VIDEO] Method 1 - Found video: {video_src[:100]}")
             
             # Method 2: Check for video in image carousel scripts
             video_scripts = soup.find_all('script', {'type': 'text/javascript'})
@@ -430,11 +435,15 @@ class AmazonProductScraper(BaseScraper):
                                 if isinstance(vid, dict) and 'url' in vid:
                                     video_url = vid['url']
                                     if video_url and video_url not in videos:
-                                        videos.append(video_url)
-                    except:
-                        pass
+                                        if not video_url.startswith('http'):
+                                            video_url = 'https:' + video_url if video_url.startswith('//') else video_url
+                                        if video_url.startswith('http'):
+                                            videos.append(video_url)
+                                            print(f"[VIDEO] Method 2 - Found video: {video_url[:100]}")
+                    except Exception as e:
+                        print(f"[VIDEO] Method 2 error: {e}")
             
-            # Method 3: Look for image/video data in imageBlock scripts
+            # Method 3: Look for image/video data in imageBlock scripts  
             for script in video_scripts:
                 if script.string and 'colorImages' in script.string:
                     try:
@@ -443,8 +452,25 @@ class AmazonProductScraper(BaseScraper):
                         for video_url in video_url_matches:
                             if video_url and video_url not in videos:
                                 videos.append(video_url)
-                    except:
-                        pass
+                                print(f"[VIDEO] Method 3 - Found video: {video_url[:100]}")
+                    except Exception as e:
+                        print(f"[VIDEO] Method 3 error: {e}")
+            
+            # Method 4: Look for videos in the imageBlock data
+            for script in video_scripts:
+                if script.string and 'imageBlock' in script.string:
+                    try:
+                        # Find video URLs with better pattern matching
+                        # Amazon videos often have patterns like: /videos/...mp4
+                        all_video_urls = re.findall(r'"(https?://[^"]*(?:videos?/)[^"]*\.mp4[^"]*)"', script.string or '')
+                        for video_url in all_video_urls:
+                            if video_url and video_url not in videos:
+                                videos.append(video_url)
+                                print(f"[VIDEO] Method 4 - Found video: {video_url[:100]}")
+                    except Exception as e:
+                        print(f"[VIDEO] Method 4 error: {e}")
+            
+            print(f"[VIDEO] Total videos found: {len(videos)}")
             
             product_data['images'] = images[:10]  # Limit to 10 images
             product_data['videos'] = videos[:3]  # Limit to 3 videos
