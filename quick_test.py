@@ -8,7 +8,7 @@ import json
 import re
 
 # Get backend URL from environment
-BACKEND_URL = "https://scraper-bypass.preview.emergentagent.com/api"
+BACKEND_URL = "https://indeed-bot-bypass.preview.emergentagent.com/api"
 
 def test_run_creation():
     # Authenticate

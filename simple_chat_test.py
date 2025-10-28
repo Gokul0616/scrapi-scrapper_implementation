@@ -7,7 +7,7 @@ import requests
 import json
 
 # Backend URL
-BACKEND_URL = "https://scraper-bypass.preview.emergentagent.com/api"
+BACKEND_URL = "https://indeed-bot-bypass.preview.emergentagent.com/api"
 
 def test_basic_chat():
     print("=== Testing Global Chat Assistant ===")
