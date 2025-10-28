@@ -1305,7 +1305,7 @@ const DatasetV2 = () => {
                       {media.type === 'video' ? (
                         <div className="w-full h-full bg-gradient-to-br from-red-900 to-red-800 flex items-center justify-center relative">
                           <Play className="w-7 h-7 text-white absolute z-10 drop-shadow-lg" />
-                          <div className="absolute inset-0 bg-black bg-opacity-30"></div>
+                          <div className="absolute inset-0 bg-black bg-opacity-30 pointer-events-none"></div>
                         </div>
                       ) : (
                         <img
@@ -1316,9 +1316,6 @@ const DatasetV2 = () => {
                             e.target.src = 'https://via.placeholder.com/48?text=?';
                           }}
                         />
-                      )}
-                      {media.type === 'video' && (
-                        <div className="absolute inset-0 bg-red-600 bg-opacity-20 pointer-events-none"></div>
                       )}
                     </button>
                   ))}
