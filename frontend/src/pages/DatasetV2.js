@@ -1270,59 +1270,38 @@ const DatasetV2 = () => {
               )}
             </div>
             
-            {/* Thumbnail Gallery */}
-            {selectedProduct.images && selectedProduct.images.length > 1 && (
+            {/* Thumbnail Gallery - Combined Images and Videos */}
+            {getAllMedia(selectedProduct).length > 1 && (
               <div className="px-3 py-2 border-t border-gray-200 bg-white overflow-y-auto" style={{ maxHeight: '120px' }}>
                 <div className="flex gap-1.5 flex-wrap">
-                  {selectedProduct.images.map((img, index) => (
+                  {getAllMedia(selectedProduct).map((media, index) => (
                     <button
                       key={index}
                       onClick={() => selectThumbnail(index)}
-                      className={`flex-shrink-0 w-12 h-12 rounded overflow-hidden border-2 transition-all ${
+                      className={`relative flex-shrink-0 w-12 h-12 rounded overflow-hidden border-2 transition-all ${
                         index === currentImageIndex
                           ? 'border-blue-500 ring-1 ring-blue-200'
                           : 'border-gray-200 hover:border-gray-400'
                       }`}
                     >
-                      <img
-                        src={img}
-                        alt={`${index + 1}`}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.src = 'https://via.placeholder.com/48?text=?';
-                        }}
-                      />
+                      {media.type === 'video' ? (
+                        <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                          <Play className="w-5 h-5 text-white" />
+                        </div>
+                      ) : (
+                        <img
+                          src={media.url}
+                          alt={`${index + 1}`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.src = 'https://via.placeholder.com/48?text=?';
+                          }}
+                        />
+                      )}
+                      {media.type === 'video' && (
+                        <div className="absolute inset-0 bg-red-600 bg-opacity-20 pointer-events-none"></div>
+                      )}
                     </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Video Player Section */}
-            {selectedProduct.videos && selectedProduct.videos.length > 0 && (
-              <div className="px-3 py-3 border-t border-gray-200 bg-white">
-                <div className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1">
-                  <Play className="w-3 h-3 text-red-600" />
-                  Product Videos ({selectedProduct.videos.length})
-                </div>
-                <div className="space-y-2">
-                  {selectedProduct.videos.map((videoUrl, index) => (
-                    <div key={index} className="relative group">
-                      <video
-                        className="w-full rounded border border-gray-200"
-                        controls
-                        preload="metadata"
-                        style={{ maxHeight: '200px' }}
-                      >
-                        <source src={videoUrl} type="video/mp4" />
-                        <source src={videoUrl} type="video/webm" />
-                        <source src={videoUrl} type="video/ogg" />
-                        Your browser does not support the video tag.
-                      </video>
-                      <div className="absolute top-1 left-1 bg-black bg-opacity-60 text-white px-1.5 py-0.5 rounded text-xs">
-                        Video {index + 1}
-                      </div>
-                    </div>
                   ))}
                 </div>
               </div>
