@@ -16,22 +16,29 @@ class ScraperEngine:
         self.contexts: List[BrowserContext] = []
         
     async def initialize(self):
-        """Initialize Playwright browser."""
+        """Initialize the scraping engine with browser and proxy manager."""
         self.playwright = await async_playwright().start()
         
         # Launch browser with anti-detection settings
+        # Use headless=False for better Cloudflare bypass
         self.browser = await self.playwright.chromium.launch(
-            headless=True,
+            headless=False,  # Non-headless mode bypasses more detection
             args=[
                 '--disable-blink-features=AutomationControlled',
                 '--disable-dev-shm-usage',
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
                 '--disable-web-security',
-                '--disable-features=IsolateOrigins,site-per-process'
+                '--disable-features=IsolateOrigins,site-per-process',
+                '--disable-blink-features=AutomationControlled',
+                '--no-first-run',
+                '--no-default-browser-check',
+                '--disable-background-timer-throttling',
+                '--disable-backgrounding-occluded-windows',
+                '--disable-renderer-backgrounding',
             ]
         )
-        logger.info("Scraper engine initialized")
+        logger.info("Scraper engine initialized with enhanced anti-detection")
     
     async def create_context(self, use_proxy: bool = True, ultra_fast: bool = False) -> BrowserContext:
         """Create a new browser context with optional proxy and resource blocking for ultra-fast mode."""
