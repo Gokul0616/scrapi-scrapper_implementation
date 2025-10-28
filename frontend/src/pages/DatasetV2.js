@@ -570,11 +570,52 @@ const DatasetV2 = () => {
                                   </span>
                                   {product.discount && product.discount > 0 && (
                                     <span className="text-xs text-green-600">
-                                  -{product.discount.toFixed(0)}%
+                                      -{product.discount.toFixed(0)}%
+                                    </span>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          ) : '-'}
+                        </td>
+                        
+                        {/* Rating */}
+                        <td className="px-4 py-4 text-sm">
+                          {product.rating ? (
+                            <div className="flex items-center gap-1">
+                              <span className="text-yellow-500">⭐</span>
+                              <span className="font-medium text-gray-900">{product.rating}</span>
+                            </div>
+                          ) : '-'}
+                        </td>
+                        
+                        {/* Reviews Count */}
+                        <td className="px-4 py-4 text-sm text-gray-700">
+                          {product.reviewCount ? product.reviewCount.toLocaleString() : '-'}
+                        </td>
+                        
+                        {/* Availability */}
+                        <td className="px-4 py-4 text-sm">
+                          {product.availability ? (
+                            <div className="flex items-center gap-1">
+                              {product.availability.toLowerCase().includes('in stock') ? (
+                                <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">
+                                  In Stock
+                                </span>
+                              ) : (
+                                <span className="text-gray-600 text-xs">
+                                  {product.availability.substring(0, 30)}
                                 </span>
                               )}
                             </div>
                           ) : '-'}
+                        </td>
+                        
+                        {/* Category */}
+                        <td className="px-4 py-4 text-sm text-gray-700 max-w-xs">
+                          <div className="line-clamp-2" title={product.category}>
+                            {product.category || '-'}
+                          </div>
                         </td>
                         
                         {/* URL */}
