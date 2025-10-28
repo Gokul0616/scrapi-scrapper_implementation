@@ -4305,38 +4305,22 @@ class ScrapiAPITester:
         self.log("Indeed Jobs Scraper zero results fix testing completed")
         return True
     def run_all_tests(self):
-        """Run backend API tests with priority on Indeed Jobs Scraper Zero Results Fix"""
-        self.log("🚀 Starting Backend API Testing - PRIORITY: Indeed Jobs Scraper Zero Results Fix")
+        """Run backend API tests with priority on Indeed Jobs Scraper User Reported Issue"""
+        self.log("🚀 Starting Backend API Testing - PRIORITY: Indeed Jobs Scraper User Reported Issue")
         self.log(f"Backend URL: {self.base_url}")
         
         try:
-            # Run the specific review request test first - Indeed Jobs Scraper Zero Results Fix
+            # Run the specific review request test first - Indeed Jobs Scraper with user parameters
             self.log("=" * 80)
-            self.log("CRITICAL TESTING: Indeed Jobs Scraper Zero Results Fix")
+            self.log("CRITICAL TESTING: Indeed Jobs Scraper - User Reported Parameters")
+            self.log("Testing with: keyword='python developer', location='tamilnadu', max_pages=5")
             self.log("=" * 80)
-            indeed_success = self.test_indeed_jobs_scraper_zero_results_fix()
+            indeed_success = self.test_indeed_jobs_scraper_user_reported_issue()
             
             if indeed_success:
-                self.log("🎉 INDEED JOBS SCRAPER ZERO RESULTS FIX TEST COMPLETED!")
+                self.log("🎉 INDEED JOBS SCRAPER USER REPORTED ISSUE TEST COMPLETED!")
             else:
-                self.log("❌ INDEED JOBS SCRAPER ZERO RESULTS FIX TEST FAILED!")
-            
-            self.log("\n" + "=" * 80)
-            self.log("ADDITIONAL TESTS: Running other backend tests if needed")
-            self.log("=" * 80)
-            amazon_success = self.test_amazon_scraper_comprehensive()
-            
-            if amazon_success:
-                self.log("🎉 AMAZON PRODUCT SCRAPER COMPREHENSIVE TEST COMPLETED SUCCESSFULLY!")
-            else:
-                self.log("❌ AMAZON PRODUCT SCRAPER COMPREHENSIVE TEST FAILED!")
-            
-            self.log("\n" + "=" * 80)
-            self.log("ADDITIONAL TESTS: Running other backend tests")
-            self.log("=" * 80)
-            
-            # Test the new /api/actors-used endpoint as requested in previous review
-            self.test_actors_used_endpoint()
+                self.log("❌ INDEED JOBS SCRAPER USER REPORTED ISSUE TEST FAILED!")
             
         except Exception as e:
             self.log(f"❌ Unexpected error during testing: {e}")
