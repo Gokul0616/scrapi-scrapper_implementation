@@ -1214,21 +1214,40 @@ const DatasetV2 = () => {
                   
                   if (currentMedia.type === 'video') {
                     const videoUrl = currentMedia.url;
+                    console.log('[VIDEO PLAYER] Loading video:', videoUrl);
                     
                     return (
                       <div className="w-full h-full flex flex-col items-center justify-center bg-black p-2">
                         <video
                           key={videoUrl}
-                          className="max-w-full max-h-full object-contain"
+                          className="max-w-full max-h-full object-contain rounded"
                           controls
-                          preload="metadata"
+                          controlsList="nodownload"
+                          preload="auto"
                           playsInline
-                          src={videoUrl}
-                          style={{ maxHeight: '250px' }}
+                          style={{ maxHeight: '250px', backgroundColor: '#000' }}
+                          onLoadedMetadata={(e) => {
+                            console.log('[VIDEO PLAYER] Metadata loaded:', {
+                              duration: e.target.duration,
+                              videoWidth: e.target.videoWidth,
+                              videoHeight: e.target.videoHeight
+                            });
+                          }}
+                          onCanPlay={(e) => {
+                            console.log('[VIDEO PLAYER] Can play video');
+                          }}
                           onError={(e) => {
-                            console.error('Video load error:', videoUrl);
+                            console.error('[VIDEO PLAYER] Error loading video:', {
+                              url: videoUrl,
+                              error: e.target.error,
+                              code: e.target.error?.code,
+                              message: e.target.error?.message
+                            });
                           }}
                         >
+                          <source src={videoUrl} type="video/mp4" />
+                          <source src={videoUrl} type="video/webm" />
+                          <source src={videoUrl} type="video/ogg" />
                           Your browser does not support the video tag.
                         </video>
                         <div className="mt-2 flex gap-2">
@@ -1240,7 +1259,7 @@ const DatasetV2 = () => {
                             onClick={(e) => e.stopPropagation()}
                           >
                             <ExternalLink className="w-3 h-3" />
-                            Open video
+                            Open in new tab
                           </a>
                         </div>
                       </div>
