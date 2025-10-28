@@ -1565,35 +1565,30 @@ const DatasetV2 = () => {
                       }`}
                     >
                       {media.type === 'video' ? (
-                        <div className="w-full h-full relative">
-                          {/* Video thumbnail with first frame */}
-                          <video
-                            className="w-full h-full object-cover"
-                            preload="metadata"
-                            muted
-                            playsInline
-                            onLoadedMetadata={(e) => {
-                              // Seek to 1 second to show first frame
-                              e.target.currentTime = 1;
-                            }}
-                          >
-                            {media.url.includes('.m3u8') ? (
-                              // For HLS, we can't show thumbnail easily, use poster or gradient
-                              <></>
-                            ) : (
-                              <source src={`${media.url}#t=1`} type="video/mp4" />
-                            )}
-                          </video>
-                          {/* Play icon overlay - only for videos */}
-                          <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center pointer-events-none">
-                            <Play className="w-6 h-6 text-white drop-shadow-lg" />
-                          </div>
-                          {/* HLS gradient fallback if video thumbnail fails */}
-                          {media.url.includes('.m3u8') && (
-                            <div className="absolute inset-0 bg-gradient-to-br from-red-900 via-red-800 to-red-900 flex items-center justify-center -z-10">
-                              <Play className="w-7 h-7 text-white drop-shadow-lg" />
-                            </div>
+                        <div className="w-full h-full relative bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900">
+                          {/* Video thumbnail - try to show first frame */}
+                          {!media.url.includes('.m3u8') ? (
+                            <video
+                              className="w-full h-full object-cover"
+                              preload="metadata"
+                              muted
+                              playsInline
+                              src={`${media.url}#t=0.1`}
+                              onLoadedData={(e) => {
+                                e.target.currentTime = 0.5;
+                              }}
+                              style={{ backgroundColor: '#000' }}
+                            />
+                          ) : (
+                            // HLS videos - show gradient background
+                            <div className="w-full h-full bg-gradient-to-br from-red-900 via-red-800 to-red-900" />
                           )}
+                          {/* Play icon overlay - always visible for videos */}
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div className="bg-black bg-opacity-50 rounded-full p-1.5">
+                              <Play className="w-4 h-4 text-white drop-shadow-lg" fill="currentColor" />
+                            </div>
+                          </div>
                         </div>
                       ) : (
                         // Regular image - no play icon
