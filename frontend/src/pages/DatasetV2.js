@@ -1407,23 +1407,30 @@ const DatasetV2 = () => {
                     >
                       {media.type === 'video' ? (
                         <div className="w-full h-full relative">
-                          {/* Use video element with poster to show thumbnail */}
-                          <video
-                            className="w-full h-full object-cover"
-                            preload="metadata"
-                            muted
-                            playsInline
-                            onLoadedData={(e) => {
-                              // Seek to 1 second to get a better thumbnail
-                              e.target.currentTime = 1;
-                            }}
-                          >
-                            <source src={`${media.url}#t=1`} type="video/mp4" />
-                          </video>
-                          {/* Overlay with play icon */}
-                          <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center pointer-events-none">
-                            <Play className="w-6 h-6 text-white drop-shadow-lg" />
-                          </div>
+                          {media.url.includes('.m3u8') ? (
+                            // HLS video - show gradient background with play icon
+                            <div className="w-full h-full bg-gradient-to-br from-red-900 via-red-800 to-red-900 flex items-center justify-center">
+                              <Play className="w-7 h-7 text-white drop-shadow-lg" />
+                            </div>
+                          ) : (
+                            // Regular video - try to show thumbnail
+                            <>
+                              <video
+                                className="w-full h-full object-cover"
+                                preload="metadata"
+                                muted
+                                playsInline
+                                onLoadedData={(e) => {
+                                  e.target.currentTime = 1;
+                                }}
+                              >
+                                <source src={`${media.url}#t=1`} type="video/mp4" />
+                              </video>
+                              <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center pointer-events-none">
+                                <Play className="w-6 h-6 text-white drop-shadow-lg" />
+                              </div>
+                            </>
+                          )}
                         </div>
                       ) : (
                         <img
