@@ -537,7 +537,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Indeed Jobs Scraper - Complete Implementation"
+    - "Indeed Jobs Scraper V2 - Cloudflare Bypass Testing Complete"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
