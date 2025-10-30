@@ -4514,22 +4514,23 @@ class ScrapiAPITester:
         self.log("Indeed Jobs Scraper zero results fix testing completed")
         return True
     def run_all_tests(self):
-        """Run backend API tests with priority on Indeed Jobs Scraper User Reported Issue"""
-        self.log("🚀 Starting Backend API Testing - PRIORITY: Indeed Jobs Scraper User Reported Issue")
+        """Run backend API tests with priority on Indeed Jobs Scraper Cloudflare Bypass Testing"""
+        self.log("🚀 Starting Backend API Testing - PRIORITY: Indeed Jobs Scraper Cloudflare Bypass")
         self.log(f"Backend URL: {self.base_url}")
         
         try:
-            # Run the specific review request test first - Indeed Jobs Scraper with user parameters
+            # Run the specific review request test - Indeed Jobs Scraper V2 with Cloudflare bypass
             self.log("=" * 80)
-            self.log("CRITICAL TESTING: Indeed Jobs Scraper - User Reported Parameters")
-            self.log("Testing with: keyword='python developer', location='tamilnadu', max_pages=5")
+            self.log("CRITICAL TESTING: Indeed Jobs Scraper V2 - Cloudflare Bypass Implementation")
+            self.log("Testing with: keyword='software engineer', location='New York', max_pages=1")
+            self.log("Monitoring for Cloudflare bypass messages and run execution")
             self.log("=" * 80)
-            indeed_success = self.test_indeed_jobs_scraper_comprehensive()
+            indeed_success = self.test_indeed_jobs_scraper_cloudflare_bypass()
             
             if indeed_success:
-                self.log("🎉 INDEED JOBS SCRAPER USER REPORTED ISSUE TEST COMPLETED!")
+                self.log("🎉 INDEED JOBS SCRAPER CLOUDFLARE BYPASS TEST COMPLETED!")
             else:
-                self.log("❌ INDEED JOBS SCRAPER USER REPORTED ISSUE TEST FAILED!")
+                self.log("❌ INDEED JOBS SCRAPER CLOUDFLARE BYPASS TEST FAILED!")
             
         except Exception as e:
             self.log(f"❌ Unexpected error during testing: {e}")
