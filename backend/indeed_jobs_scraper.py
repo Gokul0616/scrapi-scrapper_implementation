@@ -332,6 +332,16 @@ class IndeedJobsScraper(BaseScraper):
         
         await self._log_progress("✅ Advanced anti-detection applied successfully", progress_callback)
         
+        # Restore session cookies if we have them from previous successful bypass
+        if self.session_cookies:
+            try:
+                await page.context.add_cookies(self.session_cookies)
+                logger.info(f"🔄 Restored {len(self.session_cookies)} session cookies from previous bypass")
+                await self._log_progress(f"🔄 Reusing session from previous successful bypass", progress_callback)
+            except Exception as e:
+                logger.warning(f"Failed to restore cookies: {e}")
+                self.session_cookies = None
+        
         consecutive_failures = 0  # Track consecutive page failures
         max_consecutive_failures = 2  # Stop after 2 consecutive failures
         
