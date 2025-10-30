@@ -148,8 +148,8 @@ All results include: business name, address, phone (verified), email, rating, re
                 author_name="Scrapi",
                 author_id="system",
                 is_verified=True,
-            is_featured=True,
-            readme="""# Amazon Product Scraper
+                is_featured=True,
+                readme="""# Amazon Product Scraper
 
 Complete Amazon product data extraction for e-commerce intelligence.
 
@@ -170,57 +170,57 @@ Complete Amazon product data extraction for e-commerce intelligence.
 
 ## Output Fields
 Includes: ASIN, title, price, original price, discount %, rating, review count, availability, Prime status, images, description, features, specifications, seller info, BSR, and reviews (optional).""",
-            input_schema={
-                "type": "object",
-                "required": ["search_keywords"],
-                "properties": {
-                    "search_keywords": {
-                        "type": "array",
-                        "title": "Search Keywords",
-                        "description": "Enter product keywords to search (e.g., 'wireless headphones', 'laptop stand')",
-                        "editor": "stringList",
-                        "example": ["wireless headphones", "bluetooth speaker"]
-                    },
-                    "max_results": {
-                        "type": "integer",
-                        "title": "Maximum Results",
-                        "description": "Maximum number of products to scrape per keyword",
-                        "editor": "number",
-                        "default": 50,
-                        "minimum": 1,
-                        "maximum": 200
-                    },
-                    "extract_reviews": {
-                        "type": "boolean",
-                        "title": "Extract Reviews",
-                        "description": "Extract review text from product pages (slower but more detailed)",
-                        "editor": "checkbox",
-                        "default": False
-                    },
-                    "min_rating": {
-                        "type": "number",
-                        "title": "Minimum Rating",
-                        "description": "Filter products by minimum rating (0-5 stars)",
-                        "editor": "number",
-                        "default": 0,
-                        "minimum": 0,
-                        "maximum": 5
-                    },
-                    "max_price": {
-                        "type": "number",
-                        "title": "Maximum Price (USD)",
-                        "description": "Filter products by maximum price in USD (optional)",
-                        "editor": "number",
-                        "minimum": 0
+                input_schema={
+                    "type": "object",
+                    "required": ["search_keywords"],
+                    "properties": {
+                        "search_keywords": {
+                            "type": "array",
+                            "title": "Search Keywords",
+                            "description": "Enter product keywords to search (e.g., 'wireless headphones', 'laptop stand')",
+                            "editor": "stringList",
+                            "example": ["wireless headphones", "bluetooth speaker"]
+                        },
+                        "max_results": {
+                            "type": "integer",
+                            "title": "Maximum Results",
+                            "description": "Maximum number of products to scrape per keyword",
+                            "editor": "number",
+                            "default": 50,
+                            "minimum": 1,
+                            "maximum": 200
+                        },
+                        "extract_reviews": {
+                            "type": "boolean",
+                            "title": "Extract Reviews",
+                            "description": "Extract review text from product pages (slower but more detailed)",
+                            "editor": "checkbox",
+                            "default": False
+                        },
+                        "min_rating": {
+                            "type": "number",
+                            "title": "Minimum Rating",
+                            "description": "Filter products by minimum rating (0-5 stars)",
+                            "editor": "number",
+                            "default": 0,
+                            "minimum": 0,
+                            "maximum": 5
+                        },
+                        "max_price": {
+                            "type": "number",
+                            "title": "Maximum Price (USD)",
+                            "description": "Filter products by maximum price in USD (optional)",
+                            "editor": "number",
+                            "minimum": 0
+                        }
                     }
                 }
-            }
-        )
-        doc = actor.model_dump()
-        doc['created_at'] = doc['created_at'].isoformat()
-        doc['updated_at'] = doc['updated_at'].isoformat()
-        await db.actors.insert_one(doc)
-        logger.info("✅ Created Amazon Product Scraper actor")
+            )
+            doc = actor.model_dump()
+            doc['created_at'] = doc['created_at'].isoformat()
+            doc['updated_at'] = doc['updated_at'].isoformat()
+            await db.actors.insert_one(doc)
+            logger.info("✅ Created Amazon Product Scraper actor")
     except Exception as e:
         logger.error(f"❌ Error creating Amazon actor: {e}", exc_info=True)
     
