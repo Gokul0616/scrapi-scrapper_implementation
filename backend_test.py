@@ -1071,14 +1071,20 @@ class ScrapiAPITester:
         
         return True
 
-    def test_indeed_jobs_scraper_comprehensive(self):
-        """Test Indeed Jobs Scraper with COMPREHENSIVE validation as requested in review"""
-        self.log("=== COMPREHENSIVE INDEED JOBS SCRAPER TESTING ===")
-        self.log("Test Parameters: keyword='python developer', location='tamilnadu', max_pages=5")
+    def test_indeed_jobs_scraper_cloudflare_bypass(self):
+        """Test Indeed Jobs Scraper V2 with Cloudflare bypass implementation as requested in review"""
+        self.log("=== INDEED JOBS SCRAPER V2 - CLOUDFLARE BYPASS TESTING ===")
+        self.log("CRITICAL TEST REQUIREMENTS:")
+        self.log("1. Use test credentials (username: test, password: test)")
+        self.log("2. Find Indeed Jobs Scraper V2 actor in database")
+        self.log("3. Create test run with: keyword='software engineer', location='New York', max_pages=1")
+        self.log("4. Monitor run execution for at least 90 seconds")
+        self.log("5. Check backend logs for Cloudflare detection messages")
+        self.log("6. Verify run status and results")
         
         # Add indeed_scraper to test results if not exists
-        if "indeed_scraper" not in self.test_results:
-            self.test_results["indeed_scraper"] = {"passed": 0, "failed": 0, "errors": []}
+        if "indeed_scraper_cloudflare" not in self.test_results:
+            self.test_results["indeed_scraper_cloudflare"] = {"passed": 0, "failed": 0, "errors": []}
         
         # Step 1: Authentication with test credentials as requested
         self.log("Step 1: Authentication with test credentials (username: test, password: test)...")
@@ -1096,11 +1102,11 @@ class ScrapiAPITester:
                 self.auth_token = data["access_token"]
                 self.user_data = data["user"]
                 self.log("✅ Authentication: Login successful with test credentials")
-                self.test_results["indeed_scraper"]["passed"] += 1
+                self.test_results["indeed_scraper_cloudflare"]["passed"] += 1
             else:
                 self.log("❌ Login response missing required fields")
-                self.test_results["indeed_scraper"]["failed"] += 1
-                self.test_results["indeed_scraper"]["errors"].append("Login response missing access_token or user")
+                self.test_results["indeed_scraper_cloudflare"]["failed"] += 1
+                self.test_results["indeed_scraper_cloudflare"]["errors"].append("Login response missing access_token or user")
                 return False
         else:
             # Try registration if login fails
@@ -1119,47 +1125,56 @@ class ScrapiAPITester:
                     self.auth_token = data["access_token"]
                     self.user_data = data["user"]
                     self.log("✅ Authentication: Registration successful with test credentials")
-                    self.test_results["indeed_scraper"]["passed"] += 1
+                    self.test_results["indeed_scraper_cloudflare"]["passed"] += 1
                 else:
                     self.log("❌ Registration response missing required fields")
-                    self.test_results["indeed_scraper"]["failed"] += 1
-                    self.test_results["indeed_scraper"]["errors"].append("Registration response missing access_token or user")
+                    self.test_results["indeed_scraper_cloudflare"]["failed"] += 1
+                    self.test_results["indeed_scraper_cloudflare"]["errors"].append("Registration response missing access_token or user")
                     return False
             else:
                 self.log(f"❌ Authentication failed: {response.status_code if response else 'No response'}")
-                self.test_results["indeed_scraper"]["failed"] += 1
-                self.test_results["indeed_scraper"]["errors"].append("Both registration and login failed")
+                self.test_results["indeed_scraper_cloudflare"]["failed"] += 1
+                self.test_results["indeed_scraper_cloudflare"]["errors"].append("Both registration and login failed")
                 return False
         
-        # Step 2: Actor Verification - Find Indeed Jobs Scraper actor
-        self.log("Step 2: Actor Verification - Finding Indeed Jobs Scraper actor...")
+        # Step 2: Actor Verification - Find Indeed Jobs Scraper V2 actor
+        self.log("Step 2: Actor Verification - Finding Indeed Jobs Scraper V2 actor...")
         response = self.make_request("GET", "/actors")
         if response and response.status_code == 200:
             actors = response.json()
             indeed_actor = None
             for actor in actors:
-                if actor.get("name") == "Indeed Jobs Scraper":
+                if actor.get("name") == "Indeed Jobs Scraper V2":
                     indeed_actor = actor
                     indeed_actor_id = actor["id"]
                     break
             
             if indeed_actor:
-                self.log(f"✅ Actor Verification: Found Indeed Jobs Scraper actor")
+                self.log(f"✅ Actor Verification: Found Indeed Jobs Scraper V2 actor")
                 self.log(f"   Actor ID: {indeed_actor_id}")
                 self.log(f"   Icon: {indeed_actor.get('icon', 'N/A')}")
                 self.log(f"   Category: {indeed_actor.get('category', 'N/A')}")
                 self.log(f"   Description: {indeed_actor.get('description', 'N/A')}")
-                self.log(f"   Configuration: {indeed_actor.get('input_schema', {})}")
-                self.test_results["indeed_scraper"]["passed"] += 1
+                self.log(f"   Tags: {indeed_actor.get('tags', [])}")
+                
+                # Verify Cloudflare bypass tag
+                tags = indeed_actor.get('tags', [])
+                if 'cloudflare-bypass' in tags:
+                    self.log("✅ Cloudflare bypass tag found in actor")
+                    self.test_results["indeed_scraper_cloudflare"]["passed"] += 1
+                else:
+                    self.log("⚠️ Cloudflare bypass tag not found in actor tags")
+                
+                self.test_results["indeed_scraper_cloudflare"]["passed"] += 1
             else:
-                self.log("❌ Actor Verification: Indeed Jobs Scraper actor not found")
-                self.test_results["indeed_scraper"]["failed"] += 1
-                self.test_results["indeed_scraper"]["errors"].append("Indeed Jobs Scraper actor not found")
+                self.log("❌ Actor Verification: Indeed Jobs Scraper V2 actor not found")
+                self.test_results["indeed_scraper_cloudflare"]["failed"] += 1
+                self.test_results["indeed_scraper_cloudflare"]["errors"].append("Indeed Jobs Scraper V2 actor not found")
                 return False
         else:
             self.log(f"❌ Failed to get actors: {response.status_code if response else 'No response'}")
-            self.test_results["indeed_scraper"]["failed"] += 1
-            self.test_results["indeed_scraper"]["errors"].append("Failed to get actors")
+            self.test_results["indeed_scraper_cloudflare"]["failed"] += 1
+            self.test_results["indeed_scraper_cloudflare"]["errors"].append("Failed to get actors")
             return False
         
         # Step 3: Run Creation & Execution with exact user-reported parameters
