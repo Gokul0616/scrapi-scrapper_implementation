@@ -236,9 +236,11 @@ class IndeedJobsScraperV2(BaseScraper):
         Wait for Cloudflare Turnstile challenge to be bypassed.
         Returns True if bypassed successfully, False otherwise.
         """
-        max_wait_time = 60  # Maximum 60 seconds
-        check_interval = 2  # Check every 2 seconds
+        max_wait_time = 120  # Increased to 120 seconds (2 minutes)
+        check_interval = 3  # Check every 3 seconds for more patience
         elapsed = 0
+        retry_count = 0
+        max_retries = 2
         
         while elapsed < max_wait_time:
             await asyncio.sleep(check_interval)
@@ -248,30 +250,73 @@ class IndeedJobsScraperV2(BaseScraper):
                 # Check page title
                 title = await page.title()
                 content = await page.content()
+                url = page.url
                 
                 # Check if still on challenge page
-                if "just a moment" in title.lower() or "challenge" in title.lower():
+                challenge_indicators = ["just a moment", "challenge", "checking", "verifying"]
+                if any(indicator in title.lower() for indicator in challenge_indicators):
                     if elapsed % 10 == 0:  # Log every 10 seconds
                         await self._log_progress(f"⏳ Waiting for Cloudflare ({elapsed}s)...", progress_callback)
+                    
+                    # Try clicking on Turnstile checkbox if visible
+                    try:
+                        turnstile_frame = page.frame_locator('iframe[src*="challenges.cloudflare.com"]')
+                        checkbox = turnstile_frame.locator('input[type="checkbox"]')
+                        if await checkbox.is_visible(timeout=1000):
+                            await checkbox.click()
+                            await asyncio.sleep(2)
+                            logger.info("🖱️ Clicked Turnstile checkbox")
+                    except:
+                        pass
+                    
+                    # If stuck too long, try refreshing once
+                    if elapsed == 60 and retry_count < max_retries:
+                        await self._log_progress(f"🔄 Refreshing page to retry Cloudflare bypass...", progress_callback)
+                        await page.reload(wait_until="domcontentloaded")
+                        await asyncio.sleep(random.uniform(3, 5))
+                        retry_count += 1
+                    
                     continue
                 
-                # Check for Turnstile widget
-                turnstile_visible = await page.evaluate("""
+                # Check for Turnstile widget completion
+                turnstile_complete = await page.evaluate("""
                     () => {
                         const turnstile = document.querySelector('input[name="cf-turnstile-response"]');
                         return turnstile && turnstile.value && turnstile.value.length > 0;
                     }
                 """)
                 
-                if turnstile_visible:
+                if turnstile_complete:
                     await self._log_progress(f"✅ Cloudflare bypassed after {elapsed}s!", progress_callback)
                     logger.info(f"✅ Successfully bypassed Cloudflare challenge in {elapsed}s")
+                    await asyncio.sleep(2)  # Wait a bit more for page to load
                     return True
                 
                 # Check if we're on the actual Indeed job search page
-                if 'indeed.com/jobs' in page.url and 'captcha' not in content.lower():
-                    await self._log_progress(f"✅ Reached Indeed jobs page after {elapsed}s!", progress_callback)
-                    logger.info(f"✅ Successfully reached Indeed jobs page in {elapsed}s")
+                success_indicators = ['indeed.com/jobs', 'indeed.com/viewjob']
+                if any(indicator in url for indicator in success_indicators):
+                    # Make sure it's not a captcha page
+                    if 'captcha' not in content.lower() and 'challenge' not in content.lower():
+                        await self._log_progress(f"✅ Reached Indeed page after {elapsed}s!", progress_callback)
+                        logger.info(f"✅ Successfully reached Indeed page in {elapsed}s")
+                        return True
+                
+                # Check if page has actual job content
+                has_jobs = await page.evaluate("""
+                    () => {
+                        const indicators = [
+                            document.querySelector('.job_seen_beacon'),
+                            document.querySelector('[data-testid="slider_item"]'),
+                            document.querySelector('.jobsearch-ResultsList'),
+                            document.querySelector('[data-jk]')
+                        ];
+                        return indicators.some(el => el !== null);
+                    }
+                """)
+                
+                if has_jobs:
+                    await self._log_progress(f"✅ Job content detected after {elapsed}s!", progress_callback)
+                    logger.info(f"✅ Job content detected in {elapsed}s")
                     return True
                     
             except Exception as e:
