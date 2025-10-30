@@ -655,11 +655,6 @@ const DatasetV2 = () => {
     return runDetails?.actor_name?.toLowerCase().includes('amazon') || false;
   };
 
-  // Helper function to detect if this is an Indeed scraper run
-  const isIndeedScraper = () => {
-    return runDetails?.actor_name?.toLowerCase().includes('indeed') || false;
-  };
-
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center bg-white min-h-screen">
