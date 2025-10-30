@@ -9,7 +9,7 @@ import time
 import re
 
 # Get backend URL from environment
-BACKEND_URL = "https://captcha-bypass-8.preview.emergentagent.com/api"
+BACKEND_URL = "https://jobdata-fixer.preview.emergentagent.com/api"
 
 def authenticate():
     """Authenticate and return headers"""

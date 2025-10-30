@@ -6,7 +6,7 @@ Test actor update functionality by creating a user's own actor
 import requests
 import json
 
-BACKEND_URL = "https://captcha-bypass-8.preview.emergentagent.com/api"
+BACKEND_URL = "https://jobdata-fixer.preview.emergentagent.com/api"
 
 def test_actor_update_with_user_actor():
     """Test actor update by creating and updating a user's own actor"""
