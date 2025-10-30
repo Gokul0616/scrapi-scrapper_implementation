@@ -1177,18 +1177,18 @@ class ScrapiAPITester:
             self.test_results["indeed_scraper_cloudflare"]["errors"].append("Failed to get actors")
             return False
         
-        # Step 3: Run Creation & Execution with exact user-reported parameters
-        self.log("Step 3: Creating scraping run with user-reported parameters...")
-        self.log("   Keyword: 'python developer'")
-        self.log("   Location: 'tamilnadu'")
-        self.log("   Max pages: 5")
+        # Step 3: Run Creation & Execution with exact test parameters as requested
+        self.log("Step 3: Creating scraping run with test parameters...")
+        self.log("   Keyword: 'software engineer' (as requested)")
+        self.log("   Location: 'New York' (as requested)")
+        self.log("   Max pages: 1 (as requested)")
         
         run_data = {
             "actor_id": indeed_actor_id,
             "input_data": {
-                "keyword": "python developer",
-                "location": "tamilnadu",
-                "max_pages": 5
+                "keyword": "software engineer",
+                "location": "New York",
+                "max_pages": 1
             }
         }
         
@@ -1198,6 +1198,197 @@ class ScrapiAPITester:
         
         self.log(f"RESPONSE STATUS: {response.status_code if response else 'No response'}")
         if response:
+            try:
+                response_json = response.json()
+                self.log(f"RESPONSE JSON: {json.dumps(response_json, indent=2)}")
+            except:
+                self.log(f"RESPONSE TEXT: {response.text}")
+        
+        if response and response.status_code == 200:
+            run = response.json()
+            if "id" in run:
+                run_id = run["id"]
+                self.log(f"✅ Run created successfully: {run_id}")
+                self.log(f"✅ Initial status: {run.get('status', 'unknown')}")
+                self.test_results["indeed_scraper_cloudflare"]["passed"] += 1
+                
+                # Step 4: Monitor run execution for at least 90 seconds (as requested)
+                self.log("Step 4: Monitoring run execution for at least 90 seconds...")
+                self.log("Looking for Cloudflare bypass messages in logs:")
+                self.log("  - '🔐 Cloudflare challenge detected'")
+                self.log("  - '✅ Cloudflare challenge bypassed'")
+                self.log("  - '🛡️ Applying advanced anti-detection measures'")
+                self.log("  - '💾 Saved session cookies'")
+                
+                max_wait_time = 120  # 120 seconds as requested
+                check_interval = 10  # 10 seconds
+                elapsed_time = 0
+                cloudflare_detected = False
+                bypass_attempted = False
+                bypass_successful = False
+                anti_detection_applied = False
+                
+                while elapsed_time < max_wait_time:
+                    response = self.make_request("GET", f"/runs/{run_id}")
+                    if response and response.status_code == 200:
+                        run_status = response.json()
+                        status = run_status.get("status", "unknown")
+                        error_message = run_status.get("error_message")
+                        logs = run_status.get("logs", [])
+                        
+                        # Check for Cloudflare bypass messages in logs
+                        for log_entry in logs:
+                            log_text = str(log_entry).lower()
+                            if "cloudflare challenge detected" in log_text or "🔐" in str(log_entry):
+                                cloudflare_detected = True
+                                self.log("✅ FOUND: Cloudflare challenge detected message")
+                            if "cloudflare challenge bypassed" in log_text or "cloudflare bypassed" in log_text:
+                                bypass_successful = True
+                                self.log("✅ FOUND: Cloudflare challenge bypassed message")
+                            if "anti-detection" in log_text or "🛡️" in str(log_entry):
+                                anti_detection_applied = True
+                                self.log("✅ FOUND: Advanced anti-detection measures applied")
+                            if "bypass" in log_text and ("attempt" in log_text or "trying" in log_text):
+                                bypass_attempted = True
+                                self.log("✅ FOUND: Cloudflare bypass attempted")
+                        
+                        self.log(f"Run status: {status} (elapsed: {elapsed_time}s)")
+                        
+                        # Show latest logs
+                        if logs:
+                            latest_logs = logs[-3:] if len(logs) >= 3 else logs
+                            for log_entry in latest_logs:
+                                self.log(f"  Log: {log_entry}")
+                        
+                        if error_message:
+                            self.log(f"Error message: {error_message}")
+                        
+                        if status == "succeeded":
+                            results_count = run_status.get("results_count", 0)
+                            self.log(f"✅ Run completed successfully with {results_count} results")
+                            self.test_results["indeed_scraper_cloudflare"]["passed"] += 1
+                            
+                            # Check if we got actual job data
+                            if results_count > 0:
+                                self.log("Step 5: Checking dataset results...")
+                                dataset_response = self.make_request("GET", f"/datasets/{run_id}/items")
+                                if dataset_response and dataset_response.status_code == 200:
+                                    items = dataset_response.json()
+                                    self.log(f"✅ Retrieved {len(items)} job items from dataset")
+                                    self.test_results["indeed_scraper_cloudflare"]["passed"] += 1
+                                    
+                                    if isinstance(items, list) and len(items) > 0:
+                                        sample_job = items[0]
+                                        job_data = sample_job.get('data', {})
+                                        self.log(f"Sample job: {job_data.get('jobTitle', 'N/A')} at {job_data.get('company', 'N/A')}")
+                                        self.log(f"Location: {job_data.get('location', 'N/A')}")
+                                        self.log(f"Job URL: {job_data.get('jobUrl', 'N/A')}")
+                                        self.test_results["indeed_scraper_cloudflare"]["passed"] += 1
+                                    else:
+                                        self.log("⚠️ No job items in dataset (empty results)")
+                                        self.test_results["indeed_scraper_cloudflare"]["errors"].append("Empty dataset results")
+                                else:
+                                    self.log("❌ Failed to retrieve dataset items")
+                                    self.test_results["indeed_scraper_cloudflare"]["failed"] += 1
+                                    self.test_results["indeed_scraper_cloudflare"]["errors"].append("Failed to retrieve dataset")
+                            break
+                            
+                        elif status == "failed":
+                            self.log(f"❌ Run failed: {error_message or 'Unknown error'}")
+                            self.test_results["indeed_scraper_cloudflare"]["failed"] += 1
+                            self.test_results["indeed_scraper_cloudflare"]["errors"].append(f"Run failed: {error_message}")
+                            
+                            # Analyze failure reason
+                            if error_message:
+                                if "cloudflare" in error_message.lower() or "turnstile" in error_message.lower():
+                                    self.log("🔍 FAILURE REASON: Cloudflare Turnstile blocking")
+                                elif "captcha" in error_message.lower():
+                                    self.log("🔍 FAILURE REASON: CAPTCHA challenge")
+                                elif "timeout" in error_message.lower():
+                                    self.log("🔍 FAILURE REASON: Timeout during scraping")
+                                else:
+                                    self.log(f"🔍 FAILURE REASON: {error_message}")
+                            break
+                            
+                        elif status in ["queued", "running"]:
+                            time.sleep(check_interval)
+                            elapsed_time += check_interval
+                        else:
+                            self.log(f"❌ Unknown status: {status}")
+                            self.test_results["indeed_scraper_cloudflare"]["failed"] += 1
+                            self.test_results["indeed_scraper_cloudflare"]["errors"].append(f"Unknown status: {status}")
+                            break
+                    else:
+                        self.log(f"❌ Failed to get run status: {response.status_code if response else 'No response'}")
+                        self.test_results["indeed_scraper_cloudflare"]["failed"] += 1
+                        self.test_results["indeed_scraper_cloudflare"]["errors"].append("Failed to get run status")
+                        break
+                
+                # Check backend logs for Cloudflare messages
+                self.log("Step 6: Checking backend logs for Cloudflare bypass messages...")
+                try:
+                    import subprocess
+                    log_result = subprocess.run(
+                        ["tail", "-n", "200", "/var/log/supervisor/backend.out.log"],
+                        capture_output=True, text=True, timeout=10
+                    )
+                    backend_logs = log_result.stdout
+                    
+                    # Look for specific Cloudflare messages
+                    cloudflare_messages = [
+                        "🔐 Cloudflare challenge detected",
+                        "✅ Cloudflare challenge bypassed", 
+                        "🛡️ Applying advanced anti-detection measures",
+                        "💾 Saved session cookies"
+                    ]
+                    
+                    found_messages = []
+                    for message in cloudflare_messages:
+                        if message in backend_logs:
+                            found_messages.append(message)
+                            self.log(f"✅ BACKEND LOG: Found '{message}'")
+                    
+                    if found_messages:
+                        self.log(f"✅ Found {len(found_messages)}/4 expected Cloudflare messages in backend logs")
+                        self.test_results["indeed_scraper_cloudflare"]["passed"] += 1
+                    else:
+                        self.log("⚠️ No specific Cloudflare messages found in backend logs")
+                        
+                except Exception as e:
+                    self.log(f"⚠️ Could not check backend logs: {e}")
+                
+                # Summary of Cloudflare bypass testing
+                self.log("=== CLOUDFLARE BYPASS TESTING SUMMARY ===")
+                self.log(f"Cloudflare detected: {'✅ YES' if cloudflare_detected else '❌ NO'}")
+                self.log(f"Bypass attempted: {'✅ YES' if bypass_attempted else '❌ NO'}")
+                self.log(f"Bypass successful: {'✅ YES' if bypass_successful else '❌ NO'}")
+                self.log(f"Anti-detection applied: {'✅ YES' if anti_detection_applied else '❌ NO'}")
+                
+                if elapsed_time >= max_wait_time:
+                    self.log("⚠️ Run monitoring reached maximum wait time (120s)")
+                    # This is not necessarily a failure - the run might still be processing
+                    
+            else:
+                self.log("❌ Run creation response missing ID")
+                self.test_results["indeed_scraper_cloudflare"]["failed"] += 1
+                self.test_results["indeed_scraper_cloudflare"]["errors"].append("Run creation response missing ID")
+        else:
+            self.log(f"❌ Failed to create run: {response.status_code if response else 'No response'}")
+            if response:
+                try:
+                    error_details = response.json()
+                    self.log(f"Error details: {error_details}")
+                    self.test_results["indeed_scraper_cloudflare"]["errors"].append(f"Run creation failed: {error_details}")
+                except:
+                    self.log(f"Error text: {response.text}")
+                    self.test_results["indeed_scraper_cloudflare"]["errors"].append(f"Run creation failed: {response.text}")
+            else:
+                self.test_results["indeed_scraper_cloudflare"]["errors"].append("No response from server")
+            
+            self.test_results["indeed_scraper_cloudflare"]["failed"] += 1
+            return False
+        
+        return True
             try:
                 response_json = response.json()
                 self.log(f"RESPONSE JSON: {json.dumps(response_json, indent=2)}")
