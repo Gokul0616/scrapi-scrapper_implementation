@@ -9,7 +9,7 @@ import json
 import time
 from datetime import datetime
 
-BACKEND_URL = "https://indeed-bot-bypass.preview.emergentagent.com/api"
+BACKEND_URL = "https://captcha-bypass-8.preview.emergentagent.com/api"
 
 def log(message):
     print(f"[{datetime.now().strftime('%H:%M:%S')}] {message}")
