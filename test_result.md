@@ -766,11 +766,11 @@ agent_communication:
 
   - task: "Indeed Jobs Scraper - Complete Implementation"
     implemented: true
-    working: true
-    file: "backend/indeed_jobs_scraper.py, backend/scraper_registry.py, backend/server.py, frontend/src/pages/DatasetV2.js, frontend/src/pages/RunsV3.js"
+    working: "NA"
+    file: "backend/indeed_jobs_scraper.py, backend/scraper_registry.py, backend/server.py, frontend/src/pages/DatasetV2.js, frontend/src/pages/RunsV3.js, /app/CLOUDFLARE_BYPASS_GUIDE.md"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: "NA"
           agent: "main"
