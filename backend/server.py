@@ -133,21 +133,21 @@ All results include: business name, address, phone (verified), email, rating, re
         logger.info(f"Amazon actor exists: {existing_amazon is not None}")
         
         if not existing_amazon:
-        from datetime import datetime, timezone
-        actor = Actor(
-            user_id="system",
-            name="Amazon Product Scraper",
-            description="Extract products, prices, reviews, ratings, and seller info from Amazon search results and product pages",
-            icon="📦",
-            category="E-commerce",
-            type="prebuilt",
-            is_public=True,
-            status="published",
-            visibility="public",
-            tags=["amazon", "ecommerce", "products", "prices", "reviews", "shopping"],
-            author_name="Scrapi",
-            author_id="system",
-            is_verified=True,
+            from datetime import datetime, timezone
+            actor = Actor(
+                user_id="system",
+                name="Amazon Product Scraper",
+                description="Extract products, prices, reviews, ratings, and seller info from Amazon search results and product pages",
+                icon="📦",
+                category="E-commerce",
+                type="prebuilt",
+                is_public=True,
+                status="published",
+                visibility="public",
+                tags=["amazon", "ecommerce", "products", "prices", "reviews", "shopping"],
+                author_name="Scrapi",
+                author_id="system",
+                is_verified=True,
             is_featured=True,
             readme="""# Amazon Product Scraper
 
