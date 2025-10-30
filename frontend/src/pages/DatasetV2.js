@@ -692,9 +692,7 @@ const DatasetV2 = () => {
               </Button>
               <div className="border-l h-6"></div>
               <h1 className="text-2xl font-semibold text-blue-600">
-                {isAmazonScraper() ? 'Amazon Product Scraper - Run' : 
-                 isIndeedScraper() ? 'Indeed Jobs Scraper - Run' : 
-                 'Google Maps Scraper - Run'}
+                {isAmazonScraper() ? 'Amazon Product Scraper - Run' : 'Google Maps Scraper - Run'}
               </h1>
               <Button variant="ghost" size="icon" className="hover:bg-gray-50">
                 <Star className="w-4 h-4" />
