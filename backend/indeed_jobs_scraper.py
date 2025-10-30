@@ -415,6 +415,15 @@ class IndeedJobsScraper(BaseScraper):
                                 # If we see job content, we're through
                                 if sum(success_indicators) >= 2:  # At least 2 success indicators
                                     solved = True
+                                    
+                                    # Save cookies for future requests (session persistence)
+                                    try:
+                                        self.session_cookies = await page.context.cookies()
+                                        logger.info(f"💾 Saved {len(self.session_cookies)} session cookies for reuse")
+                                        await self._log_progress(f"💾 Saved session cookies for faster subsequent requests", progress_callback)
+                                    except Exception as e:
+                                        logger.warning(f"Failed to save cookies: {e}")
+                                    
                                     await self._log_progress(f"✅ Cloudflare challenge bypassed after {(wait_iteration + 1) * 10}s!", progress_callback)
                                     logger.info(f"✅ Successfully bypassed Cloudflare in {(wait_iteration + 1) * 10} seconds")
                                     break
