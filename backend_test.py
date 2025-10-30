@@ -1389,11 +1389,6 @@ class ScrapiAPITester:
             return False
         
         return True
-            try:
-                response_json = response.json()
-                self.log(f"RESPONSE JSON: {json.dumps(response_json, indent=2)}")
-            except:
-                self.log(f"RESPONSE TEXT: {response.text}")
         
         if response and response.status_code == 200:
             run = response.json()
