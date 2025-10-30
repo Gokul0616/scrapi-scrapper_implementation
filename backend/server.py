@@ -69,27 +69,30 @@ async def startup_event():
     """Initialize default actors on startup."""
     logger.info("🚀 Starting actor initialization...")
     
-    # Check if Google Maps Scraper V2 exists
-    existing_v2 = await db.actors.find_one({"name": "Google Maps Scraper V2"})
-    if not existing_v2:
-        # Create default Google Maps scraper V2
-        from datetime import datetime, timezone
-        actor = Actor(
-            user_id="system",
-            name="Google Maps Scraper V2",
-            description="Extract businesses, places, reviews from Google Maps with powerful scraping engine",
-            icon="🗺️",
-            category="Maps & Location",
-            type="prebuilt",
-            is_public=True,
-            status="published",
-            visibility="public",
-            tags=["maps", "google", "business", "leads", "local"],
-            author_name="Scrapi",
-            author_id="system",
-            is_verified=True,
-            is_featured=True,
-            readme="""# Google Maps Scraper V2
+    try:
+        # Check if Google Maps Scraper V2 exists
+        existing_v2 = await db.actors.find_one({"name": "Google Maps Scraper V2"})
+        logger.info(f"Google Maps V2 actor exists: {existing_v2 is not None}")
+        
+        if not existing_v2:
+            # Create default Google Maps scraper V2
+            from datetime import datetime, timezone
+            actor = Actor(
+                user_id="system",
+                name="Google Maps Scraper V2",
+                description="Extract businesses, places, reviews from Google Maps with powerful scraping engine",
+                icon="🗺️",
+                category="Maps & Location",
+                type="prebuilt",
+                is_public=True,
+                status="published",
+                visibility="public",
+                tags=["maps", "google", "business", "leads", "local"],
+                author_name="Scrapi",
+                author_id="system",
+                is_verified=True,
+                is_featured=True,
+                readme="""# Google Maps Scraper V2
 
 The most comprehensive Google Maps scraper for business data extraction.
 
@@ -108,19 +111,21 @@ The most comprehensive Google Maps scraper for business data extraction.
 
 ## Output Fields
 All results include: business name, address, phone (verified), email, rating, reviews count, category, opening hours, website, social media links, place ID, and more.""",
-            input_schema={
-                "search_terms": {"type": "array", "description": "List of search terms"},
-                "location": {"type": "string", "description": "Location to search in"},
-                "max_results": {"type": "integer", "default": 100},
-                "extract_reviews": {"type": "boolean", "default": False},
-                "extract_images": {"type": "boolean", "default": False}
-            }
-        )
-        doc = actor.model_dump()
-        doc['created_at'] = doc['created_at'].isoformat()
-        doc['updated_at'] = doc['updated_at'].isoformat()
-        await db.actors.insert_one(doc)
-        logger.info("Created default Google Maps Scraper V2 actor")
+                input_schema={
+                    "search_terms": {"type": "array", "description": "List of search terms"},
+                    "location": {"type": "string", "description": "Location to search in"},
+                    "max_results": {"type": "integer", "default": 100},
+                    "extract_reviews": {"type": "boolean", "default": False},
+                    "extract_images": {"type": "boolean", "default": False}
+                }
+            )
+            doc = actor.model_dump()
+            doc['created_at'] = doc['created_at'].isoformat()
+            doc['updated_at'] = doc['updated_at'].isoformat()
+            await db.actors.insert_one(doc)
+            logger.info("✅ Created default Google Maps Scraper V2 actor")
+    except Exception as e:
+        logger.error(f"❌ Error creating Google Maps actor: {e}", exc_info=True)
     
     # Check if Amazon Product Scraper exists
     existing_amazon = await db.actors.find_one({"name": "Amazon Product Scraper"})
