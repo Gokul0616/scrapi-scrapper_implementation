@@ -348,51 +348,109 @@ class IndeedJobsScraper(BaseScraper):
                 await self._log_progress(f"🔍 Searching page {page_num + 1}/{max_pages}", progress_callback)
                 
                 try:
-                    # Navigate to search page
-                    await page.goto(search_url, wait_until="domcontentloaded", timeout=60000)
+                    # Navigate to search page with extended timeout for Cloudflare
+                    await page.goto(search_url, wait_until="domcontentloaded", timeout=90000)
                     
-                    # Wait for page to fully render
-                    await asyncio.sleep(5)
+                    # ENHANCED CLOUDFLARE DETECTION AND BYPASS
+                    await asyncio.sleep(3)
                     
                     # Check if we hit Cloudflare challenge
+                    page_content = await page.content()
                     page_title = await page.title()
                     logger.info(f"📄 Page title: {page_title}")
                     
-                    if "just a moment" in page_title.lower() or "challenge" in page_title.lower():
-                        await self._log_progress(f"🔐 Cloudflare challenge detected, waiting to auto-solve...", progress_callback)
-                        logger.info("⏳ Waiting for Cloudflare challenge to auto-solve...")
+                    # Detect Cloudflare challenge (multiple indicators)
+                    cloudflare_indicators = [
+                        "just a moment" in page_title.lower(),
+                        "challenge" in page_title.lower(),
+                        "cf-challenge" in page_content.lower(),
+                        "checking your browser" in page_content.lower(),
+                        "cloudflare" in page_title.lower() and "ray id" in page_content.lower()
+                    ]
+                    
+                    if any(cloudflare_indicators):
+                        await self._log_progress(f"🔐 Cloudflare challenge detected - employing advanced bypass techniques...", progress_callback)
+                        logger.info("⏳ Cloudflare challenge detected - attempting automated bypass...")
                         
-                        # Wait for Cloudflare to auto-solve (can take 10-30 seconds)
-                        max_wait_iterations = 6  # Wait up to 60 seconds total
+                        # Simulate realistic human behavior while waiting
+                        for human_action in range(3):
+                            import random
+                            # Random mouse movements
+                            await page.mouse.move(
+                                random.randint(100, 1500), 
+                                random.randint(100, 900),
+                                steps=random.randint(10, 30)
+                            )
+                            await asyncio.sleep(random.uniform(0.5, 1.5))
+                            
+                            # Random scrolling
+                            await page.evaluate(f"window.scrollTo(0, {random.randint(0, 500)})")
+                            await asyncio.sleep(random.uniform(0.3, 0.8))
+                        
+                        # Wait for Cloudflare to auto-solve with intelligent checking
+                        max_wait_iterations = 12  # Wait up to 120 seconds total (Cloudflare can take time)
+                        solved = False
+                        
                         for wait_iteration in range(max_wait_iterations):
                             await asyncio.sleep(10)
                             
-                            # Check page title again
+                            # Check multiple indicators of success
                             try:
                                 page_title = await page.title()
-                                logger.info(f"🔄 Check {wait_iteration + 1}/{max_wait_iterations}: Page title = {page_title}")
+                                page_url = page.url
+                                page_content_check = await page.content()
+                                
+                                logger.info(f"🔄 Check {wait_iteration + 1}/{max_wait_iterations}: Title='{page_title[:50]}...', URL={page_url[:80]}...")
+                                
+                                # Success indicators - any of these means we're through
+                                success_indicators = [
+                                    "just a moment" not in page_title.lower(),
+                                    "challenge" not in page_title.lower(),
+                                    "job" in page_title.lower() or "indeed" in page_title.lower(),
+                                    ".job_seen_beacon" in page_content_check or "data-jk=" in page_content_check,
+                                    page_url != search_url and "indeed.com/jobs" in page_url
+                                ]
+                                
+                                # If we see job content, we're through
+                                if sum(success_indicators) >= 2:  # At least 2 success indicators
+                                    solved = True
+                                    await self._log_progress(f"✅ Cloudflare challenge bypassed after {(wait_iteration + 1) * 10}s!", progress_callback)
+                                    logger.info(f"✅ Successfully bypassed Cloudflare in {(wait_iteration + 1) * 10} seconds")
+                                    break
+                                
+                                # Continue simulating human behavior while waiting
+                                if wait_iteration % 2 == 0:
+                                    import random
+                                    await page.mouse.move(random.randint(200, 1000), random.randint(200, 700))
+                                    
                             except Exception as e:
-                                logger.warning(f"Error checking page title: {e}")
+                                logger.warning(f"Error during Cloudflare bypass check: {e}")
                                 continue
-                            
-                            if "just a moment" not in page_title.lower() and "challenge" not in page_title.lower():
-                                await self._log_progress(f"✅ Cloudflare challenge passed after {(wait_iteration + 1) * 10}s!", progress_callback)
-                                logger.info(f"✅ Successfully bypassed Cloudflare challenge in {(wait_iteration + 1) * 10} seconds")
-                                break
-                        else:
+                        
+                        if not solved:
                             # Still on challenge page after max wait
-                            await self._log_progress(f"⚠️ Cloudflare challenge not resolved after {max_wait_iterations * 10}s", progress_callback)
+                            await self._log_progress(f"⚠️ Cloudflare challenge not fully resolved after {max_wait_iterations * 10}s, continuing anyway...", progress_callback)
                             logger.warning(f"⚠️ Cloudflare challenge still present after {max_wait_iterations * 10}s")
                             
                             # Save debug HTML
                             try:
                                 debug_content = await page.content()
-                                debug_file = f"/tmp/indeed_cloudflare_stuck.html"
+                                debug_file = f"/tmp/indeed_cloudflare_stuck_page{page_num + 1}.html"
                                 with open(debug_file, 'w', encoding='utf-8') as f:
                                     f.write(debug_content)
-                                logger.info(f"💾 Saved stuck Cloudflare page to {debug_file}")
+                                logger.info(f"💾 Saved Cloudflare challenge page to {debug_file}")
+                                await self._log_progress(f"💾 Debug: Saved challenge HTML to {debug_file}", progress_callback)
                             except Exception as e:
                                 logger.error(f"Failed to save debug HTML: {e}")
+                            
+                            # Try refreshing the page once
+                            logger.info("🔄 Attempting page refresh to retry Cloudflare...")
+                            await page.reload(wait_until="domcontentloaded", timeout=60000)
+                            await asyncio.sleep(10)
+                    
+                    else:
+                        # No Cloudflare detected
+                        await self._log_progress("✅ No Cloudflare challenge - page loaded successfully", progress_callback)
                     
                     # Random delay to appear more human (2-4 seconds)
                     import random
