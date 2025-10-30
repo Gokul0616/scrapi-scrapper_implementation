@@ -127,9 +127,12 @@ All results include: business name, address, phone (verified), email, rating, re
     except Exception as e:
         logger.error(f"❌ Error creating Google Maps actor: {e}", exc_info=True)
     
-    # Check if Amazon Product Scraper exists
-    existing_amazon = await db.actors.find_one({"name": "Amazon Product Scraper"})
-    if not existing_amazon:
+    try:
+        # Check if Amazon Product Scraper exists
+        existing_amazon = await db.actors.find_one({"name": "Amazon Product Scraper"})
+        logger.info(f"Amazon actor exists: {existing_amazon is not None}")
+        
+        if not existing_amazon:
         from datetime import datetime, timezone
         actor = Actor(
             user_id="system",
