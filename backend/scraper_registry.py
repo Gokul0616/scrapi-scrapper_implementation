@@ -151,12 +151,10 @@ def auto_register_scrapers():
         # Import all scraper modules
         from google_maps_scraper_v3 import GoogleMapsScraperV3
         from amazon_scraper import AmazonProductScraper
-        from indeed_jobs_scraper_v2 import IndeedJobsScraperV2
         
         # Register each scraper
         _global_registry.register(GoogleMapsScraperV3)
         _global_registry.register(AmazonProductScraper)
-        _global_registry.register(IndeedJobsScraperV2)
         
         logger.info(f"Auto-registered {len(_global_registry._scrapers)} scrapers")
         
