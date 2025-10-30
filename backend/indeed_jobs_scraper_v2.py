@@ -427,15 +427,26 @@ class IndeedJobsScraperV2(BaseScraper):
                 await self._log_progress(f"🔍 Searching page {page_num + 1}/{max_pages}", progress_callback)
                 
                 try:
-                    # Navigate with realistic settings
-                    await page.goto(search_url, wait_until="domcontentloaded", timeout=30000)
+                    # Navigate with realistic settings - use networkidle for better timing
+                    await page.goto(search_url, wait_until="networkidle", timeout=45000)
                     
-                    # Initial wait
-                    await asyncio.sleep(random.uniform(2, 4))
+                    # Longer initial wait to let page fully load
+                    await asyncio.sleep(random.uniform(4, 6))
                     
                     # Check for Cloudflare challenge
                     title = await page.title()
-                    if "just a moment" in title.lower() or "challenge" in title.lower():
+                    content = await page.content()
+                    
+                    # Check for various challenge indicators
+                    challenge_detected = any([
+                        "just a moment" in title.lower(),
+                        "challenge" in title.lower(),
+                        "checking" in title.lower(),
+                        "cloudflare" in content.lower() and "turnstile" in content.lower(),
+                        "cf-challenge" in content.lower()
+                    ])
+                    
+                    if challenge_detected:
                         await self._log_progress("🔐 Cloudflare detected, waiting for bypass...", progress_callback)
                         
                         # Wait for Cloudflare bypass
@@ -443,7 +454,8 @@ class IndeedJobsScraperV2(BaseScraper):
                         
                         if not bypassed:
                             logger.error("Failed to bypass Cloudflare")
-                            break
+                            # Don't break immediately, try to continue
+                            await self._log_progress("⚠️ Continuing despite Cloudflare block...", progress_callback)
                     
                     # Simulate human behavior
                     await self._simulate_human_behavior(page)
