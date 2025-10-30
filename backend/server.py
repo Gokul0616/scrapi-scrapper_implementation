@@ -67,6 +67,8 @@ logger = logging.getLogger(__name__)
 @app.on_event("startup")
 async def startup_event():
     """Initialize default actors on startup."""
+    logger.info("🚀 Starting actor initialization...")
+    
     # Check if Google Maps Scraper V2 exists
     existing_v2 = await db.actors.find_one({"name": "Google Maps Scraper V2"})
     if not existing_v2:
