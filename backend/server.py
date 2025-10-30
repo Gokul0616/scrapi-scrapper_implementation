@@ -217,7 +217,11 @@ Includes: ASIN, title, price, original price, discount %, rating, review count, 
         doc['created_at'] = doc['created_at'].isoformat()
         doc['updated_at'] = doc['updated_at'].isoformat()
         await db.actors.insert_one(doc)
-        logger.info("Created Amazon Product Scraper actor")
+        logger.info("✅ Created Amazon Product Scraper actor")
+    except Exception as e:
+        logger.error(f"❌ Error creating Amazon actor: {e}", exc_info=True)
+    
+    logger.info("🎉 Actor initialization complete")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
