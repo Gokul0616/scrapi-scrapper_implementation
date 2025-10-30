@@ -224,16 +224,112 @@ class IndeedJobsScraper(BaseScraper):
         await stealth_async(page)
         await self._log_progress("🥷 Applied stealth mode to avoid detection", progress_callback)
         
+        # ENHANCED CLOUDFLARE BYPASS: Advanced fingerprint masking via CDP
+        await self._log_progress("🛡️ Applying advanced anti-detection measures...", progress_callback)
+        
+        # Remove automation signals using CDP
+        cdp = await page.context.new_cdp_session(page)
+        
+        # Override navigator.webdriver to hide automation
+        await page.evaluate("""
+            () => {
+                Object.defineProperty(navigator, 'webdriver', {
+                    get: () => undefined
+                });
+            }
+        """)
+        
+        # Mask Chrome automation flags
+        await page.evaluate("""
+            () => {
+                // Remove automation property
+                delete window.navigator.__proto__.webdriver;
+                
+                // Override permissions
+                const originalQuery = window.navigator.permissions.query;
+                window.navigator.permissions.query = (parameters) => (
+                    parameters.name === 'notifications' ?
+                        Promise.resolve({ state: Notification.permission }) :
+                        originalQuery(parameters)
+                );
+                
+                // Mock plugins
+                Object.defineProperty(navigator, 'plugins', {
+                    get: () => [
+                        {
+                            0: {type: "application/x-google-chrome-pdf", suffixes: "pdf", description: "Portable Document Format"},
+                            description: "Portable Document Format",
+                            filename: "internal-pdf-viewer",
+                            length: 1,
+                            name: "Chrome PDF Plugin"
+                        },
+                        {
+                            0: {type: "application/pdf", suffixes: "pdf", description: "Portable Document Format"},
+                            description: "Portable Document Format",
+                            filename: "mhjfbmdgcfjbbpaeojofohoefgiehjai",
+                            length: 1,
+                            name: "Chrome PDF Viewer"
+                        }
+                    ]
+                });
+                
+                // Spoof Chrome runtime
+                window.chrome = {
+                    runtime: {}
+                };
+                
+                // Override languages to appear more natural
+                Object.defineProperty(navigator, 'languages', {
+                    get: () => ['en-US', 'en']
+                });
+                
+                // Mock WebGL to prevent fingerprinting
+                const getParameter = WebGLRenderingContext.prototype.getParameter;
+                WebGLRenderingContext.prototype.getParameter = function(parameter) {
+                    if (parameter === 37445) {
+                        return 'Intel Inc.';
+                    }
+                    if (parameter === 37446) {
+                        return 'Intel Iris OpenGL Engine';
+                    }
+                    return getParameter.call(this, parameter);
+                };
+            }
+        """)
+        
         # Set realistic user agent and headers to avoid detection
+        user_agents = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+        ]
+        import random
+        selected_ua = random.choice(user_agents)
         await page.set_extra_http_headers({
+            'User-Agent': selected_ua,
             'Accept-Language': 'en-US,en;q=0.9',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-            'Accept-Encoding': 'gzip, deflate, br',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'Accept-Encoding': 'gzip, deflate, br, zstd',
             'Referer': 'https://www.google.com/',
+            'Sec-Ch-Ua': '"Chromium";v="131", "Not_A Brand";v="24"',
+            'Sec-Ch-Ua-Mobile': '?0',
+            'Sec-Ch-Ua-Platform': '"Windows"',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'cross-site',
+            'Sec-Fetch-User': '?1',
+            'Upgrade-Insecure-Requests': '1'
         })
         
-        # Set viewport to realistic desktop size
-        await page.set_viewport_size({"width": 1920, "height": 1080})
+        # Set viewport to realistic desktop size with randomization
+        viewport_widths = [1920, 1680, 1536, 1440, 1366]
+        viewport_heights = [1080, 1050, 864, 900, 768]
+        width = random.choice(viewport_widths)
+        height = random.choice(viewport_heights)
+        await page.set_viewport_size({"width": width, "height": height})
+        
+        await self._log_progress("✅ Advanced anti-detection applied successfully", progress_callback)
         
         consecutive_failures = 0  # Track consecutive page failures
         max_consecutive_failures = 2  # Stop after 2 consecutive failures
