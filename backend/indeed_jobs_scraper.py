@@ -37,6 +37,7 @@ class IndeedJobsScraper(BaseScraper):
         self.base_url = "https://www.indeed.com"  # Default to US
         self.email_pattern = re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b')
         self.phone_pattern = re.compile(r'[\+\(]?[1-9][0-9 .\-\(\)]{8,}[0-9]')
+        self.session_cookies = None  # Store cookies after successful Cloudflare bypass
     
     def _get_indeed_domain(self, location: str) -> str:
         """Determine the correct Indeed domain based on location."""
