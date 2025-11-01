@@ -164,6 +164,24 @@ function AppRoutes() {
         } 
       />
       <Route 
+        path="/my-scraper" 
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <MyScraper />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/scraper-builder" 
+        element={
+          <ProtectedRoute>
+            <ScraperBuilder />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
         path="/create-scraper" 
         element={
           <ProtectedRoute>
