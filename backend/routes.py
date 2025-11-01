@@ -1120,3 +1120,377 @@ async def clear_chat_history(
     except Exception as e:
         logger.error(f"Error clearing chat history: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============= Visual Scraper Builder Routes =============
+
+@router.post("/scrapers/builder/test-selector")
+async def test_selector(
+    request: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Test a CSS or XPath selector on a URL"""
+    from scraper_builder import scraper_builder
+    
+    try:
+        url = request.get("url")
+        selector = request.get("selector")
+        selector_type = request.get("selector_type", "css")
+        
+        if not url or not selector:
+            raise HTTPException(status_code=400, detail="URL and selector are required")
+        
+        logger.info(f"🧪 Testing selector: {selector} ({selector_type}) on {url}")
+        result = await scraper_builder.test_selector(url, selector, selector_type)
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"❌ Error testing selector: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/scrapers/builder/test")
+async def test_scraper(
+    request: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Test complete scraper configuration on a single URL"""
+    from scraper_builder import scraper_builder
+    from models import ScraperField
+    
+    try:
+        url = request.get("url")
+        fields_data = request.get("fields", [])
+        use_browser = request.get("use_browser", True)
+        wait_for_selector = request.get("wait_for_selector")
+        
+        if not url:
+            raise HTTPException(status_code=400, detail="URL is required")
+        
+        # Convert fields data to ScraperField models
+        fields = [ScraperField(**field) for field in fields_data]
+        
+        logger.info(f"🧪 Testing scraper with {len(fields)} fields on {url}")
+        result = await scraper_builder.test_scraper(url, fields, use_browser, wait_for_selector)
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"❌ Error testing scraper: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/scrapers/config")
+async def create_scraper_config(
+    config_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a new scraper configuration"""
+    from models import ScraperConfig, ScraperField, PaginationConfig
+    
+    try:
+        # Parse fields
+        fields_data = config_data.get("fields", [])
+        fields = [ScraperField(**field) for field in fields_data]
+        
+        # Parse pagination
+        pagination_data = config_data.get("pagination", {})
+        pagination = PaginationConfig(**pagination_data) if pagination_data else PaginationConfig()
+        
+        # Create scraper config
+        scraper_config = ScraperConfig(
+            user_id=current_user["id"],
+            name=config_data["name"],
+            description=config_data.get("description", ""),
+            icon=config_data.get("icon", "🕷️"),
+            start_urls=config_data.get("start_urls", []),
+            fields=fields,
+            pagination=pagination,
+            use_browser=config_data.get("use_browser", True),
+            wait_for_selector=config_data.get("wait_for_selector"),
+            delay_between_pages=config_data.get("delay_between_pages", 2000),
+            use_proxy=config_data.get("use_proxy", False),
+            max_pages=config_data.get("max_pages", 50),
+            category=config_data.get("category", "General"),
+            tags=config_data.get("tags", []),
+            status="draft"
+        )
+        
+        # Save to database
+        config_dict = scraper_config.model_dump()
+        await db.scraper_configs.insert_one(config_dict)
+        
+        logger.info(f"✅ Created scraper config: {scraper_config.name} (ID: {scraper_config.id})")
+        
+        return {"success": True, "config": config_dict}
+        
+    except Exception as e:
+        logger.error(f"❌ Error creating scraper config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/scrapers/config")
+async def list_scraper_configs(
+    current_user: dict = Depends(get_current_user)
+):
+    """List all scraper configurations for the current user"""
+    try:
+        configs = await db.scraper_configs.find({"user_id": current_user["id"]}).to_list(100)
+        return {"configs": configs}
+    except Exception as e:
+        logger.error(f"❌ Error listing scraper configs: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/scrapers/config/{config_id}")
+async def get_scraper_config(
+    config_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get a specific scraper configuration"""
+    try:
+        config = await db.scraper_configs.find_one({"id": config_id, "user_id": current_user["id"]})
+        if not config:
+            raise HTTPException(status_code=404, detail="Scraper configuration not found")
+        return {"config": config}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error getting scraper config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.put("/scrapers/config/{config_id}")
+async def update_scraper_config(
+    config_id: str,
+    update_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update a scraper configuration"""
+    from models import ScraperField, PaginationConfig
+    
+    try:
+        # Check if config exists and belongs to user
+        existing = await db.scraper_configs.find_one({"id": config_id, "user_id": current_user["id"]})
+        if not existing:
+            raise HTTPException(status_code=404, detail="Scraper configuration not found")
+        
+        # Prepare update data
+        update_dict = {}
+        
+        if "name" in update_data:
+            update_dict["name"] = update_data["name"]
+        if "description" in update_data:
+            update_dict["description"] = update_data["description"]
+        if "icon" in update_data:
+            update_dict["icon"] = update_data["icon"]
+        if "start_urls" in update_data:
+            update_dict["start_urls"] = update_data["start_urls"]
+        if "fields" in update_data:
+            fields = [ScraperField(**f).model_dump() for f in update_data["fields"]]
+            update_dict["fields"] = fields
+        if "pagination" in update_data:
+            pagination = PaginationConfig(**update_data["pagination"]).model_dump()
+            update_dict["pagination"] = pagination
+        if "use_browser" in update_data:
+            update_dict["use_browser"] = update_data["use_browser"]
+        if "wait_for_selector" in update_data:
+            update_dict["wait_for_selector"] = update_data["wait_for_selector"]
+        if "delay_between_pages" in update_data:
+            update_dict["delay_between_pages"] = update_data["delay_between_pages"]
+        if "max_pages" in update_data:
+            update_dict["max_pages"] = update_data["max_pages"]
+        if "status" in update_data:
+            update_dict["status"] = update_data["status"]
+        if "tags" in update_data:
+            update_dict["tags"] = update_data["tags"]
+        
+        update_dict["updated_at"] = datetime.now(timezone.utc)
+        
+        # Update in database
+        await db.scraper_configs.update_one(
+            {"id": config_id},
+            {"$set": update_dict}
+        )
+        
+        logger.info(f"✅ Updated scraper config: {config_id}")
+        
+        return {"success": True, "message": "Scraper configuration updated"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error updating scraper config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/scrapers/config/{config_id}")
+async def delete_scraper_config(
+    config_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Delete a scraper configuration"""
+    try:
+        result = await db.scraper_configs.delete_one({"id": config_id, "user_id": current_user["id"]})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Scraper configuration not found")
+        
+        logger.info(f"✅ Deleted scraper config: {config_id}")
+        
+        return {"success": True, "message": "Scraper configuration deleted"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error deleting scraper config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/scrapers/config/{config_id}/run")
+async def run_scraper_config(
+    config_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Run a scraper configuration (create run and execute)"""
+    from scraper_builder import scraper_builder
+    from models import ScraperConfig, ScraperField, PaginationConfig
+    
+    try:
+        # Get config
+        config_data = await db.scraper_configs.find_one({"id": config_id, "user_id": current_user["id"]})
+        if not config_data:
+            raise HTTPException(status_code=404, detail="Scraper configuration not found")
+        
+        # Parse config
+        fields = [ScraperField(**f) for f in config_data.get("fields", [])]
+        pagination = PaginationConfig(**config_data.get("pagination", {}))
+        
+        config = ScraperConfig(
+            **{**config_data, "fields": fields, "pagination": pagination}
+        )
+        
+        # Create run record
+        from models import Run
+        run = Run(
+            user_id=current_user["id"],
+            actor_id=config_id,
+            actor_name=config.name,
+            status="queued",
+            input_data={"config_id": config_id},
+            started_at=datetime.now(timezone.utc)
+        )
+        
+        await db.runs.insert_one(run.model_dump())
+        logger.info(f"✅ Created run: {run.id} for config: {config.name}")
+        
+        # Execute scraper in background
+        async def execute_scraper():
+            try:
+                # Update status to running
+                await db.runs.update_one(
+                    {"id": run.id},
+                    {"$set": {"status": "running"}}
+                )
+                
+                # Run scraper
+                results = await scraper_builder.run_scraper(config)
+                
+                # Save results
+                for item_data in results:
+                    dataset_item = DatasetItem(
+                        run_id=run.id,
+                        data=item_data
+                    )
+                    await db.dataset_items.insert_one(dataset_item.model_dump())
+                
+                # Update run status
+                finished_at = datetime.now(timezone.utc)
+                duration = int((finished_at - run.started_at).total_seconds())
+                
+                await db.runs.update_one(
+                    {"id": run.id},
+                    {"$set": {
+                        "status": "succeeded",
+                        "finished_at": finished_at,
+                        "duration_seconds": duration,
+                        "results_count": len(results)
+                    }}
+                )
+                
+                logger.info(f"🎉 Scraper run {run.id} completed: {len(results)} items")
+                
+            except Exception as e:
+                logger.error(f"❌ Scraper run {run.id} failed: {e}")
+                await db.runs.update_one(
+                    {"id": run.id},
+                    {"$set": {
+                        "status": "failed",
+                        "error_message": str(e),
+                        "finished_at": datetime.now(timezone.utc)
+                    }}
+                )
+        
+        # Start background task
+        task_manager.start_task(run.id, execute_scraper())
+        
+        return {"success": True, "run_id": run.id, "message": "Scraper started"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error running scraper config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/scrapers/config/{config_id}/publish")
+async def publish_scraper_as_actor(
+    config_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Publish a scraper configuration as an Actor"""
+    try:
+        # Get config
+        config = await db.scraper_configs.find_one({"id": config_id, "user_id": current_user["id"]})
+        if not config:
+            raise HTTPException(status_code=404, detail="Scraper configuration not found")
+        
+        # Create Actor from config
+        actor = Actor(
+            user_id=current_user["id"],
+            name=config["name"],
+            description=config["description"],
+            icon=config.get("icon", "🕷️"),
+            category=config.get("category", "General"),
+            type="custom",
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "start_urls": {"type": "array", "title": "Start URLs"},
+                },
+                "required": ["start_urls"]
+            },
+            tags=config.get("tags", []),
+            template_type="visual_builder",
+            status="published",
+            visibility=config.get("visibility", "private")
+        )
+        
+        actor_dict = actor.model_dump()
+        actor_dict["scraper_config_id"] = config_id  # Link to scraper config
+        
+        await db.actors.insert_one(actor_dict)
+        
+        # Update config status
+        await db.scraper_configs.update_one(
+            {"id": config_id},
+            {"$set": {"status": "active", "updated_at": datetime.now(timezone.utc)}}
+        )
+        
+        logger.info(f"✅ Published scraper config {config_id} as actor {actor.id}")
+        
+        return {
+            "success": True,
+            "actor_id": actor.id,
+            "message": f"Scraper '{config['name']}' published as Actor"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error publishing scraper: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
