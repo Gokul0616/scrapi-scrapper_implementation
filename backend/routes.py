@@ -4,7 +4,8 @@ from datetime import datetime, timezone
 from models import (
     UserCreate, UserLogin, UserResponse, Actor, ActorCreate, ActorUpdate, ActorPublish,
     Run, RunCreate, Dataset, DatasetItem, Proxy, ProxyCreate,
-    LeadChatMessage, LeadChatRequest
+    LeadChatMessage, LeadChatRequest,
+    ScraperConfig, ScraperConfigCreate, ScraperConfigUpdate, ScraperField, PaginationConfig, ScraperTestRequest
 )
 from auth import create_access_token, get_current_user, hash_password, verify_password
 from proxy_manager import get_proxy_manager
