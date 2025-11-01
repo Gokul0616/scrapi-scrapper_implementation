@@ -89,7 +89,7 @@ const Runs = () => {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-4xl mb-4">🕷️</div>
+          <img src="/logo.png" alt="Scrapi Logo" className="w-16 h-16 mx-auto mb-4" />
           <p className="text-gray-600">Loading runs...</p>
         </div>
       </div>
