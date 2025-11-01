@@ -106,11 +106,11 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
       <div className="h-16 border-b flex items-center justify-between px-4">
         {!isCollapsed && (
           <div className="flex items-center space-x-2">
-            <div className="text-2xl">🕷️</div>
+            <img src="/logo.png" alt="Scrapi Logo" className="w-8 h-8" />
             <span className="font-bold text-xl text-gray-900">SCRAPI</span>
           </div>
         )}
-        {isCollapsed && <div className="text-2xl mx-auto">🕷️</div>}
+        {isCollapsed && <img src="/logo.png" alt="Scrapi Logo" className="w-8 h-8 mx-auto" />}
       </div>
 
       {/* User Info */}
