@@ -47,7 +47,7 @@ const Register = () => {
       <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
         <div className="flex items-center justify-center mb-8">
           <div className="flex items-center space-x-2">
-            <div className="text-4xl">🕷️</div>
+            <img src="/logo.png" alt="Scrapi Logo" className="w-12 h-12" />
             <h1 className="text-3xl font-bold text-gray-900">SCRAPI</h1>
           </div>
         </div>
