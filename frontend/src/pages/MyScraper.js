@@ -135,20 +135,17 @@ function MyScraper() {
   const publishAsActor = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${backendUrl}/api/scrapers/config/${id}/publish`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        cache: 'no-store'
-      });
+      const response = await axios.post(
+        `${backendUrl}/api/scrapers/config/${id}/publish`,
+        {},
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-      }
-
-      const data = await response.json();
+      const data = response.data;
       
       if (data.success) {
         setAlertModal({
@@ -168,6 +165,14 @@ function MyScraper() {
       }
     } catch (error) {
       console.error('Error publishing scraper:', error);
+      setAlertModal({
+        show: true,
+        type: 'error',
+        title: 'Error',
+        message: error.response?.data?.detail || 'Failed to publish scraper'
+      });
+    }
+  };
       setAlertModal({
         show: true,
         type: 'error',
