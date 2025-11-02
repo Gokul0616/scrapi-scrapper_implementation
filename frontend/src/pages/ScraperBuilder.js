@@ -5,6 +5,7 @@ import {
   MousePointer, Layers, Globe, Repeat, Clock, Shield, Zap
 } from 'lucide-react';
 import AlertModal from '../components/AlertModal';
+import { safeFetchJSON } from '../utils/safeFetch';
 
 const ScraperBuilder = () => {
   const navigate = useNavigate();
