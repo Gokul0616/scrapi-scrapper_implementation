@@ -149,11 +149,13 @@ const ScraperBuilder = () => {
           url: previewUrl,
           selector: field.selector,
           selector_type: field.selector_type
-        })
+        }),
+        cache: 'no-store'
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
 
       const data = await response.json();
