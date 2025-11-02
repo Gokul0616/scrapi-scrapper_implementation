@@ -236,7 +236,12 @@ const ScraperBuilder = () => {
     }
 
     if (fields.length === 0) {
-      alert('Please add at least one field');
+      setAlertModal({
+        show: true,
+        type: 'warning',
+        title: 'Fields Required',
+        message: 'Please add at least one field'
+      });
       return;
     }
 
@@ -288,13 +293,28 @@ const ScraperBuilder = () => {
       const data = await response.json();
       
       if (data.success) {
-        alert('✅ Scraper saved successfully!');
-        navigate('/my-scraper');
+        setAlertModal({
+          show: true,
+          type: 'success',
+          title: 'Scraper Saved',
+          message: 'Your scraper has been saved successfully!'
+        });
+        setTimeout(() => navigate('/my-scraper'), 1500);
       } else {
-        alert(`❌ Error saving scraper: ${data.message || 'Unknown error'}`);
+        setAlertModal({
+          show: true,
+          type: 'error',
+          title: 'Save Failed',
+          message: data.message || 'Unknown error occurred'
+        });
       }
     } catch (error) {
-      alert(`❌ Error saving scraper: ${error.message}`);
+      setAlertModal({
+        show: true,
+        type: 'error',
+        title: 'Save Error',
+        message: error.message
+      });
     } finally {
       setIsSaving(false);
     }
