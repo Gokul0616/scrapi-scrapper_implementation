@@ -820,6 +820,16 @@ const ScraperBuilder = () => {
           </div>
         </div>
       </div>
+      
+      {/* Alert Modal */}
+      <AlertModal
+        show={alertModal.show}
+        onClose={() => setAlertModal({ ...alertModal, show: false })}
+        title={alertModal.title}
+        message={alertModal.message}
+        type={alertModal.type}
+        details={alertModal.details}
+      />
     </div>
   );
 };
