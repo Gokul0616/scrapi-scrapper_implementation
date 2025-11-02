@@ -137,14 +137,29 @@ function MyScraper() {
       const data = await response.json();
       
       if (data.success) {
-        alert(`✅ ${data.message}`);
+        setAlertModal({
+          show: true,
+          type: 'success',
+          title: 'Published',
+          message: data.message
+        });
         fetchScrapers();
       } else {
-        alert('❌ Failed to publish scraper');
+        setAlertModal({
+          show: true,
+          type: 'error',
+          title: 'Publish Failed',
+          message: 'Failed to publish scraper'
+        });
       }
     } catch (error) {
       console.error('Error publishing scraper:', error);
-      alert('Failed to publish scraper');
+      setAlertModal({
+        show: true,
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to publish scraper'
+      });
     }
   };
 
