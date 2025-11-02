@@ -81,13 +81,23 @@ const ScraperBuilder = () => {
 
   const testSelector = async (fieldId) => {
     if (!previewUrl) {
-      alert('Please enter a preview URL first');
+      setAlertModal({
+        show: true,
+        type: 'warning',
+        title: 'Preview URL Required',
+        message: 'Please enter a preview URL first'
+      });
       return;
     }
 
     const field = fields.find(f => f.id === fieldId);
     if (!field.selector) {
-      alert('Please enter a selector first');
+      setAlertModal({
+        show: true,
+        type: 'warning',
+        title: 'Selector Required',
+        message: 'Please enter a selector first'
+      });
       return;
     }
 
