@@ -121,12 +121,30 @@ const ScraperBuilder = () => {
       const data = await response.json();
       
       if (data.success) {
-        alert(`✅ Found ${data.count} elements\n\nSample: ${data.samples.map(s => s.text).join(', ')}`);
+        setAlertModal({
+          show: true,
+          type: 'success',
+          title: 'Selector Test Successful',
+          message: `Found ${data.count} elements`,
+          details: [
+            { label: 'Sample Results', value: data.samples.map(s => s.text).join(', ') }
+          ]
+        });
       } else {
-        alert(`❌ Error: ${data.error}`);
+        setAlertModal({
+          show: true,
+          type: 'error',
+          title: 'Selector Test Failed',
+          message: data.error
+        });
       }
     } catch (error) {
-      alert(`❌ Error testing selector: ${error.message}`);
+      setAlertModal({
+        show: true,
+        type: 'error',
+        title: 'Test Error',
+        message: error.message
+      });
     } finally {
       setIsTestingSelector(false);
     }
@@ -134,12 +152,22 @@ const ScraperBuilder = () => {
 
   const testScraper = async () => {
     if (!previewUrl) {
-      alert('Please enter a URL to test');
+      setAlertModal({
+        show: true,
+        type: 'warning',
+        title: 'URL Required',
+        message: 'Please enter a URL to test'
+      });
       return;
     }
 
     if (fields.length === 0) {
-      alert('Please add at least one field');
+      setAlertModal({
+        show: true,
+        type: 'warning',
+        title: 'Fields Required',
+        message: 'Please add at least one field'
+      });
       return;
     }
 
