@@ -380,6 +380,32 @@ function MyScraper() {
           </div>
         )}
       </div>
+      
+      {/* Alert Modal */}
+      <AlertModal
+        show={alertModal.show}
+        onClose={() => setAlertModal({ ...alertModal, show: false })}
+        title={alertModal.title}
+        message={alertModal.message}
+        type={alertModal.type}
+        details={alertModal.details}
+      />
+      
+      {/* Confirmation Modal */}
+      <AlertModal
+        show={confirmModal.show}
+        onClose={() => setConfirmModal({ ...confirmModal, show: false })}
+        onConfirm={() => {
+          confirmModal.onConfirm();
+          setConfirmModal({ ...confirmModal, show: false });
+        }}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        type="warning"
+        showCancel={true}
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
     </div>
   );
 }
