@@ -355,47 +355,65 @@ const ScraperBuilder = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${backendUrl}/api/scrapers/config`,
-        {
-          name: scraperName,
-          description: description,
-          icon: icon,
-          start_urls: startUrls.filter(u => u.trim()),
-          fields: fields.map(f => ({
-            name: f.name,
-            selector: f.selector,
-            selector_type: f.selector_type,
-            extract_type: f.extract_type,
-            attribute: f.attribute || null,
-            multiple: f.multiple,
-            transform: f.transform || null,
-            required: f.required,
-            default_value: f.default_value || null
-          })),
-          pagination: {
-            enabled: paginationEnabled,
-            type: paginationType,
-            next_selector: nextSelector || null,
-            max_pages: maxPages,
-            wait_after_load: 2000,
-            stop_if_no_new_items: true
-          },
-          use_browser: useBrowser,
-          wait_for_selector: waitForSelector || null,
-          delay_between_pages: delayBetweenPages,
-          use_proxy: useProxy,
-          max_pages: maxPagesLimit,
-          category: 'Custom',
-          tags: ['custom', 'visual-builder'],
-          status: 'draft'
+      
+      const scraperData = {
+        name: scraperName,
+        description: description,
+        icon: icon,
+        start_urls: startUrls.filter(u => u.trim()),
+        fields: fields.map(f => ({
+          name: f.name,
+          selector: f.selector,
+          selector_type: f.selector_type,
+          extract_type: f.extract_type,
+          attribute: f.attribute || null,
+          multiple: f.multiple,
+          transform: f.transform || null,
+          required: f.required,
+          default_value: f.default_value || null
+        })),
+        pagination: {
+          enabled: paginationEnabled,
+          type: paginationType,
+          next_selector: nextSelector || null,
+          max_pages: maxPages,
+          wait_after_load: 2000,
+          stop_if_no_new_items: true
         },
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
+        use_browser: useBrowser,
+        wait_for_selector: waitForSelector || null,
+        delay_between_pages: delayBetweenPages,
+        use_proxy: useProxy,
+        max_pages: maxPagesLimit,
+        category: 'Custom',
+        tags: ['custom', 'visual-builder'],
+        status: 'draft'
+      };
+      
+      let response;
+      if (scraperId) {
+        // Update existing scraper
+        response = await axios.put(
+          `${backendUrl}/api/scrapers/config/${scraperId}`,
+          scraperData,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
           }
-        }
-      );
+        );
+      } else {
+        // Create new scraper
+        response = await axios.post(
+          `${backendUrl}/api/scrapers/config`,
+          scraperData,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+      }
 
       const data = response.data;
       
@@ -403,8 +421,8 @@ const ScraperBuilder = () => {
         setAlertModal({
           show: true,
           type: 'success',
-          title: 'Scraper Saved',
-          message: 'Your scraper has been saved successfully!'
+          title: scraperId ? 'Scraper Updated' : 'Scraper Saved',
+          message: scraperId ? 'Your scraper has been updated successfully!' : 'Your scraper has been saved successfully!'
         });
         setTimeout(() => navigate('/my-scraper'), 1500);
       } else {
