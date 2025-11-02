@@ -8,7 +8,7 @@ import json
 import re
 
 # Get backend URL from environment
-BACKEND_URL = "https://modal-alerts.preview.emergentagent.com/api"
+BACKEND_URL = "https://css-scraper-help.preview.emergentagent.com/api"
 
 def test_run_creation():
     # Authenticate
