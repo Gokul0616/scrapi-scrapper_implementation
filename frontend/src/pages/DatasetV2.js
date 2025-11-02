@@ -1538,59 +1538,55 @@ const DatasetV2 = () => {
             <div className="px-6 py-4 max-h-96 overflow-y-auto">
               <p className="text-sm text-gray-600 mb-4">Select columns to display in the table:</p>
               <div className="space-y-2">
-                {Object.entries({
-                  number: '#',
-                  title: 'Place name',
-                  totalScore: 'Total Score',
-                  reviewsCount: 'Reviews Count',
-                  address: 'Street',
-                  city: 'City',
-                  state: 'State',
-                  countryCode: 'Country Code',
-                  website: 'Website',
-                  phone: 'Phone',
-                  category: 'Category Name',
-                  url: 'URL',
-                  socialMedia: 'Social Media',
-                  actions: 'Actions'
-                }).map(([key, label]) => (
-                  <label key={key} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                {/* Fixed columns */}
+                <label className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={visibleColumns.number}
+                    onChange={(e) => setVisibleColumns(prev => ({ ...prev, number: e.target.checked }))}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-900 font-medium">#</span>
+                </label>
+                
+                {/* Dynamic columns from data */}
+                {allColumns.map(colKey => (
+                  <label key={colKey} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={visibleColumns[key]}
-                      onChange={(e) => setVisibleColumns(prev => ({ ...prev, [key]: e.target.checked }))}
+                      checked={visibleColumns[colKey]}
+                      onChange={(e) => setVisibleColumns(prev => ({ ...prev, [colKey]: e.target.checked }))}
                       className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     />
-                    <span className="text-sm text-gray-900">{label}</span>
+                    <span className="text-sm text-gray-900">{formatColumnName(colKey)}</span>
                   </label>
                 ))}
+                
+                {/* Actions column */}
+                <label className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={visibleColumns.actions}
+                    onChange={(e) => setVisibleColumns(prev => ({ ...prev, actions: e.target.checked }))}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-900 font-medium">Actions</span>
+                </label>
               </div>
             </div>
             <div className="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
               <Button
                 variant="outline"
                 onClick={() => {
-                  setVisibleColumns({
-                    number: true,
-                    title: true,
-                    totalScore: true,
-                    rating: true,
-                    reviewsCount: true,
-                    address: true,
-                    city: true,
-                    state: true,
-                    countryCode: true,
-                    website: true,
-                    phone: true,
-                    email: true,
-                    category: true,
-                    socialMedia: true,
-                    url: true,
-                    actions: true
+                  // Reset all columns to visible
+                  const resetColumns = { number: true, actions: true };
+                  allColumns.forEach(col => {
+                    resetColumns[col] = true;
                   });
+                  setVisibleColumns(resetColumns);
                 }}
               >
-                Reset
+                Show All
               </Button>
               <Button onClick={() => setShowColumnSettings(false)} className="bg-blue-600 hover:bg-blue-700">
                 Apply
