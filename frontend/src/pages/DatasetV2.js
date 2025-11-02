@@ -326,25 +326,37 @@ const DatasetV2 = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [videoThumbnails, setVideoThumbnails] = useState({});
-  const [visibleColumns, setVisibleColumns] = useState({
-    number: true,
-    title: true,
-    totalScore: true,
-    rating: true,
-    reviewsCount: true,
-    address: true,
-    city: true,
-    state: true,
-    countryCode: true,
-    website: true,
-    phone: true,
-    email: true,
-    category: true,
-    socialMedia: true,
-    url: true,
-    actions: true
-  });
+  const [visibleColumns, setVisibleColumns] = useState({});
+  const [allColumns, setAllColumns] = useState([]);
   const [showColumnSettings, setShowColumnSettings] = useState(false);
+  
+  // Detect all available columns from data
+  useEffect(() => {
+    if (items.length > 0) {
+      const detectedColumns = new Set();
+      
+      // Scan first 10 items to detect all possible fields
+      items.slice(0, 10).forEach(item => {
+        if (item.data) {
+          Object.keys(item.data).forEach(key => {
+            detectedColumns.add(key);
+          });
+        }
+      });
+      
+      const columnsArray = Array.from(detectedColumns).sort();
+      setAllColumns(columnsArray);
+      
+      // Initialize visible columns (all visible by default)
+      if (Object.keys(visibleColumns).length === 0) {
+        const initialVisibility = { number: true, actions: true };
+        columnsArray.forEach(col => {
+          initialVisibility[col] = true;
+        });
+        setVisibleColumns(initialVisibility);
+      }
+    }
+  }, [items]);
 
   useEffect(() => {
     fetchRunDetails();
