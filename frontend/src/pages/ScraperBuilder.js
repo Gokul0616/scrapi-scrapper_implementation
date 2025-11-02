@@ -4,6 +4,7 @@ import {
   Plus, X, Play, Save, Code, Eye, Settings, ChevronDown, ChevronUp,
   MousePointer, Layers, Globe, Repeat, Clock, Shield, Zap
 } from 'lucide-react';
+import AlertModal from '../components/AlertModal';
 
 const ScraperBuilder = () => {
   const navigate = useNavigate();
@@ -25,6 +26,15 @@ const ScraperBuilder = () => {
     fields: true,
     pagination: false,
     advanced: false
+  });
+  
+  // AlertModal state
+  const [alertModal, setAlertModal] = useState({ 
+    show: false, 
+    type: 'info', 
+    title: '', 
+    message: '',
+    details: []
   });
   
   // Pagination config
