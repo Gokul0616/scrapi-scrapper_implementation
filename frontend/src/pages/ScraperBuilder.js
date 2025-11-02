@@ -285,13 +285,9 @@ const ScraperBuilder = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const result = await safeFetchJSON(`${backendUrl}/api/scrapers/config`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
+      const response = await axios.post(
+        `${backendUrl}/api/scrapers/config`,
+        {
           name: scraperName,
           description: description,
           icon: icon,
@@ -323,14 +319,15 @@ const ScraperBuilder = () => {
           category: 'Custom',
           tags: ['custom', 'visual-builder'],
           status: 'draft'
-        })
-      });
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
 
-      if (!result.ok) {
-        throw new Error(result.error);
-      }
-
-      const data = result.data;
+      const data = response.data;
       
       if (data.success) {
         setAlertModal({
@@ -353,7 +350,7 @@ const ScraperBuilder = () => {
         show: true,
         type: 'error',
         title: 'Save Error',
-        message: error.message
+        message: error.response?.data?.detail || error.message
       });
     } finally {
       setIsSaving(false);
