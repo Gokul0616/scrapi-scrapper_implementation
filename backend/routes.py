@@ -1448,7 +1448,7 @@ async def run_scraper_config(
                 )
         
         # Start background task
-        task_manager.start_task(run.id, execute_scraper())
+        await task_manager.start_task(run.id, execute_scraper())
         
         return {"success": True, "run_id": run.id, "message": "Scraper started"}
         
