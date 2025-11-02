@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   Plus, X, Play, Save, Code, Eye, Settings, ChevronDown, ChevronUp,
   MousePointer, Layers, Globe, Repeat, Clock, Shield, Zap
@@ -9,6 +9,8 @@ import axios from 'axios';
 
 const ScraperBuilder = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const scraperId = searchParams.get('id'); // Get scraper ID from URL query params
   const iframeRef = useRef(null);
   
   // State
@@ -24,6 +26,7 @@ const ScraperBuilder = () => {
   const [isRunningTest, setIsRunningTest] = useState(false);
   const [iframeKey, setIframeKey] = useState(0);
   const [iframeError, setIframeError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
     basic: true,
     fields: true,
@@ -54,6 +57,73 @@ const ScraperBuilder = () => {
   const [maxPagesLimit, setMaxPagesLimit] = useState(50);
 
   const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+
+  // Load existing scraper data if editing
+  useEffect(() => {
+    if (scraperId) {
+      loadScraperData(scraperId);
+    }
+  }, [scraperId]);
+
+  const loadScraperData = async (id) => {
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${backendUrl}/api/scrapers/config/${id}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      const scraper = response.data.config;
+      
+      // Load all scraper data into state
+      setScraperName(scraper.name || '');
+      setDescription(scraper.description || '');
+      setIcon(scraper.icon || '🕷️');
+      setStartUrls(scraper.start_urls || ['']);
+      
+      // Load fields with proper IDs for React keys
+      setFields((scraper.fields || []).map(field => ({
+        ...field,
+        id: Date.now() + Math.random() // Generate unique ID for React
+      })));
+      
+      // Load pagination config
+      if (scraper.pagination) {
+        setPaginationEnabled(scraper.pagination.enabled || false);
+        setPaginationType(scraper.pagination.type || 'next_button');
+        setNextSelector(scraper.pagination.next_selector || '');
+        setMaxPages(scraper.pagination.max_pages || 10);
+      }
+      
+      // Load advanced settings
+      setUseBrowser(scraper.use_browser !== undefined ? scraper.use_browser : true);
+      setWaitForSelector(scraper.wait_for_selector || '');
+      setDelayBetweenPages(scraper.delay_between_pages || 2000);
+      setUseProxy(scraper.use_proxy || false);
+      setMaxPagesLimit(scraper.max_pages || 50);
+      
+      // Set preview URL to first start URL if available
+      if (scraper.start_urls && scraper.start_urls.length > 0) {
+        setPreviewUrl(scraper.start_urls[0]);
+      }
+      
+    } catch (error) {
+      console.error('Error loading scraper:', error);
+      setAlertModal({
+        show: true,
+        type: 'error',
+        title: 'Load Failed',
+        message: error.response?.data?.detail || 'Failed to load scraper data'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Detect sites that commonly block iframes
   useEffect(() => {
