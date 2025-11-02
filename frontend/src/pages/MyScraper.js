@@ -167,14 +167,6 @@ function MyScraper() {
       });
     }
   };
-      setAlertModal({
-        show: true,
-        type: 'error',
-        title: 'Error',
-        message: 'Failed to publish scraper'
-      });
-    }
-  };
 
   const getStatusBadge = (status) => {
     switch (status) {
