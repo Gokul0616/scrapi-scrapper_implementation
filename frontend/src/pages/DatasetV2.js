@@ -666,6 +666,94 @@ const DatasetV2 = () => {
   const isAmazonScraper = () => {
     return runDetails?.actor_name?.toLowerCase().includes('amazon') || false;
   };
+  
+  // Helper function to format column names
+  const formatColumnName = (key) => {
+    // Convert camelCase or snake_case to Title Case
+    return key
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/_/g, ' ')
+      .replace(/^./, str => str.toUpperCase())
+      .trim();
+  };
+  
+  // Helper function to render cell value dynamically
+  const renderCellValue = (value, key) => {
+    // Handle null or undefined
+    if (value === null || value === undefined) return '-';
+    
+    // Handle arrays
+    if (Array.isArray(value)) {
+      if (value.length === 0) return '-';
+      if (key === 'images' && value.length > 0) {
+        return (
+          <div className="flex gap-1">
+            {value.slice(0, 3).map((img, idx) => (
+              <img key={idx} src={img} alt="" className="w-8 h-8 rounded object-cover" />
+            ))}
+            {value.length > 3 && <span className="text-xs text-gray-500">+{value.length - 3}</span>}
+          </div>
+        );
+      }
+      return value.join(', ');
+    }
+    
+    // Handle objects (like socialMedia)
+    if (typeof value === 'object') {
+      const entries = Object.entries(value);
+      if (entries.length === 0) return '-';
+      if (key === 'socialMedia') {
+        const links = getSocialMediaLinks(value);
+        return (
+          <div className="flex gap-1">
+            {links.slice(0, 3).map((link, idx) => (
+              <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" 
+                 className="text-blue-600 hover:text-blue-800 text-xs">
+                {link.platform}
+              </a>
+            ))}
+            {links.length > 3 && <span className="text-xs text-gray-500">+{links.length - 3}</span>}
+          </div>
+        );
+      }
+      return JSON.stringify(value);
+    }
+    
+    // Handle URLs
+    if (typeof value === 'string' && (value.startsWith('http://') || value.startsWith('https://'))) {
+      return (
+        <a href={value} target="_blank" rel="noopener noreferrer" 
+           className="text-blue-600 hover:text-blue-800 truncate max-w-xs block">
+          {value.length > 50 ? value.substring(0, 50) + '...' : value}
+        </a>
+      );
+    }
+    
+    // Handle boolean
+    if (typeof value === 'boolean') {
+      return value ? '✓' : '✗';
+    }
+    
+    // Handle numbers
+    if (typeof value === 'number') {
+      return value.toLocaleString();
+    }
+    
+    // Handle strings
+    if (typeof value === 'string') {
+      // If it's too long, truncate
+      if (value.length > 100) {
+        return (
+          <span title={value}>
+            {value.substring(0, 100)}...
+          </span>
+        );
+      }
+      return value;
+    }
+    
+    return String(value);
+  };
 
   if (loading) {
     return (
