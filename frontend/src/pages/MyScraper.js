@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Play, Edit, Trash2, Eye, Star, StarOff, Clock, CheckCircle, XCircle, Archive } from 'lucide-react';
 import AlertModal from '../components/AlertModal';
+import axios from 'axios';
 
 function MyScraper() {
   const navigate = useNavigate();
