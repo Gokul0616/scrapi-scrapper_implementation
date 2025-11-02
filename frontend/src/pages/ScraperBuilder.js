@@ -54,6 +54,22 @@ const ScraperBuilder = () => {
 
   const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
+  // Detect sites that commonly block iframes
+  useEffect(() => {
+    if (previewUrl) {
+      const blockedDomains = ['facebook.com', 'twitter.com', 'instagram.com', 'linkedin.com', 'google.com', 'youtube.com', 'amazon.com', 'netflix.com', 'bank'];
+      const isLikelyBlocked = blockedDomains.some(domain => previewUrl.toLowerCase().includes(domain));
+      
+      if (isLikelyBlocked) {
+        // Wait a bit to see if iframe loads
+        const timer = setTimeout(() => {
+          handleIframeError();
+        }, 3000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [previewUrl]);
+
   const toggleSection = (section) => {
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
