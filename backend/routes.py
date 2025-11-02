@@ -1224,6 +1224,10 @@ async def create_scraper_config(
         
         logger.info(f"✅ Created scraper config: {scraper_config.name} (ID: {scraper_config.id})")
         
+        # Remove MongoDB's _id field from response (it's not JSON serializable)
+        if "_id" in config_dict:
+            del config_dict["_id"]
+        
         return {"success": True, "config": config_dict}
         
     except ValidationError as e:
