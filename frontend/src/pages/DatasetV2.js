@@ -1053,81 +1053,23 @@ const DatasetV2 = () => {
               </table>
             </div>
           ) : (
-            // Google Maps Table (existing code)
+            // Dynamic Table - Auto-detects all columns from data
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="border-b border-gray-200 bg-white">
                     {visibleColumns.number && (
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">#</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide sticky left-0 bg-white z-10">#</th>
                     )}
-                    {visibleColumns.title && (
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Place name
-                      </th>
-                    )}
-                    {visibleColumns.totalScore && (
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Total Score
-                      </th>
-                    )}
-                    {visibleColumns.rating && (
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Rating
-                      </th>
-                    )}
-                    {visibleColumns.reviewsCount && (
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Reviews
-                      </th>
-                    )}
-                    {visibleColumns.address && (
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Address
-                      </th>
-                    )}
-                    {visibleColumns.city && (
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        City
-                      </th>
-                    )}
-                    {visibleColumns.state && (
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        State
-                      </th>
-                    )}
-                    {visibleColumns.countryCode && (
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Country
-                      </th>
-                    )}
-                    {visibleColumns.website && (
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Website
-                      </th>
-                    )}
-                    {visibleColumns.phone && (
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Phone
-                      </th>
-                    )}
-                    {visibleColumns.category && (
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Category
-                      </th>
-                    )}
-                    {visibleColumns.url && (
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Map URL
-                      </th>
-                    )}
-                    {visibleColumns.socialMedia && (
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Social Media
-                      </th>
-                    )}
+                    {allColumns.map(colKey => (
+                      visibleColumns[colKey] && (
+                        <th key={colKey} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap">
+                          {formatColumnName(colKey)}
+                        </th>
+                      )
+                    ))}
                     {visibleColumns.actions && (
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Actions</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide sticky right-0 bg-white z-10">Actions</th>
                     )}
                   </tr>
                 </thead>
