@@ -237,11 +237,13 @@ const ScraperBuilder = () => {
           })),
           use_browser: useBrowser,
           wait_for_selector: waitForSelector || null
-        })
+        }),
+        cache: 'no-store'
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
 
       const data = await response.json();
