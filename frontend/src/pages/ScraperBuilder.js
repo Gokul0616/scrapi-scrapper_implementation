@@ -212,13 +212,9 @@ const ScraperBuilder = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const result = await safeFetchJSON(`${backendUrl}/api/scrapers/builder/test`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
+      const response = await axios.post(
+        `${backendUrl}/api/scrapers/builder/test`,
+        {
           url: previewUrl,
           fields: fields.map(f => ({
             name: f.name,
@@ -233,20 +229,21 @@ const ScraperBuilder = () => {
           })),
           use_browser: useBrowser,
           wait_for_selector: waitForSelector || null
-        })
-      });
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
 
-      if (!result.ok) {
-        throw new Error(result.error);
-      }
-
-      setTestResults(result.data);
+      setTestResults(response.data);
     } catch (error) {
       setAlertModal({
         show: true,
         type: 'error',
         title: 'Test Error',
-        message: error.message
+        message: error.response?.data?.detail || error.message
       });
     } finally {
       setIsRunningTest(false);
