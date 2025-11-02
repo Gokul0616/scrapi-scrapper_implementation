@@ -176,6 +176,95 @@ const ScraperBuilder = () => {
       url: previewUrl,
       message: 'This website cannot be loaded in the preview frame'
     });
+    // Auto-switch to proxy preview for blocked sites
+    setUseProxyPreview(true);
+  };
+
+  // Cookie management functions
+  const handleSaveCookies = () => {
+    try {
+      const parsed = JSON.parse(cookieInput);
+      if (!Array.isArray(parsed)) {
+        setCookieError('Cookies must be an array');
+        return;
+      }
+      setCookies(parsed);
+      setCookieError('');
+      setShowCookieModal(false);
+      setAlertModal({
+        show: true,
+        type: 'success',
+        title: 'Cookies Saved',
+        message: `Successfully saved ${parsed.length} cookie(s)`
+      });
+    } catch (e) {
+      setCookieError('Invalid JSON format. Please check your cookie data.');
+    }
+  };
+
+  const handleClearCookies = () => {
+    setCookies([]);
+    setCookieInput('');
+    setCookieError('');
+    setShowCookieModal(false);
+    setAlertModal({
+      show: true,
+      type: 'info',
+      title: 'Cookies Cleared',
+      message: 'All cookies have been removed'
+    });
+  };
+
+  // Load preview using backend proxy
+  const loadProxyPreview = async () => {
+    if (!previewUrl) return;
+    
+    setProxyPreviewLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${backendUrl}/api/scrapers/builder/preview-proxy`,
+        {
+          url: previewUrl,
+          cookies: cookies
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setProxyPreviewHtml(response.data.html);
+        setIframeError(null);
+      } else {
+        setAlertModal({
+          show: true,
+          type: 'error',
+          title: 'Preview Failed',
+          message: response.data.error || 'Failed to load preview'
+        });
+      }
+    } catch (error) {
+      setAlertModal({
+        show: true,
+        type: 'error',
+        title: 'Preview Error',
+        message: error.response?.data?.detail || error.message
+      });
+    } finally {
+      setProxyPreviewLoading(false);
+    }
+  };
+
+  // Reload preview based on mode
+  const handleReloadPreview = () => {
+    if (useProxyPreview) {
+      loadProxyPreview();
+    } else {
+      reloadIframe();
+    }
   };
 
   const addField = () => {
