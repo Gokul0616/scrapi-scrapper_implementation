@@ -1,12 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Play, Edit, Trash2, Eye, Star, StarOff, Clock, CheckCircle, XCircle, Archive } from 'lucide-react';
+import AlertModal from '../components/AlertModal';
 
 function MyScraper() {
   const navigate = useNavigate();
   const [scrapers, setScrapers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('all'); // all, draft, active, archived
+  
+  // AlertModal state
+  const [alertModal, setAlertModal] = useState({ 
+    show: false, 
+    type: 'info', 
+    title: '', 
+    message: '' 
+  });
+  
+  // Confirmation modal state
+  const [confirmModal, setConfirmModal] = useState({ 
+    show: false, 
+    title: '', 
+    message: '', 
+    onConfirm: null 
+  });
 
   const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
