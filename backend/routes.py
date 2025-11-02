@@ -1189,13 +1189,13 @@ async def create_scraper_config(
     from models import ScraperConfig, ScraperField, PaginationConfig
     
     try:
-        # Parse fields
+        # Parse fields - validate and convert to dict immediately
         fields_data = config_data.get("fields", [])
-        fields = [ScraperField(**field) for field in fields_data]
+        fields = [ScraperField(**field).model_dump() for field in fields_data]
         
-        # Parse pagination
+        # Parse pagination - validate and convert to dict immediately
         pagination_data = config_data.get("pagination", {})
-        pagination = PaginationConfig(**pagination_data) if pagination_data else PaginationConfig()
+        pagination = PaginationConfig(**pagination_data).model_dump() if pagination_data else PaginationConfig().model_dump()
         
         # Create scraper config
         scraper_config = ScraperConfig(
@@ -1216,16 +1216,20 @@ async def create_scraper_config(
             status="draft"
         )
         
-        # Save to database
-        config_dict = scraper_config.model_dump()
+        # Save to database - use mode='json' for proper datetime serialization
+        config_dict = scraper_config.model_dump(mode='json')
         await db.scraper_configs.insert_one(config_dict)
         
         logger.info(f"✅ Created scraper config: {scraper_config.name} (ID: {scraper_config.id})")
         
         return {"success": True, "config": config_dict}
         
+    except ValidationError as e:
+        logger.error(f"❌ Validation error creating scraper config: {e}")
+        raise HTTPException(status_code=422, detail=f"Validation error: {str(e)}")
     except Exception as e:
         logger.error(f"❌ Error creating scraper config: {e}")
+        logger.error(f"Stack trace:", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/scrapers/config")
