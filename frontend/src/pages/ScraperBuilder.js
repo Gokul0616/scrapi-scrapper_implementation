@@ -58,6 +58,22 @@ const ScraperBuilder = () => {
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
+  // Safe iframe reload - fixes cross-origin error
+  const reloadIframe = () => {
+    // Instead of accessing contentWindow (causes CORS error), 
+    // we force a remount by changing the key
+    setIframeKey(prev => prev + 1);
+    setIframeError(null);
+  };
+
+  // Handle iframe load errors (e.g., X-Frame-Options blocking)
+  const handleIframeError = () => {
+    setIframeError({
+      url: previewUrl,
+      message: 'This website cannot be loaded in the preview frame'
+    });
+  };
+
   const addField = () => {
     setFields([...fields, {
       id: Date.now(),
