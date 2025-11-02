@@ -215,7 +215,7 @@ const ScraperBuilder = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${backendUrl}/api/scrapers/builder/test`, {
+      const result = await safeFetchJSON(`${backendUrl}/api/scrapers/builder/test`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -236,17 +236,14 @@ const ScraperBuilder = () => {
           })),
           use_browser: useBrowser,
           wait_for_selector: waitForSelector || null
-        }),
-        cache: 'no-store'
+        })
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      if (!result.ok) {
+        throw new Error(result.error);
       }
 
-      const data = await response.json();
-      setTestResults(data);
+      setTestResults(result.data);
     } catch (error) {
       setAlertModal({
         show: true,
