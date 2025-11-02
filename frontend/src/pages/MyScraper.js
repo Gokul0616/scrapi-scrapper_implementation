@@ -40,6 +40,10 @@ function MyScraper() {
         }
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
       setScrapers(data.configs || []);
     } catch (error) {
