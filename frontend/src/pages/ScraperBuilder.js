@@ -705,30 +705,50 @@ const ScraperBuilder = () => {
             <div className="flex-1 overflow-hidden">
               {previewUrl ? (
                 <>
-                  <iframe
-                    key={iframeKey}
-                    ref={iframeRef}
-                    src={previewUrl}
-                    className="w-full h-full border-0"
-                    sandbox="allow-same-origin allow-scripts allow-forms"
-                    title="Page Preview"
-                    onError={handleIframeError}
-                    onLoad={() => {
-                      // Check if iframe loaded successfully
-                      try {
-                        // Try to access iframe - if it fails, it's blocked
-                        if (iframeRef.current?.contentWindow?.location.href === 'about:blank') {
-                          handleIframeError();
+                  {useProxyPreview && proxyPreviewHtml ? (
+                    // Show proxy-loaded HTML
+                    <div className="w-full h-full overflow-auto bg-white">
+                      <iframe
+                        srcDoc={proxyPreviewHtml}
+                        className="w-full h-full border-0"
+                        sandbox="allow-same-origin allow-scripts"
+                        title="Proxy Preview"
+                      />
+                    </div>
+                  ) : proxyPreviewLoading ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+                        <p className="mt-4 text-gray-600">Loading preview...</p>
+                      </div>
+                    </div>
+                  ) : (
+                    // Show normal iframe
+                    <iframe
+                      key={iframeKey}
+                      ref={iframeRef}
+                      src={previewUrl}
+                      className="w-full h-full border-0"
+                      sandbox="allow-same-origin allow-scripts allow-forms"
+                      title="Page Preview"
+                      onError={handleIframeError}
+                      onLoad={() => {
+                        // Check if iframe loaded successfully
+                        try {
+                          // Try to access iframe - if it fails, it's blocked
+                          if (iframeRef.current?.contentWindow?.location.href === 'about:blank') {
+                            handleIframeError();
+                          }
+                        } catch (e) {
+                          // Cross-origin or blocked - this is expected for many sites
+                          // Only show error if we get a specific blocking error
+                          if (e.name === 'SecurityError' && previewUrl.includes('facebook.com')) {
+                            handleIframeError();
+                          }
                         }
-                      } catch (e) {
-                        // Cross-origin or blocked - this is expected for many sites
-                        // Only show error if we get a specific blocking error
-                        if (e.name === 'SecurityError' && previewUrl.includes('facebook.com')) {
-                          handleIframeError();
-                        }
-                      }
-                    }}
-                  />
+                      }}
+                    />
+                  )}
                 </>
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-400">
