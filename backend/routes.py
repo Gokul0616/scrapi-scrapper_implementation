@@ -448,6 +448,7 @@ async def create_run(
         user_id=current_user['id'],
         actor_id=run_data.actor_id,
         actor_name=actor['name'],
+        actor_icon=actor.get('icon'),
         input_data=run_data.input_data,
         status="queued"
     )
