@@ -53,15 +53,6 @@ class ScraperBuilderEngine:
             viewport={'width': 1920, 'height': 1080},
             user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         )
-        
-        # Add cookies if provided in config
-        if config.cookies:
-            try:
-                await context.add_cookies(config.cookies)
-                logger.info(f"✅ Added {len(config.cookies)} cookies to scraper context")
-            except Exception as e:
-                logger.warning(f"⚠️ Error adding cookies: {e}")
-        
         page = await context.new_page()
         
         try:
