@@ -97,14 +97,30 @@ function MyScraper() {
       const data = await response.json();
       
       if (data.success) {
-        alert(`✅ Scraper started! Run ID: ${data.run_id}`);
-        navigate('/runs');
+        setAlertModal({
+          show: true,
+          type: 'success',
+          title: 'Scraper Started',
+          message: `Run ID: ${data.run_id}`,
+          details: [{ label: 'Status', value: 'Scraper is now running' }]
+        });
+        setTimeout(() => navigate('/runs'), 1500);
       } else {
-        alert('❌ Failed to start scraper');
+        setAlertModal({
+          show: true,
+          type: 'error',
+          title: 'Start Failed',
+          message: 'Failed to start scraper'
+        });
       }
     } catch (error) {
       console.error('Error running scraper:', error);
-      alert('Failed to start scraper');
+      setAlertModal({
+        show: true,
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to start scraper'
+      });
     }
   };
 
