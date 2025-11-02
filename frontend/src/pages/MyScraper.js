@@ -48,12 +48,6 @@ function MyScraper() {
       setLoading(false);
     }
   };
-    } catch (error) {
-      console.error('Error fetching scrapers:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const deleteScraper = async (id) => {
     setConfirmModal({
