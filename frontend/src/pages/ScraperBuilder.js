@@ -238,6 +238,10 @@ const ScraperBuilder = () => {
         })
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
       setTestResults(data);
     } catch (error) {
