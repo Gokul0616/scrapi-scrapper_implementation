@@ -258,6 +258,9 @@ class ScraperConfig(BaseModel):
     stealth_mode: bool = True
     user_agent: Optional[str] = None
     
+    # Authentication & Cookies
+    cookies: Optional[List[Dict[str, Any]]] = None  # Browser cookies for authenticated scraping
+    
     # Limits & error handling
     max_pages: int = 50
     max_items: Optional[int] = None
