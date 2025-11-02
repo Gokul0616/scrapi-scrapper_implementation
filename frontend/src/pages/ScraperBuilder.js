@@ -497,7 +497,12 @@ const ScraperBuilder = () => {
                 className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-lg hover:from-gray-900 hover:to-black disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Save className="w-4 h-4" />
-                <span>{isSaving ? 'Saving...' : 'Save Scraper'}</span>
+                <span>
+                  {isSaving 
+                    ? (scraperId ? 'Updating...' : 'Saving...') 
+                    : (scraperId ? 'Update Scraper' : 'Save Scraper')
+                  }
+                </span>
               </button>
             </div>
           </div>
