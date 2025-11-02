@@ -12,7 +12,7 @@ import os
 from datetime import datetime
 
 # Get backend URL from environment
-BACKEND_URL = "https://fleximap.preview.emergentagent.com/api"
+BACKEND_URL = "https://login-harvest.preview.emergentagent.com/api"
 
 class ScrapiAPITester:
     def __init__(self):
