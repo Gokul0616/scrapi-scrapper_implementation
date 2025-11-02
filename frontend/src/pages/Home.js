@@ -278,7 +278,7 @@ function Home() {
                           {formatDate(run.started_at)}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-600">
-                          {formatDuration(run.duration)}
+                          {formatDuration(run.duration_seconds)}
                         </td>
                       </tr>
                     ))
