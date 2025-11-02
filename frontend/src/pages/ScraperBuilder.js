@@ -203,7 +203,12 @@ const ScraperBuilder = () => {
       const data = await response.json();
       setTestResults(data);
     } catch (error) {
-      alert(`❌ Error testing scraper: ${error.message}`);
+      setAlertModal({
+        show: true,
+        type: 'error',
+        title: 'Test Error',
+        message: error.message
+      });
     } finally {
       setIsRunningTest(false);
     }
@@ -211,12 +216,22 @@ const ScraperBuilder = () => {
 
   const saveScraper = async () => {
     if (!scraperName) {
-      alert('Please enter a scraper name');
+      setAlertModal({
+        show: true,
+        type: 'warning',
+        title: 'Name Required',
+        message: 'Please enter a scraper name'
+      });
       return;
     }
 
     if (startUrls.filter(u => u.trim()).length === 0) {
-      alert('Please enter at least one start URL');
+      setAlertModal({
+        show: true,
+        type: 'warning',
+        title: 'URL Required',
+        message: 'Please enter at least one start URL'
+      });
       return;
     }
 
