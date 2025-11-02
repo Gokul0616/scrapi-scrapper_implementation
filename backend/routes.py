@@ -1418,6 +1418,7 @@ async def run_scraper_config(
             user_id=current_user["id"],
             actor_id=config_id,
             actor_name=config.name,
+            actor_icon=config.icon if hasattr(config, 'icon') else None,
             status="queued",
             input_data={"config_id": config_id},
             started_at=datetime.now(timezone.utc)
