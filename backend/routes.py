@@ -1177,74 +1177,6 @@ async def test_selector(
         logger.error(f"❌ Error testing selector: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/scrapers/builder/capture-cookies")
-async def capture_cookies_interactive(
-    request: dict,
-    current_user: dict = Depends(get_current_user)
-):
-    """
-    Open an interactive browser session for login and capture cookies.
-    Returns cookies after user completes login.
-    """
-    from playwright.async_api import async_playwright
-    import asyncio
-    
-    try:
-        url = request.get("url")
-        wait_time = request.get("wait_time", 30)  # seconds to wait for login
-        
-        if not url:
-            raise HTTPException(status_code=400, detail="URL is required")
-        
-        logger.info(f"🔐 Starting interactive session for: {url}")
-        
-        async with async_playwright() as p:
-            # Launch browser in non-headless mode for user interaction
-            browser = await p.chromium.launch(
-                headless=False,  # Show browser window
-                args=['--start-maximized']
-            )
-            context = await browser.new_context(
-                viewport={'width': 1920, 'height': 1080},
-                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-            )
-            
-            page = await context.new_page()
-            
-            try:
-                # Navigate to the page
-                await page.goto(url, wait_until='domcontentloaded', timeout=30000)
-                
-                logger.info(f"⏳ Waiting {wait_time} seconds for user to complete login...")
-                
-                # Wait for user to complete login
-                await asyncio.sleep(wait_time)
-                
-                # Capture all cookies from the context
-                captured_cookies = await context.cookies()
-                
-                logger.info(f"✅ Captured {len(captured_cookies)} cookies from session")
-                
-                return {
-                    "success": True,
-                    "cookies": captured_cookies,
-                    "count": len(captured_cookies),
-                    "message": f"Successfully captured {len(captured_cookies)} cookies"
-                }
-                
-            finally:
-                await page.close()
-                await context.close()
-                await browser.close()
-                
-    except Exception as e:
-        logger.error(f"❌ Error capturing cookies: {e}")
-        return {
-            "success": False,
-            "error": str(e),
-            "cookies": []
-        }
-
 @router.post("/scrapers/builder/preview-proxy")
 async def preview_proxy(
     request: dict,
@@ -1253,9 +1185,90 @@ async def preview_proxy(
     """
     Preview a webpage using backend proxy (for sites that block iframes).
     Returns HTML content that can be rendered in the frontend.
+    Can also capture cookies after page load for authenticated sessions.
     """
     from playwright.async_api import async_playwright
     import base64
+    
+    try:
+        url = request.get("url")
+        cookies = request.get("cookies", [])
+        capture_cookies = request.get("capture_cookies", False)
+        wait_time = request.get("wait_time", 5000)  # milliseconds
+        
+        if not url:
+            raise HTTPException(status_code=400, detail="URL is required")
+        
+        logger.info(f"🔍 Loading preview for: {url} (with {len(cookies)} cookies)")
+        
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True)
+            context = await browser.new_context(
+                viewport={'width': 1280, 'height': 720},
+                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            )
+            
+            # Add cookies if provided
+            if cookies:
+                try:
+                    await context.add_cookies(cookies)
+                    logger.info(f"✅ Added {len(cookies)} cookies to browser context")
+                except Exception as e:
+                    logger.warning(f"⚠️ Error adding cookies: {e}")
+            
+            page = await context.new_page()
+            
+            try:
+                # Navigate to the page
+                await page.goto(url, wait_until='domcontentloaded', timeout=30000)
+                await page.wait_for_timeout(wait_time)  # Wait for dynamic content
+                
+                # Get the HTML content
+                html_content = await page.content()
+                
+                # Take a screenshot
+                screenshot_bytes = await page.screenshot(full_page=False, type='png')
+                screenshot_base64 = base64.b64encode(screenshot_bytes).decode('utf-8')
+                
+                # Capture cookies if requested
+                captured_cookies = []
+                if capture_cookies:
+                    captured_cookies = await context.cookies()
+                    logger.info(f"📝 Captured {len(captured_cookies)} cookies from context")
+                
+                logger.info(f"✅ Successfully loaded preview for: {url}")
+                
+                return {
+                    "success": True,
+                    "url": url,
+                    "html": html_content,
+                    "screenshot": screenshot_base64,
+                    "cookies_used": len(cookies) > 0,
+                    "captured_cookies": captured_cookies if capture_cookies else None
+                }
+                
+            finally:
+                await page.close()
+                await context.close()
+                await browser.close()
+                
+    except Exception as e:
+        logger.error(f"❌ Error in preview proxy: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "url": url
+        }
+
+@router.post("/scrapers/builder/capture-cookies")
+async def capture_cookies_interactive(
+    request: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Load a page and allow user to see current cookies.
+    Better approach: User should export cookies from their browser and paste them.
+    """
     
     try:
         url = request.get("url")
