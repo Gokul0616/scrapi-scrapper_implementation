@@ -1266,6 +1266,11 @@ async def get_scraper_config(
         config = await db.scraper_configs.find_one({"id": config_id, "user_id": current_user["id"]})
         if not config:
             raise HTTPException(status_code=404, detail="Scraper configuration not found")
+        
+        # Remove MongoDB's _id field (not JSON serializable)
+        if "_id" in config:
+            del config["_id"]
+        
         return {"config": config}
     except HTTPException:
         raise
