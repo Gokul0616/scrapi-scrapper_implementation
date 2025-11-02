@@ -118,6 +118,12 @@ const ScraperBuilder = () => {
       setUseProxy(scraper.use_proxy || false);
       setMaxPagesLimit(scraper.max_pages || 50);
       
+      // Load cookies if available
+      if (scraper.cookies && Array.isArray(scraper.cookies)) {
+        setCookies(scraper.cookies);
+        setCookieInput(JSON.stringify(scraper.cookies, null, 2));
+      }
+      
       // Set preview URL to first start URL if available
       if (scraper.start_urls && scraper.start_urls.length > 0) {
         setPreviewUrl(scraper.start_urls[0]);
