@@ -12,7 +12,7 @@ import os
 from datetime import datetime
 
 # Get backend URL from environment
-BACKEND_URL = "https://api-response-debug.preview.emergentagent.com/api"
+BACKEND_URL = "https://scrapper-error-fix.preview.emergentagent.com/api"
 
 class IndeedJobsScraperTester:
     def __init__(self):

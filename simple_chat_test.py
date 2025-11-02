@@ -7,7 +7,7 @@ import requests
 import json
 
 # Backend URL
-BACKEND_URL = "https://api-response-debug.preview.emergentagent.com/api"
+BACKEND_URL = "https://scrapper-error-fix.preview.emergentagent.com/api"
 
 def test_basic_chat():
     print("=== Testing Global Chat Assistant ===")
