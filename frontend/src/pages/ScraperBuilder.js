@@ -394,28 +394,70 @@ const ScraperBuilder = () => {
                 <input
                   type="url"
                   value={previewUrl}
-                  onChange={(e) => setPreviewUrl(e.target.value)}
+                  onChange={(e) => {
+                    setPreviewUrl(e.target.value);
+                    setIframeError(null);
+                  }}
                   placeholder="Enter URL to preview (e.g., https://example.com)"
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
                 />
                 <button
-                  onClick={() => iframeRef.current?.contentWindow.location.reload()}
-                  className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                  onClick={reloadIframe}
+                  disabled={!previewUrl}
+                  className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Reload preview"
                 >
                   Reload
                 </button>
               </div>
+              {iframeError && (
+                <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div className="flex items-start space-x-2">
+                    <Shield className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-yellow-900">
+                        Preview Unavailable
+                      </p>
+                      <p className="text-sm text-yellow-700 mt-1">
+                        {iframeError.message}. This happens with sites like Facebook, Twitter, and banks that block embedding for security.
+                      </p>
+                      <p className="text-sm text-yellow-700 mt-2">
+                        <strong>Don't worry!</strong> You can still test your selectors using the "Test" button - our backend will fetch the page properly.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             
             <div className="flex-1 overflow-hidden">
               {previewUrl ? (
-                <iframe
-                  ref={iframeRef}
-                  src={previewUrl}
-                  className="w-full h-full border-0"
-                  sandbox="allow-same-origin allow-scripts"
-                  title="Page Preview"
-                />
+                <>
+                  <iframe
+                    key={iframeKey}
+                    ref={iframeRef}
+                    src={previewUrl}
+                    className="w-full h-full border-0"
+                    sandbox="allow-same-origin allow-scripts allow-forms"
+                    title="Page Preview"
+                    onError={handleIframeError}
+                    onLoad={() => {
+                      // Check if iframe loaded successfully
+                      try {
+                        // Try to access iframe - if it fails, it's blocked
+                        if (iframeRef.current?.contentWindow?.location.href === 'about:blank') {
+                          handleIframeError();
+                        }
+                      } catch (e) {
+                        // Cross-origin or blocked - this is expected for many sites
+                        // Only show error if we get a specific blocking error
+                        if (e.name === 'SecurityError' && previewUrl.includes('facebook.com')) {
+                          handleIframeError();
+                        }
+                      }
+                    }}
+                  />
+                </>
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-400">
                   <div className="text-center">
