@@ -118,6 +118,7 @@ class Run(BaseModel):
     user_id: str
     actor_id: str
     actor_name: str
+    actor_icon: Optional[str] = None
     status: str = "queued"  # queued, running, succeeded, failed, aborted
     input_data: Dict[str, Any] = Field(default_factory=dict)
     started_at: Optional[datetime] = None
