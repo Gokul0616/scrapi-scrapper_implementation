@@ -50,24 +50,38 @@ function MyScraper() {
   };
 
   const deleteScraper = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this scraper?')) {
-      return;
-    }
+    setConfirmModal({
+      show: true,
+      title: 'Delete Scraper',
+      message: 'Are you sure you want to delete this scraper? This action cannot be undone.',
+      onConfirm: async () => {
+        try {
+          const token = localStorage.getItem('token');
+          await fetch(`${backendUrl}/api/scrapers/config/${id}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
 
-    try {
-      const token = localStorage.getItem('token');
-      await fetch(`${backendUrl}/api/scrapers/config/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
+          setScrapers(scrapers.filter(s => s.id !== id));
+          setAlertModal({
+            show: true,
+            type: 'success',
+            title: 'Deleted',
+            message: 'Scraper deleted successfully'
+          });
+        } catch (error) {
+          console.error('Error deleting scraper:', error);
+          setAlertModal({
+            show: true,
+            type: 'error',
+            title: 'Delete Failed',
+            message: 'Failed to delete scraper'
+          });
         }
-      });
-
-      setScrapers(scrapers.filter(s => s.id !== id));
-    } catch (error) {
-      console.error('Error deleting scraper:', error);
-      alert('Failed to delete scraper');
-    }
+      }
+    });
   };
 
   const runScraper = async (id) => {
