@@ -7,7 +7,7 @@ import requests
 import json
 
 # Get backend URL from environment
-BACKEND_URL = "https://table-column-setup.preview.emergentagent.com/api"
+BACKEND_URL = "https://fleximap.preview.emergentagent.com/api"
 
 def test_amazon_scraper():
     print("🚀 Quick Amazon Product Scraper Test")

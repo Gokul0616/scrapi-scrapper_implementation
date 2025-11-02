@@ -8,7 +8,7 @@ import json
 import re
 
 # Get backend URL from environment
-BACKEND_URL = "https://table-column-setup.preview.emergentagent.com/api"
+BACKEND_URL = "https://fleximap.preview.emergentagent.com/api"
 
 def test_run_creation():
     # Authenticate
