@@ -117,11 +117,10 @@ pip install -r requirements.txt --quiet
 print_success "Backend dependencies installed"
 
 # Install Playwright browsers (including Chromium)
-print_info "Installing Playwright browsers (Chromium, Firefox, WebKit)..."
+print_info "Installing Playwright browsers (Chromium for web scraping)..."
 playwright install chromium
-playwright install-deps chromium
 
-print_success "Playwright and Chromium installed successfully"
+print_success "Playwright browsers installed successfully"
 
 ################################################################################
 # STEP 3: INSTALL FRONTEND DEPENDENCIES
