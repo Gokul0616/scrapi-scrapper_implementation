@@ -35,20 +35,19 @@ function MyScraper() {
   const fetchScrapers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${backendUrl}/api/scrapers/config`, {
+      const response = await axios.get(`${backendUrl}/api/scrapers/config`, {
         headers: {
           'Authorization': `Bearer ${token}`
-        },
-        cache: 'no-store'
+        }
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-      }
-
-      const data = await response.json();
-      setScrapers(data.configs || []);
+      setScrapers(response.data.configs || []);
+    } catch (error) {
+      console.error('Error fetching scrapers:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
     } catch (error) {
       console.error('Error fetching scrapers:', error);
     } finally {
