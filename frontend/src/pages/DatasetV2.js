@@ -1077,187 +1077,23 @@ const DatasetV2 = () => {
                   {items.map((item, index) => (
                     <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                       {visibleColumns.number && (
-                        <td className="px-6 py-4 text-sm text-gray-900">{(page - 1) * limit + index + 1}</td>
+                        <td className="px-6 py-4 text-sm text-gray-900 sticky left-0 bg-white">{(page - 1) * limit + index + 1}</td>
                       )}
-                      {visibleColumns.title && (
-                        <td className="px-6 py-4 text-sm">
-                          <div className="font-medium text-gray-900 max-w-xs truncate" title={item.data.title}>
-                            {item.data.title || '-'}
-                          </div>
-                        </td>
-                      )}
-                      {visibleColumns.totalScore && (
-                        <td className="px-6 py-4 text-sm text-gray-700">
-                          {item.data.totalScore || '-'}
-                        </td>
-                      )}
-                      {visibleColumns.rating && (
-                        <td className="px-6 py-4 text-sm text-gray-700">
-                          {item.data.rating ? (
-                            <div className="flex items-center gap-1">
-                              <span className="text-yellow-500">⭐</span>
-                              <span className="font-medium">{item.data.rating}</span>
+                      {allColumns.map(colKey => (
+                        visibleColumns[colKey] && (
+                          <td key={colKey} className="px-6 py-4 text-sm text-gray-700">
+                            <div className="max-w-xs">
+                              {renderCellValue(item.data[colKey], colKey)}
                             </div>
-                          ) : '-'}
-                        </td>
-                      )}
-                      {visibleColumns.reviewsCount && (
-                        <td className="px-6 py-4 text-sm text-gray-700">
-                          {item.data.reviewsCount || '0'}
-                        </td>
-                      )}
-                      {visibleColumns.address && (
-                        <td className="px-6 py-4 text-sm text-gray-700 max-w-xs truncate" title={item.data.address}>
-                          {item.data.address || '-'}
-                        </td>
-                      )}
-                      {visibleColumns.city && (
-                        <td className="px-6 py-4 text-sm text-gray-700">
-                          {item.data.city || '-'}
-                        </td>
-                      )}
-                      {visibleColumns.state && (
-                        <td className="px-6 py-4 text-sm text-gray-700">
-                          {item.data.state || '-'}
-                        </td>
-                      )}
-                      {visibleColumns.countryCode && (
-                        <td className="px-6 py-4 text-sm text-gray-700 font-medium">
-                          {item.data.countryCode || '-'}
-                        </td>
-                      )}
-                      {visibleColumns.website && (
-                        <td className="px-6 py-4 text-sm">
-                          {item.data.website ? (
-                            <a 
-                              href={item.data.website} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline max-w-xs truncate block"
-                              title={item.data.website}
-                            >
-                              {item.data.website}
-                            </a>
-                          ) : (
-                            // If no website, show social media links
-                            (() => {
-                              const socialLinks = [];
-                              if (item.data.socialMedia) {
-                                const social = item.data.socialMedia;
-                                if (social.facebook) socialLinks.push({ name: 'Facebook', url: social.facebook });
-                                if (social.instagram) socialLinks.push({ name: 'Instagram', url: social.instagram });
-                                if (social.twitter) socialLinks.push({ name: 'Twitter', url: social.twitter });
-                                if (social.linkedin) socialLinks.push({ name: 'LinkedIn', url: social.linkedin });
-                                if (social.youtube) socialLinks.push({ name: 'YouTube', url: social.youtube });
-                                if (social.tiktok) socialLinks.push({ name: 'TikTok', url: social.tiktok });
-                              }
-                              
-                              if (socialLinks.length > 0) {
-                                return (
-                                  <div className="flex flex-col gap-1">
-                                    {socialLinks.slice(0, 2).map((link, idx) => (
-                                      <a 
-                                        key={idx}
-                                        href={link.url} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="text-blue-600 hover:underline text-xs truncate max-w-xs"
-                                        title={`${link.name}: ${link.url}`}
-                                      >
-                                        {link.name}
-                                      </a>
-                                    ))}
-                                    {socialLinks.length > 2 && (
-                                      <span className="text-xs text-gray-500">+{socialLinks.length - 2} more</span>
-                                    )}
-                                  </div>
-                                );
-                              }
-                              return '-';
-                            })()
-                          )}
-                        </td>
-                      )}
-                      {visibleColumns.phone && (
-                        <td className="px-6 py-4 text-sm text-gray-700">
-                          {item.data.phone || '-'}
-                        </td>
-                      )}
-                      {visibleColumns.category && (
-                        <td className="px-6 py-4 text-sm text-gray-700">
-                          {item.data.category || '-'}
-                        </td>
-                      )}
-                      {visibleColumns.url && (
-                        <td className="px-6 py-4 text-sm">
-                          {item.data.url ? (
-                            <a 
-                              href={item.data.url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline"
-                              title="View on Google Maps"
-                            >
-                              View Map
-                            </a>
-                          ) : '-'}
-                        </td>
-                      )}
-                      {visibleColumns.socialMedia && (
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-1">
-                            {(() => {
-                              const allLinks = [];
-                              if (item.data.socialMedia) {
-                                const social = item.data.socialMedia;
-                                if (social.facebook) allLinks.push({ platform: 'Facebook', url: social.facebook, icon: 'f', color: 'blue' });
-                                if (social.instagram) allLinks.push({ platform: 'Instagram', url: social.instagram, icon: '📷', color: 'pink' });
-                                if (social.twitter) allLinks.push({ platform: 'Twitter', url: social.twitter, icon: '𝕏', color: 'sky' });
-                                if (social.linkedin) allLinks.push({ platform: 'LinkedIn', url: social.linkedin, icon: 'in', color: 'blue' });
-                                if (social.youtube) allLinks.push({ platform: 'YouTube', url: social.youtube, icon: '▶', color: 'red' });
-                                if (social.tiktok) allLinks.push({ platform: 'TikTok', url: social.tiktok, icon: '🎵', color: 'black' });
-                              }
-                              
-                              const visibleLinks = allLinks.slice(0, 5);
-                              const hasMore = allLinks.length > 5;
-                              
-                              if (allLinks.length === 0) return <span className="text-gray-400 text-xs">-</span>;
-                              
-                              return (
-                                <>
-                                  {visibleLinks.map((link, idx) => (
-                                    <a
-                                      key={idx}
-                                      href={link.url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className={`inline-flex items-center justify-center w-7 h-7 rounded-full bg-${link.color}-100 hover:bg-${link.color}-200 transition-colors`}
-                                      title={link.platform}
-                                    >
-                                      <span className={`text-xs font-bold text-${link.color}-600`}>{link.icon}</span>
-                                    </a>
-                                  ))}
-                                  {hasMore && (
-                                    <button
-                                      onClick={(e) => openLinksModal(item, e)}
-                                      className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
-                                      title={`+${allLinks.length - 5} more`}
-                                    >
-                                      <MoreHorizontal className="w-4 h-4 text-gray-600" />
-                                    </button>
-                                  )}
-                                </>
-                              );
-                            })()}
-                          </div>
-                        </td>
-                      )}
+                          </td>
+                        )
+                      ))}
                       {visibleColumns.actions && (
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 sticky right-0 bg-white">
                           <Button
                             size="sm"
                             onClick={() => openChat(item)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs"
+                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs whitespace-nowrap"
                           >
                             <MessageSquare className="w-3 h-3 mr-1" />
                             AI Chat
