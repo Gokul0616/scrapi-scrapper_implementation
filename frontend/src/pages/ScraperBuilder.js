@@ -55,6 +55,17 @@ const ScraperBuilder = () => {
   const [delayBetweenPages, setDelayBetweenPages] = useState(2000);
   const [useProxy, setUseProxy] = useState(false);
   const [maxPagesLimit, setMaxPagesLimit] = useState(50);
+  
+  // Cookie management
+  const [cookies, setCookies] = useState([]);
+  const [showCookieModal, setShowCookieModal] = useState(false);
+  const [cookieInput, setCookieInput] = useState('');
+  const [cookieError, setCookieError] = useState('');
+  
+  // Preview mode
+  const [useProxyPreview, setUseProxyPreview] = useState(false);
+  const [proxyPreviewLoading, setProxyPreviewLoading] = useState(false);
+  const [proxyPreviewHtml, setProxyPreviewHtml] = useState('');
 
   const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
