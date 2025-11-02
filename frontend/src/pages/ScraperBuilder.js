@@ -1191,8 +1191,21 @@ const ScraperBuilder = () => {
             </div>
             
             <div className="px-6 py-4 overflow-y-auto max-h-[60vh]">
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                <p className="text-sm text-yellow-900 font-semibold mb-2">⚠️ Important: Login in Your Browser First!</p>
+                <p className="text-sm text-yellow-800 mb-2">
+                  The preview in this tool shows a static snapshot. To scrape authenticated content:
+                </p>
+                <ol className="text-sm text-yellow-800 space-y-1 list-decimal list-inside">
+                  <li><strong>Login in your real browser</strong> (Chrome/Firefox)</li>
+                  <li>Export your cookies using the steps below</li>
+                  <li>Paste them here</li>
+                  <li>When you run the scraper, it will use these cookies to access authenticated content</li>
+                </ol>
+              </div>
+              
               <p className="text-sm text-gray-600 mb-4">
-                Add browser cookies in JSON format to authenticate your scraper. This is useful for scraping sites that require login.
+                Add browser cookies in JSON format to authenticate your scraper. These cookies will be injected when the scraper runs.
               </p>
               
               <div className="mb-4">
@@ -1215,14 +1228,31 @@ const ScraperBuilder = () => {
               </div>
               
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                <p className="text-sm text-blue-900 font-medium mb-2">How to get cookies:</p>
-                <ol className="text-xs text-blue-800 space-y-1 list-decimal list-inside">
-                  <li>Open the website in Chrome/Firefox</li>
-                  <li>Press F12 to open DevTools</li>
-                  <li>Go to Application/Storage → Cookies</li>
-                  <li>Copy the cookies you need (name, value, domain, path)</li>
-                  <li>Format as JSON array and paste above</li>
-                </ol>
+                <p className="text-sm text-blue-900 font-medium mb-2">📋 How to export cookies from your browser:</p>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-xs text-blue-900 font-semibold mb-1">Method 1: Using EditThisCookie Extension (Easiest)</p>
+                    <ol className="text-xs text-blue-800 space-y-1 list-decimal list-inside ml-2">
+                      <li>Install "EditThisCookie" extension in Chrome</li>
+                      <li>Login to the website you want to scrape</li>
+                      <li>Click the cookie icon in your browser toolbar</li>
+                      <li>Click "Export" button (JSON format)</li>
+                      <li>Paste the exported JSON here</li>
+                    </ol>
+                  </div>
+                  
+                  <div>
+                    <p className="text-xs text-blue-900 font-semibold mb-1">Method 2: Manual Copy from DevTools</p>
+                    <ol className="text-xs text-blue-800 space-y-1 list-decimal list-inside ml-2">
+                      <li>Login to the website in Chrome/Firefox</li>
+                      <li>Press F12 to open DevTools</li>
+                      <li>Go to "Application" tab → "Cookies" (left sidebar)</li>
+                      <li>Select the website domain</li>
+                      <li>Right-click on cookie rows and copy values</li>
+                      <li>Format as JSON array and paste here</li>
+                    </ol>
+                  </div>
+                </div>
               </div>
               
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
