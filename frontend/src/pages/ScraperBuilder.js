@@ -21,6 +21,8 @@ const ScraperBuilder = () => {
   const [testResults, setTestResults] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isRunningTest, setIsRunningTest] = useState(false);
+  const [iframeKey, setIframeKey] = useState(0);
+  const [iframeError, setIframeError] = useState(null);
   const [expandedSections, setExpandedSections] = useState({
     basic: true,
     fields: true,
