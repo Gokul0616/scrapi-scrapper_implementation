@@ -1173,6 +1173,104 @@ const ScraperBuilder = () => {
         </div>
       </div>
       
+      {/* Cookie Management Modal */}
+      {showCookieModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Manage Cookies</h3>
+              <button
+                onClick={() => {
+                  setShowCookieModal(false);
+                  setCookieError('');
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="px-6 py-4 overflow-y-auto max-h-[60vh]">
+              <p className="text-sm text-gray-600 mb-4">
+                Add browser cookies in JSON format to authenticate your scraper. This is useful for scraping sites that require login.
+              </p>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Cookie JSON Array
+                </label>
+                <textarea
+                  value={cookieInput}
+                  onChange={(e) => {
+                    setCookieInput(e.target.value);
+                    setCookieError('');
+                  }}
+                  placeholder='[{"name": "session_id", "value": "abc123", "domain": ".example.com", "path": "/"}]'
+                  rows={12}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 font-mono text-sm"
+                />
+                {cookieError && (
+                  <p className="mt-2 text-sm text-red-600">{cookieError}</p>
+                )}
+              </div>
+              
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                <p className="text-sm text-blue-900 font-medium mb-2">How to get cookies:</p>
+                <ol className="text-xs text-blue-800 space-y-1 list-decimal list-inside">
+                  <li>Open the website in Chrome/Firefox</li>
+                  <li>Press F12 to open DevTools</li>
+                  <li>Go to Application/Storage → Cookies</li>
+                  <li>Copy the cookies you need (name, value, domain, path)</li>
+                  <li>Format as JSON array and paste above</li>
+                </ol>
+              </div>
+              
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                <p className="text-xs text-gray-600 font-medium mb-1">Example format:</p>
+                <pre className="text-xs text-gray-800 overflow-x-auto">
+{`[
+  {
+    "name": "session_token",
+    "value": "your_token_here",
+    "domain": ".facebook.com",
+    "path": "/",
+    "secure": true,
+    "httpOnly": false
+  }
+]`}
+                </pre>
+              </div>
+            </div>
+            
+            <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+              <button
+                onClick={handleClearCookies}
+                className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg"
+              >
+                Clear All Cookies
+              </button>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={() => {
+                    setShowCookieModal(false);
+                    setCookieError('');
+                  }}
+                  className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveCookies}
+                  className="px-4 py-2 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-lg hover:from-gray-900 hover:to-black"
+                >
+                  Save Cookies
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Alert Modal */}
       <AlertModal
         show={alertModal.show}
