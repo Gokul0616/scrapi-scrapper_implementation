@@ -491,6 +491,7 @@ const ScraperBuilder = () => {
         delay_between_pages: delayBetweenPages,
         use_proxy: useProxy,
         max_pages: maxPagesLimit,
+        cookies: cookies.length > 0 ? cookies : null,  // Add cookies to scraper data
         category: 'Custom',
         tags: ['custom', 'visual-builder'],
         status: 'draft'
