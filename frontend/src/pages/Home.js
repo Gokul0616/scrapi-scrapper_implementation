@@ -260,10 +260,10 @@ function Home() {
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
                             <div className="w-8 h-8 bg-gradient-to-br from-gray-100 to-gray-200 rounded flex items-center justify-center text-sm">
-                              🗺️
+                              {run.actor_icon || '🗺️'}
                             </div>
                             <div>
-                              <div className="font-medium text-gray-900">Google Maps Scraper</div>
+                              <div className="font-medium text-gray-900">{run.actor_name || 'Google Maps Scraper'}</div>
                               <div className="text-xs text-gray-500">compass/crawler-google-places</div>
                             </div>
                           </div>
