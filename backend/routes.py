@@ -1245,6 +1245,12 @@ async def list_scraper_configs(
     """List all scraper configurations for the current user"""
     try:
         configs = await db.scraper_configs.find({"user_id": current_user["id"]}).to_list(100)
+        
+        # Remove MongoDB's _id field from each config (not JSON serializable)
+        for config in configs:
+            if "_id" in config:
+                del config["_id"]
+        
         return {"configs": configs}
     except Exception as e:
         logger.error(f"❌ Error listing scraper configs: {e}")
