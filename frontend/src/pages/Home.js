@@ -96,9 +96,8 @@ function Home() {
     }
   };
 
-  const formatDuration = (ms) => {
-    if (!ms) return '-';
-    const seconds = Math.floor(ms / 1000);
+  const formatDuration = (seconds) => {
+    if (!seconds) return '-';
     return `${seconds}s`;
   };
 
