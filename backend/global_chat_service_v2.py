@@ -891,6 +891,7 @@ Then FUNCTION_CALL: {"name": "view_run_details", "arguments": {"run_id": "<first
                 "user_id": self.user_id,
                 "actor_id": actor["id"],
                 "actor_name": actor["name"],
+                "actor_icon": actor.get("icon"),
                 "status": "queued",
                 "input_data": input_data,
                 "started_at": None,
