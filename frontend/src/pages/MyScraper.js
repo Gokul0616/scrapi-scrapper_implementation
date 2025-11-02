@@ -63,8 +63,7 @@ function MyScraper() {
       onConfirm: async () => {
         try {
           const token = localStorage.getItem('token');
-          await fetch(`${backendUrl}/api/scrapers/config/${id}`, {
-            method: 'DELETE',
+          await axios.delete(`${backendUrl}/api/scrapers/config/${id}`, {
             headers: {
               'Authorization': `Bearer ${token}`
             }
@@ -93,20 +92,17 @@ function MyScraper() {
   const runScraper = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${backendUrl}/api/scrapers/config/${id}/run`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        cache: 'no-store'
-      });
+      const response = await axios.post(
+        `${backendUrl}/api/scrapers/config/${id}/run`,
+        {},
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-      }
-
-      const data = await response.json();
+      const data = response.data;
       
       if (data.success) {
         setAlertModal({
@@ -131,7 +127,7 @@ function MyScraper() {
         show: true,
         type: 'error',
         title: 'Error',
-        message: 'Failed to start scraper'
+        message: error.response?.data?.detail || 'Failed to start scraper'
       });
     }
   };
