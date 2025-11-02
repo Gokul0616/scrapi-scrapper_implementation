@@ -1190,13 +1190,13 @@ async def create_scraper_config(
     from models import ScraperConfig, ScraperField, PaginationConfig
     
     try:
-        # Parse fields - validate and convert to dict immediately
+        # Parse fields - create Pydantic objects for validation
         fields_data = config_data.get("fields", [])
-        fields = [ScraperField(**field).model_dump() for field in fields_data]
+        fields = [ScraperField(**field) for field in fields_data]
         
-        # Parse pagination - validate and convert to dict immediately
+        # Parse pagination - create Pydantic object for validation
         pagination_data = config_data.get("pagination", {})
-        pagination = PaginationConfig(**pagination_data).model_dump() if pagination_data else PaginationConfig().model_dump()
+        pagination = PaginationConfig(**pagination_data) if pagination_data else PaginationConfig()
         
         # Create scraper config
         scraper_config = ScraperConfig(
@@ -1218,6 +1218,7 @@ async def create_scraper_config(
         )
         
         # Save to database - use mode='json' for proper datetime serialization
+        # This will properly serialize nested Pydantic models and datetime objects
         config_dict = scraper_config.model_dump(mode='json')
         await db.scraper_configs.insert_one(config_dict)
         
