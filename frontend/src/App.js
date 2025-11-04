@@ -183,6 +183,14 @@ function AppRoutes() {
         } 
       />
       <Route 
+        path="/actor-code-editor" 
+        element={
+          <ProtectedRoute>
+            <ActorCodeEditor />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
         path="/create-scraper" 
         element={
           <ProtectedRoute>
