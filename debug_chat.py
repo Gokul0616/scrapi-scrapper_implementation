@@ -7,7 +7,7 @@ import requests
 import json
 
 # Get backend URL from environment
-BACKEND_URL = "https://login-harvest.preview.emergentagent.com/api"
+BACKEND_URL = "https://chromerun.preview.emergentagent.com/api"
 
 def test_chat_response():
     # First authenticate

@@ -7,7 +7,7 @@ import requests
 import json
 import time
 
-BACKEND_URL = "https://login-harvest.preview.emergentagent.com/api"
+BACKEND_URL = "https://chromerun.preview.emergentagent.com/api"
 
 def test_actor_update_issue():
     """Debug the actor update 404 issue"""

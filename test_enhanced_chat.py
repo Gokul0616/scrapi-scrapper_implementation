@@ -9,7 +9,7 @@ import time
 import re
 
 # Get backend URL from environment
-BACKEND_URL = "https://login-harvest.preview.emergentagent.com/api"
+BACKEND_URL = "https://chromerun.preview.emergentagent.com/api"
 
 def authenticate():
     """Authenticate and return headers"""
