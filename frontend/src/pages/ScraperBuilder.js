@@ -643,13 +643,14 @@ const ScraperBuilder = () => {
                 >
                   {proxyPreviewLoading ? 'Loading...' : 'Reload'}
                 </button>
-                <button
+                {/* Settings icon button commented out */}
+                {/* <button
                   onClick={() => setShowCookieModal(true)}
                   className="p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
                   title="Manage cookies"
                 >
                   <Settings className="w-5 h-5" />
-                </button>
+                </button> */}
               </div>
               
               {/* Cookie indicator */}
