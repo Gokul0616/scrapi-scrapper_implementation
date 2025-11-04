@@ -192,6 +192,94 @@ async def create_actor(actor_data: ActorCreate, current_user: dict = Depends(get
     
     return actor
 
+@router.post("/actors/validate-code")
+async def validate_code(request: dict, current_user: dict = Depends(get_current_user)):
+    """Validate actor code for syntax and security issues."""
+    import ast
+    import re
+    
+    code = request.get('code', '')
+    language = request.get('language', 'python')
+    
+    if not code:
+        return {"valid": False, "error": "No code provided"}
+    
+    if language == 'python':
+        try:
+            # Parse Python code using AST
+            tree = ast.parse(code)
+            
+            # Check for dangerous imports
+            dangerous_imports = ['os', 'sys', 'subprocess', '__import__', 'eval', 'exec', 'compile', 'open']
+            dangerous_builtins = ['eval', 'exec', 'compile', '__import__', 'open', 'file', 'input', 'raw_input']
+            
+            for node in ast.walk(tree):
+                # Check imports
+                if isinstance(node, ast.Import):
+                    for alias in node.names:
+                        if alias.name in dangerous_imports or alias.name.startswith('os.'):
+                            return {
+                                "valid": False,
+                                "error": f"Import '{alias.name}' is not allowed for security reasons",
+                                "line": node.lineno
+                            }
+                
+                # Check from imports
+                if isinstance(node, ast.ImportFrom):
+                    if node.module in dangerous_imports:
+                        return {
+                            "valid": False,
+                            "error": f"Import from '{node.module}' is not allowed for security reasons",
+                            "line": node.lineno
+                        }
+                
+                # Check for dangerous function calls
+                if isinstance(node, ast.Call):
+                    if isinstance(node.func, ast.Name) and node.func.id in dangerous_builtins:
+                        return {
+                            "valid": False,
+                            "error": f"Function '{node.func.id}()' is not allowed for security reasons",
+                            "line": node.lineno
+                        }
+            
+            # Check for required functions
+            function_names = [node.name for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
+            if 'start' not in function_names:
+                return {
+                    "valid": False,
+                    "error": "Required function 'start(input_data)' not found",
+                    "line": 1
+                }
+            if 'parse' not in function_names:
+                return {
+                    "valid": False,
+                    "error": "Required function 'parse(url, html)' not found",
+                    "line": 1
+                }
+            
+            return {"valid": True, "message": "Code is valid"}
+            
+        except SyntaxError as e:
+            return {
+                "valid": False,
+                "error": f"Syntax error: {e.msg}",
+                "line": e.lineno
+            }
+        except Exception as e:
+            return {
+                "valid": False,
+                "error": f"Validation error: {str(e)}",
+                "line": 1
+            }
+    
+    elif language == 'javascript':
+        # Basic JavaScript validation (just check if it's not empty for now)
+        if not code.strip():
+            return {"valid": False, "error": "Empty code"}
+        return {"valid": True, "message": "JavaScript code accepted (full validation not implemented)"}
+    
+    return {"valid": False, "error": "Unsupported language"}
+
 @router.get("/actors/{actor_id}", response_model=Actor)
 async def get_actor(actor_id: str, current_user: dict = Depends(get_current_user)):
     """Get specific actor."""
