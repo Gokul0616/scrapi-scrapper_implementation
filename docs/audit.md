@@ -621,6 +621,61 @@ frontend/
 
 ---
 
+## 12. Software Upgrade Strategy
+
+### Upgrade Goals
+- Eliminate known security vulnerabilities within 48 hours of disclosure
+- Maintain compatibility with the current LTS versions of Python (3.11/3.12) and Node.js (20/22)
+- Reduce mean time-to-upgrade (MTTU) for critical dependencies to < 5 business days
+
+### Pre-Upgrade Checklist
+1. Establish automated linting, type-checking, unit, and integration tests (sections 4 and 7)
+2. Stand up a staging environment mirroring production (MongoDB, Playwright browsers, proxy infra)
+3. Snapshot the current database and configuration for rollback safety
+4. Document the exact runtime matrix (Python, Node.js, Yarn, Playwright browser cache)
+5. Enable dependabot/renovate (or equivalent) to surface new releases immediately
+
+### Backend Upgrade Path
+- **Runtime:** Standardize on Python 3.12 for improved performance and security patches
+- **Framework:** Bump FastAPI to `>=0.115.0`, Uvicorn to `>=0.31.0`, Starlette to the matching release
+- **ORM/Drivers:** Upgrade Motor to `>=3.5` and PyMongo to `>=4.7` to leverage newer MongoDB features
+- **Security Libraries:** Pin `cryptography>=43.0.1`, `bcrypt>=4.2.0`, `pyjwt>=2.9.0`
+- **Async Stack:** Align `aiohttp`, `httpx`, and related packages to the latest compatible minor versions
+- **Process:**
+  1. Create a dedicated feature branch (e.g., `chore/backend-runtime-upgrade`)
+  2. Update `requirements.txt`, regenerate lockfiles if introduced, and run formatting tools
+  3. Execute the full test suite plus smoke Playwright runs against staging
+  4. Perform manual validation of critical flows (auth, scraper run, dataset export)
+  5. Tag and deploy to staging, monitor logs for regressions before production rollout
+
+### Frontend Upgrade Path
+- **Runtime:** Target Node.js 22 LTS with Yarn 1.22.x (or migrate to Yarn Berry/PNPM with lockfile)
+- **React Ecosystem:**
+  - Confirm React 19 compatibility across Radix UI, React Router 7, and supporting libraries
+  - Introduce TypeScript + Vite (or maintain CRA with React Scripts 5 until Vite migration is complete)
+  - Add `@testing-library/react`, `vitest`/`jest`, and `msw` for robust testing
+- **State & Data Fetching:** Adopt `@tanstack/react-query` for caching, retry, and background refresh behavior
+- **Build Improvements:** Configure bundle analysis (Webpack Bundle Analyzer or Vite visualizer) and code-splitting strategy
+- **Process:**
+  1. Incrementally upgrade dependencies via Renovate PRs scoped per package family (Radix, tooling, utilities)
+  2. After each bump, run lint, unit tests, and Storybook/visual regression checks (if adopted)
+  3. Validate Webpack/CRACO configuration or migrate to Vite with controlled flag rollout
+
+### Infrastructure & Tooling Upgrades
+- Introduce Docker-based dev environments (Python + Node multi-stage build)
+- Add Makefile/Taskfile targets for `install`, `format`, `test`, `lint`, `e2e`
+- Implement GitHub Actions (or preferred CI) matrices covering Python 3.11/3.12 and Node.js 20/22
+- Cache Playwright browsers in CI to avoid redundant downloads
+- Instrument Prometheus/Grafana dashboards to observe upgrade impact on latency and throughput
+
+### Verification & Rollout
+1. **Canary Deployments:** Route a small percentage of traffic to the upgraded stack and monitor for anomalies
+2. **Synthetic Monitoring:** Run scheduled smoke tests (Playwright/E2E) against production endpoints post-upgrade
+3. **Logging & Alerts:** Configure alert thresholds for error rates, scraper failures, and proxy connection issues
+4. **Rollback Plan:** Maintain infra-as-code and deployment scripts that can revert to the previous container image or package set within minutes
+
+---
+
 ## Conclusion
 
 The Scrapi codebase shows promise with its modern technology stack and comprehensive feature set, but suffers from common growth issues: oversized files, lack of testing, security vulnerabilities, and missing development tooling. 
