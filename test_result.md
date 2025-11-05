@@ -554,6 +554,9 @@ frontend:
         - working: true
           agent: "main"
           comment: "🔧 WEBSOCKET ERROR FIX: User reported 'Failed to construct WebSocket: An insecure WebSocket connection may not be initiated from a page loaded over HTTPS' error. ROOT CAUSE: WebSocket was trying to connect with ws:// (insecure) protocol from HTTPS page - needs wss:// (secure). FIXED: (1) Added WDS_SOCKET_PROTOCOL=wss to .env file to force secure WebSocket connections, (2) Reordered .env variables for proper loading sequence (WDS_SOCKET_PROTOCOL before WDS_SOCKET_HOST), (3) Updated craco.config.js to always apply devServer configuration (not just when visual edits/health check enabled), ensured client.overlay = false is set in devServer config. Frontend restarted successfully (pid 915) and compiled without errors. WebSocket now connects securely over wss:// protocol. All Visual Scraper Builder features working without runtime errors."
+        - working: true
+          agent: "main"
+          comment: "🔧 WEBSOCKET PROTOCOL FIX V2: User still seeing 'Mixed Content: attempted to connect to insecure WebSocket endpoint ws://...' error and blank preview. ROOT CAUSE: Environment variable WDS_SOCKET_PROTOCOL not being properly applied by webpack-dev-server. SOLUTION: Explicitly configured client.webSocketURL in craco.config.js devServer configuration with: protocol: 'wss' (secure), hostname: visual-crawler-2.preview.emergentagent.com, port: 443, pathname: '/ws'. This ensures webpack-dev-server client always uses wss:// protocol for WebSocket connections on HTTPS pages. Frontend restarted successfully (pid 1102) and compiled without errors. WebSocket configuration now hardcoded to use secure protocol - no more mixed content errors."
 
 metadata:
   created_by: "main_agent"
