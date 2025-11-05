@@ -82,9 +82,15 @@ if (config.enableVisualEdits) {
 
 // Setup dev server
 webpackConfig.devServer = (devServerConfig) => {
-  // Disable error overlay
+  // Configure WebSocket to use secure wss:// protocol
   devServerConfig.client = devServerConfig.client || {};
   devServerConfig.client.overlay = false;
+  devServerConfig.client.webSocketURL = {
+    protocol: 'wss',
+    hostname: process.env.WDS_SOCKET_HOST || 'visual-crawler-2.preview.emergentagent.com',
+    port: process.env.WDS_SOCKET_PORT || 443,
+    pathname: '/ws'
+  };
   
   // Apply visual edits dev server setup if enabled
   if (config.enableVisualEdits && setupDevServer) {
