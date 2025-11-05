@@ -11,7 +11,7 @@ import sys
 from datetime import datetime
 
 # Get backend URL from environment
-BACKEND_URL = "https://visual-crawler-2.preview.emergentagent.com/api"
+BACKEND_URL = "https://apify-clone-2.preview.emergentagent.com/api"
 
 class AmazonTrimmerTester:
     def __init__(self):
