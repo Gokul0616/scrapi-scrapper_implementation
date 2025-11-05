@@ -15,7 +15,7 @@ from datetime import datetime
 import asyncio
 
 # Get backend URL from environment
-BACKEND_URL = "https://chromerun.preview.emergentagent.com/api"
+BACKEND_URL = "https://visual-crawler-2.preview.emergentagent.com/api"
 
 class CriticalFixesTester:
     def __init__(self):
