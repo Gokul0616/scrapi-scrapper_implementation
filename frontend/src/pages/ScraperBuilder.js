@@ -644,14 +644,39 @@ const ScraperBuilder = () => {
                 >
                   {proxyPreviewLoading ? 'Loading...' : 'Reload'}
                 </button>
-                {/* Settings icon button commented out */}
-                {/* <button
+                
+                {/* Preview Mode Toggle */}
+                {previewUrl && (
+                  <button
+                    onClick={() => {
+                      if (!useProxyPreview) {
+                        setUseProxyPreview(true);
+                        loadProxyPreview();
+                      } else {
+                        setUseProxyPreview(false);
+                        setIframeError(null);
+                        reloadIframe();
+                      }
+                    }}
+                    className={`px-3 py-2 rounded-lg flex items-center space-x-1 ${
+                      useProxyPreview 
+                        ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                    title={useProxyPreview ? "Using backend proxy - Click to use direct iframe" : "Click to use backend proxy"}
+                  >
+                    <Shield className="w-4 h-4" />
+                    <span className="text-sm">{useProxyPreview ? 'Proxy' : 'Direct'}</span>
+                  </button>
+                )}
+                
+                <button
                   onClick={() => setShowCookieModal(true)}
                   className="p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
                   title="Manage cookies"
                 >
                   <Settings className="w-5 h-5" />
-                </button> */}
+                </button>
               </div>
               
               {/* Cookie indicator */}
