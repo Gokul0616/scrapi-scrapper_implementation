@@ -176,8 +176,9 @@ const ScraperBuilder = () => {
       url: previewUrl,
       message: 'This website cannot be loaded in the preview frame'
     });
-    // Auto-switch to proxy preview for blocked sites
+    // Auto-switch to proxy preview for blocked sites and load it
     setUseProxyPreview(true);
+    loadProxyPreview();
   };
 
   // Cookie management functions
