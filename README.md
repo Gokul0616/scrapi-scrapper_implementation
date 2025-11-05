@@ -4,45 +4,47 @@ Scrapi is a powerful web scraping platform (Apify clone) built with FastAPI, Rea
 
 ## 🚀 Quick Start
 
-### Method 1: Simple Starter Script (Recommended)
+### One-Command Startup (Recommended)
 
 ```bash
-# Run the starter script
-./starter.sh
+# Make script executable (first time only)
+chmod +x application_startup.sh
+
+# Run the complete startup script
+./application_startup.sh
 ```
 
-This will:
-- ✅ Install all backend dependencies
-- ✅ Install Playwright browsers (Chromium)
-- ✅ Install frontend dependencies
-- ✅ Start all services automatically
+This comprehensive script will:
+- ✅ Verify all prerequisites (Python, Node.js, Yarn, MongoDB)
+- ✅ Install all backend dependencies (Python packages)
+- ✅ Install Playwright browsers (Chromium for web scraping)
+- ✅ Install frontend dependencies (Node.js packages)
+- ✅ Verify environment configuration (.env files)
+- ✅ Start MongoDB service
+- ✅ Start Backend server via Supervisor
+- ✅ Start Frontend server via Supervisor
+- ✅ Provide complete status report and access information
 
-### Method 2: Manual Installation
+### Manual Installation (Alternative)
+
+If you prefer to install dependencies manually:
 
 ```bash
 # 1. Install backend dependencies
 cd /app/backend
 pip install -r requirements.txt
-
-# 2. Install Playwright browsers
 playwright install chromium
 
-# 3. Install frontend dependencies
+# 2. Install frontend dependencies
 cd /app/frontend
 yarn install
 
-# 4. Restart all services
+# 3. Start all services
 sudo supervisorctl restart all
+
+# 4. Check status
+sudo supervisorctl status
 ```
-
-### Method 3: Complete Startup Script
-
-```bash
-# Run the comprehensive startup script
-./startup.sh
-```
-
-This provides detailed status checks and verification at each step.
 
 ## 🌐 Access Points
 
