@@ -703,26 +703,34 @@ const ScraperBuilder = () => {
                 </div>
               )}
               
-              {iframeError && !useProxyPreview && (
-                <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              {/* Preview Mode Indicator */}
+              {previewUrl && (
+                <div className={`mt-3 p-3 rounded-lg ${
+                  useProxyPreview 
+                    ? 'bg-blue-50 border border-blue-200' 
+                    : iframeError 
+                    ? 'bg-yellow-50 border border-yellow-200'
+                    : 'bg-green-50 border border-green-200'
+                }`}>
                   <div className="flex items-start space-x-2">
-                    <Shield className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                    <Shield className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
+                      useProxyPreview ? 'text-blue-600' : iframeError ? 'text-yellow-600' : 'text-green-600'
+                    }`} />
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-yellow-900">
-                        Preview Unavailable
+                      <p className={`text-sm font-medium ${
+                        useProxyPreview ? 'text-blue-900' : iframeError ? 'text-yellow-900' : 'text-green-900'
+                      }`}>
+                        {useProxyPreview ? 'Backend Proxy Mode' : iframeError ? 'Preview Unavailable' : 'Direct Preview'}
                       </p>
-                      <p className="text-sm text-yellow-700 mt-1">
-                        {iframeError.message}. This happens with sites like Facebook, Twitter, and banks that block embedding for security.
+                      <p className={`text-sm mt-1 ${
+                        useProxyPreview ? 'text-blue-700' : iframeError ? 'text-yellow-700' : 'text-green-700'
+                      }`}>
+                        {useProxyPreview 
+                          ? 'Loading page through backend proxy to bypass iframe restrictions. CSS selectors will still work correctly!'
+                          : iframeError 
+                          ? 'This website blocks iframe embedding for security. Use the Proxy toggle button above to load via backend.'
+                          : 'Preview loaded successfully. You can test CSS selectors below.'}
                       </p>
-                      <button
-                        onClick={() => {
-                          setUseProxyPreview(true);
-                          loadProxyPreview();
-                        }}
-                        className="mt-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
-                      >
-                        Load via Backend Proxy →
-                      </button>
                     </div>
                   </div>
                 </div>
