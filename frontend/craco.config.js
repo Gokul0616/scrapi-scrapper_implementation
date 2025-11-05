@@ -68,11 +68,6 @@ const webpackConfig = {
         webpackConfig.plugins.push(healthPluginInstance);
       }
 
-      // Disable webpack error overlay
-      webpackConfig.devServer = webpackConfig.devServer || {};
-      webpackConfig.devServer.client = webpackConfig.devServer.client || {};
-      webpackConfig.devServer.client.overlay = false;
-
       return webpackConfig;
     },
   },
