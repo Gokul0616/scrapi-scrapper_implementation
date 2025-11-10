@@ -6,7 +6,7 @@ Debug Edge Case Tests - Check actual responses
 import requests
 import json
 
-BACKEND_URL = "https://apify-clone-2.preview.emergentagent.com/api"
+BACKEND_URL = "https://high-perf-scraping.preview.emergentagent.com/api"
 
 def test_invalid_login():
     print("=== Testing Invalid Login ===")
