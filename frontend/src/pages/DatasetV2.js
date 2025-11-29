@@ -1489,49 +1489,56 @@ const DatasetV2 = () => {
             <div className="overflow-y-auto max-h-[320px]">
               <div className="py-1">
                 {/* Social Media Links */}
-                {selectedLinksItem.data.socialMedia && Object.entries(selectedLinksItem.data.socialMedia).map(([platform, url]) => (
-                  <a
-                    key={platform}
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center px-3 py-2 hover:bg-gray-100 transition-colors group"
-                  >
-                    <div className={`w-8 h-8 rounded flex items-center justify-center mr-3 flex-shrink-0 ${
-                      platform === 'facebook' ? 'bg-blue-50 group-hover:bg-blue-100' :
-                      platform === 'instagram' ? 'bg-pink-50 group-hover:bg-pink-100' :
-                      platform === 'twitter' ? 'bg-sky-50 group-hover:bg-sky-100' :
-                      platform === 'linkedin' ? 'bg-blue-50 group-hover:bg-blue-100' :
-                      platform === 'youtube' ? 'bg-red-50 group-hover:bg-red-100' :
-                      platform === 'tiktok' ? 'bg-gray-100 group-hover:bg-gray-200' : 'bg-gray-50 group-hover:bg-gray-100'
-                    }`}>
-                      <span className={`text-sm font-semibold ${
-                        platform === 'facebook' ? 'text-blue-600' :
-                        platform === 'instagram' ? 'text-pink-600' :
-                        platform === 'twitter' ? 'text-sky-600' :
-                        platform === 'linkedin' ? 'text-blue-700' :
-                        platform === 'youtube' ? 'text-red-600' :
-                        platform === 'tiktok' ? 'text-gray-900' : 'text-gray-600'
-                      }`}>
-                        {platform === 'facebook' ? 'f' :
-                         platform === 'instagram' ? '📷' :
-                         platform === 'twitter' ? '𝕏' :
-                         platform === 'linkedin' ? 'in' :
-                         platform === 'youtube' ? '▶' :
-                         platform === 'tiktok' ? '🎵' : ''}
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-gray-900 capitalize">
-                        {platform}
+                {selectedLinksItem.data.socialMedia && Object.entries(selectedLinksItem.data.socialMedia).map(([platform, url]) => {
+                  const platformLower = platform.toLowerCase();
+                  let bgClass = 'bg-gray-50 group-hover:bg-gray-100';
+                  let iconColorClass = 'text-gray-600';
+                  
+                  if (platformLower.includes('facebook')) {
+                    bgClass = 'bg-blue-50 group-hover:bg-blue-100';
+                    iconColorClass = 'text-blue-600';
+                  } else if (platformLower.includes('instagram')) {
+                    bgClass = 'bg-pink-50 group-hover:bg-pink-100';
+                    iconColorClass = 'text-pink-600';
+                  } else if (platformLower.includes('twitter') || platformLower.includes('x.com')) {
+                    bgClass = 'bg-sky-50 group-hover:bg-sky-100';
+                    iconColorClass = 'text-sky-600';
+                  } else if (platformLower.includes('linkedin')) {
+                    bgClass = 'bg-blue-50 group-hover:bg-blue-100';
+                    iconColorClass = 'text-blue-700';
+                  } else if (platformLower.includes('youtube')) {
+                    bgClass = 'bg-red-50 group-hover:bg-red-100';
+                    iconColorClass = 'text-red-600';
+                  } else if (platformLower.includes('tiktok')) {
+                    bgClass = 'bg-gray-100 group-hover:bg-gray-200';
+                    iconColorClass = 'text-gray-900';
+                  }
+                  
+                  return (
+                    <a
+                      key={platform}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center px-3 py-2 hover:bg-gray-100 transition-colors group"
+                    >
+                      <div className={`w-8 h-8 rounded flex items-center justify-center mr-3 flex-shrink-0 ${bgClass}`}>
+                        <div className={iconColorClass}>
+                          {getSocialIcon(platform)}
+                        </div>
                       </div>
-                      <div className="text-xs text-gray-500 truncate">
-                        {url.length > 40 ? url.substring(0, 40) + '...' : url}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-gray-900 capitalize">
+                          {platform}
+                        </div>
+                        <div className="text-xs text-gray-500 truncate">
+                          {url.length > 40 ? url.substring(0, 40) + '...' : url}
+                        </div>
                       </div>
-                    </div>
-                    <ExternalLink className="w-4 h-4 text-gray-400 ml-2 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </a>
-                ))}
+                      <ExternalLink className="w-4 h-4 text-gray-400 ml-2 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </a>
+                  );
+                })}
                 
                 {/* Website Link */}
                 {selectedLinksItem.data.website && (
