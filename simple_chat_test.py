@@ -7,7 +7,7 @@ import requests
 import json
 
 # Backend URL
-BACKEND_URL = "https://frontend-backend-70.preview.emergentagent.com/api"
+BACKEND_URL = "https://fullstack-scraper.preview.emergentagent.com/api"
 
 def test_basic_chat():
     print("=== Testing Global Chat Assistant ===")
