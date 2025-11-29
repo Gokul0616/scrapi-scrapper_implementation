@@ -1216,42 +1216,138 @@ const DatasetV2 = () => {
               </table>
             </div>
           ) : (
-            // Dynamic Table - Auto-detects all columns from data
+            // Dynamic Table - Auto-detects all columns from data with proper ordering
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="border-b border-gray-200 bg-white">
-                    {visibleColumns.number && (
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide sticky left-0 bg-white z-10">#</th>
-                    )}
-                    {allColumns.map(colKey => (
-                      visibleColumns[colKey] && (
-                        <th key={colKey} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap">
-                          {formatColumnName(colKey)}
-                        </th>
-                      )
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide sticky left-0 bg-white z-10">#</th>
+                    {getOrderedColumns().map(colKey => (
+                      <th key={colKey} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap">
+                        {formatColumnName(colKey)}
+                      </th>
                     ))}
-                    {visibleColumns.actions && (
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide sticky right-0 bg-white z-10">Actions</th>
-                    )}
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide sticky right-0 bg-white z-10">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white">
-                  {items.map((item, index) => (
-                    <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                      {visibleColumns.number && (
-                        <td className="px-6 py-4 text-sm text-gray-900 sticky left-0 bg-white">{(page - 1) * limit + index + 1}</td>
-                      )}
-                      {allColumns.map(colKey => (
-                        visibleColumns[colKey] && (
-                          <td key={colKey} className="px-6 py-4 text-sm text-gray-700">
-                            <div className="max-w-xs">
-                              {renderCellValue(item.data[colKey], colKey)}
-                            </div>
-                          </td>
-                        )
-                      ))}
-                      {visibleColumns.actions && (
+                  {items.map((item, index) => {
+                    const orderedCols = getOrderedColumns();
+                    return (
+                      <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 text-sm text-gray-900 font-medium sticky left-0 bg-white">
+                          {(page - 1) * limit + index + 1}
+                        </td>
+                        {orderedCols.map(colKey => {
+                          const value = item.data[colKey];
+                          
+                          // Special rendering for social media
+                          if (colKey === 'socialMedia' && value && typeof value === 'object') {
+                            return (
+                              <td key={colKey} className="px-6 py-4 text-sm text-gray-700">
+                                {renderSocialMediaIcons(value, item)}
+                              </td>
+                            );
+                          }
+                          
+                          // Special rendering for title (primary column - bold)
+                          if (colKey === 'title') {
+                            return (
+                              <td key={colKey} className="px-6 py-4 text-sm">
+                                <div className="font-semibold text-gray-900 max-w-xs">
+                                  {value || '-'}
+                                </div>
+                              </td>
+                            );
+                          }
+                          
+                          // Special rendering for phone with icon
+                          if (colKey === 'phone' && value) {
+                            return (
+                              <td key={colKey} className="px-6 py-4 text-sm text-gray-700">
+                                <div className="flex items-center gap-2">
+                                  <Phone className="w-3 h-3 text-gray-400" />
+                                  <span>{value}</span>
+                                  {item.data.phoneVerified && (
+                                    <CheckCircle2 className="w-3 h-3 text-green-500" />
+                                  )}
+                                </div>
+                              </td>
+                            );
+                          }
+                          
+                          // Special rendering for email with icon
+                          if (colKey === 'email' && value) {
+                            return (
+                              <td key={colKey} className="px-6 py-4 text-sm text-gray-700">
+                                <div className="flex items-center gap-2">
+                                  <Mail className="w-3 h-3 text-gray-400" />
+                                  <span>{value}</span>
+                                  {item.data.emailVerified && (
+                                    <CheckCircle2 className="w-3 h-3 text-green-500" />
+                                  )}
+                                </div>
+                              </td>
+                            );
+                          }
+                          
+                          // Special rendering for website with icon
+                          if (colKey === 'website' && value) {
+                            return (
+                              <td key={colKey} className="px-6 py-4 text-sm">
+                                <a 
+                                  href={value} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                                >
+                                  <ExternalLink className="w-3 h-3" />
+                                  <span className="truncate max-w-[150px]">
+                                    {value.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                                  </span>
+                                </a>
+                              </td>
+                            );
+                          }
+                          
+                          // Special rendering for Google Maps URL with map icon
+                          if (colKey === 'url' && value) {
+                            return (
+                              <td key={colKey} className="px-6 py-4 text-sm">
+                                <a 
+                                  href={value} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-1 text-red-600 hover:text-red-700"
+                                >
+                                  <MapPin className="w-3 h-3" />
+                                  <span>Maps</span>
+                                </a>
+                              </td>
+                            );
+                          }
+                          
+                          // Special rendering for rating with stars
+                          if (colKey === 'rating' && value) {
+                            return (
+                              <td key={colKey} className="px-6 py-4 text-sm">
+                                <div className="flex items-center gap-1">
+                                  <span className="text-yellow-500">⭐</span>
+                                  <span className="font-medium text-gray-900">{value}</span>
+                                </div>
+                              </td>
+                            );
+                          }
+                          
+                          // Default rendering for other columns
+                          return (
+                            <td key={colKey} className="px-6 py-4 text-sm text-gray-700">
+                              <div className="max-w-xs">
+                                {renderCellValue(value, colKey, item)}
+                              </div>
+                            </td>
+                          );
+                        })}
                         <td className="px-6 py-4 sticky right-0 bg-white">
                           <Button
                             size="sm"
@@ -1262,9 +1358,9 @@ const DatasetV2 = () => {
                             AI Chat
                           </Button>
                         </td>
-                      )}
-                    </tr>
-                  ))}
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
