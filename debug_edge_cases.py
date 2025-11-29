@@ -6,7 +6,7 @@ Debug Edge Case Tests - Check actual responses
 import requests
 import json
 
-BACKEND_URL = "https://fullstack-scraper.preview.emergentagent.com/api"
+BACKEND_URL = "https://scraper-cleanup.preview.emergentagent.com/api"
 
 def test_invalid_login():
     print("=== Testing Invalid Login ===")
