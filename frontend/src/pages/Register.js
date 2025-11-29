@@ -34,7 +34,7 @@ const Register = () => {
     
     if (result.success) {
       toast({ title: 'Registration successful!', variant: 'default' });
-      navigate('/actors');
+      navigate('/home');
     } else {
       toast({ title: 'Registration failed', description: result.error, variant: 'destructive' });
     }
