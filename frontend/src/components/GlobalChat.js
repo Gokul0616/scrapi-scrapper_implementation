@@ -459,8 +459,8 @@ const GlobalChat = () => {
             position: 'fixed',
             ...getPositionStyles()
           }}
-          className={`w-96 bg-white rounded-lg shadow-2xl border border-gray-200 flex flex-col z-[70] transition-all duration-300 ${
-            isMinimized ? 'h-14' : 'h-[600px]'
+          className={`w-80 bg-white rounded-lg shadow-2xl border border-gray-200 flex flex-col z-[70] transition-all duration-300 ${
+            isMinimized ? 'h-12' : 'h-[500px]'
           }`}
         >
           {/* Header */}
