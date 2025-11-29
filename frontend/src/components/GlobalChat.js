@@ -513,15 +513,15 @@ const GlobalChat = () => {
               )}
               
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 bg-gray-50">
+              <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 bg-gray-50">
                 {messages.length === 0 && (
-                  <div className="text-center text-gray-500 mt-8">
-                    <MessageCircle className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                    <p className="text-sm">Hi! I'm your Scrapi assistant.</p>
-                    <p className="text-xs text-gray-400 mt-2">I can now help you navigate and control the app!</p>
-                    <div className="mt-4 space-y-2 text-xs text-left bg-white p-3 rounded-lg">
+                  <div className="text-center text-gray-500 mt-4">
+                    <MessageCircle className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                    <p className="text-xs">Hi! I'm your Scrapi assistant.</p>
+                    <p className="text-[10px] text-gray-400 mt-1">I can help you navigate and control the app!</p>
+                    <div className="mt-3 space-y-1 text-[10px] text-left bg-white p-2 rounded-lg">
                       <p className="font-semibold text-gray-700">Try asking:</p>
-                      <ul className="list-disc list-inside text-gray-600 space-y-1">
+                      <ul className="list-disc list-inside text-gray-600 space-y-0.5">
                         <li>"Go to Actors page"</li>
                         <li>"Show me my runs"</li>
                         <li>"Export my latest data as CSV"</li>
