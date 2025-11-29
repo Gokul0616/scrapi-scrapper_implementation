@@ -537,16 +537,16 @@ const GlobalChat = () => {
                     className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                      className={`max-w-[80%] rounded-lg px-3 py-1.5 ${
                         msg.role === 'user'
                           ? 'bg-gradient-to-r from-gray-700 to-gray-900 text-white'
                           : 'bg-white border border-gray-200 text-gray-900'
                       }`}
                     >
                       {msg.role === 'user' ? (
-                        <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                        <p className="text-xs whitespace-pre-wrap">{msg.content}</p>
                       ) : (
-                        <div className="text-sm prose prose-sm max-w-none">
+                        <div className="text-xs prose prose-sm max-w-none">
                           <ReactMarkdown 
                             remarkPlugins={[remarkGfm]}
                             components={{
