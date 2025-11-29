@@ -5,8 +5,7 @@ from pydantic import ValidationError
 from models import (
     UserCreate, UserLogin, UserResponse, Actor, ActorCreate, ActorUpdate, ActorPublish,
     Run, RunCreate, Dataset, DatasetItem, Proxy, ProxyCreate,
-    LeadChatMessage, LeadChatRequest,
-    ScraperConfig, ScraperConfigCreate, ScraperConfigUpdate, ScraperField, PaginationConfig, ScraperTestRequest
+    LeadChatMessage, LeadChatRequest
 )
 from auth import create_access_token, get_current_user, hash_password, verify_password
 from proxy_manager import get_proxy_manager
