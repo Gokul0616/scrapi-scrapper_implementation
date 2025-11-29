@@ -781,7 +781,7 @@ const DatasetV2 = () => {
   };
   
   // Helper function to render cell value dynamically
-  const renderCellValue = (value, key) => {
+  const renderCellValue = (value, key, item) => {
     // Handle null or undefined
     if (value === null || value === undefined) return '-';
     
@@ -806,18 +806,8 @@ const DatasetV2 = () => {
       const entries = Object.entries(value);
       if (entries.length === 0) return '-';
       if (key === 'socialMedia') {
-        const links = getSocialMediaLinks(value);
-        return (
-          <div className="flex gap-1">
-            {links.slice(0, 3).map((link, idx) => (
-              <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" 
-                 className="text-blue-600 hover:text-blue-800 text-xs">
-                {link.platform}
-              </a>
-            ))}
-            {links.length > 3 && <span className="text-xs text-gray-500">+{links.length - 3}</span>}
-          </div>
-        );
+        // Don't render here, will be handled by special case in table
+        return null;
       }
       return JSON.stringify(value);
     }
@@ -834,7 +824,7 @@ const DatasetV2 = () => {
     
     // Handle boolean
     if (typeof value === 'boolean') {
-      return value ? '✓' : '✗';
+      return value ? <span className="text-green-600">✓</span> : <span className="text-gray-400">✗</span>;
     }
     
     // Handle numbers
