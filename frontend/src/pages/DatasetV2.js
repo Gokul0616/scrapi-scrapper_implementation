@@ -778,6 +778,76 @@ const DatasetV2 = () => {
     { id: 'table', label: 'Table', icon: TableIcon }
   ];
 
+  // Get filtered columns based on active tab
+  const getVisibleColumnsByTab = () => {
+    if (isAmazonScraper()) return allColumns;
+    
+    switch(activeTab) {
+      case 'contact':
+        return ['title', 'address', 'city', 'state', 'countryCode', 'phone', 'email', 'website'];
+      case 'social':
+        return ['title', 'socialMedia', 'website'];
+      case 'rating':
+        return ['title', 'rating', 'reviewsCount', 'totalScore'];
+      case 'reviews':
+        return ['title', 'rating', 'reviewsCount', 'reviews'];
+      case 'enrichment':
+        return ['title', 'email', 'emailVerified', 'phone', 'phoneVerified', 'website'];
+      case 'all':
+        return allColumns;
+      case 'overview':
+      default:
+        return allColumns;
+    }
+  };
+
+  // Define standard column order for Google Maps data
+  const getOrderedColumns = () => {
+    if (isAmazonScraper()) return allColumns;
+    
+    const standardOrder = [
+      'title',
+      'address', 
+      'city',
+      'state',
+      'countryCode',
+      'phone',
+      'phoneVerified',
+      'email',
+      'emailVerified',
+      'website',
+      'rating',
+      'reviewsCount',
+      'totalScore',
+      'category',
+      'url',
+      'socialMedia',
+      'reviews',
+      'location',
+      'placeId',
+      'cid'
+    ];
+    
+    const visibleCols = getVisibleColumnsByTab();
+    const ordered = [];
+    
+    // Add columns in standard order if they exist and are visible
+    standardOrder.forEach(col => {
+      if (allColumns.includes(col) && visibleCols.includes(col)) {
+        ordered.push(col);
+      }
+    });
+    
+    // Add any remaining columns not in standard order
+    allColumns.forEach(col => {
+      if (!ordered.includes(col) && visibleCols.includes(col)) {
+        ordered.push(col);
+      }
+    });
+    
+    return ordered;
+  };
+
   return (
     <div className="flex-1 bg-white min-h-screen">
       {/* Header with Tabs */}
