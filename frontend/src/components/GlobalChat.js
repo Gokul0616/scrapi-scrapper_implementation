@@ -570,7 +570,7 @@ const GlobalChat = () => {
                           </ReactMarkdown>
                         </div>
                       )}
-                      <p className={`text-xs mt-1 ${
+                      <p className={`text-[10px] mt-0.5 ${
                         msg.role === 'user' ? 'text-white/70' : 'text-gray-400'
                       }`}>
                         {new Date(msg.timestamp).toLocaleTimeString([], { 
