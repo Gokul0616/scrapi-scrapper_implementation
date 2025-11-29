@@ -444,11 +444,11 @@ const GlobalChat = () => {
                   transition: 'all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)'
                 }
           }
-          className="w-14 h-14 bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800 text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center z-[70] group active:scale-95"
+          className="w-10 h-10 bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800 text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center z-[70] group active:scale-95"
           title="Chat Assistant (Drag to move)"
         >
-          <MessageCircle className="w-6 h-6" />
-          <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+          <MessageCircle className="w-5 h-5" />
+          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
         </button>
       )}
 
