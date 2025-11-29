@@ -403,58 +403,33 @@ async def execute_scraping_job(run_id: str, actor_id: str, user_id: str, input_d
             
             results = []
             
-            # Check if this is a custom scraper (has scraper_config_id)
-            if actor and actor.get('scraper_config_id'):
-                logger.info(f"   Custom scraper detected. Config ID: {actor['scraper_config_id']}")
-                
-                # Get scraper configuration
-                from scraper_builder import scraper_builder
-                from models import ScraperConfig, ScraperField, PaginationConfig
-                
-                config_data = await db.scraper_configs.find_one({"id": actor['scraper_config_id']})
-                if not config_data:
-                    raise ValueError(f"Scraper configuration not found: {actor['scraper_config_id']}")
-                
-                # Parse config
-                fields = [ScraperField(**f) for f in config_data.get("fields", [])]
-                pagination = PaginationConfig(**config_data.get("pagination", {}))
-                
-                config = ScraperConfig(
-                    **{**config_data, "fields": fields, "pagination": pagination}
+            # Built-in scraper - use registry
+            scraper_registry = get_scraper_registry()
+            actor_name = actor.get('name') if actor else None
+            
+            if not actor_name:
+                raise ValueError("Actor not found or has no name")
+            
+            logger.info(f"   Looking for built-in scraper: {actor_name}")
+            scraper = scraper_registry.get_scraper(actor_name, engine)
+            
+            if not scraper:
+                logger.error(f"❌ No scraper found for: {actor_name}")
+                raise ValueError(f"No scraper registered for actor: {actor_name}")
+            
+            logger.info(f"✅ Found scraper: {type(scraper).__name__}")
+            logger.info(f"   Calling scraper.scrape() with input_data: {input_data}")
+            
+            # Progress callback for logging
+            async def progress_callback(message: str):
+                await db.runs.update_one(
+                    {"id": run_id},
+                    {"$push": {"logs": f"{datetime.now(timezone.utc).isoformat()}: {message}"}}
                 )
-                
-                # Run custom scraper using scraper_builder
-                logger.info(f"   Executing custom scraper: {config.name}")
-                results = await scraper_builder.run_scraper(config)
-                
-            else:
-                # Built-in scraper - use registry
-                scraper_registry = get_scraper_registry()
-                actor_name = actor.get('name') if actor else None
-                
-                if not actor_name:
-                    raise ValueError("Actor not found or has no name")
-                
-                logger.info(f"   Looking for built-in scraper: {actor_name}")
-                scraper = scraper_registry.get_scraper(actor_name, engine)
-                
-                if not scraper:
-                    logger.error(f"❌ No scraper found for: {actor_name}")
-                    raise ValueError(f"No scraper registered for actor: {actor_name}")
-                
-                logger.info(f"✅ Found scraper: {type(scraper).__name__}")
-                logger.info(f"   Calling scraper.scrape() with input_data: {input_data}")
-                
-                # Progress callback for logging
-                async def progress_callback(message: str):
-                    await db.runs.update_one(
-                        {"id": run_id},
-                        {"$push": {"logs": f"{datetime.now(timezone.utc).isoformat()}: {message}"}}
-                    )
-                    logger.info(f"Run {run_id}: {message}")
-                
-                # Execute built-in scraper
-                results = await scraper.scrape(input_data, progress_callback)
+                logger.info(f"Run {run_id}: {message}")
+            
+            # Execute built-in scraper
+            results = await scraper.scrape(input_data, progress_callback)
             
             # Create dataset and store results
             from models import Dataset
