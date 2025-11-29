@@ -506,8 +506,8 @@ const GlobalChat = () => {
             <>
               {/* Action Feedback Banner */}
               {actionFeedback && (
-                <div className="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-sm flex items-center space-x-2 animate-pulse">
-                  <Navigation className="w-4 h-4" />
+                <div className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-xs flex items-center space-x-2 animate-pulse">
+                  <Navigation className="w-3 h-3" />
                   <span>{actionFeedback}</span>
                 </div>
               )}
