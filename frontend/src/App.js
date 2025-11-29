@@ -140,7 +140,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      {/* Marketplace & Scraper Creation Routes */}
+      {/* Marketplace Route */}
       <Route 
         path="/marketplace" 
         element={
@@ -152,46 +152,10 @@ function AppRoutes() {
         } 
       />
       <Route 
-        path="/my-scrapers" 
-        element={
-          <ProtectedRoute>
-            <DashboardLayout>
-              <MyScraper />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/my-scraper" 
-        element={
-          <ProtectedRoute>
-            <DashboardLayout>
-              <MyScraper />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/scraper-builder" 
-        element={
-          <ProtectedRoute>
-            <ScraperBuilder />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
         path="/actor-code-editor" 
         element={
           <ProtectedRoute>
             <ActorCodeEditor />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/create-scraper" 
-        element={
-          <ProtectedRoute>
-            <CreateScraper />
           </ProtectedRoute>
         } 
       />
