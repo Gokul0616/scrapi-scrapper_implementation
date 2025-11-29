@@ -1348,7 +1348,7 @@ const DatasetV2 = () => {
                             </td>
                           );
                         })}
-                        <td className="px-6 py-4 sticky right-0 bg-white">
+                        <td className="px-6 py-4">
                           <Button
                             size="sm"
                             onClick={() => openChat(item)}
