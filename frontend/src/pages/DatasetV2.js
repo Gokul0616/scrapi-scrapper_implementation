@@ -1227,7 +1227,7 @@ const DatasetV2 = () => {
                         {formatColumnName(colKey)}
                       </th>
                     ))}
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide sticky right-0 bg-white z-10">Actions</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white">
