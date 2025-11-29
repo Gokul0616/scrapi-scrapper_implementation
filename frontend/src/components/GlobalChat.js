@@ -556,13 +556,13 @@ const GlobalChat = () => {
                               h1: ({children}) => <h1 className="text-sm font-bold mb-1 text-gray-900">{children}</h1>,
                               h2: ({children}) => <h2 className="text-xs font-bold mb-1 text-gray-900">{children}</h2>,
                               h3: ({children}) => <h3 className="text-xs font-bold mb-0.5 text-gray-900">{children}</h3>,
-                              ul: ({children}) => <ul className="list-disc pl-4 mb-2 space-y-1">{children}</ul>,
-                              ol: ({children}) => <ol className="list-decimal pl-4 mb-2 space-y-1">{children}</ol>,
+                              ul: ({children}) => <ul className="list-disc pl-3 mb-1 space-y-0.5">{children}</ul>,
+                              ol: ({children}) => <ol className="list-decimal pl-3 mb-1 space-y-0.5">{children}</ol>,
                               li: ({children}) => <li className="text-gray-800">{children}</li>,
                               code: ({inline, children}) => 
                                 inline ? 
-                                  <code className="bg-gray-100 px-1 py-0.5 rounded text-xs font-mono text-emerald-700">{children}</code> :
-                                  <code className="block bg-gray-100 p-2 rounded text-xs font-mono overflow-x-auto">{children}</code>,
+                                  <code className="bg-gray-100 px-1 py-0.5 rounded text-[10px] font-mono text-emerald-700">{children}</code> :
+                                  <code className="block bg-gray-100 p-1.5 rounded text-[10px] font-mono overflow-x-auto">{children}</code>,
                               blockquote: ({children}) => <blockquote className="border-l-4 border-emerald-500 pl-3 italic text-gray-700">{children}</blockquote>
                             }}
                           >
