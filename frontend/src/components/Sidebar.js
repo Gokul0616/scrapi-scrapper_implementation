@@ -36,7 +36,6 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
     { icon: Store, label: 'Store', path: '/store' },
     { icon: Sparkles, label: 'Actors', path: '/actors', active: true },
     { icon: ShoppingBag, label: 'Marketplace', path: '/marketplace' },
-    { icon: FolderOpen, label: 'My Scrapper', path: '/my-scrapers' },
     { icon: Code, label: 'Development', path: '/development' },
     { icon: BookOpen, label: 'Saved tasks', path: '/tasks' },
     { icon: Play, label: 'Runs', path: '/runs' },
