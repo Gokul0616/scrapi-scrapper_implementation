@@ -24,84 +24,73 @@
 
 ---
 
-## 1. EXECUTIVE SUMMARY
+## 1. WHY ADMIN CONSOLE IS NEEDED
 
-### 1.1 Project Overview
+### 1.1 Business Problems It Solves
 
-**What We're Building:**
-A comprehensive, secure admin console accessible ONLY by the platform owner with complete control over:
-- All user accounts and activities
-- System-wide analytics and metrics
-- Actor management and verification
-- Run monitoring and control
-- System settings and configurations
-- Complete audit trail
-- Database management tools
+**Current State Without Admin Console:**
+- ❌ No visibility into platform usage across all users
+- ❌ Cannot manage problematic users or abusive behavior
+- ❌ No way to identify platform bottlenecks or issues
+- ❌ Unable to promote quality actors or verify trusted scrapers
+- ❌ No control over system resources and limits
+- ❌ Cannot track platform growth or user engagement
+- ❌ No audit trail for compliance and security
+- ❌ Cannot provide data-driven insights for business decisions
 
-**Key Differentiators:**
-- **Single Owner Access:** First registered user becomes owner automatically
-- **Complete Visibility:** See all data across all users
-- **Full Control:** Manage, suspend, delete any resource
-- **Audit Everything:** Every admin action is logged
-- **Zero User Impact:** Admin operations don't affect user experience
+**Future State With Admin Console:**
+- ✅ Complete visibility into all platform activities
+- ✅ Proactive user management and moderation capabilities
+- ✅ Real-time monitoring of system health and performance
+- ✅ Curate marketplace with featured and verified actors
+- ✅ Fine-tune system settings and resource allocation
+- ✅ Data-driven decision making with comprehensive analytics
+- ✅ Full compliance with audit trails and action logging
+- ✅ Optimize platform performance based on actual usage patterns
 
-### 1.2 Architecture Overview
+### 1.2 Owner's Daily Use Cases
+
+**Morning Routine (5-10 minutes):**
+1. Check dashboard for overnight activity
+2. Review new user registrations
+3. Monitor system health and any failed runs
+4. Check for any alerts or unusual patterns
+
+**Weekly Tasks (30-60 minutes):**
+1. Review user growth trends
+2. Analyze most popular actors and categories
+3. Verify new actors submitted by users
+4. Review and respond to any user issues
+5. Adjust system settings based on usage patterns
+
+**Monthly Tasks (2-3 hours):**
+1. Generate comprehensive usage reports
+2. Plan infrastructure scaling based on growth
+3. Review audit logs for security compliance
+4. Clean up old data and optimize database
+5. Plan new features based on usage insights
+
+### 1.3 Key Capabilities Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        ADMIN CONSOLE                             │
-│                    (Owner Access Only)                           │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                   │
-│  ┌───────────────┐  ┌───────────────┐  ┌──────────────────┐   │
-│  │   Dashboard   │  │     Users     │  │    Analytics     │   │
-│  │               │  │               │  │                  │   │
-│  │  Key Metrics  │  │  • View All   │  │  • Charts        │   │
-│  │  Quick Stats  │  │  • Suspend    │  │  • Trends        │   │
-│  │  Alerts       │  │  • Delete     │  │  • Reports       │   │
-│  └───────────────┘  └───────────────┘  └──────────────────┘   │
-│                                                                   │
-│  ┌───────────────┐  ┌───────────────┐  ┌──────────────────┐   │
-│  │    Actors     │  │     Runs      │  │   Audit Logs     │   │
-│  │               │  │               │  │                  │   │
-│  │  • Feature    │  │  • Monitor    │  │  • Track All     │   │
-│  │  • Verify     │  │  • Abort      │  │  • Filter        │   │
-│  │  • Delete     │  │  • View Logs  │  │  • Export        │   │
-│  └───────────────┘  └───────────────┘  └──────────────────┘   │
-│                                                                   │
-│  ┌───────────────┐  ┌───────────────┐                          │
-│  │   Settings    │  │   Database    │                          │
-│  │               │  │               │                          │
-│  │  • Limits     │  │  • Stats      │                          │
-│  │  • Features   │  │  • Cleanup    │                          │
-│  │  • System     │  │  • Backup     │                          │
-│  └───────────────┘  └───────────────┘                          │
-│                                                                   │
-└─────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────┐
-│                      MIDDLEWARE LAYER                            │
-├─────────────────────────────────────────────────────────────────┤
-│  Role Check → Audit Logger → Rate Limiter → DB Access           │
-└─────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────┐
-│                        BACKEND API                               │
-├─────────────────────────────────────────────────────────────────┤
-│  FastAPI + MongoDB + JWT Auth + Admin Services                  │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### 1.3 Implementation Timeline
-
-**Total Estimate: 5-7 Days**
-
-| Phase | Duration | Description |
-|-------|----------|-------------|
-| Phase 1 | 1 day | Database schema updates, role system, migration |
-| Phase 2 | 2 days | Backend API, middleware, admin services |
-| Phase 3 | 2-3 days | Frontend pages, components, routing |
-| Phase 4 | 1 day | Testing, security audit, deployment |
+┌────────────────────────────────────────────────────────────┐
+│                    ADMIN CONSOLE                            │
+│                  (Owner Access Only)                        │
+└────────────────────────────────────────────────────────────┘
+                            │
+        ┌───────────────────┼───────────────────┐
+        │                   │                   │
+        ▼                   ▼                   ▼
+┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│   MONITOR    │    │   MANAGE     │    │   CONTROL    │
+├──────────────┤    ├──────────────┤    ├──────────────┤
+│• All Users   │    │• Suspend     │    │• System      │
+│• All Runs    │    │• Activate    │    │  Settings    │
+│• System      │    │• Delete      │    │• Resource    │
+│  Health      │    │• Verify      │    │  Limits      │
+│• Analytics   │    │• Feature     │    │• Maintenance │
+│• Audit Logs  │    │• Plans       │    │  Mode        │
+└──────────────┘    └──────────────┘    └──────────────┘
 
 ---
 
