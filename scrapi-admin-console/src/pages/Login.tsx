@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ShieldAlert, Lock, Mail, ArrowRight } from 'lucide-react';
+import { Lock, Mail, ArrowRight } from 'lucide-react';
 
 export const Login: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -19,18 +19,16 @@ export const Login: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-aws-light flex flex-col justify-center py-12 sm:px-6 lg:px-8">
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="flex justify-center">
-                    <div className="bg-aws-nav p-3 rounded-xl shadow-lg">
-                        <ShieldAlert className="h-12 w-12 text-aws-orange" />
-                    </div>
+                    <img src="/logo.png" alt="Scrapi Logo" className="h-16 w-auto" />
                 </div>
-                <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                    Scrapi Admin Console
+                <h2 className="mt-6 text-center text-3xl font-extrabold text-aws-text">
+                    Sign in to Console
                 </h2>
-                <p className="mt-2 text-center text-sm text-gray-600">
-                    Restricted access for platform owners only
+                <p className="mt-2 text-center text-sm text-aws-text-secondary">
+                    Scrapi Admin Platform
                 </p>
             </div>
 
@@ -38,7 +36,7 @@ export const Login: React.FC = () => {
                 <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border-t-4 border-aws-orange">
                     <form className="space-y-6" onSubmit={handleSubmit}>
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="email" className="block text-sm font-medium text-aws-text">
                                 Email address
                             </label>
                             <div className="mt-1 relative rounded-md shadow-sm">
@@ -60,7 +58,7 @@ export const Login: React.FC = () => {
                         </div>
 
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="password" className="block text-sm font-medium text-aws-text">
                                 Password
                             </label>
                             <div className="mt-1 relative rounded-md shadow-sm">
@@ -85,7 +83,7 @@ export const Login: React.FC = () => {
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-aws-blue hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-aws-blue disabled:opacity-50 transition-colors"
+                                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-aws-orange hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-aws-orange disabled:opacity-50 transition-colors"
                             >
                                 {isLoading ? (
                                     <span className="flex items-center">
@@ -97,7 +95,7 @@ export const Login: React.FC = () => {
                                     </span>
                                 ) : (
                                     <span className="flex items-center">
-                                        Sign in to Console <ArrowRight className="ml-2 h-4 w-4" />
+                                        Sign In <ArrowRight className="ml-2 h-4 w-4" />
                                     </span>
                                 )}
                             </button>

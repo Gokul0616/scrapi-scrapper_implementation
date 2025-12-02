@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@theme {
+  --color-aws-nav: #232f3e;
+  --color-aws-dark: #191e2a;
+  --color-aws-light: #f2f3f3;
+  --color-aws-blue: #0073bb;
+  --color-aws-orange: #ec7211;
+  --color-aws-hover: #374151;
+  --color-aws-border: #d5dbdb;
+  --color-aws-text: #16191f;
+  --color-aws-text-secondary: #545b64;
+}
+
+body {
+  background-color: var(--color-aws-light);
+  color: var(--color-aws-text);
+  font-family: "Amazon Ember", "Helvetica Neue", Roboto, Arial, sans-serif;
+}
