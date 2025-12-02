@@ -12,7 +12,6 @@ from proxy_manager import get_proxy_manager
 from scraper_engine import ScraperEngine
 from scraper_registry import get_scraper_registry  # New: Dynamic scraper management
 from chat_service import LeadChatService
-from global_chat_service import GlobalChatService
 from global_chat_service_v2 import EnhancedGlobalChatService
 from task_manager import get_task_manager
 import logging

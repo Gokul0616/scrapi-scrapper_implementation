@@ -10,7 +10,7 @@ import re
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone
 from dotenv import load_dotenv
-from emergentintegrations.llm.chat import LlmChat, UserMessage
+import google.generativeai as genai
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -21,16 +21,15 @@ class EnhancedGlobalChatService:
     def __init__(self, db, user_id: str):
         self.db = db
         self.user_id = user_id
-        # Get Emergent LLM key
-        self.api_key = os.getenv('EMERGENT_LLM_KEY')
+        # Get Gemini API key
+        self.api_key = os.getenv('GEMINI_API_KEY')
         
         if not self.api_key:
-            raise ValueError("EMERGENT_LLM_KEY not found in environment")
+            raise ValueError("GEMINI_API_KEY not found in environment")
         
-        logger.info(f"EnhancedGlobalChatService initialized with Emergent LLM key")
-        
-        # Initialize LlmChat client with emergentintegrations
-        self.chat_client = None  # Will be initialized per request with session_id
+        genai.configure(api_key=self.api_key)
+        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        logger.info(f"EnhancedGlobalChatService initialized with Gemini LLM")
         
         self.system_prompt = """You are Scrapi AI Agent - an intelligent AI with COMPLETE CONTROL over the Scrapi web scraping platform.
 
@@ -1232,19 +1231,12 @@ When user mentions multiple locations with "and", create SEPARATE runs for EACH 
 
 {conversation_context}"""
             
-            # Initialize LlmChat WITHOUT session_id to avoid interference with our history management
-            # We manage history ourselves through the enhanced_prompt
-            llm_chat = LlmChat(
-                api_key=self.api_key,
-                session_id=f"global_{self.user_id}_{datetime.now().timestamp()}",  # Unique session per message
-                system_message=enhanced_prompt
-            ).with_model("openai", "gpt-4o-mini")
+            # Construct full prompt with system message and context
+            full_prompt = f"{enhanced_prompt}\n\nUSER: {message}"
             
-            # Create user message
-            user_msg = UserMessage(text=message)
-            
-            # Get response using emergentintegrations
-            response = await llm_chat.send_message(user_msg)
+            # Get response using Gemini
+            response_obj = await self.model.generate_content_async(full_prompt)
+            response = response_obj.text
             
             # LOG: Check what the AI responded
             logger.info(f"AI Response: {response[:500]}...")
@@ -1311,17 +1303,11 @@ When user mentions multiple locations with "and", create SEPARATE runs for EACH 
                 
                 # Get final response with all function results
                 results_summary = json.dumps(all_function_results, indent=2)
-                follow_up_prompt = f"{enhanced_prompt}\n\nFunction results: {results_summary}\n\nPlease respond naturally to the user's original question with this data. Remember the conversation context. DO NOT include FUNCTION_CALL in your response. If multiple runs were created, mention all of them."
+                follow_up_prompt = f"{enhanced_prompt}\n\nFunction results: {results_summary}\n\nPlease respond naturally to the user's original question with this data. Remember the conversation context. DO NOT include FUNCTION_CALL in your response. If multiple runs were created, mention all of them.\n\nUSER: Original message: {message}\n\nPlease provide a natural response about what was executed."
                 
-                # Create new LlmChat instance for follow-up
-                follow_up_chat = LlmChat(
-                    api_key=self.api_key,
-                    session_id=f"followup_{self.user_id}_{datetime.now().timestamp()}",
-                    system_message=follow_up_prompt
-                ).with_model("openai", "gpt-4o-mini")
-                
-                follow_up_msg = UserMessage(text=f"Original message: {message}\n\nPlease provide a natural response about what was executed.")
-                final_response = await follow_up_chat.send_message(follow_up_msg)
+                # Generate follow-up response
+                final_response_obj = await self.model.generate_content_async(follow_up_prompt)
+                final_response = final_response_obj.text
                 
                 # Save assistant response with all function calls
                 await self.save_message("assistant", final_response, {"multiple_calls": function_calls})
