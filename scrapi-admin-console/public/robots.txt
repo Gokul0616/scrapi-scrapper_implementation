@@ -1,0 +1,8 @@
+# Scrapi Admin Console - Robots.txt
+# Admin console should not be indexed by search engines
+
+User-agent: *
+Disallow: /
+
+# Sitemap (for reference, even though indexing is disabled)
+Sitemap: https://admin-host-setup.preview.emergentagent.com/sitemap.xml
