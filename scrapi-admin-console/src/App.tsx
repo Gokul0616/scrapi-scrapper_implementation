@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
+import { Register } from './pages/Register';
+import { RoleSelection } from './pages/RoleSelection';
 import { Dashboard } from './pages/Dashboard';
 import { UsersPage } from './pages/Users';
 import { ActorsPage } from './pages/Actors';
@@ -20,9 +22,17 @@ const ProtectedRoute = () => {
 const PublicRoute = () => {
   const { isAuthenticated } = useAuth();
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
   return <Outlet />;
+};
+
+const RoleSelectionRoute = () => {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  return <RoleSelection />;
 };
 
 function App() {
@@ -33,11 +43,16 @@ function App() {
           {/* Public Routes */}
           <Route element={<PublicRoute />}>
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
           </Route>
+
+          {/* Role Selection Route - Semi-protected */}
+          <Route path="/select-role" element={<RoleSelectionRoute />} />
 
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/users" element={<UsersPage />} />
             <Route path="/actors" element={<ActorsPage />} />
             <Route path="/runs" element={<RunsPage />} />
