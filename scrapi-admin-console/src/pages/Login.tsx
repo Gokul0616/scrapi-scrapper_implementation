@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Lock, Mail, ArrowRight } from 'lucide-react';
 
@@ -7,15 +8,28 @@ export const Login: React.FC = () => {
     const [password, setPassword] = useState('');
     const { login } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
+    const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
-        // Simulate network delay
-        setTimeout(async () => {
-            await login(email);
+        setError('');
+
+        try {
+            const result = await login(email, password);
+            
+            // Check if role selection is needed
+            if (result.needs_role_selection) {
+                navigate('/select-role');
+            } else {
+                navigate('/dashboard');
+            }
+        } catch (err: any) {
+            setError(err.message || 'Login failed. Please check your credentials.');
+        } finally {
             setIsLoading(false);
-        }, 1000);
+        }
     };
 
     return (
