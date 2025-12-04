@@ -36,6 +36,10 @@ class UserResponse(BaseModel):
     email: str
     organization_name: Optional[str] = None
     plan: str
+    role: str
+    is_active: bool
+    created_at: str
+    last_login_at: Optional[str] = None
 
 # Actor Models
 class Actor(BaseModel):
