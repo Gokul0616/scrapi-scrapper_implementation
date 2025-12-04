@@ -120,6 +120,15 @@ export const Login: React.FC = () => {
                                 )}
                             </button>
                         </div>
+
+                        <div className="text-center">
+                            <Link
+                                to="/register"
+                                className="text-sm text-aws-orange hover:text-orange-600 font-medium"
+                            >
+                                Don't have an account? Register here
+                            </Link>
+                        </div>
                     </form>
                 </div>
             </div>
