@@ -113,7 +113,16 @@ async def login(credentials: UserLogin):
     if not user_doc or not verify_password(credentials.password, user_doc['hashed_password']):
         raise HTTPException(status_code=401, detail="Invalid username or password")
     
-    token = create_access_token({"sub": user_doc['id'], "username": user_doc['username']})
+    # Check if owner exists in system
+    owner_exists = await db.users.find_one({"role": "owner"})
+    
+    # Update last login timestamp
+    await db.users.update_one(
+        {"id": user_doc['id']},
+        {"$set": {"last_login_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    token = create_access_token({"sub": user_doc['id'], "username": user_doc['username'], "role": user_doc.get('role', 'admin')})
     
     return {
         "access_token": token,
@@ -123,8 +132,13 @@ async def login(credentials: UserLogin):
             username=user_doc['username'],
             email=user_doc['email'],
             organization_name=user_doc.get('organization_name'),
-            plan=user_doc.get('plan', 'Free')
-        )
+            plan=user_doc.get('plan', 'Free'),
+            role=user_doc.get('role', 'admin'),
+            is_active=user_doc.get('is_active', True),
+            created_at=user_doc.get('created_at', datetime.now(timezone.utc).isoformat()),
+            last_login_at=datetime.now(timezone.utc).isoformat()
+        ),
+        "needs_role_selection": not owner_exists and user_doc.get('role') == 'admin'
     }
 
 @router.get("/auth/me", response_model=UserResponse)
