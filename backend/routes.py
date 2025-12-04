@@ -153,8 +153,64 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         username=user_doc['username'],
         email=user_doc['email'],
         organization_name=user_doc.get('organization_name'),
-        plan=user_doc.get('plan', 'Free')
+        plan=user_doc.get('plan', 'Free'),
+        role=user_doc.get('role', 'admin'),
+        is_active=user_doc.get('is_active', True),
+        created_at=user_doc.get('created_at', datetime.now(timezone.utc).isoformat()),
+        last_login_at=user_doc.get('last_login_at')
     )
+
+@router.get("/auth/has-owner")
+async def check_has_owner():
+    """Check if system has an owner user."""
+    owner_exists = await db.users.find_one({"role": "owner"})
+    return {"has_owner": owner_exists is not None}
+
+@router.post("/auth/select-role")
+async def select_role(
+    role_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Allow user to select owner role if no owner exists."""
+    selected_role = role_data.get('role')
+    
+    if selected_role not in ['owner', 'admin']:
+        raise HTTPException(status_code=400, detail="Invalid role. Must be 'owner' or 'admin'")
+    
+    # Check if owner already exists
+    owner_exists = await db.users.find_one({"role": "owner"})
+    
+    if selected_role == 'owner' and owner_exists:
+        raise HTTPException(status_code=400, detail="Owner role already assigned to another user")
+    
+    # Update user role
+    await db.users.update_one(
+        {"id": current_user['id']},
+        {"$set": {"role": selected_role}}
+    )
+    
+    # Get updated user
+    user_doc = await db.users.find_one({"id": current_user['id']}, {"_id": 0})
+    
+    # Create new token with updated role
+    token = create_access_token({"sub": user_doc['id'], "username": user_doc['username'], "role": selected_role})
+    
+    return {
+        "success": True,
+        "access_token": token,
+        "token_type": "bearer",
+        "user": UserResponse(
+            id=user_doc['id'],
+            username=user_doc['username'],
+            email=user_doc['email'],
+            organization_name=user_doc.get('organization_name'),
+            plan=user_doc.get('plan', 'Free'),
+            role=selected_role,
+            is_active=user_doc.get('is_active', True),
+            created_at=user_doc.get('created_at', datetime.now(timezone.utc).isoformat()),
+            last_login_at=user_doc.get('last_login_at')
+        )
+    }
 
 @router.patch("/auth/last-path")
 async def update_last_path(
