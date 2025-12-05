@@ -120,6 +120,10 @@ async def login(credentials: UserLogin):
     
     token = create_access_token({"sub": user_doc['id'], "username": user_doc['username'], "role": user_doc.get('role', 'admin')})
     
+    # Determine if role selection is needed
+    # Show role selection only if no owner exists in the system
+    needs_role_selection = not owner_exists
+    
     return {
         "access_token": token,
         "token_type": "bearer",
@@ -134,7 +138,7 @@ async def login(credentials: UserLogin):
             created_at=user_doc.get('created_at', datetime.now(timezone.utc).isoformat()),
             last_login_at=datetime.now(timezone.utc).isoformat()
         ),
-        "needs_role_selection": not owner_exists and user_doc.get('role') == 'admin'
+        "needs_role_selection": needs_role_selection
     }
 
 @router.get("/auth/me", response_model=UserResponse)
