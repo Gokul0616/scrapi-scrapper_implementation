@@ -81,12 +81,22 @@ export const Layout: React.FC = () => {
                         <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-aws-nav transform translate-x-1/4 -translate-y-1/4"></span>
                     </button>
 
-                    <div className="flex items-center space-x-2 cursor-pointer hover:bg-aws-hover px-2 py-1 rounded">
+                    <div className="relative group flex items-center space-x-2 cursor-pointer hover:bg-aws-hover px-2 py-1 rounded">
                         <div className="text-right hidden sm:block">
                             <p className="text-sm font-bold leading-none">{user?.username}</p>
                             <p className="text-xs text-gray-400 leading-none mt-1">{user?.organization_name || 'Account ID: 1234-5678'}</p>
                         </div>
                         <ChevronDown size={16} className="text-gray-400" />
+
+                        {/* User Dropdown Menu */}
+                        <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden group-hover:block">
+                            <button
+                                onClick={logout}
+                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                                Sign Out
+                            </button>
+                        </div>
                     </div>
                 </div>
             </header>

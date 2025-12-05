@@ -12,10 +12,16 @@ import { SettingsPage } from './pages/Settings';
 import { NotFound } from './pages/NotFound';
 
 const ProtectedRoute = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, pendingRoleSelection } = useAuth();
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
+
+  if (pendingRoleSelection) {
+    return <Navigate to="/select-role" replace />;
+  }
+
   return <Layout />;
 };
 
@@ -28,10 +34,17 @@ const PublicRoute = () => {
 };
 
 const RoleSelectionRoute = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, pendingRoleSelection } = useAuth();
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
+
+  // If authenticated but no pending role selection, redirect to dashboard
+  if (!pendingRoleSelection) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return <RoleSelection />;
 };
 

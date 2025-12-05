@@ -68,6 +68,10 @@ export const Register: React.FC = () => {
                 localStorage.setItem('scrapi_admin_user', JSON.stringify(data.user));
                 // Also store in sessionStorage for role selection flow
                 sessionStorage.setItem('temp_registration_data', JSON.stringify(data));
+
+                // Set pending role selection flag
+                localStorage.setItem('scrapi_pending_role_selection', 'true');
+
                 navigate('/select-role');
             } else {
                 // Store token and user data for direct login

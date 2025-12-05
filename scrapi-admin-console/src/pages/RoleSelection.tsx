@@ -37,7 +37,7 @@ export const RoleSelection: React.FC = () => {
             if (tempData) {
                 // New registration - store temp token first to make API call
                 const tempToken = tempData.access_token;
-                
+
                 // Call select role API with temp token
                 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
                 const response = await fetch(`${BACKEND_URL}/api/auth/select-role`, {
@@ -56,12 +56,19 @@ export const RoleSelection: React.FC = () => {
                 }
 
                 // Now store the updated token and user to localStorage
-                localStorage.setItem('scrapi_admin_token', data.access_token);
-                localStorage.setItem('scrapi_admin_user', JSON.stringify(data.user));
-                
+                if (data.access_token) {
+                    localStorage.setItem('scrapi_admin_token', data.access_token);
+                }
+                if (data.user) {
+                    localStorage.setItem('scrapi_admin_user', JSON.stringify(data.user));
+                }
+
+                // Clear pending role selection flag
+                localStorage.removeItem('scrapi_pending_role_selection');
+
                 // Clear temp data
                 sessionStorage.removeItem('temp_registration_data');
-                
+
                 // Reload to update auth context
                 window.location.href = '/dashboard';
             } else {
@@ -101,24 +108,21 @@ export const RoleSelection: React.FC = () => {
                     {/* Owner Role Card */}
                     <div
                         onClick={() => handleRoleSelect('owner')}
-                        className={`bg-white p-8 rounded-lg shadow-md cursor-pointer transition-all border-4 ${
-                            selectedRole === 'owner'
-                                ? 'border-aws-orange shadow-xl scale-105'
-                                : 'border-gray-200 hover:border-gray-300 hover:shadow-lg'
-                        }`}
+                        className={`bg-white p-8 rounded-lg shadow-md cursor-pointer transition-all border-4 ${selectedRole === 'owner'
+                            ? 'border-aws-orange shadow-xl scale-105'
+                            : 'border-gray-200 hover:border-gray-300 hover:shadow-lg'
+                            }`}
                     >
                         <div className="flex flex-col items-center text-center">
                             <div
-                                className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${
-                                    selectedRole === 'owner'
-                                        ? 'bg-gradient-to-br from-yellow-400 to-orange-500'
-                                        : 'bg-gradient-to-br from-gray-100 to-gray-200'
-                                }`}
+                                className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${selectedRole === 'owner'
+                                    ? 'bg-gradient-to-br from-yellow-400 to-orange-500'
+                                    : 'bg-gradient-to-br from-gray-100 to-gray-200'
+                                    }`}
                             >
                                 <Crown
-                                    className={`h-10 w-10 ${
-                                        selectedRole === 'owner' ? 'text-white' : 'text-gray-500'
-                                    }`}
+                                    className={`h-10 w-10 ${selectedRole === 'owner' ? 'text-white' : 'text-gray-500'
+                                        }`}
                                 />
                             </div>
                             <h3 className="text-2xl font-bold text-aws-text mb-2">Owner</h3>
@@ -162,24 +166,21 @@ export const RoleSelection: React.FC = () => {
                     {/* Admin Role Card */}
                     <div
                         onClick={() => handleRoleSelect('admin')}
-                        className={`bg-white p-8 rounded-lg shadow-md cursor-pointer transition-all border-4 ${
-                            selectedRole === 'admin'
-                                ? 'border-aws-orange shadow-xl scale-105'
-                                : 'border-gray-200 hover:border-gray-300 hover:shadow-lg'
-                        }`}
+                        className={`bg-white p-8 rounded-lg shadow-md cursor-pointer transition-all border-4 ${selectedRole === 'admin'
+                            ? 'border-aws-orange shadow-xl scale-105'
+                            : 'border-gray-200 hover:border-gray-300 hover:shadow-lg'
+                            }`}
                     >
                         <div className="flex flex-col items-center text-center">
                             <div
-                                className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${
-                                    selectedRole === 'admin'
-                                        ? 'bg-gradient-to-br from-blue-400 to-blue-600'
-                                        : 'bg-gradient-to-br from-gray-100 to-gray-200'
-                                }`}
+                                className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${selectedRole === 'admin'
+                                    ? 'bg-gradient-to-br from-blue-400 to-blue-600'
+                                    : 'bg-gradient-to-br from-gray-100 to-gray-200'
+                                    }`}
                             >
                                 <Shield
-                                    className={`h-10 w-10 ${
-                                        selectedRole === 'admin' ? 'text-white' : 'text-gray-500'
-                                    }`}
+                                    className={`h-10 w-10 ${selectedRole === 'admin' ? 'text-white' : 'text-gray-500'
+                                        }`}
                                 />
                             </div>
                             <h3 className="text-2xl font-bold text-aws-text mb-2">Admin</h3>

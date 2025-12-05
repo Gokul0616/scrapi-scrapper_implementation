@@ -10,6 +10,7 @@ interface AuthContextType {
     selectRole: (role: 'owner' | 'admin') => Promise<void>;
     isAuthenticated: boolean;
     loading: boolean;
+    pendingRoleSelection: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,15 +18,18 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const [pendingRoleSelection, setPendingRoleSelection] = useState(false);
 
     useEffect(() => {
         // Check local storage for persisted session
         const storedUser = localStorage.getItem('scrapi_admin_user');
         const storedToken = localStorage.getItem('scrapi_admin_token');
-        
+        const isPendingRole = localStorage.getItem('scrapi_pending_role_selection') === 'true';
+
         if (storedUser && storedToken) {
             setUser(JSON.parse(storedUser));
         }
+        setPendingRoleSelection(isPendingRole);
         setLoading(false);
     }, []);
 
@@ -51,16 +55,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Check if role selection is needed
             if (data.needs_role_selection) {
                 // Store token for authentication (needed to access role selection page)
-                localStorage.setItem('scrapi_admin_token', data.access_token);
-                localStorage.setItem('scrapi_admin_user', JSON.stringify(data.user));
-                setUser(data.user);
+                if (data.access_token) {
+                    localStorage.setItem('scrapi_admin_token', data.access_token);
+                }
+                if (data.user) {
+                    localStorage.setItem('scrapi_admin_user', JSON.stringify(data.user));
+                    setUser(data.user);
+                }
                 // Also store in sessionStorage for role selection flow
                 sessionStorage.setItem('temp_registration_data', JSON.stringify(data));
+
+                // Set pending role selection flag
+                localStorage.setItem('scrapi_pending_role_selection', 'true');
+                setPendingRoleSelection(true);
             } else {
                 // Store permanently and set user
-                localStorage.setItem('scrapi_admin_token', data.access_token);
-                localStorage.setItem('scrapi_admin_user', JSON.stringify(data.user));
-                setUser(data.user);
+                if (data.access_token) {
+                    localStorage.setItem('scrapi_admin_token', data.access_token);
+                }
+                if (data.user) {
+                    localStorage.setItem('scrapi_admin_user', JSON.stringify(data.user));
+                    setUser(data.user);
+                }
+
+                // Clear pending role selection flag
+                localStorage.removeItem('scrapi_pending_role_selection');
+                setPendingRoleSelection(false);
             }
 
             return { needs_role_selection: data.needs_role_selection || false };
@@ -72,7 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const selectRole = async (role: 'owner' | 'admin'): Promise<void> => {
         const token = localStorage.getItem('scrapi_admin_token');
-        
+
         if (!token) {
             throw new Error('No authentication token found');
         }
@@ -94,9 +114,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
 
             // Update token and user data
-            localStorage.setItem('scrapi_admin_token', data.access_token);
-            localStorage.setItem('scrapi_admin_user', JSON.stringify(data.user));
-            setUser(data.user);
+            if (data.access_token) {
+                localStorage.setItem('scrapi_admin_token', data.access_token);
+            }
+            if (data.user) {
+                localStorage.setItem('scrapi_admin_user', JSON.stringify(data.user));
+                setUser(data.user);
+            }
+
+            // Clear pending role selection flag
+            localStorage.removeItem('scrapi_pending_role_selection');
+            setPendingRoleSelection(false);
         } catch (error) {
             console.error('Select role error:', error);
             throw error;
@@ -105,12 +133,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const logout = () => {
         setUser(null);
+        setPendingRoleSelection(false);
         localStorage.removeItem('scrapi_admin_user');
         localStorage.removeItem('scrapi_admin_token');
+        localStorage.removeItem('scrapi_pending_role_selection');
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, selectRole, isAuthenticated: !!user, loading }}>
+        <AuthContext.Provider value={{ user, login, logout, selectRole, isAuthenticated: !!user, loading, pendingRoleSelection }}>
             {children}
         </AuthContext.Provider>
     );
