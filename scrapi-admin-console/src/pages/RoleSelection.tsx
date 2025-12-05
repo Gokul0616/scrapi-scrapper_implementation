@@ -34,8 +34,40 @@ export const RoleSelection: React.FC = () => {
         setError('');
 
         try {
-            await selectRole(selectedRole);
-            navigate('/dashboard');
+            if (tempData) {
+                // New registration - store temp token first to make API call
+                const tempToken = tempData.access_token;
+                
+                // Call select role API with temp token
+                const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
+                const response = await fetch(`${BACKEND_URL}/api/auth/select-role`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${tempToken}`
+                    },
+                    body: JSON.stringify({ role: selectedRole }),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Failed to set role');
+                }
+
+                // Now store the updated token and user to localStorage
+                localStorage.setItem('scrapi_admin_token', data.access_token);
+                localStorage.setItem('scrapi_admin_user', JSON.stringify(data.user));
+                
+                // Clear temp data
+                sessionStorage.removeItem('temp_registration_data');
+                
+                navigate('/dashboard');
+            } else {
+                // Existing user changing role
+                await selectRole(selectedRole);
+                navigate('/dashboard');
+            }
         } catch (err: any) {
             setError(err.message || 'Failed to set role. Please try again.');
         } finally {
