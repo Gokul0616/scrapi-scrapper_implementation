@@ -92,7 +92,7 @@ async def register(user_data: UserCreate):
             created_at=user.created_at.isoformat(),
             last_login_at=user.last_login_at.isoformat() if user.last_login_at else None
         ),
-        "needs_role_selection": not owner_exists and not user_data.role
+        "needs_role_selection": needs_role_selection
     }
 
 @router.post("/auth/login", response_model=dict)
