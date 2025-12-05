@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Crown, Shield, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -7,8 +7,17 @@ export const RoleSelection: React.FC = () => {
     const [selectedRole, setSelectedRole] = useState<'owner' | 'admin' | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+    const [tempData, setTempData] = useState<any>(null);
     const navigate = useNavigate();
     const { selectRole } = useAuth();
+
+    useEffect(() => {
+        // Check for temporary registration data
+        const tempRegistrationData = sessionStorage.getItem('temp_registration_data');
+        if (tempRegistrationData) {
+            setTempData(JSON.parse(tempRegistrationData));
+        }
+    }, []);
 
     const handleRoleSelect = (role: 'owner' | 'admin') => {
         setSelectedRole(role);
