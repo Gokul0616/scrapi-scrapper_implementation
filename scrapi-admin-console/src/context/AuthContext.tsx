@@ -48,10 +48,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 throw new Error(data.detail || 'Login failed');
             }
 
-            // Store token and user data
-            localStorage.setItem('scrapi_admin_token', data.access_token);
-            localStorage.setItem('scrapi_admin_user', JSON.stringify(data.user));
-            setUser(data.user);
+            // Check if role selection is needed
+            if (data.needs_role_selection) {
+                // Store temporarily for role selection
+                sessionStorage.setItem('temp_registration_data', JSON.stringify(data));
+            } else {
+                // Store permanently and set user
+                localStorage.setItem('scrapi_admin_token', data.access_token);
+                localStorage.setItem('scrapi_admin_user', JSON.stringify(data.user));
+                setUser(data.user);
+            }
 
             return { needs_role_selection: data.needs_role_selection || false };
         } catch (error) {
