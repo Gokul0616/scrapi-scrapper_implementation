@@ -49,19 +49,15 @@ async def register(user_data: UserCreate):
     # Check if owner exists in the system
     owner_exists = await db.users.find_one({"role": "owner"})
     
-    # Determine role based on system state and user selection
-    user_role = "admin"  # Default role
-    if not owner_exists:
-        # No owner exists - allow role selection
-        if user_data.role and user_data.role in ["owner", "admin"]:
-            user_role = user_data.role
-        else:
-            # If no role specified and no owner exists, make this user admin
-            # They can change to owner later via role selection screen
-            user_role = "admin"
-    else:
+    # Determine role based on system state
+    if owner_exists:
         # Owner exists - force admin role for all new users
         user_role = "admin"
+        needs_role_selection = False
+    else:
+        # No owner exists - need role selection
+        user_role = "admin"  # Temporary default, will be updated via role selection
+        needs_role_selection = True
     
     # Create user
     from models import User
