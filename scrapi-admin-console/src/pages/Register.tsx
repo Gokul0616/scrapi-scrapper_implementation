@@ -61,14 +61,15 @@ export const Register: React.FC = () => {
                 throw new Error(data.detail || 'Registration failed');
             }
 
-            // Store token and user data
-            localStorage.setItem('scrapi_admin_token', data.access_token);
-            localStorage.setItem('scrapi_admin_user', JSON.stringify(data.user));
-
             // Check if role selection is needed
             if (data.needs_role_selection) {
+                // Store temporarily for role selection page
+                sessionStorage.setItem('temp_registration_data', JSON.stringify(data));
                 navigate('/select-role');
             } else {
+                // Store token and user data for direct login
+                localStorage.setItem('scrapi_admin_token', data.access_token);
+                localStorage.setItem('scrapi_admin_user', JSON.stringify(data.user));
                 navigate('/dashboard');
             }
         } catch (err: any) {
