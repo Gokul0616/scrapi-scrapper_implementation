@@ -598,6 +598,41 @@ agent_communication:
       message: "🎯 NEW FEATURES IMPLEMENTED: (1) Enhanced scraper to extract social media links (Facebook, Instagram, Twitter/X, LinkedIn, YouTube, TikTok) from Google Maps pages and business websites, (2) Added 'Links' column to leads table displaying Google Maps link and social media icons with platform-specific styling, (3) Created global chat assistant service with Emergent LLM for general app help, (4) Built floating chat button component accessible from all pages with green theme. All services running. Ready for backend testing of new social media extraction and global chat endpoints."
     - agent: "testing"
       message: "🎉 NEW FEATURES BACKEND TESTING COMPLETE: Successfully tested both newly implemented backend features! ✅ Social Media Extraction: Confirmed working in GoogleMapsScraperV3 - extracted Facebook, Instagram, Twitter links from coffee shops in San Francisco with valid URLs stored in 'socialMedia' object. ✅ Global Chat Assistant: Fixed LlmChat API integration issue and confirmed all functionality working - contextual responses for scraper creation, data export, AI features, proxy system questions, plus conversation context maintained. Both features ready for production use. Fixed API parameter issue (llm_api_key → api_key) and made chat method async for proper integration."
+  - task: "Admin Console Role Selection Flow"
+    implemented: false
+    working: false
+    file: "frontend/src/pages/SelectRole.js (missing), frontend/src/contexts/AuthContext.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "❌ CRITICAL MISSING FEATURE: Role selection flow completely missing from frontend despite backend support. BACKEND READY: /auth/register returns needs_role_selection flag, /auth/select-role endpoint exists, User model supports owner/admin roles. FRONTEND MISSING: /select-role route doesn't exist, no SelectRole component, AuthContext doesn't handle needs_role_selection flag from registration response, no role selection UI. TESTED: First user registration skips role selection entirely and goes directly to dashboard. Users cannot select Owner role during first registration as required. Complete frontend implementation needed."
+
+  - task: "JWT Token Storage and Management"
+    implemented: false
+    working: false
+    file: "frontend/src/contexts/AuthContext.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "❌ JWT TOKEN STORAGE ISSUE: Users can authenticate and access dashboard but JWT tokens are not stored in localStorage. TESTED: Registration and login work, users reach dashboard successfully, route protection functional, but localStorage.getItem('token') returns null. This indicates authentication is working through some other mechanism (possibly session cookies) but JWT token persistence is broken. AuthContext needs to properly store and manage JWT tokens from API responses."
+
+  - task: "Admin Console Logout Functionality"
+    implemented: false
+    working: false
+    file: "frontend/src/components/Dashboard.js (or similar)"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "❌ LOGOUT BUTTON MISSING: Dashboard UI does not include logout functionality. TESTED: User can access dashboard but no logout button found with selectors: 'Sign Out', 'Logout', '[data-testid=\"logout-button\"]'. Route protection works (accessing dashboard after session ends redirects to login), but users have no way to manually logout from the UI. Logout button needs to be added to dashboard/header component."
     - agent: "main"
       message: "🚀 ENHANCED GLOBAL CHAT IMPLEMENTED: Complete overhaul with AI-powered function calling. Backend: (1) Created EnhancedGlobalChatService with 7 functions for full platform control (get_user_stats, list_recent_runs, get_actors, create_scraping_run, stop_run, delete_run, get_dataset_info), (2) MongoDB conversation persistence (global_chat_history collection) with per-user sessions, (3) Natural language parsing for run creation ('run google maps scraper for Hotels in NYC with 50 results'), (4) Real-time data access - answers 'how many runs' with actual database queries, (5) Background job execution when creating runs from chat. Frontend: (1) react-markdown + remark-gfm for ChatGPT-style formatting (bold, headings, lists, code blocks), (2) Auto-load conversation history on open, (3) Clear History button, (4) Beautiful message rendering - no more raw ### or ** symbols. Ready for comprehensive testing of function calling, data access, natural language understanding, and markdown rendering."
     - agent: "testing"
