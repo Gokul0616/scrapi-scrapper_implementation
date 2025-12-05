@@ -63,7 +63,10 @@ export const Register: React.FC = () => {
 
             // Check if role selection is needed
             if (data.needs_role_selection) {
-                // Store temporarily for role selection page
+                // Store token for authentication (needed to access role selection page)
+                localStorage.setItem('scrapi_admin_token', data.access_token);
+                localStorage.setItem('scrapi_admin_user', JSON.stringify(data.user));
+                // Also store in sessionStorage for role selection flow
                 sessionStorage.setItem('temp_registration_data', JSON.stringify(data));
                 navigate('/select-role');
             } else {
