@@ -62,7 +62,8 @@ export const RoleSelection: React.FC = () => {
                 // Clear temp data
                 sessionStorage.removeItem('temp_registration_data');
                 
-                navigate('/dashboard');
+                // Reload to update auth context
+                window.location.href = '/dashboard';
             } else {
                 // Existing user changing role
                 await selectRole(selectedRole);
