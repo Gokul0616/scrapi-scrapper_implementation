@@ -566,7 +566,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Indeed Jobs Scraper V2 - Cloudflare Bypass Testing Complete"
+    - "Admin Console Role Selection Implementation"
+    - "JWT Token Storage Fix"
+    - "Authentication Flow Completion"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
