@@ -1424,3 +1424,155 @@ async def get_admin_users(
         ))
         
     return cleaned_users
+
+@router.post("/admin/users/{user_id}/suspend")
+async def suspend_user(
+    user_id: str,
+    request: Request,
+    reason: dict = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Suspend a user account."""
+    if current_user.get('role') not in ['admin', 'owner']:
+        raise HTTPException(status_code=403, detail="Admin access required")
+        
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    if user.get('role') == 'owner':
+         raise HTTPException(status_code=403, detail="Cannot suspend owner")
+
+    # Abort running jobs
+    running_runs = await db.runs.find({"user_id": user_id, "status": {"$in": ["running", "queued"]}}).to_list(None)
+    for run in running_runs:
+        await task_manager.cancel_task(run['id'])
+        await db.runs.update_one(
+            {"id": run['id']}, 
+            {"$set": {"status": "aborted", "finished_at": datetime.now(timezone.utc).isoformat()}}
+        )
+    
+    await db.users.update_one({"id": user_id}, {"$set": {"is_active": False}})
+    
+    await log_admin_action(
+        db, 
+        current_user, 
+        "user_suspended", 
+        "user", 
+        user_id, 
+        user['username'], 
+        details=reason.get('reason') if reason else "Suspended by admin",
+        ip_address=request.client.host
+    )
+    
+    return {"message": "User suspended successfully"}
+
+@router.post("/admin/users/{user_id}/activate")
+async def activate_user(
+    user_id: str,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """Activate a user account."""
+    if current_user.get('role') not in ['admin', 'owner']:
+        raise HTTPException(status_code=403, detail="Admin access required")
+        
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    await db.users.update_one({"id": user_id}, {"$set": {"is_active": True}})
+    
+    await log_admin_action(
+        db, 
+        current_user, 
+        "user_activated", 
+        "user", 
+        user_id, 
+        user['username'],
+        ip_address=request.client.host
+    )
+    
+    return {"message": "User activated successfully"}
+
+@router.patch("/admin/users/{user_id}")
+async def update_user_admin(
+    user_id: str,
+    updates: dict,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update user details (role, plan)."""
+    if current_user.get('role') not in ['admin', 'owner']:
+        raise HTTPException(status_code=403, detail="Admin access required")
+        
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    if user.get('role') == 'owner' and current_user['id'] != user['id']:
+         raise HTTPException(status_code=403, detail="Cannot modify owner account")
+
+    allowed_updates = ['plan', 'role', 'organization_name']
+    update_data = {k: v for k, v in updates.items() if k in allowed_updates}
+    
+    if not update_data:
+        return {"message": "No valid updates provided"}
+        
+    await db.users.update_one({"id": user_id}, {"$set": update_data})
+    
+    # Log details
+    details = ", ".join([f"{k} changed to {v}" for k, v in update_data.items()])
+    
+    await log_admin_action(
+        db, 
+        current_user, 
+        "user_updated", 
+        "user", 
+        user_id, 
+        user['username'],
+        details=details,
+        ip_address=request.client.host
+    )
+    
+    return {"message": "User updated successfully"}
+
+@router.get("/admin/audit-logs")
+async def get_audit_logs(
+    page: int = 1,
+    limit: int = 50,
+    action: Optional[str] = None,
+    target_type: Optional[str] = None,
+    admin_username: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get audit logs."""
+    if current_user.get('role') not in ['admin', 'owner']:
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    query = {}
+    if action:
+        query['action'] = action
+    if target_type:
+        query['target_type'] = target_type
+    if admin_username:
+        query['admin_username'] = {"$regex": admin_username, "$options": "i"}
+
+    total = await db.audit_logs.count_documents(query)
+    skip = (page - 1) * limit
+    
+    logs = await db.audit_logs.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    # Convert datetimes
+    for log in logs:
+         if isinstance(log.get('created_at'), str):
+            log['created_at'] = datetime.fromisoformat(log['created_at'])
+            
+    return {
+        "logs": logs,
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "total_pages": (total + limit - 1) // limit
+    }
+
