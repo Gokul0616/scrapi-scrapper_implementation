@@ -49,3 +49,16 @@ export interface SystemHealth {
         last_24h: number;
     };
 }
+
+
+export interface AuditLog {
+    id: string;
+    admin_username: string;
+    action: string;
+    target_type: string;
+    target_name?: string;
+    details?: string;
+    ip_address?: string;
+    created_at: string;
+    metadata?: Record<string, any>;
+}
