@@ -12,7 +12,8 @@ import {
     Bell,
     Search,
     ChevronDown,
-    X
+    X,
+    FileText
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
