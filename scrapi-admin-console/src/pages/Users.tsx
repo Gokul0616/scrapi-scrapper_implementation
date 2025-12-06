@@ -164,7 +164,7 @@ export const UsersPage: React.FC = () => {
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <div className="flex items-center justify-end space-x-3">
                                             <button
-                                                onClick={() => toggleStatus(user.id)}
+                                                onClick={() => toggleStatus(user)}
                                                 className={`text-gray-400 hover:${user.is_active ? 'text-red-600' : 'text-green-600'}`}
                                                 title={user.is_active ? "Suspend User" : "Activate User"}
                                             >
