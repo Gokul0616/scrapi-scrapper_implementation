@@ -908,3 +908,30 @@ agent_communication:
       message: "🤖 AMAZON SCRAPER GLOBAL CHAT INTEGRATION: User reported global chat not recognizing Amazon scraper commands ('run 100 for trimmer in amazon scraper' returns actor not found error). IMPLEMENTED: (1) **Updated System Prompt** - Added comprehensive documentation for both Google Maps and Amazon scrapers with detection rules (products without location = Amazon, places with location = Google Maps), included 6+ Amazon-specific examples ('run 100 for trimmer in amazon', 'scrape wireless headphones from amazon', etc.), explained parameter differences (search_keywords vs search_terms, no location for Amazon). (2) **Enhanced Function Definitions** - Updated fill_and_start_scraper function to support both scrapers with parameters: search_terms (Google Maps), search_keywords (Amazon), location (Google Maps only), extract_reviews/min_rating/max_price (Amazon only). Updated create_scraping_run function description to support both scrapers. (3) **Smart Actor Detection** - Completely rewrote create_scraping_run() function implementation to detect scraper type automatically based on actor name (checks if 'amazon' in actor name), builds appropriate input_data format for each scraper (Amazon uses search_keywords array, Google Maps uses search_terms + location), supports flexible keyword matching ('Amazon', 'Amazon Product Scraper' both work). Function now accepts all parameters for both scrapers and intelligently formats the run based on actor type. Backend restarted successfully (pid 2243). TESTING READY: Try these commands in global chat: 'run 100 for trimmer in amazon scraper', 'scrape wireless headphones', 'get 50 laptop stands from amazon'. Chat should now recognize Amazon scraper and create runs with proper input format (search_keywords instead of search_terms)."
 
 
+
+  - task: "Admin Console API Endpoints"
+    implemented: true
+    working: true
+    file: "backend/routes.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Implemented GET /api/admin/stats (users, runs, success rate, recent activity) and GET /api/admin/users (list users) for Admin Console."
+
+  - task: "Admin Console Real Data Integration"
+    implemented: true
+    working: true
+    file: "scrapi-admin-console/src/pages/Dashboard.tsx, scrapi-admin-console/src/pages/Users.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Connected Admin Console Dashboard to /api/admin/stats and Users page to /api/admin/users. Implemented real data fetching and display."
+
+    - agent: "main"
+      message: "🚀 ADMIN CONSOLE REAL DATA: Implemented backend endpoints for admin stats and users list. Connected Admin Console Dashboard and Users page to fetch real data. Dashboard now shows actual user count, run count, success rate, and recent activity. Users page lists actual users from database."
