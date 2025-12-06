@@ -67,4 +67,4 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
             detail="Could not validate credentials"
         )
     
-    return {"id": user_id, "username": payload.get("username")}
+    return {"id": user_id, "username": payload.get("username"), "role": payload.get("role", "user")}
