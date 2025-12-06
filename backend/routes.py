@@ -5,7 +5,7 @@ from pydantic import ValidationError
 from models import (
     UserCreate, UserLogin, UserResponse, Actor, ActorCreate, ActorUpdate, ActorPublish,
     Run, RunCreate, Dataset, DatasetItem, Proxy, ProxyCreate,
-    LeadChatMessage, LeadChatRequest
+    LeadChatMessage, LeadChatRequest, AuditLog
 )
 from auth import create_access_token, get_current_user, hash_password, verify_password
 from proxy_manager import get_proxy_manager
@@ -14,9 +14,11 @@ from scraper_registry import get_scraper_registry  # New: Dynamic scraper manage
 from chat_service import LeadChatService
 from global_chat_service import GlobalChatService
 from global_chat_service_v2 import EnhancedGlobalChatService
+from audit_service import log_admin_action
 from task_manager import get_task_manager
 import logging
 import asyncio
+from fastapi import Request
 
 logger = logging.getLogger(__name__)
 
