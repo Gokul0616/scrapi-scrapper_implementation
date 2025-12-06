@@ -1322,3 +1322,103 @@ async def clear_chat_history(
 # - POST /scrapers/config/{config_id}/run
 # - POST /scrapers/config/{config_id}/publish
 
+
+# ============= Admin Routes =============
+@router.get("/admin/stats")
+async def get_admin_stats(current_user: dict = Depends(get_current_user)):
+    """Get admin dashboard statistics."""
+    # Check if user is admin or owner
+    if current_user.get('role') not in ['admin', 'owner']:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # 1. User stats
+    total_users = await db.users.count_documents({})
+    # Active users in last 7 days
+    seven_days_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+    active_users = await db.users.count_documents({
+        "$or": [
+            {"last_login_at": {"$gte": seven_days_ago}},
+            {"created_at": {"$gte": seven_days_ago}} # Consider new users as active
+        ]
+    })
+    
+    # 2. Run stats
+    total_runs = await db.runs.count_documents({})
+    succeeded_runs = await db.runs.count_documents({"status": "succeeded"})
+    
+    success_rate = 0
+    if total_runs > 0:
+        success_rate = (succeeded_runs / total_runs) * 100
+        
+    # 3. Recent activity
+    recent_runs = await db.runs.find(
+        {}, 
+        {"_id": 0}
+    ).sort("created_at", -1).limit(5).to_list(5)
+    
+    # Format recent runs
+    formatted_runs = []
+    for run in recent_runs:
+        if isinstance(run.get('created_at'), str):
+            created_at = datetime.fromisoformat(run['created_at'])
+        else:
+            created_at = run.get('created_at')
+            
+        # Calculate time ago roughly
+        now = datetime.now(timezone.utc)
+        diff = now - created_at
+        hours_ago = int(diff.total_seconds() / 3600)
+        
+        formatted_runs.append({
+            "id": run['id'],
+            "type": "run",
+            "status": run['status'],
+            "actor_name": run['actor_name'],
+            "hours_ago": hours_ago
+        })
+        
+    return {
+        "total_users": total_users,
+        "active_users_7d": active_users,
+        "total_runs": total_runs,
+        "success_rate": round(success_rate, 1),
+        "recent_activity": formatted_runs
+    }
+
+@router.get("/admin/users", response_model=List[UserResponse])
+async def get_admin_users(
+    current_user: dict = Depends(get_current_user),
+    skip: int = 0,
+    limit: int = 100,
+    search: Optional[str] = None
+):
+    """Get all users (admin only)."""
+    if current_user.get('role') not in ['admin', 'owner']:
+        raise HTTPException(status_code=403, detail="Admin access required")
+        
+    query = {}
+    if search:
+        query["$or"] = [
+            {"username": {"$regex": search, "$options": "i"}},
+            {"email": {"$regex": search, "$options": "i"}},
+            {"organization_name": {"$regex": search, "$options": "i"}}
+        ]
+        
+    users = await db.users.find(query, {"_id": 0}).skip(skip).limit(limit).to_list(limit)
+    
+    # Helper to clean user data for response
+    cleaned_users = []
+    for user_doc in users:
+        cleaned_users.append(UserResponse(
+            id=user_doc['id'],
+            username=user_doc['username'],
+            email=user_doc['email'],
+            organization_name=user_doc.get('organization_name'),
+            plan=user_doc.get('plan', 'Free'),
+            role=user_doc.get('role', 'admin'),
+            is_active=user_doc.get('is_active', True),
+            created_at=user_doc.get('created_at', datetime.now(timezone.utc).isoformat()),
+            last_login_at=user_doc.get('last_login_at')
+        ))
+        
+    return cleaned_users
