@@ -45,9 +45,25 @@ export const UsersPage: React.FC = () => {
         (user.organization_name && user.organization_name.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
-    const toggleStatus = (userId: string) => {
-        console.log("Toggle status for", userId);
-        // Implement backend call here if needed
+    const toggleStatus = async (user: User) => {
+        try {
+            const action = user.is_active ? 'suspend' : 'activate';
+            if (!window.confirm(`Are you sure you want to ${action} ${user.username}?`)) return;
+
+            const token = localStorage.getItem('scrapi_admin_token');
+            const response = await fetch(`${BACKEND_URL}/api/admin/users/${user.id}/${action}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(user.is_active ? { reason: "Manual suspension" } : {})
+            });
+
+            if (!response.ok) throw new Error('Action failed');
+            
+            setUsers(users.map(u => u.id === user.id ? { ...u, is_active: !u.is_active } : u));
+        } catch (err) {
+            console.error(err);
+            alert("Failed to update user status");
+        }
     };
 
     if (loading) return <div className="p-6">Loading users...</div>;
