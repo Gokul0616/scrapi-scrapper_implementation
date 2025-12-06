@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Users, Activity, Play, CheckCircle, ArrowUp, ArrowDown } from 'lucide-react';
 import { clsx } from 'clsx';
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
 
 interface MetricCardProps {
     title: string;
@@ -32,56 +34,87 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, trend, trendDirec
                     <Icon size={24} />
                 </div>
             </div>
-            {trend && (
-                <div className="mt-4 flex items-center text-sm">
-                    {trendDirection === 'up' ? (
-                        <ArrowUp className="self-center flex-shrink-0 h-4 w-4 text-green-500" aria-hidden="true" />
-                    ) : (
-                        <ArrowDown className="self-center flex-shrink-0 h-4 w-4 text-red-500" aria-hidden="true" />
-                    )}
-                    <span className={clsx("ml-1 font-medium", trendDirection === 'up' ? "text-green-600" : "text-red-600")}>
-                        {trend}
-                    </span>
-                    <span className="ml-2 text-aws-text-secondary">from last month</span>
-                </div>
-            )}
+            {/* Trend can be re-enabled if we calculate it later */}
         </div>
     );
 };
 
+interface DashboardStats {
+    total_users: number;
+    active_users_7d: number;
+    total_runs: number;
+    success_rate: number;
+    recent_activity: Array<{
+        id: string;
+        type: string;
+        status: string;
+        actor_name: string;
+        hours_ago: number;
+    }>;
+}
+
 export const Dashboard: React.FC = () => {
+    const [stats, setStats] = useState<DashboardStats | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const token = localStorage.getItem('scrapi_admin_token');
+                if (!token) throw new Error('No token found');
+
+                const response = await fetch(`${BACKEND_URL}/api/admin/stats`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch stats');
+                }
+
+                const data = await response.json();
+                setStats(data);
+            } catch (err) {
+                console.error(err);
+                setError('Failed to load dashboard data');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchStats();
+    }, []);
+
+    if (loading) return <div className="p-6">Loading dashboard...</div>;
+    if (error) return <div className="p-6 text-red-600">{error}</div>;
+    if (!stats) return null;
+
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                 <MetricCard
                     title="Total Users"
-                    value="1,234"
-                    trend="12%"
-                    trendDirection="up"
+                    value={stats.total_users.toLocaleString()}
                     icon={Users}
                     color="blue"
                 />
                 <MetricCard
                     title="Active Users (7d)"
-                    value="856"
-                    trend="5%"
-                    trendDirection="up"
+                    value={stats.active_users_7d.toLocaleString()}
                     icon={Activity}
                     color="purple"
                 />
                 <MetricCard
                     title="Total Runs"
-                    value="45.2k"
-                    trend="8%"
-                    trendDirection="up"
+                    value={stats.total_runs.toLocaleString()}
                     icon={Play}
                     color="orange"
                 />
                 <MetricCard
                     title="Success Rate"
-                    value="94.2%"
-                    trend="2%"
-                    trendDirection="down"
+                    value={`${stats.success_rate}%`}
                     icon={CheckCircle}
                     color="green"
                 />
@@ -91,36 +124,40 @@ export const Dashboard: React.FC = () => {
                 <h3 className="text-lg leading-6 font-medium text-aws-text mb-4">Recent Activity</h3>
                 <div className="flow-root">
                     <ul className="-mb-8">
-                        {[1, 2, 3, 4, 5].map((item, itemIdx) => (
-                            <li key={item}>
+                        {stats.recent_activity.map((item, itemIdx) => (
+                            <li key={item.id}>
                                 <div className="relative pb-8">
-                                    {itemIdx !== 4 ? (
+                                    {itemIdx !== stats.recent_activity.length - 1 ? (
                                         <span className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true" />
                                     ) : null}
                                     <div className="relative flex space-x-3">
                                         <div>
                                             <span className={clsx(
                                                 "h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white",
-                                                item % 2 === 0 ? "bg-green-500" : "bg-aws-blue"
+                                                item.status === 'succeeded' ? "bg-green-500" : 
+                                                item.status === 'failed' ? "bg-red-500" : "bg-aws-blue"
                                             )}>
-                                                {item % 2 === 0 ? <CheckCircle className="h-5 w-5 text-white" /> : <Play className="h-5 w-5 text-white" />}
+                                                {item.status === 'succeeded' ? <CheckCircle className="h-5 w-5 text-white" /> : <Play className="h-5 w-5 text-white" />}
                                             </span>
                                         </div>
                                         <div className="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
                                             <div>
                                                 <p className="text-sm text-aws-text-secondary">
-                                                    {item % 2 === 0 ? 'Run completed successfully' : 'New scraping run started'}
-                                                    <span className="font-medium text-aws-text"> Google Maps Scraper</span>
+                                                    {item.status === 'succeeded' ? 'Run completed successfully' : `Run ${item.status}`}
+                                                    <span className="font-medium text-aws-text"> {item.actor_name}</span>
                                                 </p>
                                             </div>
                                             <div className="text-right text-sm whitespace-nowrap text-gray-500">
-                                                <time dateTime="2020-09-20">{item}h ago</time>
+                                                <time>{item.hours_ago === 0 ? 'Just now' : `${item.hours_ago}h ago`}</time>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </li>
                         ))}
+                        {stats.recent_activity.length === 0 && (
+                            <p className="text-sm text-gray-500 italic">No recent activity found.</p>
+                        )}
                     </ul>
                 </div>
             </div>

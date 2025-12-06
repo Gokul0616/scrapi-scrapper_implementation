@@ -1,28 +1,57 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Filter, MoreVertical, Shield, ShieldOff } from 'lucide-react';
 import type { User } from '../types';
 
-const MOCK_USERS: User[] = [
-    { id: '1', username: 'john_doe', email: 'john@example.com', role: 'user', plan: 'Free', is_active: true, created_at: '2023-01-15T10:00:00Z', organization_name: 'Acme Inc' },
-    { id: '2', username: 'jane_smith', email: 'jane@example.com', role: 'admin', plan: 'Enterprise', is_active: true, created_at: '2023-02-20T14:30:00Z', organization_name: 'TechCorp' },
-    { id: '3', username: 'bob_wilson', email: 'bob@example.com', role: 'user', plan: 'Premium', is_active: false, created_at: '2023-03-10T09:15:00Z' },
-    { id: '4', username: 'alice_jones', email: 'alice@example.com', role: 'user', plan: 'Free', is_active: true, created_at: '2023-04-05T16:45:00Z' },
-    { id: '5', username: 'mike_brown', email: 'mike@example.com', role: 'user', plan: 'Premium', is_active: true, created_at: '2023-05-12T11:20:00Z', organization_name: 'DataSystems' },
-];
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
 
 export const UsersPage: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
-    const [users, setUsers] = useState<User[]>(MOCK_USERS);
+    const [users, setUsers] = useState<User[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        fetchUsers();
+    }, []);
+
+    const fetchUsers = async () => {
+        try {
+            const token = localStorage.getItem('scrapi_admin_token');
+            if (!token) throw new Error('No token found');
+
+            const response = await fetch(`${BACKEND_URL}/api/admin/users`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch users');
+            }
+
+            const data = await response.json();
+            setUsers(data);
+        } catch (err) {
+            console.error(err);
+            setError('Failed to load users');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const filteredUsers = users.filter(user =>
         user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.organization_name?.toLowerCase().includes(searchTerm.toLowerCase())
+        (user.organization_name && user.organization_name.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
     const toggleStatus = (userId: string) => {
-        setUsers(users.map(u => u.id === userId ? { ...u, is_active: !u.is_active } : u));
+        console.log("Toggle status for", userId);
+        // Implement backend call here if needed
     };
+
+    if (loading) return <div className="p-6">Loading users...</div>;
+    if (error) return <div className="p-6 text-red-600">{error}</div>;
 
     return (
         <div className="space-y-6">
@@ -132,13 +161,20 @@ export const UsersPage: React.FC = () => {
                                     </td>
                                 </tr>
                             ))}
+                            {filteredUsers.length === 0 && (
+                                <tr>
+                                    <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                                        No users found
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
                 <div className="bg-white px-4 py-3 border-t border-aws-border sm:px-6">
                     <div className="flex items-center justify-between">
                         <div className="text-sm text-aws-text-secondary">
-                            Showing <span className="font-medium">1</span> to <span className="font-medium">{filteredUsers.length}</span> of <span className="font-medium">{users.length}</span> results
+                            Showing <span className="font-medium">{filteredUsers.length > 0 ? 1 : 0}</span> to <span className="font-medium">{filteredUsers.length}</span> of <span className="font-medium">{users.length}</span> results
                         </div>
                         <div className="flex-1 flex justify-end">
                             <button className="relative inline-flex items-center px-4 py-1.5 border border-gray-300 text-sm font-medium rounded-sm text-aws-text bg-white hover:bg-gray-50">
