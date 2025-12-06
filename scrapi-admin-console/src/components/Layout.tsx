@@ -193,6 +193,7 @@ export const Layout: React.FC = () => {
                                 <SidebarItem icon={Users} label="Users" to="/users" active={location.pathname.startsWith('/users')} collapsed={false} />
                                 <SidebarItem icon={Bot} label="Actors" to="/actors" active={location.pathname.startsWith('/actors')} collapsed={false} />
                                 <SidebarItem icon={PlaySquare} label="Runs" to="/runs" active={location.pathname.startsWith('/runs')} collapsed={false} />
+                                <SidebarItem icon={FileText} label="Audit Logs" to="/audit-logs" active={location.pathname.startsWith('/audit-logs')} collapsed={false} />
                                 <SidebarItem icon={Settings} label="Settings" to="/settings" active={location.pathname.startsWith('/settings')} collapsed={false} />
                             </nav>
                             <div className="p-4 border-t border-gray-700">
