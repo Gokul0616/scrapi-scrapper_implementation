@@ -117,14 +117,34 @@ class SEOMetadataScraper(BaseScraper):
             # Get a browser page from the engine
             page = await self.engine.new_page()
             
-            # Navigate to the URL
+            # Navigate to the URL with increased timeout and fallback strategy
             await self._log_progress(f"📡 Loading page: {url}", progress_callback)
-            response = await page.goto(url, wait_until='networkidle', timeout=60000)
-            status_code = response.status if response else None
             
-            # Wait for page to be fully loaded
-            await page.wait_for_load_state('domcontentloaded')
-            await self._log_progress(f"✅ Page loaded (status: {status_code})", progress_callback)
+            # Try with networkidle first, then fallback to domcontentloaded
+            response = None
+            status_code = None
+            
+            try:
+                response = await page.goto(url, wait_until='networkidle', timeout=90000)
+                status_code = response.status if response else None
+                await self._log_progress(f"✅ Page loaded with networkidle (status: {status_code})", progress_callback)
+            except Exception as e:
+                await self._log_progress(f"⚠️ Networkidle failed, trying domcontentloaded: {str(e)}", progress_callback)
+                try:
+                    response = await page.goto(url, wait_until='domcontentloaded', timeout=90000)
+                    status_code = response.status if response else None
+                    await self._log_progress(f"✅ Page loaded with domcontentloaded (status: {status_code})", progress_callback)
+                except Exception as e2:
+                    await self._log_progress(f"⚠️ Domcontentloaded failed, trying load: {str(e2)}", progress_callback)
+                    response = await page.goto(url, wait_until='load', timeout=90000)
+                    status_code = response.status if response else None
+                    await self._log_progress(f"✅ Page loaded with load (status: {status_code})", progress_callback)
+            
+            # Wait a bit more for dynamic content
+            try:
+                await page.wait_for_timeout(2000)  # Wait 2 seconds for any dynamic content
+            except Exception:
+                pass
             
             # Extract all metadata
             await self._log_progress("📊 Extracting SEO metadata...", progress_callback)
