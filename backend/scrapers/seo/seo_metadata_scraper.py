@@ -498,11 +498,14 @@ class SEOMetadataScraper(BaseScraper):
         return image_data
     
     async def _extract_links(self, page: Page, base_url: str) -> Dict[str, Any]:
-        """Extract and categorize links (internal/external)"""
+        """Extract and categorize links (internal/external) with SEO attributes"""
         link_data = {
             'total_links': 0,
             'internal_links': 0,
             'external_links': 0,
+            'nofollow_links': 0,
+            'sponsored_links': 0,
+            'ugc_links': 0,
             'sample_links': []
         }
         try:
@@ -513,6 +516,7 @@ class SEOMetadataScraper(BaseScraper):
             for link in links[:20]:  # Sample first 20 links
                 href = await link.get_attribute('href')
                 text = await link.inner_text()
+                rel = await link.get_attribute('rel')
                 
                 if href:
                     absolute_url = urljoin(base_url, href)
@@ -520,20 +524,38 @@ class SEOMetadataScraper(BaseScraper):
                     
                     is_internal = link_domain == base_domain or link_domain == ''
                     
+                    # Check rel attributes
+                    is_nofollow = rel and 'nofollow' in rel.lower()
+                    is_sponsored = rel and 'sponsored' in rel.lower()
+                    is_ugc = rel and 'ugc' in rel.lower()
+                    
                     if is_internal:
                         link_data['internal_links'] += 1
                     else:
                         link_data['external_links'] += 1
                     
+                    if is_nofollow:
+                        link_data['nofollow_links'] += 1
+                    if is_sponsored:
+                        link_data['sponsored_links'] += 1
+                    if is_ugc:
+                        link_data['ugc_links'] += 1
+                    
                     link_data['sample_links'].append({
                         'url': absolute_url,
                         'text': text.strip() if text else '',
-                        'type': 'internal' if is_internal else 'external'
+                        'type': 'internal' if is_internal else 'external',
+                        'rel': rel or '',
+                        'nofollow': is_nofollow,
+                        'sponsored': is_sponsored,
+                        'ugc': is_ugc
                     })
             
             # Count remaining links
             for link in links[20:]:
                 href = await link.get_attribute('href')
+                rel = await link.get_attribute('rel')
+                
                 if href:
                     absolute_url = urljoin(base_url, href)
                     link_domain = urlparse(absolute_url).netloc
@@ -543,6 +565,15 @@ class SEOMetadataScraper(BaseScraper):
                         link_data['internal_links'] += 1
                     else:
                         link_data['external_links'] += 1
+                    
+                    # Check rel attributes
+                    if rel:
+                        if 'nofollow' in rel.lower():
+                            link_data['nofollow_links'] += 1
+                        if 'sponsored' in rel.lower():
+                            link_data['sponsored_links'] += 1
+                        if 'ugc' in rel.lower():
+                            link_data['ugc_links'] += 1
                         
         except Exception as e:
             logger.error(f"Error extracting links: {e}")
