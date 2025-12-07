@@ -149,8 +149,8 @@ def auto_register_scrapers():
     """Automatically discover and register all scraper classes."""
     try:
         # Import all scraper modules
-        from google_maps_scraper_v3 import GoogleMapsScraperV3
-        from amazon_scraper import AmazonProductScraper
+        from .googlemap.google_maps_scraper_v3 import GoogleMapsScraperV3
+        from .amazon.amazon_scraper import AmazonProductScraper
         
         # Register each scraper
         _global_registry.register(GoogleMapsScraperV3)
