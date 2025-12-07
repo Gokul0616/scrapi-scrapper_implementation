@@ -798,13 +798,38 @@ const ScheduleModal = ({ isEdit, schedule, actors, onClose, onSuccess }) => {
               {actors && actors.length > 0 ? (
                 actors.map(actor => (
                   <option key={actor.id} value={actor.id}>
-                    {actor.icon} {actor.name}
+                    {actor.name}
                   </option>
                 ))
               ) : (
-                <option value="" disabled>Loading actors...</option>
+                <option value="" disabled>No actors available</option>
               )}
             </select>
+            {formData.actor_id === '' && actors.length === 0 && (
+              <p className="text-xs text-amber-600 mt-1">
+                ⚠️ Please create an actor first before scheduling
+              </p>
+            )}
+            {selectedActor && (
+              <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm font-medium text-blue-900">
+                  {selectedActor.name}
+                </p>
+                {selectedActor.description && (
+                  <p className="text-xs text-blue-700 mt-1">
+                    {selectedActor.description}
+                  </p>
+                )}
+                {selectedActor.input_schema && (
+                  <div className="mt-2">
+                    <p className="text-xs font-medium text-blue-900">Expected Input Format:</p>
+                    <pre className="text-xs text-blue-800 mt-1 bg-blue-100 p-2 rounded overflow-x-auto">
+                      {JSON.stringify(selectedActor.input_schema, null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div>
