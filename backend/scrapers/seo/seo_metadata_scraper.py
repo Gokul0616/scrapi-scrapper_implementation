@@ -84,11 +84,16 @@ class SEOMetadataScraper(BaseScraper):
                 "open_graph": {"type": "object"},
                 "twitter_card": {"type": "object"},
                 "json_ld": {"type": "array"},
+                "microdata": {"type": "array"},
                 "headings": {"type": "object"},
                 "icons": {"type": "object"},
                 "hreflang": {"type": "array"},
                 "images": {"type": "object"},
-                "links": {"type": "object"}
+                "links": {"type": "object"},
+                "social_profiles": {"type": "object"},
+                "performance_hints": {"type": "object"},
+                "security_headers": {"type": "object"},
+                "accessibility": {"type": "object"}
             }
         }
     
