@@ -1583,6 +1583,11 @@ async def run_schedule_now(
         )
     )
     
+    # Update schedule statistics for manual runs
+    from services.scheduler_service import get_scheduler
+    scheduler = get_scheduler()
+    await scheduler._update_schedule_status(schedule_id, "success", run.id)
+    
     logger.info(f"✅ Manual run triggered for schedule {schedule_id}: {run.id}")
     
     return {"message": "Run triggered successfully", "run_id": run.id, "run": run}
