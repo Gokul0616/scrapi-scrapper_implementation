@@ -328,17 +328,17 @@ const Schedules = () => {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleRunNow(schedule.id)}
-                          className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
+                          className="text-black hover:text-gray-700 p-1 rounded hover:bg-gray-100 border border-gray-300"
                           title="Run now"
                         >
                           <Play size={16} />
                         </button>
                         <button
                           onClick={() => handleToggleSchedule(schedule.id, schedule.is_enabled)}
-                          className={`p-1 rounded ${
+                          className={`p-1 rounded border border-gray-300 ${
                             schedule.is_enabled 
-                              ? 'text-yellow-600 hover:text-yellow-900 hover:bg-yellow-50' 
-                              : 'text-green-600 hover:text-green-900 hover:bg-green-50'
+                              ? 'text-gray-600 hover:text-black hover:bg-gray-100' 
+                              : 'text-black hover:text-gray-700 hover:bg-gray-100'
                           }`}
                           title={schedule.is_enabled ? 'Pause' : 'Activate'}
                         >
@@ -349,14 +349,14 @@ const Schedules = () => {
                             setSelectedSchedule(schedule);
                             setShowEditModal(true);
                           }}
-                          className="text-gray-600 hover:text-gray-900 p-1 rounded hover:bg-gray-50"
+                          className="text-gray-600 hover:text-black p-1 rounded hover:bg-gray-100 border border-gray-300"
                           title="Edit"
                         >
                           <Edit size={16} />
                         </button>
                         <button
                           onClick={() => handleDeleteSchedule(schedule.id)}
-                          className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
+                          className="text-black hover:text-gray-700 p-1 rounded hover:bg-gray-200 border border-gray-400"
                           title="Delete"
                         >
                           <Trash2 size={16} />
