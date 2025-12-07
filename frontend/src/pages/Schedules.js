@@ -898,27 +898,36 @@ const ScheduleModal = ({ isEdit, schedule, actors, onClose, onSuccess }) => {
             </select>
           </div>
 
+          {/* Dynamic Input Fields Based on Actor Schema */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Input Data (JSON)
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Input Configuration
             </label>
-            <textarea
-              value={JSON.stringify(formData.input_data, null, 2)}
-              onChange={(e) => {
-                try {
-                  const parsed = JSON.parse(e.target.value);
-                  setFormData({ ...formData, input_data: parsed });
-                } catch (err) {
-                  // Invalid JSON, just update the text
-                }
-              }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
-              placeholder='{"search_terms": ["restaurants"], "location": "New York"}'
-              rows={4}
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Actor input parameters in JSON format
-            </p>
+            
+            {selectedActor && selectedActor.input_schema ? (
+              <div className="space-y-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                {Object.entries(selectedActor.input_schema).map(([key, schema]) => (
+                  <DynamicInputField
+                    key={key}
+                    fieldKey={key}
+                    schema={schema}
+                    value={formData.input_data[key]}
+                    onChange={(value) => {
+                      setFormData({
+                        ...formData,
+                        input_data: { ...formData.input_data, [key]: value }
+                      });
+                    }}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 text-center">
+                <p className="text-sm text-gray-600">
+                  {formData.actor_id ? 'Loading input fields...' : 'Select an actor to see input fields'}
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center">
