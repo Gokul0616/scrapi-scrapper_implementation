@@ -276,6 +276,18 @@ backend:
           agent: "main"
           comment: "Updated server to use new routes, startup event creates default Google Maps Scraper actor"
 
+  - task: "SEO Metadata Scraper - Protocol Fix"
+    implemented: true
+    working: true
+    file: "backend/scrapers/seo/seo_metadata_scraper.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "✅ PROTOCOL FIX IMPLEMENTED: User reported error 'Page.goto: Protocol error... navigating to x...'. Fixed backend scraper to automatically prepend 'https://' if protocol is missing in the URL. Added backend/test_seo_fix.py to verify the fix with 'xploanimation.com'. Test confirmed successful extraction with protocol auto-correction."
+
 frontend:
   - task: "Connect to Real Authentication API"
     implemented: true
