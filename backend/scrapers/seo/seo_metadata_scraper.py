@@ -24,7 +24,7 @@ class SEOMetadataScraper(BaseScraper):
     
     @classmethod
     def get_description(cls) -> str:
-        return "Extract comprehensive SEO metadata including meta tags, Open Graph, Twitter Cards, JSON-LD structured data, headings, and technical SEO elements"
+        return "Advanced SEO analyzer: Extract meta tags, Open Graph, Twitter Cards, JSON-LD, Schema.org microdata, social profiles, performance hints, security headers, accessibility info, and comprehensive link analysis with nofollow/sponsored/ugc detection"
     
     @classmethod
     def get_category(cls) -> str:
