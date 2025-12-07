@@ -5,6 +5,7 @@ from .run import Run, RunCreate, RunInput
 from .dataset import Dataset, DatasetItem
 from .proxy import Proxy, ProxyCreate
 from .chat import LeadChatMessage, LeadChatRequest, GlobalChatMessage, GlobalChatRequest
+from .schedule import Schedule, ScheduleCreate, ScheduleUpdate, ScheduleResponse
 
 __all__ = [
     # User models
@@ -18,5 +19,7 @@ __all__ = [
     # Proxy models
     'Proxy', 'ProxyCreate',
     # Chat models
-    'LeadChatMessage', 'LeadChatRequest', 'GlobalChatMessage', 'GlobalChatRequest'
+    'LeadChatMessage', 'LeadChatRequest', 'GlobalChatMessage', 'GlobalChatRequest',
+    # Schedule models
+    'Schedule', 'ScheduleCreate', 'ScheduleUpdate', 'ScheduleResponse'
 ]
