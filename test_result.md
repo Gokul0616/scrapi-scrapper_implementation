@@ -558,6 +558,18 @@ frontend:
           agent: "main"
           comment: "🔧 WEBSOCKET PROTOCOL FIX V2: User still seeing 'Mixed Content: attempted to connect to insecure WebSocket endpoint ws://...' error and blank preview. ROOT CAUSE: Environment variable WDS_SOCKET_PROTOCOL not being properly applied by webpack-dev-server. SOLUTION: Explicitly configured client.webSocketURL in craco.config.js devServer configuration with: protocol: 'wss' (secure), hostname: visual-crawler-2.preview.emergentagent.com, port: 443, pathname: '/ws'. This ensures webpack-dev-server client always uses wss:// protocol for WebSocket connections on HTTPS pages. Frontend restarted successfully (pid 1102) and compiled without errors. WebSocket configuration now hardcoded to use secure protocol - no more mixed content errors."
 
+  - task: "SEO Metadata Scraper - Frontend Integration"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/DatasetV2.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "✅ FRONTEND INTEGRATION COMPLETE: Updated DatasetV2.js to natively support SEO Metadata Scraper data. Features: (1) Added `isSeoScraper` detection logic. (2) Implemented `seoOrder` column sorting to prioritize key fields (url, title, meta, OG tags). (3) Added rich renderers for complex SEO objects: Open Graph (summary + hover detail), Headings (H1/H2/H3 counts), Images (stats + samples), Links (int/ext counts), JSON-LD (schema types), Icons (favicon preview). (4) Updated UI headers and banners to reflect SEO context. (5) PRESERVED existing logic for Google Maps and Amazon scrapers using conditional checks. All scraper types now display optimally in the same dataset view."
+
   - task: "SEO Metadata Scraper - Real World Validation"
     implemented: true
     working: true
