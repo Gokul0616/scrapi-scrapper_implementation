@@ -598,6 +598,11 @@ frontend:
           comment: "✅ COMPREHENSIVE SEO SCRAPER VALIDATION COMPLETE: Successfully executed all requested tests with EXCELLENT results. (1) REAL WORLD TEST SCRIPT: Ran 'python backend/test_seo_real.py' successfully - extracted rich metadata from Google (basic data + icons), GitHub (7 OG tags, 5 Twitter cards, 32 headings, 30 images, 149 links), Python.org (JSON-LD schema, 21 headings, 224 links). All core Apify-like fields present. (2) BACKEND API VERIFICATION: SEO Metadata Scraper actor properly registered with ID a5ce1260-9cf5-4956-bda0-675847ceca17, correct icon (🔍), category (SEO & Analytics), all required parameters (url, extract_headings, extract_images, extract_links) present. API endpoints fully functional at https://meta-extraction.preview.emergentagent.com/api. (3) DATA STRUCTURE VALIDATION: Comprehensive testing with NPM Registry and GitHub confirmed all expected schema fields present: Basic SEO (10/10 fields), Object fields (7/7 fields), Open Graph metadata, Twitter Cards, JSON-LD structured data, headings analysis, icons extraction, images/links analysis, technical SEO elements (robots.txt, sitemap.xml URLs). (4) PERFORMANCE: Both test runs completed successfully with proper status transitions (queued → running → succeeded). 100% success rate (3/3 tests passed). SEO scraper delivers Apify-quality rich metadata extraction and is production-ready."
 
   - task: "SEO Metadata Scraper - Comprehensive SEO Data Extraction"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "✅ PROTOCOL FIX IMPLEMENTED: User reported error 'Page.goto: Protocol error... navigating to x...'. Fixed backend scraper to automatically prepend 'https://' if protocol is missing in the URL. Added backend/test_seo_fix.py to verify the fix with 'xploanimation.com'. Test confirmed successful extraction with protocol auto-correction."
     implemented: true
     working: true
     file: "backend/scrapers/seo/seo_metadata_scraper.py, backend/server.py, backend/scrapers/scraper_registry.py"
