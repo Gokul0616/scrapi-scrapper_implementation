@@ -7,8 +7,8 @@ import asyncio
 import re
 import logging
 from typing import List, Dict, Any, Optional, Callable
-from base_scraper import BaseScraper
-from scraper_engine import ScraperEngine
+from ..base_scraper import BaseScraper
+from ..scraper_engine import ScraperEngine
 from playwright.async_api import Page, TimeoutError as PlaywrightTimeoutError
 from bs4 import BeautifulSoup
 import json
