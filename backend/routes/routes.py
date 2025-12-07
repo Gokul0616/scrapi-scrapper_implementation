@@ -1351,7 +1351,7 @@ async def get_schedule(
     current_user: dict = Depends(get_current_user)
 ):
     """Get a specific schedule by ID."""
-    schedule = await db.schedules.find_one({"id": schedule_id, "user_id": current_user['id']})
+    schedule = await db.schedules.find_one({"id": schedule_id, "user_id": current_user['id']}, {"_id": 0})
     
     if not schedule:
         raise HTTPException(status_code=404, detail="Schedule not found")
