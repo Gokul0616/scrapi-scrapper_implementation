@@ -952,6 +952,238 @@ const ScheduleModal = ({ isEdit, schedule, actors, onClose, onSuccess }) => {
           </div>
         </form>
       </div>
+
+      {/* Help Modal */}
+      {showHelp && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white p-6 border-b border-gray-200 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <Info className="text-blue-600" size={24} />
+                Scheduling Guide
+              </h2>
+              <button
+                onClick={() => setShowHelp(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Cron Expression Basics */}
+              <section>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Cron Expression Format</h3>
+                <div className="bg-gray-100 p-4 rounded-lg font-mono text-sm">
+                  <div className="grid grid-cols-5 gap-4 mb-2">
+                    <div className="text-center">
+                      <div className="font-bold text-blue-600">*</div>
+                      <div className="text-xs mt-1">Minute</div>
+                      <div className="text-xs text-gray-600">(0-59)</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-bold text-blue-600">*</div>
+                      <div className="text-xs mt-1">Hour</div>
+                      <div className="text-xs text-gray-600">(0-23)</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-bold text-blue-600">*</div>
+                      <div className="text-xs mt-1">Day</div>
+                      <div className="text-xs text-gray-600">(1-31)</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-bold text-blue-600">*</div>
+                      <div className="text-xs mt-1">Month</div>
+                      <div className="text-xs text-gray-600">(1-12)</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-bold text-blue-600">*</div>
+                      <div className="text-xs mt-1">Weekday</div>
+                      <div className="text-xs text-gray-600">(0-7)</div>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600 mt-2">
+                  Note: For weekday, 0 and 7 both represent Sunday
+                </p>
+              </section>
+
+              {/* Special Characters */}
+              <section>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Special Characters</h3>
+                <div className="space-y-2">
+                  <div className="flex gap-3 p-3 bg-gray-50 rounded-lg">
+                    <code className="font-mono font-bold text-blue-600 text-lg">*</code>
+                    <div className="flex-1">
+                      <div className="font-medium">Any value</div>
+                      <div className="text-sm text-gray-600">Matches all possible values for that field</div>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 p-3 bg-gray-50 rounded-lg">
+                    <code className="font-mono font-bold text-blue-600 text-lg">,</code>
+                    <div className="flex-1">
+                      <div className="font-medium">Value list separator</div>
+                      <div className="text-sm text-gray-600">Example: "1,15" in hour = 1 AM and 3 PM</div>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 p-3 bg-gray-50 rounded-lg">
+                    <code className="font-mono font-bold text-blue-600 text-lg">-</code>
+                    <div className="flex-1">
+                      <div className="font-medium">Range of values</div>
+                      <div className="text-sm text-gray-600">Example: "1-5" in weekday = Monday to Friday</div>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 p-3 bg-gray-50 rounded-lg">
+                    <code className="font-mono font-bold text-blue-600 text-lg">/</code>
+                    <div className="flex-1">
+                      <div className="font-medium">Step values</div>
+                      <div className="text-sm text-gray-600">Example: "*/15" in minute = every 15 minutes</div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Common Examples */}
+              <section>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Common Examples</h3>
+                <div className="space-y-3">
+                  <div className="border-l-4 border-blue-500 pl-4 py-2">
+                    <code className="font-mono text-blue-600 font-semibold">* * * * *</code>
+                    <p className="text-sm text-gray-700 mt-1">Every minute</p>
+                  </div>
+                  <div className="border-l-4 border-green-500 pl-4 py-2">
+                    <code className="font-mono text-green-600 font-semibold">*/5 * * * *</code>
+                    <p className="text-sm text-gray-700 mt-1">Every 5 minutes</p>
+                  </div>
+                  <div className="border-l-4 border-purple-500 pl-4 py-2">
+                    <code className="font-mono text-purple-600 font-semibold">0 * * * *</code>
+                    <p className="text-sm text-gray-700 mt-1">Every hour (at minute 0)</p>
+                  </div>
+                  <div className="border-l-4 border-orange-500 pl-4 py-2">
+                    <code className="font-mono text-orange-600 font-semibold">0 */6 * * *</code>
+                    <p className="text-sm text-gray-700 mt-1">Every 6 hours</p>
+                  </div>
+                  <div className="border-l-4 border-red-500 pl-4 py-2">
+                    <code className="font-mono text-red-600 font-semibold">0 0 * * *</code>
+                    <p className="text-sm text-gray-700 mt-1">Daily at midnight (00:00)</p>
+                  </div>
+                  <div className="border-l-4 border-indigo-500 pl-4 py-2">
+                    <code className="font-mono text-indigo-600 font-semibold">0 9 * * *</code>
+                    <p className="text-sm text-gray-700 mt-1">Daily at 9:00 AM</p>
+                  </div>
+                  <div className="border-l-4 border-pink-500 pl-4 py-2">
+                    <code className="font-mono text-pink-600 font-semibold">0 9 * * 1-5</code>
+                    <p className="text-sm text-gray-700 mt-1">Weekdays at 9:00 AM (Monday to Friday)</p>
+                  </div>
+                  <div className="border-l-4 border-teal-500 pl-4 py-2">
+                    <code className="font-mono text-teal-600 font-semibold">0 0 * * 0</code>
+                    <p className="text-sm text-gray-700 mt-1">Every Sunday at midnight</p>
+                  </div>
+                  <div className="border-l-4 border-yellow-500 pl-4 py-2">
+                    <code className="font-mono text-yellow-600 font-semibold">0 0 1 * *</code>
+                    <p className="text-sm text-gray-700 mt-1">First day of every month at midnight</p>
+                  </div>
+                  <div className="border-l-4 border-cyan-500 pl-4 py-2">
+                    <code className="font-mono text-cyan-600 font-semibold">0 12 1 */3 *</code>
+                    <p className="text-sm text-gray-700 mt-1">Every 3 months on the 1st at noon</p>
+                  </div>
+                  <div className="border-l-4 border-gray-500 pl-4 py-2">
+                    <code className="font-mono text-gray-600 font-semibold">30 2 * * 6,0</code>
+                    <p className="text-sm text-gray-700 mt-1">Weekends (Saturday & Sunday) at 2:30 AM</p>
+                  </div>
+                </div>
+              </section>
+
+              {/* Advanced Examples */}
+              <section>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Advanced Examples</h3>
+                <div className="space-y-3">
+                  <div className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg">
+                    <code className="font-mono text-blue-700 font-semibold">0 9,12,15,18 * * *</code>
+                    <p className="text-sm text-gray-700 mt-1">Four times daily: 9 AM, 12 PM, 3 PM, 6 PM</p>
+                  </div>
+                  <div className="p-4 bg-gradient-to-r from-green-50 to-green-100 rounded-lg">
+                    <code className="font-mono text-green-700 font-semibold">0 8-17 * * 1-5</code>
+                    <p className="text-sm text-gray-700 mt-1">Every hour from 8 AM to 5 PM, Monday through Friday</p>
+                  </div>
+                  <div className="p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg">
+                    <code className="font-mono text-purple-700 font-semibold">*/30 9-17 * * 1-5</code>
+                    <p className="text-sm text-gray-700 mt-1">Every 30 minutes during business hours (9 AM - 5 PM), weekdays</p>
+                  </div>
+                  <div className="p-4 bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg">
+                    <code className="font-mono text-orange-700 font-semibold">0 0 1,15 * *</code>
+                    <p className="text-sm text-gray-700 mt-1">Twice a month: 1st and 15th at midnight</p>
+                  </div>
+                </div>
+              </section>
+
+              {/* Tips and Best Practices */}
+              <section>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Tips & Best Practices</h3>
+                <div className="space-y-2">
+                  <div className="flex gap-2 p-3 bg-blue-50 rounded-lg">
+                    <CheckCircle className="text-blue-600 flex-shrink-0" size={20} />
+                    <p className="text-sm text-gray-700">
+                      <strong>Test your schedule:</strong> Use the frequency presets or verify your cron expression online at crontab.guru
+                    </p>
+                  </div>
+                  <div className="flex gap-2 p-3 bg-green-50 rounded-lg">
+                    <CheckCircle className="text-green-600 flex-shrink-0" size={20} />
+                    <p className="text-sm text-gray-700">
+                      <strong>Consider timezone:</strong> All times are based on the timezone you select. Default is UTC
+                    </p>
+                  </div>
+                  <div className="flex gap-2 p-3 bg-purple-50 rounded-lg">
+                    <CheckCircle className="text-purple-600 flex-shrink-0" size={20} />
+                    <p className="text-sm text-gray-700">
+                      <strong>Avoid overlapping:</strong> Make sure your actor can complete before the next scheduled run
+                    </p>
+                  </div>
+                  <div className="flex gap-2 p-3 bg-amber-50 rounded-lg">
+                    <AlertCircle className="text-amber-600 flex-shrink-0" size={20} />
+                    <p className="text-sm text-gray-700">
+                      <strong>Monitor usage:</strong> Frequent schedules consume more resources. Balance frequency with your needs
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              {/* External Resources */}
+              <section>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Need More Help?</h3>
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-700 mb-2">
+                    Use these online tools to help build and test your cron expressions:
+                  </p>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                      <a href="https://crontab.guru" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                        crontab.guru - Quick and simple cron editor
+                      </a>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                      <a href="https://crontab-generator.org" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                        crontab-generator.org - Visual cron generator
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </section>
+
+              <div className="flex justify-end pt-4">
+                <button
+                  onClick={() => setShowHelp(false)}
+                  className="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
+                >
+                  Got it!
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
