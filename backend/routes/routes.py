@@ -1410,7 +1410,7 @@ async def update_schedule(
         )
         
         # Get updated schedule
-        updated_schedule = await db.schedules.find_one({"id": schedule_id})
+        updated_schedule = await db.schedules.find_one({"id": schedule_id}, {"_id": 0})
         
         # Update scheduler if enabled status changed or cron/timezone changed
         scheduler = get_scheduler()
