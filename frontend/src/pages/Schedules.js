@@ -518,15 +518,19 @@ const ScheduleModal = ({ isEdit, schedule, actors, onClose, onSuccess }) => {
             <select
               value={formData.actor_id}
               onChange={(e) => setFormData({ ...formData, actor_id: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
               required
             >
               <option value="">Select an actor</option>
-              {actors.map(actor => (
-                <option key={actor.id} value={actor.id}>
-                  {actor.icon} {actor.name}
-                </option>
-              ))}
+              {actors && actors.length > 0 ? (
+                actors.map(actor => (
+                  <option key={actor.id} value={actor.id}>
+                    {actor.icon} {actor.name}
+                  </option>
+                ))
+              ) : (
+                <option value="" disabled>Loading actors...</option>
+              )}
             </select>
           </div>
 
