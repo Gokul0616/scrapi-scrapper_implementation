@@ -1,5 +1,5 @@
 
-  - task: "Install Dependencies & Run Backend"
+  - task: "Install Playwright Chromium"
     implemented: true
     working: true
     file: "backend/requirements.txt"
@@ -9,4 +9,4 @@
     status_history:
         - working: true
           agent: "main"
-          comment: "Installed backend dependencies from requirements.txt and restarted backend service. Verified service is running."
+          comment: "Successfully installed Playwright Chromium browser binary and FFMPEG. Restarted backend to ensure availability."
