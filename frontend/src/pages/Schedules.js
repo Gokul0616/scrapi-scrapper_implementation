@@ -463,7 +463,7 @@ const Schedules = () => {
 
       {/* Schedules List */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        {schedules.length === 0 ? (
+        {filteredSchedules.length === 0 ? (
           <div className="p-12 text-center">
             <Clock className="mx-auto text-gray-400 mb-4" size={64} />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No schedules yet</h3>
