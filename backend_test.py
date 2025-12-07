@@ -41,10 +41,10 @@ class SEOScraperTester:
         """Setup HTTP session and authenticate"""
         self.session = aiohttp.ClientSession()
         
-        # Test authentication with existing user
+        # Test authentication with provided credentials
         auth_data = {
-            "username": "testuser_scrapi",
-            "password": "testpass123"
+            "username": "test@gmail.com",
+            "password": "test123"
         }
         
         try:
