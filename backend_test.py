@@ -396,18 +396,11 @@ class SEOScraperTester:
         # Test URLs - well-structured sites with rich metadata
         test_urls = [
             {
-                'url': 'https://www.npmjs.com',
-                'name': 'NPM Registry',
+                'url': 'https://xploanimation.com/',
+                'name': 'XploAnimation',
                 'extract_headings': True,
                 'extract_images': True,
-                'extract_links': False
-            },
-            {
-                'url': 'https://github.com',
-                'name': 'GitHub',
-                'extract_headings': True,
-                'extract_images': True,
-                'extract_links': True  # Test link extraction
+                'extract_links': True  # Test all features for comprehensive analysis
             }
         ]
         
