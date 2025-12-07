@@ -302,8 +302,8 @@ const Schedules = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         schedule.is_enabled 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-gray-100 text-gray-800'
+                          ? 'bg-black text-white' 
+                          : 'bg-gray-200 text-gray-800'
                       }`}>
                         {schedule.is_enabled ? <CheckCircle size={12} /> : <Pause size={12} />}
                         {schedule.is_enabled ? 'Active' : 'Paused'}
@@ -312,8 +312,8 @@ const Schedules = () => {
                         <div className="mt-1">
                           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs ${
                             schedule.last_status === 'success' 
-                              ? 'bg-green-50 text-green-700' 
-                              : 'bg-red-50 text-red-700'
+                              ? 'bg-gray-800 text-white' 
+                              : 'bg-gray-300 text-black'
                           }`}>
                             {schedule.last_status === 'success' ? <CheckCircle size={10} /> : <XCircle size={10} />}
                             Last: {schedule.last_status}
