@@ -475,9 +475,33 @@ class SEOScraperTester:
             if isinstance(items, dict) and 'items' in items:
                 data_items = items['items']
                 if isinstance(data_items, list) and len(data_items) > 0:
-                    item = data_items[0]
-                    print(f"   Extracted item keys: {list(item.keys()) if isinstance(item, dict) else 'N/A'}")
-                    print(f"   Sample item data: {str(item)[:200]}...")
+                    dataset_item = data_items[0]
+                    print(f"   Dataset item keys: {list(dataset_item.keys()) if isinstance(dataset_item, dict) else 'N/A'}")
+                    
+                    # The actual scraped data is in the 'data' field
+                    if 'data' in dataset_item:
+                        item = dataset_item['data']
+                        print(f"   Scraped data keys: {list(item.keys()) if isinstance(item, dict) else 'N/A'}")
+                        
+                        # Check for errors in the scraped data
+                        if 'error' in item:
+                            print(f"   ❌ Scraping error found: {item['error']}")
+                            self.test_results.append({
+                                'test': f"SEO Scraper - {test_config['name']}",
+                                'status': 'FAIL',
+                                'details': f"Scraping error: {item['error']}"
+                            })
+                            all_tests_passed = False
+                            continue
+                    else:
+                        print(f"❌ No 'data' field in dataset item")
+                        self.test_results.append({
+                            'test': f"SEO Scraper - {test_config['name']}",
+                            'status': 'FAIL',
+                            'details': 'No data field in dataset item'
+                        })
+                        all_tests_passed = False
+                        continue
                 else:
                     print(f"❌ No items in dataset")
                     self.test_results.append({
