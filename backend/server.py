@@ -224,6 +224,98 @@ Includes: ASIN, title, price, original price, discount %, rating, review count, 
     except Exception as e:
         logger.error(f"❌ Error creating Amazon actor: {e}", exc_info=True)
     
+    try:
+        # Check if SEO Metadata Scraper exists
+        existing_seo = await db.actors.find_one({"name": "SEO Metadata Scraper"})
+        logger.info(f"SEO Metadata Scraper actor exists: {existing_seo is not None}")
+        
+        if not existing_seo:
+            from datetime import datetime, timezone
+            actor = Actor(
+                user_id="system",
+                name="SEO Metadata Scraper",
+                description="Extract comprehensive SEO metadata including meta tags, Open Graph, Twitter Cards, JSON-LD structured data, headings, and technical SEO elements from any website",
+                icon="🔍",
+                category="SEO & Analytics",
+                type="prebuilt",
+                is_public=True,
+                status="published",
+                visibility="public",
+                tags=["seo", "metadata", "open-graph", "twitter-cards", "json-ld", "structured-data", "analytics"],
+                author_name="Scrapi",
+                author_id="system",
+                is_verified=True,
+                is_featured=True,
+                readme="""# SEO Metadata Scraper
+
+Extract comprehensive SEO metadata from websites for audits, analysis, and optimization.
+
+## Features
+- 📄 **Basic SEO Tags**: Title, meta description, keywords, canonical URL, robots directives
+- 🌐 **Open Graph Tags**: Complete OG metadata for social sharing (title, description, image, type, etc.)
+- 🐦 **Twitter Cards**: Full Twitter Card metadata (card type, title, description, image, creator)
+- 📊 **JSON-LD Structured Data**: All schema.org structured data (Article, Product, FAQ, Organization, etc.)
+- 🎯 **Headings**: Extract all H1-H6 tags for content structure analysis
+- 🖼️ **Icons**: Favicon, Apple touch icons, and all icon formats
+- 🌍 **Hreflang Tags**: Multi-language and regional targeting tags
+- 🔗 **Technical SEO**: Charset, viewport, language, robots.txt, sitemap.xml URLs
+- 📸 **Image Metadata**: Image count, alt text statistics, sample images
+- 🔗 **Link Analysis**: Internal/external link counts and samples (optional)
+
+## Use Cases
+- SEO audits and website analysis
+- Competitor SEO research
+- Meta tag optimization verification
+- Social media preview testing
+- Structured data validation
+- Technical SEO health checks
+- Content strategy analysis
+
+## Output Fields
+Extracts: URL, status code, title, meta description, meta keywords, canonical URL, robots directives, viewport, charset, language, Open Graph metadata, Twitter Card metadata, JSON-LD structured data, all heading tags (H1-H6), icons (favicon, apple-touch-icon), hreflang tags, robots.txt URL, sitemap.xml URL, image statistics, link analysis, and additional meta tags (author, publisher, theme-color, generator).""",
+                input_schema={
+                    "type": "object",
+                    "required": ["url"],
+                    "properties": {
+                        "url": {
+                            "type": "string",
+                            "title": "Target URL",
+                            "description": "Enter the website URL to analyze (must include http:// or https://)",
+                            "editor": "textfield",
+                            "example": "https://example.com"
+                        },
+                        "extract_headings": {
+                            "type": "boolean",
+                            "title": "Extract Headings (H1-H6)",
+                            "description": "Extract all heading tags for content structure analysis",
+                            "editor": "checkbox",
+                            "default": True
+                        },
+                        "extract_images": {
+                            "type": "boolean",
+                            "title": "Extract Image Metadata",
+                            "description": "Extract image statistics and alt text analysis",
+                            "editor": "checkbox",
+                            "default": True
+                        },
+                        "extract_links": {
+                            "type": "boolean",
+                            "title": "Extract Links",
+                            "description": "Analyze internal and external links (adds processing time)",
+                            "editor": "checkbox",
+                            "default": False
+                        }
+                    }
+                }
+            )
+            doc = actor.model_dump()
+            doc['created_at'] = doc['created_at'].isoformat()
+            doc['updated_at'] = doc['updated_at'].isoformat()
+            await db.actors.insert_one(doc)
+            logger.info("✅ Created SEO Metadata Scraper actor")
+    except Exception as e:
+        logger.error(f"❌ Error creating SEO Metadata Scraper actor: {e}", exc_info=True)
+    
     logger.info("🎉 Actor initialization complete")
 
 @app.on_event("shutdown")
