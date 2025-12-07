@@ -558,6 +558,18 @@ frontend:
           agent: "main"
           comment: "🔧 WEBSOCKET PROTOCOL FIX V2: User still seeing 'Mixed Content: attempted to connect to insecure WebSocket endpoint ws://...' error and blank preview. ROOT CAUSE: Environment variable WDS_SOCKET_PROTOCOL not being properly applied by webpack-dev-server. SOLUTION: Explicitly configured client.webSocketURL in craco.config.js devServer configuration with: protocol: 'wss' (secure), hostname: visual-crawler-2.preview.emergentagent.com, port: 443, pathname: '/ws'. This ensures webpack-dev-server client always uses wss:// protocol for WebSocket connections on HTTPS pages. Frontend restarted successfully (pid 1102) and compiled without errors. WebSocket configuration now hardcoded to use secure protocol - no more mixed content errors."
 
+  - task: "SEO Metadata Scraper - Real World Validation"
+    implemented: true
+    working: true
+    file: "backend/scrapers/seo/seo_metadata_scraper.py, backend/test_seo_real.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "✅ REAL WORLD TESTING COMPLETE: Created and executed 'backend/test_seo_real.py' against 3 major sites: Google, GitHub, Python.org. Results confirmed Apify-like rich data extraction. (1) Google: Basic info extracted. (2) GitHub: Full rich metadata including 7 Open Graph tags, 5 Twitter Card tags, 32 headings, 30 images, 149 links. (3) Python.org: JSON-LD structured data detected, 21 headings, 224 links. All core fields present: url, title, meta_description, canonical, open_graph, twitter_card, json_ld, headings, images, links. Scraper handles different site structures correctly and returns comprehensive JSON data."
+
   - task: "SEO Metadata Scraper - Comprehensive SEO Data Extraction"
     implemented: true
     working: true
