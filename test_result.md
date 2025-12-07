@@ -564,7 +564,7 @@ frontend:
     file: "backend/scrapers/seo/seo_metadata_scraper.py, backend/test_seo_real.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: true
           agent: "main"
