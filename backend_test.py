@@ -168,7 +168,7 @@ class SEOScraperTester:
         """Create a SEO scraping run"""
         run_data = {
             "actor_id": actor_id,
-            "input": {
+            "input_data": {
                 "url": url,
                 "extract_headings": extract_headings,
                 "extract_images": extract_images,
