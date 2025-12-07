@@ -317,7 +317,28 @@ Extracts: URL, status code, title, meta description, meta keywords, canonical UR
         logger.error(f"❌ Error creating SEO Metadata Scraper actor: {e}", exc_info=True)
     
     logger.info("🎉 Actor initialization complete")
+    
+    # Initialize scheduler service
+    try:
+        logger.info("🔧 Initializing scheduler service...")
+        from services.scheduler_service import init_scheduler
+        await init_scheduler(db)
+        logger.info("✅ Scheduler service initialized successfully")
+    except Exception as e:
+        logger.error(f"❌ Failed to initialize scheduler: {str(e)}", exc_info=True)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
+    """Cleanup on shutdown."""
+    try:
+        # Stop scheduler
+        from services.scheduler_service import get_scheduler
+        scheduler = get_scheduler()
+        await scheduler.stop()
+        logger.info("✅ Scheduler stopped")
+    except Exception as e:
+        logger.warning(f"Failed to stop scheduler: {str(e)}")
+    
+    # Close MongoDB client
     client.close()
+    logger.info("✅ MongoDB connection closed")
