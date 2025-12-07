@@ -179,49 +179,49 @@ const Schedules = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-300">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Schedules</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{schedules.length}</p>
+              <p className="text-2xl font-bold text-black mt-1">{schedules.length}</p>
             </div>
-            <Calendar className="text-blue-600" size={32} />
+            <Calendar className="text-black" size={32} />
           </div>
         </div>
         
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-300">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Active</p>
-              <p className="text-2xl font-bold text-green-600 mt-1">
+              <p className="text-2xl font-bold text-black mt-1">
                 {schedules.filter(s => s.is_enabled).length}
               </p>
             </div>
-            <Activity className="text-green-600" size={32} />
+            <Activity className="text-black" size={32} />
           </div>
         </div>
         
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-300">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Paused</p>
-              <p className="text-2xl font-bold text-gray-600 mt-1">
+              <p className="text-2xl font-bold text-gray-700 mt-1">
                 {schedules.filter(s => !s.is_enabled).length}
               </p>
             </div>
-            <Pause className="text-gray-600" size={32} />
+            <Pause className="text-gray-700" size={32} />
           </div>
         </div>
         
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-300">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Runs</p>
-              <p className="text-2xl font-bold text-purple-600 mt-1">
+              <p className="text-2xl font-bold text-black mt-1">
                 {schedules.reduce((sum, s) => sum + (s.run_count || 0), 0)}
               </p>
             </div>
-            <Play className="text-purple-600" size={32} />
+            <Play className="text-black" size={32} />
           </div>
         </div>
       </div>
