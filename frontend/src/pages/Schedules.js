@@ -596,6 +596,13 @@ const Schedules = () => {
                           {schedule.is_enabled ? <Pause size={16} /> : <Play size={16} />}
                         </button>
                         <button
+                          onClick={() => handleCloneSchedule(schedule)}
+                          className="text-gray-600 hover:text-black p-1 rounded hover:bg-gray-100 border border-gray-300"
+                          title="Clone"
+                        >
+                          <Copy size={16} />
+                        </button>
+                        <button
                           onClick={() => {
                             setSelectedSchedule(schedule);
                             setShowEditModal(true);
