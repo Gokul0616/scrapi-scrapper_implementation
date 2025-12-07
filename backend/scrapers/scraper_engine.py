@@ -4,6 +4,13 @@ from typing import Optional, Dict, Any, List
 import logging
 import random
 
+# Try to import playwright_stealth, logging warning if not available
+try:
+    from playwright_stealth import stealth_async
+    HAS_STEALTH = True
+except ImportError:
+    HAS_STEALTH = False
+
 logger = logging.getLogger(__name__)
 
 class ScraperEngine:
@@ -39,7 +46,7 @@ class ScraperEngine:
                 '--start-maximized',
             ]
         )
-        logger.info("Scraper engine initialized with enhanced anti-detection")
+        logger.info(f"Scraper engine initialized with enhanced anti-detection (Stealth: {HAS_STEALTH})")
     
     async def create_context(self, use_proxy: bool = True, ultra_fast: bool = False) -> BrowserContext:
         """Create a new browser context with optional proxy and resource blocking for ultra-fast mode."""
@@ -80,7 +87,14 @@ class ScraperEngine:
             logger.info("🚀 Ultra-fast mode: Enabling resource blocking for 3-5x speed boost")
             await context.route("**/*", lambda route: self._handle_ultra_fast_route(route))
         
-        # Add anti-detection scripts
+        # Apply playwright-stealth if available
+        if HAS_STEALTH:
+            # We need to apply stealth to every page created in this context
+            # We can't apply it to context directly easily, usually applied to page
+            # But we can add init scripts that mimic stealth
+            pass
+            
+        # Add manual anti-detection scripts (always good as backup or if stealth fails)
         await context.add_init_script("""
             Object.defineProperty(navigator, 'webdriver', {
                 get: () => undefined
@@ -144,6 +158,10 @@ class ScraperEngine:
             context = await self.create_context()
         
         page = await context.new_page()
+        
+        # Apply playwright-stealth to the page
+        if HAS_STEALTH:
+            await stealth_async(page)
         
         # Set extra headers to avoid detection
         await page.set_extra_http_headers({
