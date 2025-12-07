@@ -297,6 +297,10 @@ class AmazonProductScraper(BaseScraper):
                         f"⚠️ No more products found at page {current_page}. Total found: {len(asins)}",
                         progress_callback
                     )
+                    # Dump debug info
+                    with open(f"amazon_debug_page_{current_page}.html", "w") as f:
+                        f.write(content)
+                    logger.info(f"Dumped HTML to amazon_debug_page_{current_page}.html")
                     break
                 
                 # Move to next page if we haven't reached max_results yet
