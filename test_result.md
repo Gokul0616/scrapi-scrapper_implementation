@@ -202,3 +202,14 @@ test_plan:
 agent_communication:
     - agent: "testing"
       message: "Starting comprehensive scheduler system testing. Will test all backend APIs and scheduler service functionality."
+    - agent: "main"
+      message: "Comprehensive scheduler system testing completed using curl. All 18 tests passed successfully (100% success rate)."
+      test_details:
+        - "Tested authentication and authorization"
+        - "Tested all CRUD operations on schedules"
+        - "Tested cron expression validation"
+        - "Tested enable/disable functionality"
+        - "Tested manual schedule execution"
+        - "Tested automatic scheduler execution (cron-based)"
+        - "Tested error handling (404, 403, 422)"
+        - "Verified scheduler service is working correctly"
