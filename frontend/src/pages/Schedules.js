@@ -333,7 +333,7 @@ const Schedules = () => {
   return (
     <div className="p-8">
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Schedules</h1>
           <p className="text-gray-600 mt-1">Automate your scraping tasks with cron-based schedules</p>
@@ -346,6 +346,71 @@ const Schedules = () => {
           Create Schedule
         </button>
       </div>
+
+      {/* Search and Filter Bar */}
+      <div className="flex gap-4 mb-6">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <input
+            type="text"
+            placeholder="Search schedules by name, actor, or description..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <Filter className="text-gray-600" size={20} />
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+          >
+            <option value="all">All Schedules</option>
+            <option value="active">Active Only</option>
+            <option value="paused">Paused Only</option>
+          </select>
+          <button
+            onClick={handleExportSchedules}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+            title="Export schedules"
+          >
+            <Download size={20} />
+            Export
+          </button>
+        </div>
+      </div>
+
+      {/* Bulk Actions Bar */}
+      {selectedSchedules.length > 0 && (
+        <div className="bg-gray-100 border border-gray-300 rounded-lg p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-900">
+              {selectedSchedules.length} schedule(s) selected
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleBulkToggle(true)}
+                className="px-3 py-1.5 text-sm bg-black text-white rounded hover:bg-gray-800 transition-colors"
+              >
+                Enable All
+              </button>
+              <button
+                onClick={() => handleBulkToggle(false)}
+                className="px-3 py-1.5 text-sm bg-gray-700 text-white rounded hover:bg-gray-800 transition-colors"
+              >
+                Disable All
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                className="px-3 py-1.5 text-sm bg-white border border-gray-400 rounded hover:bg-gray-200 transition-colors"
+              >
+                Delete Selected
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
