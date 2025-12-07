@@ -92,7 +92,7 @@ class ScraperRegistry:
         
         # Create temporary instance to get schemas
         try:
-            from scraper_engine import ScraperEngine
+            from .scraper_engine import ScraperEngine
             temp_engine = ScraperEngine()
             temp_scraper = scraper_class(temp_engine)
             
