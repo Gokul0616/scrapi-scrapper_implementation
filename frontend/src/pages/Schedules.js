@@ -689,7 +689,20 @@ const ScheduleModal = ({ isEdit, schedule, actors, onClose, onSuccess }) => {
     is_enabled: schedule?.is_enabled ?? true
   });
   const [loading, setLoading] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const [selectedActor, setSelectedActor] = useState(null);
   const { toast } = useToast();
+
+  // Update selected actor when actor_id changes
+  useEffect(() => {
+    if (formData.actor_id && actors.length > 0) {
+      const actor = actors.find(a => a.id === formData.actor_id);
+      setSelectedActor(actor);
+      console.log('Selected actor:', actor); // Debug log
+    } else {
+      setSelectedActor(null);
+    }
+  }, [formData.actor_id, actors]);
 
   const cronPresets = [
     { label: 'Every hour', value: '0 * * * *' },
