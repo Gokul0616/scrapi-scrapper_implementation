@@ -986,7 +986,7 @@ const DatasetV2 = () => {
 
   // Get filtered columns based on active tab
   const getVisibleColumnsByTab = () => {
-    if (isAmazonScraper()) return allColumns;
+    if (isAmazonScraper() || isSeoScraper()) return allColumns;
     
     switch(activeTab) {
       case 'contact':
@@ -1010,6 +1010,34 @@ const DatasetV2 = () => {
   // Define standard column order for Google Maps data
   const getOrderedColumns = () => {
     if (isAmazonScraper()) return allColumns;
+    
+    if (isSeoScraper()) {
+      const seoOrder = [
+        'url', 'title', 'meta_description', 'status_code', 'icons', 
+        'open_graph', 'twitter_card', 'json_ld', 'headings', 'images', 'links',
+        'meta_keywords', 'canonical', 'meta_robots', 'viewport', 'charset', 'language',
+        'robots_txt', 'sitemap_xml'
+      ];
+      
+      const visibleCols = getVisibleColumnsByTab();
+      const ordered = [];
+      
+      // Add columns in SEO order
+      seoOrder.forEach(col => {
+        if (allColumns.includes(col) && visibleCols.includes(col)) {
+          ordered.push(col);
+        }
+      });
+      
+      // Add remaining
+      allColumns.forEach(col => {
+        if (!ordered.includes(col) && visibleCols.includes(col)) {
+          ordered.push(col);
+        }
+      });
+      
+      return ordered;
+    }
     
     const standardOrder = [
       'title',
