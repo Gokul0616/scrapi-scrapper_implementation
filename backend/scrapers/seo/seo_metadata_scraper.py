@@ -115,7 +115,7 @@ class SEOMetadataScraper(BaseScraper):
             await self._log_progress(f"🔍 Starting SEO metadata extraction for: {url}", progress_callback)
             
             # Get a browser page from the engine
-            page = await self.engine.get_page()
+            page = await self.engine.new_page()
             
             # Navigate to the URL
             await self._log_progress(f"📡 Loading page: {url}", progress_callback)
