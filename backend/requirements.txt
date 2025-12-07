@@ -44,3 +44,6 @@ jinja2
 distro==1.9.0
 markupsafe==3.0.3
 setuptools
+apscheduler>=3.10.4
+croniter>=2.0.1
+pytz>=2024.1
