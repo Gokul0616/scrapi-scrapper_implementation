@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { 
   Clock, Plus, Play, Pause, Trash2, Edit, Calendar, 
-  Activity, CheckCircle, XCircle, AlertCircle, Copy, Download, Filter, Search
+  Activity, CheckCircle, XCircle, AlertCircle, Copy, Download, Filter, Search, HelpCircle, X, Info
 } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 
