@@ -471,7 +471,22 @@ class SEOScraperTester:
                 continue
             
             # Verify data structure
-            item = items[0]  # Should have one item per URL
+            print(f"   Dataset items structure: {type(items)}")
+            if isinstance(items, list) and len(items) > 0:
+                item = items[0]
+            elif isinstance(items, dict) and len(items) > 0:
+                # If items is a dict, get the first value
+                item = list(items.values())[0]
+            else:
+                print(f"❌ Unexpected dataset structure: {items}")
+                self.test_results.append({
+                    'test': f"SEO Scraper - {test_config['name']}",
+                    'status': 'FAIL',
+                    'details': f'Unexpected dataset structure: {type(items)}'
+                })
+                all_tests_passed = False
+                continue
+            
             is_valid, issues = self.verify_seo_data_structure(item, test_config['url'])
             
             if is_valid:
