@@ -106,6 +106,11 @@ class SEOMetadataScraper(BaseScraper):
         Main scraping method
         """
         url = config.get('url')
+        
+        # Ensure URL has protocol
+        if url and not url.startswith(('http://', 'https://')):
+            url = 'https://' + url.strip()
+            
         extract_headings = config.get('extract_headings', True)
         extract_images = config.get('extract_images', True)
         extract_links = config.get('extract_links', False)
