@@ -240,16 +240,30 @@ class AmazonProductScraper(BaseScraper):
                 )
                 
                 await page.goto(search_url, wait_until="domcontentloaded", timeout=30000)
-                await asyncio.sleep(2)
+                await asyncio.sleep(5)  # Increased wait time for Amazon
+                
+                # Check for CAPTCHA
+                content = await page.content()
+                if "api-services-support@amazon.com" in content or "Enter the characters you see below" in content:
+                    logger.warning(f"⚠️ CAPTCHA DETECTED on page {current_page}!")
+                    # Try to refresh once
+                    await page.reload()
+                    await asyncio.sleep(5)
+                    content = await page.content()
                 
                 # Scroll to load products
-                for _ in range(3):
+                for _ in range(5):  # Increased scrolling
                     await page.evaluate("window.scrollBy(0, window.innerHeight)")
                     await asyncio.sleep(0.5)
                 
                 # Extract product ASINs from search results
                 content = await page.content()
                 soup = BeautifulSoup(content, 'html.parser')
+                
+                # Debug logging
+                title = soup.title.string if soup.title else "No Title"
+                logger.info(f"Page Title: {title}")
+                logger.info(f"Page Content Length: {len(content)}")
                 
                 # Find product containers
                 product_divs = soup.find_all('div', {'data-asin': True})
