@@ -256,9 +256,9 @@ echo "Disabling schedule..."
 DISABLE_RESPONSE=$(curl -s -X POST "${API_URL}/schedules/${SCHEDULE_ID}/disable" \
     -H "Authorization: Bearer $TOKEN")
 
-ENABLED_STATUS=$(echo "$DISABLE_RESPONSE" | jq -r '.enabled')
+MESSAGE=$(echo "$DISABLE_RESPONSE" | jq -r '.message')
 
-if [ "$ENABLED_STATUS" == "false" ]; then
+if [ "$MESSAGE" == "Schedule disabled successfully" ] || [ "$MESSAGE" == "Schedule already disabled" ]; then
     print_test 0 "Successfully disabled schedule"
 else
     print_test 1 "Failed to disable schedule"
