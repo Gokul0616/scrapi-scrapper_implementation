@@ -677,6 +677,159 @@ const Schedules = () => {
   );
 };
 
+// Dynamic Input Field Component
+const DynamicInputField = ({ fieldKey, schema, value, onChange }) => {
+  const [arrayInput, setArrayInput] = useState('');
+  
+  // Get field properties
+  const fieldType = schema.type || 'string';
+  const fieldTitle = schema.title || schema.description || fieldKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  const fieldDescription = schema.description || '';
+  const isRequired = schema.required || false;
+  const defaultValue = schema.default;
+  const placeholder = schema.example ? JSON.stringify(schema.example) : '';
+
+  // Handle array type (like search_terms)
+  if (fieldType === 'array') {
+    const currentArray = Array.isArray(value) ? value : [];
+    
+    return (
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          {fieldTitle} {isRequired && <span className="text-red-500">*</span>}
+        </label>
+        {fieldDescription && (
+          <p className="text-xs text-gray-500 mb-2">{fieldDescription}</p>
+        )}
+        <div className="space-y-2">
+          {currentArray.map((item, index) => (
+            <div key={index} className="flex gap-2">
+              <input
+                type="text"
+                value={item}
+                onChange={(e) => {
+                  const newArray = [...currentArray];
+                  newArray[index] = e.target.value;
+                  onChange(newArray);
+                }}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder={`Item ${index + 1}`}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const newArray = currentArray.filter((_, i) => i !== index);
+                  onChange(newArray);
+                }}
+                className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={arrayInput}
+              onChange={(e) => setArrayInput(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  if (arrayInput.trim()) {
+                    onChange([...currentArray, arrayInput.trim()]);
+                    setArrayInput('');
+                  }
+                }
+              }}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Type and press Enter to add"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                if (arrayInput.trim()) {
+                  onChange([...currentArray, arrayInput.trim()]);
+                  setArrayInput('');
+                }
+              }}
+              className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              Add
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle boolean type
+  if (fieldType === 'boolean') {
+    return (
+      <div className="flex items-start gap-3">
+        <input
+          type="checkbox"
+          checked={value ?? defaultValue ?? false}
+          onChange={(e) => onChange(e.target.checked)}
+          className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+        />
+        <div>
+          <label className="text-sm font-medium text-gray-700">
+            {fieldTitle}
+          </label>
+          {fieldDescription && (
+            <p className="text-xs text-gray-500 mt-0.5">{fieldDescription}</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Handle integer/number type
+  if (fieldType === 'integer' || fieldType === 'number') {
+    return (
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          {fieldTitle} {isRequired && <span className="text-red-500">*</span>}
+        </label>
+        {fieldDescription && (
+          <p className="text-xs text-gray-500 mb-2">{fieldDescription}</p>
+        )}
+        <input
+          type="number"
+          value={value ?? defaultValue ?? ''}
+          onChange={(e) => {
+            const val = e.target.value === '' ? undefined : (fieldType === 'integer' ? parseInt(e.target.value) : parseFloat(e.target.value));
+            onChange(val);
+          }}
+          min={schema.minimum}
+          max={schema.maximum}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder={placeholder || `Enter ${fieldTitle.toLowerCase()}`}
+        />
+      </div>
+    );
+  }
+
+  // Handle string type (default)
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {fieldTitle} {isRequired && <span className="text-red-500">*</span>}
+      </label>
+      {fieldDescription && (
+        <p className="text-xs text-gray-500 mb-2">{fieldDescription}</p>
+      )}
+      <input
+        type="text"
+        value={value ?? defaultValue ?? ''}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        placeholder={placeholder || `Enter ${fieldTitle.toLowerCase()}`}
+      />
+    </div>
+  );
+};
+
 // Schedule Modal Component
 const ScheduleModal = ({ isEdit, schedule, actors, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
