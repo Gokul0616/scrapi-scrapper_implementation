@@ -166,7 +166,7 @@ function AppRoutes() {
       <Route path="/development" element={<ProtectedRoute><DashboardLayout><div className="p-8">Development</div></DashboardLayout></ProtectedRoute>} />
       <Route path="/tasks" element={<ProtectedRoute><DashboardLayout><div className="p-8">Saved Tasks</div></DashboardLayout></ProtectedRoute>} />
       <Route path="/integrations" element={<ProtectedRoute><DashboardLayout><div className="p-8">Integrations</div></DashboardLayout></ProtectedRoute>} />
-      <Route path="/schedules" element={<ProtectedRoute><DashboardLayout><div className="p-8">Schedules</div></DashboardLayout></ProtectedRoute>} />
+      <Route path="/schedules" element={<ProtectedRoute><DashboardLayout><Schedules /></DashboardLayout></ProtectedRoute>} />
       <Route path="/storage" element={<ProtectedRoute><DashboardLayout><div className="p-8">Storage</div></DashboardLayout></ProtectedRoute>} />
       <Route path="/proxy" element={<ProtectedRoute><DashboardLayout><div className="p-8">Proxy</div></DashboardLayout></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><DashboardLayout><div className="p-8">Settings</div></DashboardLayout></ProtectedRoute>} />
