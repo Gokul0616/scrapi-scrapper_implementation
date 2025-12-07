@@ -272,9 +272,9 @@ echo "Enabling schedule..."
 ENABLE_RESPONSE=$(curl -s -X POST "${API_URL}/schedules/${SCHEDULE_ID}/enable" \
     -H "Authorization: Bearer $TOKEN")
 
-ENABLED_STATUS=$(echo "$ENABLE_RESPONSE" | jq -r '.enabled')
+MESSAGE=$(echo "$ENABLE_RESPONSE" | jq -r '.message')
 
-if [ "$ENABLED_STATUS" == "true" ]; then
+if [ "$MESSAGE" == "Schedule enabled successfully" ] || [ "$MESSAGE" == "Schedule already enabled" ]; then
     print_test 0 "Successfully enabled schedule"
 else
     print_test 1 "Failed to enable schedule"
