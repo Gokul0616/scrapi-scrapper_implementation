@@ -1222,3 +1222,368 @@ async def clear_chat_history(
 # - POST /scrapers/config/{config_id}/run
 # - POST /scrapers/config/{config_id}/publish
 
+
+
+# ============= Schedule Routes =============
+@router.post("/schedules", status_code=201)
+async def create_schedule(
+    schedule_data: "ScheduleCreate",
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a new schedule for automatic actor runs."""
+    from models import Schedule, ScheduleCreate
+    from services.scheduler_service import get_scheduler
+    
+    # Validate actor exists
+    actor = await db.actors.find_one({"id": schedule_data.actor_id})
+    if not actor:
+        raise HTTPException(status_code=404, detail="Actor not found")
+    
+    # Check if user has access to the actor
+    if actor['user_id'] != "system" and actor['user_id'] != current_user['id']:
+        if not actor.get('is_public', False):
+            raise HTTPException(status_code=403, detail="Access denied to this actor")
+    
+    # Create schedule
+    schedule = Schedule(
+        user_id=current_user['id'],
+        actor_id=schedule_data.actor_id,
+        actor_name=actor['name'],
+        name=schedule_data.name,
+        description=schedule_data.description,
+        cron_expression=schedule_data.cron_expression,
+        timezone=schedule_data.timezone,
+        input_data=schedule_data.input_data,
+        is_enabled=schedule_data.is_enabled
+    )
+    
+    # Calculate next run
+    from services.scheduler_service import get_scheduler
+    scheduler = get_scheduler()
+    next_run = scheduler._get_next_run(schedule.cron_expression, schedule.timezone)
+    schedule.next_run = next_run
+    
+    # Save to database
+    doc = schedule.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    doc['updated_at'] = doc['updated_at'].isoformat()
+    if doc['next_run']:
+        doc['next_run'] = doc['next_run'].isoformat()
+    if doc['last_run']:
+        doc['last_run'] = doc['last_run'].isoformat()
+    
+    await db.schedules.insert_one(doc)
+    
+    # Add to scheduler if enabled
+    if schedule.is_enabled:
+        try:
+            await scheduler.add_schedule(
+                schedule_id=schedule.id,
+                cron_expression=schedule.cron_expression,
+                timezone_str=schedule.timezone,
+                user_id=current_user['id'],
+                actor_id=schedule_data.actor_id,
+                input_data=schedule_data.input_data
+            )
+        except Exception as e:
+            logger.error(f"Failed to add schedule to scheduler: {str(e)}")
+            # Still return the created schedule
+    
+    logger.info(f"✅ Schedule created: {schedule.id}")
+    return schedule
+
+
+@router.get("/schedules")
+async def get_schedules(
+    current_user: dict = Depends(get_current_user),
+    page: int = 1,
+    limit: int = 20,
+    actor_id: Optional[str] = None,
+    is_enabled: Optional[bool] = None
+):
+    """Get all schedules for the current user with pagination."""
+    # Build query
+    query = {"user_id": current_user['id']}
+    
+    if actor_id:
+        query["actor_id"] = actor_id
+    
+    if is_enabled is not None:
+        query["is_enabled"] = is_enabled
+    
+    # Get total count
+    total = await db.schedules.count_documents(query)
+    
+    # Get paginated results
+    skip = (page - 1) * limit
+    schedules = await db.schedules.find(query).sort("created_at", -1).skip(skip).limit(limit).to_list(length=limit)
+    
+    # Convert datetime strings back to datetime objects for response
+    from services.scheduler_service import get_scheduler
+    scheduler = get_scheduler()
+    
+    for schedule in schedules:
+        # Convert ISO strings to datetime if needed
+        if isinstance(schedule.get('created_at'), str):
+            schedule['created_at'] = datetime.fromisoformat(schedule['created_at'])
+        if isinstance(schedule.get('updated_at'), str):
+            schedule['updated_at'] = datetime.fromisoformat(schedule['updated_at'])
+        if isinstance(schedule.get('next_run'), str):
+            schedule['next_run'] = datetime.fromisoformat(schedule['next_run'])
+        if isinstance(schedule.get('last_run'), str):
+            schedule['last_run'] = datetime.fromisoformat(schedule['last_run'])
+        
+        # Add human-readable cron description
+        schedule['human_readable'] = scheduler.get_human_readable_cron(schedule['cron_expression'])
+    
+    return {
+        "schedules": schedules,
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "pages": (total + limit - 1) // limit
+    }
+
+
+@router.get("/schedules/{schedule_id}")
+async def get_schedule(
+    schedule_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get a specific schedule by ID."""
+    schedule = await db.schedules.find_one({"id": schedule_id, "user_id": current_user['id']})
+    
+    if not schedule:
+        raise HTTPException(status_code=404, detail="Schedule not found")
+    
+    # Convert ISO strings to datetime if needed
+    if isinstance(schedule.get('created_at'), str):
+        schedule['created_at'] = datetime.fromisoformat(schedule['created_at'])
+    if isinstance(schedule.get('updated_at'), str):
+        schedule['updated_at'] = datetime.fromisoformat(schedule['updated_at'])
+    if isinstance(schedule.get('next_run'), str):
+        schedule['next_run'] = datetime.fromisoformat(schedule['next_run'])
+    if isinstance(schedule.get('last_run'), str):
+        schedule['last_run'] = datetime.fromisoformat(schedule['last_run'])
+    
+    # Add human-readable cron description
+    from services.scheduler_service import get_scheduler
+    scheduler = get_scheduler()
+    schedule['human_readable'] = scheduler.get_human_readable_cron(schedule['cron_expression'])
+    
+    return schedule
+
+
+@router.patch("/schedules/{schedule_id}")
+async def update_schedule(
+    schedule_id: str,
+    schedule_update: "ScheduleUpdate",
+    current_user: dict = Depends(get_current_user)
+):
+    """Update a schedule."""
+    from models import ScheduleUpdate
+    from services.scheduler_service import get_scheduler
+    
+    # Check if schedule exists and belongs to user
+    schedule = await db.schedules.find_one({"id": schedule_id, "user_id": current_user['id']})
+    if not schedule:
+        raise HTTPException(status_code=404, detail="Schedule not found")
+    
+    # Build update data
+    update_data = schedule_update.model_dump(exclude_unset=True)
+    
+    if update_data:
+        update_data['updated_at'] = datetime.now(timezone.utc)
+        
+        # If cron expression or timezone changed, recalculate next run
+        if 'cron_expression' in update_data or 'timezone' in update_data:
+            scheduler = get_scheduler()
+            cron_expr = update_data.get('cron_expression', schedule['cron_expression'])
+            tz = update_data.get('timezone', schedule['timezone'])
+            next_run = scheduler._get_next_run(cron_expr, tz)
+            update_data['next_run'] = next_run
+        
+        # Update database
+        await db.schedules.update_one(
+            {"id": schedule_id},
+            {"$set": update_data}
+        )
+        
+        # Get updated schedule
+        updated_schedule = await db.schedules.find_one({"id": schedule_id})
+        
+        # Update scheduler if enabled status changed or cron/timezone changed
+        scheduler = get_scheduler()
+        if 'is_enabled' in update_data or 'cron_expression' in update_data or 'timezone' in update_data:
+            if updated_schedule['is_enabled']:
+                # Remove old job and add new one
+                await scheduler.remove_schedule(schedule_id)
+                await scheduler.add_schedule(
+                    schedule_id=schedule_id,
+                    cron_expression=updated_schedule['cron_expression'],
+                    timezone_str=updated_schedule['timezone'],
+                    user_id=current_user['id'],
+                    actor_id=updated_schedule['actor_id'],
+                    input_data=updated_schedule['input_data']
+                )
+            else:
+                # Remove from scheduler if disabled
+                await scheduler.remove_schedule(schedule_id)
+        
+        logger.info(f"✅ Schedule updated: {schedule_id}")
+        
+        # Convert datetime objects for response
+        if isinstance(updated_schedule.get('created_at'), str):
+            updated_schedule['created_at'] = datetime.fromisoformat(updated_schedule['created_at'])
+        if isinstance(updated_schedule.get('updated_at'), str):
+            updated_schedule['updated_at'] = datetime.fromisoformat(updated_schedule['updated_at'])
+        if isinstance(updated_schedule.get('next_run'), str):
+            updated_schedule['next_run'] = datetime.fromisoformat(updated_schedule['next_run'])
+        if isinstance(updated_schedule.get('last_run'), str):
+            updated_schedule['last_run'] = datetime.fromisoformat(updated_schedule['last_run'])
+        
+        return updated_schedule
+    
+    return schedule
+
+
+@router.delete("/schedules/{schedule_id}")
+async def delete_schedule(
+    schedule_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Delete a schedule."""
+    from services.scheduler_service import get_scheduler
+    
+    # Check if schedule exists and belongs to user
+    schedule = await db.schedules.find_one({"id": schedule_id, "user_id": current_user['id']})
+    if not schedule:
+        raise HTTPException(status_code=404, detail="Schedule not found")
+    
+    # Remove from scheduler
+    scheduler = get_scheduler()
+    await scheduler.remove_schedule(schedule_id)
+    
+    # Delete from database
+    await db.schedules.delete_one({"id": schedule_id})
+    
+    logger.info(f"✅ Schedule deleted: {schedule_id}")
+    
+    return {"message": "Schedule deleted successfully"}
+
+
+@router.post("/schedules/{schedule_id}/enable")
+async def enable_schedule(
+    schedule_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Enable a schedule."""
+    from services.scheduler_service import get_scheduler
+    
+    schedule = await db.schedules.find_one({"id": schedule_id, "user_id": current_user['id']})
+    if not schedule:
+        raise HTTPException(status_code=404, detail="Schedule not found")
+    
+    if schedule['is_enabled']:
+        return {"message": "Schedule already enabled"}
+    
+    # Update database
+    await db.schedules.update_one(
+        {"id": schedule_id},
+        {"$set": {"is_enabled": True, "updated_at": datetime.now(timezone.utc)}}
+    )
+    
+    # Add to scheduler
+    updated_schedule = await db.schedules.find_one({"id": schedule_id})
+    scheduler = get_scheduler()
+    await scheduler.add_schedule(
+        schedule_id=schedule_id,
+        cron_expression=updated_schedule['cron_expression'],
+        timezone_str=updated_schedule['timezone'],
+        user_id=current_user['id'],
+        actor_id=updated_schedule['actor_id'],
+        input_data=updated_schedule['input_data']
+    )
+    
+    logger.info(f"✅ Schedule enabled: {schedule_id}")
+    
+    return {"message": "Schedule enabled successfully"}
+
+
+@router.post("/schedules/{schedule_id}/disable")
+async def disable_schedule(
+    schedule_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Disable a schedule."""
+    from services.scheduler_service import get_scheduler
+    
+    schedule = await db.schedules.find_one({"id": schedule_id, "user_id": current_user['id']})
+    if not schedule:
+        raise HTTPException(status_code=404, detail="Schedule not found")
+    
+    if not schedule['is_enabled']:
+        return {"message": "Schedule already disabled"}
+    
+    # Update database
+    await db.schedules.update_one(
+        {"id": schedule_id},
+        {"$set": {"is_enabled": False, "updated_at": datetime.now(timezone.utc)}}
+    )
+    
+    # Remove from scheduler
+    scheduler = get_scheduler()
+    await scheduler.remove_schedule(schedule_id)
+    
+    logger.info(f"✅ Schedule disabled: {schedule_id}")
+    
+    return {"message": "Schedule disabled successfully"}
+
+
+@router.post("/schedules/{schedule_id}/run-now")
+async def run_schedule_now(
+    schedule_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Manually trigger a scheduled run immediately."""
+    schedule = await db.schedules.find_one({"id": schedule_id, "user_id": current_user['id']})
+    if not schedule:
+        raise HTTPException(status_code=404, detail="Schedule not found")
+    
+    # Get actor
+    actor = await db.actors.find_one({"id": schedule['actor_id']})
+    if not actor:
+        raise HTTPException(status_code=404, detail="Actor not found")
+    
+    # Create run
+    from models import Run
+    run = Run(
+        user_id=current_user['id'],
+        actor_id=schedule['actor_id'],
+        actor_name=actor['name'],
+        actor_icon=actor.get('icon'),
+        input_data=schedule['input_data'],
+        status="queued",
+        origin="Manual (Schedule)"
+    )
+    
+    doc = run.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    await db.runs.insert_one(doc)
+    
+    # Start scraping
+    from services.task_manager import task_manager
+    await task_manager.start_task(
+        run.id,
+        execute_scraping_job(
+            run.id,
+            schedule['actor_id'],
+            current_user['id'],
+            schedule['input_data']
+        )
+    )
+    
+    logger.info(f"✅ Manual run triggered for schedule {schedule_id}: {run.id}")
+    
+    return {"message": "Run triggered successfully", "run_id": run.id, "run": run}
+
