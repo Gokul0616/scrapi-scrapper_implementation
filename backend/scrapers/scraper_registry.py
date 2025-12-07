@@ -151,10 +151,12 @@ def auto_register_scrapers():
         # Import all scraper modules
         from .googlemap.google_maps_scraper_v3 import GoogleMapsScraperV3
         from .amazon.amazon_scraper import AmazonProductScraper
+        from .seo.seo_metadata_scraper import SEOMetadataScraper
         
         # Register each scraper
         _global_registry.register(GoogleMapsScraperV3)
         _global_registry.register(AmazonProductScraper)
+        _global_registry.register(SEOMetadataScraper)
         
         logger.info(f"Auto-registered {len(_global_registry._scrapers)} scrapers")
         
