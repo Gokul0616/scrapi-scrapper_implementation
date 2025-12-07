@@ -211,14 +211,13 @@ class SchedulerService:
     ):
         """Update schedule with last run information."""
         try:
-            update_data = {
+            set_data = {
                 "last_run": datetime.now(timezone.utc),
-                "last_status": status,
-                "$inc": {"run_count": 1}
+                "last_status": status
             }
             
             if run_id:
-                update_data["last_run_id"] = run_id
+                set_data["last_run_id"] = run_id
             
             # Calculate next run time
             schedule = await self.db.schedules.find_one({"id": schedule_id})
@@ -227,11 +226,14 @@ class SchedulerService:
                     schedule['cron_expression'],
                     schedule['timezone']
                 )
-                update_data["next_run"] = next_run
+                set_data["next_run"] = next_run
             
             await self.db.schedules.update_one(
                 {"id": schedule_id},
-                {"$set": update_data}
+                {
+                    "$set": set_data,
+                    "$inc": {"run_count": 1}
+                }
             )
             
         except Exception as e:
