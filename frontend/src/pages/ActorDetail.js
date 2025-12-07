@@ -520,7 +520,7 @@ const ActorDetail = () => {
                         type="checkbox"
                         checked={config.extractReviews}
                         onChange={(e) => setConfig({ ...config, extractReviews: e.target.checked })}
-                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        className="w-4 h-4 text-black border-gray-300 rounded focus:ring-gray-800"
                       />
                       <Label htmlFor="extractReviews" className="text-base font-medium cursor-pointer">
                         Extract Reviews
@@ -533,7 +533,7 @@ const ActorDetail = () => {
                         type="checkbox"
                         checked={config.extractImages}
                         onChange={(e) => setConfig({ ...config, extractImages: e.target.checked })}
-                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        className="w-4 h-4 text-black border-gray-300 rounded focus:ring-gray-800"
                       />
                       <Label htmlFor="extractImages" className="text-base font-medium cursor-pointer">
                         Extract Images
