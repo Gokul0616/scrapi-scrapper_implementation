@@ -19,13 +19,15 @@ sys.path.append('/app/backend')
 class SEOScraperTester:
     def __init__(self):
         # Get backend URL from frontend env
-        with open('/app/frontend/.env', 'r') as f:
-            for line in f:
-                if line.startswith('REACT_APP_BACKEND_URL='):
-                    self.base_url = line.split('=')[1].strip()
-                    break
-        else:
-            self.base_url = "https://seo-meta-scrapper.preview.emergentagent.com"
+        self.base_url = "https://seo-meta-scrapper.preview.emergentagent.com"
+        try:
+            with open('/app/frontend/.env', 'r') as f:
+                for line in f:
+                    if line.startswith('REACT_APP_BACKEND_URL='):
+                        self.base_url = line.split('=')[1].strip()
+                        break
+        except Exception:
+            pass  # Use default URL
         
         self.api_url = f"{self.base_url}/api"
         self.session = None
