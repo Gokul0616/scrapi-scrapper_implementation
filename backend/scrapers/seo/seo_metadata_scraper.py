@@ -211,6 +211,9 @@ class SEOMetadataScraper(BaseScraper):
         # JSON-LD structured data
         metadata['json_ld'] = await self._extract_json_ld(page)
         
+        # Schema.org Microdata (alternative to JSON-LD)
+        metadata['microdata'] = await self._extract_microdata(page)
+        
         # Icons
         metadata['icons'] = await self._extract_icons(page, url)
         
@@ -223,6 +226,18 @@ class SEOMetadataScraper(BaseScraper):
         
         # Additional meta tags
         metadata['additional_meta'] = await self._extract_additional_meta(page)
+        
+        # Social media profiles
+        metadata['social_profiles'] = await self._extract_social_profiles(page)
+        
+        # Performance hints
+        metadata['performance_hints'] = await self._extract_performance_hints(page)
+        
+        # Security headers (extracted from response if available)
+        metadata['security_headers'] = await self._extract_security_info(page)
+        
+        # Accessibility features
+        metadata['accessibility'] = await self._extract_accessibility_info(page)
         
         return metadata
     
