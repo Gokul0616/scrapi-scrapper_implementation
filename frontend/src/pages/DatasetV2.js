@@ -1096,7 +1096,9 @@ const DatasetV2 = () => {
               </Button>
               <div className="border-l h-6"></div>
               <h1 className="text-2xl font-semibold text-blue-600">
-                {isAmazonScraper() ? 'Amazon Product Scraper - Run' : 'Google Maps Scraper - Run'}
+                {isAmazonScraper() ? 'Amazon Product Scraper - Run' : 
+                 isSeoScraper() ? 'SEO Metadata Scraper - Run' :
+                 'Google Maps Scraper - Run'}
               </h1>
               <Button variant="ghost" size="icon" className="hover:bg-gray-50">
                 <Star className="w-4 h-4" />
@@ -1121,6 +1123,8 @@ const DatasetV2 = () => {
               <p className="text-sm text-green-800">
                 <strong>Scraping finished.</strong> {isAmazonScraper() 
                   ? 'You can view all scraped products with detailed information.' 
+                  : isSeoScraper()
+                  ? 'You can view comprehensive SEO metadata and content analysis.'
                   : 'You can view all scraped places laid out on a map.'}
               </p>
             </div>
