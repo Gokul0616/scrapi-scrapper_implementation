@@ -965,22 +965,19 @@ const ScheduleModal = ({ isEdit, schedule, actors, onClose, onSuccess }) => {
             )}
             {selectedActor && (
               <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm font-medium text-blue-900">
-                  {selectedActor.name}
-                </p>
-                {selectedActor.description && (
-                  <p className="text-xs text-blue-700 mt-1">
-                    {selectedActor.description}
-                  </p>
-                )}
-                {selectedActor.input_schema && (
-                  <div className="mt-2">
-                    <p className="text-xs font-medium text-blue-900">Expected Input Format:</p>
-                    <pre className="text-xs text-blue-800 mt-1 bg-blue-100 p-2 rounded overflow-x-auto">
-                      {JSON.stringify(selectedActor.input_schema, null, 2)}
-                    </pre>
+                <div className="flex items-start gap-2">
+                  <span className="text-xl">{selectedActor.icon || '🤖'}</span>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-blue-900">
+                      {selectedActor.name}
+                    </p>
+                    {selectedActor.description && (
+                      <p className="text-xs text-blue-700 mt-1">
+                        {selectedActor.description}
+                      </p>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
             )}
           </div>
