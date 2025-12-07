@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { 
   Clock, Plus, Play, Pause, Trash2, Edit, Calendar, 
-  Activity, CheckCircle, XCircle, AlertCircle 
+  Activity, CheckCircle, XCircle, AlertCircle, Copy, Download, Filter, Search
 } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 
@@ -17,6 +17,9 @@ const Schedules = () => {
   const [actors, setActors] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [selectedSchedules, setSelectedSchedules] = useState([]);
+  const [filterStatus, setFilterStatus] = useState('all'); // all, active, paused
+  const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
