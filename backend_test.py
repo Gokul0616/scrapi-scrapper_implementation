@@ -19,7 +19,7 @@ sys.path.append('/app/backend')
 class SEOScraperTester:
     def __init__(self):
         # Get backend URL from frontend env
-        self.base_url = "https://meta-extraction.preview.emergentagent.com"
+        self.base_url = "https://scraper-cleanup-1.preview.emergentagent.com"
         try:
             with open('/app/frontend/.env', 'r') as f:
                 for line in f:
