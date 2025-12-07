@@ -18,6 +18,7 @@ import Marketplace from './pages/Marketplace';
 import ActorCodeEditor from './pages/ActorCodeEditor';
 import Home from './pages/Home';
 import Store from './pages/Store';
+import Schedules from './pages/Schedules';
 import GlobalChat from './components/GlobalChat';
 
 // Component to handle root redirect based on last path
