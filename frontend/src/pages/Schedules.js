@@ -135,6 +135,173 @@ const Schedules = () => {
     }
   };
 
+  const handleCloneSchedule = async (schedule) => {
+    try {
+      const token = localStorage.getItem('token');
+      const clonedData = {
+        name: `${schedule.name} (Copy)`,
+        description: schedule.description,
+        actor_id: schedule.actor_id,
+        cron_expression: schedule.cron_expression,
+        timezone: schedule.timezone,
+        input_data: schedule.input_data,
+        is_enabled: false // Start cloned schedules as disabled
+      };
+      
+      await axios.post(`${API_URL}/api/schedules`, clonedData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast({
+        title: "Success",
+        description: "Schedule cloned successfully"
+      });
+      
+      fetchSchedules();
+    } catch (error) {
+      console.error('Error cloning schedule:', error);
+      toast({
+        title: "Error",
+        description: "Failed to clone schedule",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedSchedules.length === 0) return;
+    
+    if (!window.confirm(`Are you sure you want to delete ${selectedSchedules.length} schedule(s)?`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await Promise.all(
+        selectedSchedules.map(id => 
+          axios.delete(`${API_URL}/api/schedules/${id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          })
+        )
+      );
+      
+      toast({
+        title: "Success",
+        description: `${selectedSchedules.length} schedule(s) deleted successfully`
+      });
+      
+      setSelectedSchedules([]);
+      fetchSchedules();
+    } catch (error) {
+      console.error('Error deleting schedules:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete some schedules",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleBulkToggle = async (enable) => {
+    if (selectedSchedules.length === 0) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const endpoint = enable ? 'enable' : 'disable';
+      
+      await Promise.all(
+        selectedSchedules.map(id => 
+          axios.post(
+            `${API_URL}/api/schedules/${id}/${endpoint}`,
+            {},
+            { headers: { Authorization: `Bearer ${token}` } }
+          )
+        )
+      );
+      
+      toast({
+        title: "Success",
+        description: `${selectedSchedules.length} schedule(s) ${enable ? 'enabled' : 'disabled'} successfully`
+      });
+      
+      setSelectedSchedules([]);
+      fetchSchedules();
+    } catch (error) {
+      console.error('Error toggling schedules:', error);
+      toast({
+        title: "Error",
+        description: "Failed to toggle some schedules",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleExportSchedules = () => {
+    const exportData = schedules.map(s => ({
+      name: s.name,
+      description: s.description,
+      actor_name: s.actor_name,
+      cron_expression: s.cron_expression,
+      timezone: s.timezone,
+      is_enabled: s.is_enabled,
+      run_count: s.run_count,
+      last_status: s.last_status
+    }));
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `schedules-export-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "Success",
+      description: "Schedules exported successfully"
+    });
+  };
+
+  const toggleSelectSchedule = (scheduleId) => {
+    setSelectedSchedules(prev => 
+      prev.includes(scheduleId) 
+        ? prev.filter(id => id !== scheduleId)
+        : [...prev, scheduleId]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedSchedules.length === filteredSchedules.length) {
+      setSelectedSchedules([]);
+    } else {
+      setSelectedSchedules(filteredSchedules.map(s => s.id));
+    }
+  };
+
+  // Filter and search schedules
+  const filteredSchedules = useMemo(() => {
+    let filtered = schedules;
+
+    // Apply status filter
+    if (filterStatus === 'active') {
+      filtered = filtered.filter(s => s.is_enabled);
+    } else if (filterStatus === 'paused') {
+      filtered = filtered.filter(s => !s.is_enabled);
+    }
+
+    // Apply search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(s => 
+        s.name.toLowerCase().includes(query) ||
+        s.actor_name.toLowerCase().includes(query) ||
+        s.description?.toLowerCase().includes(query)
+      );
+    }
+
+    return filtered;
+  }, [schedules, filterStatus, searchQuery]);
+
   const formatNextRun = (nextRun) => {
     if (!nextRun) return 'N/A';
     const date = new Date(nextRun);
