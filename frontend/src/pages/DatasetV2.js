@@ -878,14 +878,19 @@ const DatasetV2 = () => {
     // Generic Images Array (Amazon/Maps)
     if (key === 'images' && Array.isArray(value)) {
          if (value.length === 0) return '-';
-         return (
-          <div className="flex gap-1">
-            {value.slice(0, 3).map((img, idx) => (
-              <img key={idx} src={img} alt="" className="w-8 h-8 rounded object-cover" />
-            ))}
-            {value.length > 3 && <span className="text-xs text-gray-500">+{value.length - 3}</span>}
-          </div>
-        );
+         
+         // Only render as image gallery if items are strings (URLs)
+         if (typeof value[0] === 'string') {
+             return (
+              <div className="flex gap-1">
+                {value.slice(0, 3).map((img, idx) => (
+                  <img key={idx} src={img} alt="" className="w-8 h-8 rounded object-cover" />
+                ))}
+                {value.length > 3 && <span className="text-xs text-gray-500">+{value.length - 3}</span>}
+              </div>
+            );
+         }
+         // If images are objects but not SEO-formatted (fall through to generic array handler)
     }
 
     // SEO Scraper: Links
