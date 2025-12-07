@@ -813,29 +813,30 @@ const DatasetV2 = () => {
     // Handle null or undefined
     if (value === null || value === undefined) return '-';
     
-    // Handle arrays
-    if (Array.isArray(value)) {
-      if (value.length === 0) return '-';
-      if (key === 'images' && value.length > 0) {
-        return (
-          <div className="flex gap-1">
-            {value.slice(0, 3).map((img, idx) => (
-              <img key={idx} src={img} alt="" className="w-8 h-8 rounded object-cover" />
-            ))}
-            {value.length > 3 && <span className="text-xs text-gray-500">+{value.length - 3}</span>}
-          </div>
-        );
-      }
-      return value.join(', ');
-    }
+    // 1. Handle Special Keys (Priority over type checks)
     
-    // Handle objects (like socialMedia)
-    if (typeof value === 'object') {
-      const entries = Object.entries(value);
-      if (entries.length === 0) return '-';
-      
-      // SEO Scraper: Headings
-      if (key === 'headings') {
+    // SEO Scraper: JSON-LD (Can be array or object)
+    if (key === 'json_ld') {
+        const schemas = Array.isArray(value) ? value : [value];
+        if (schemas.length === 0) return <span className="text-gray-400">None</span>;
+        
+        // Extract types
+        const types = schemas.map(s => {
+            if (typeof s === 'string') return 'Schema'; // Handle string JSON-LD
+            return s['@type'] || 'Schema';
+        }).filter(Boolean).join(', ');
+        
+        return (
+            <div className="text-xs">
+                <div className="font-semibold text-green-600">{schemas.length} Schemas</div>
+                <div className="text-gray-500 truncate max-w-[200px] mb-1" title={types}>{types}</div>
+                <JsonPreview data={value} label="View JSON-LD" color="green" />
+            </div>
+        );
+    }
+
+    // SEO Scraper: Headings
+    if (key === 'headings' && typeof value === 'object') {
         const h1 = value.h1 ? value.h1.length : 0;
         const h2 = value.h2 ? value.h2.length : 0;
         const h3 = value.h3 ? value.h3.length : 0;
@@ -843,19 +844,20 @@ const DatasetV2 = () => {
         return (
           <div className="text-xs">
             <div className="font-semibold">{total} Headings</div>
-            <div className="text-gray-500">H1: {h1}, H2: {h2}, H3: {h3}</div>
+            <div className="text-gray-500 mb-1">H1: {h1}, H2: {h2}, H3: {h3}</div>
+            <JsonPreview data={value} label="View Headings" color="purple" />
           </div>
         );
-      }
-
-      // SEO Scraper: Images (Object with stats)
-      if (key === 'images' && value.total_images !== undefined) {
+    }
+    
+    // SEO Scraper: Images (Object with stats)
+    if (key === 'images' && !Array.isArray(value) && typeof value === 'object') {
         return (
           <div className="text-xs">
-            <div className="font-semibold">{value.total_images} Images</div>
-            <div className="text-gray-500">{value.images_with_alt} with alt</div>
+            <div className="font-semibold">{value.total_images || 0} Images</div>
+            <div className="text-gray-500 mb-1">{value.images_with_alt || 0} with alt</div>
             {value.sample_images && value.sample_images.length > 0 && (
-              <div className="flex gap-1 mt-1">
+              <div className="flex gap-1 mb-2">
                 {value.sample_images.slice(0, 3).map((img, idx) => (
                   <img 
                     key={idx} 
@@ -868,69 +870,97 @@ const DatasetV2 = () => {
                 ))}
               </div>
             )}
+            <JsonPreview data={value} label="Details" color="blue" />
           </div>
         );
-      }
+    }
+    
+    // Generic Images Array (Amazon/Maps)
+    if (key === 'images' && Array.isArray(value)) {
+         if (value.length === 0) return '-';
+         return (
+          <div className="flex gap-1">
+            {value.slice(0, 3).map((img, idx) => (
+              <img key={idx} src={img} alt="" className="w-8 h-8 rounded object-cover" />
+            ))}
+            {value.length > 3 && <span className="text-xs text-gray-500">+{value.length - 3}</span>}
+          </div>
+        );
+    }
 
-      // SEO Scraper: Links
-      if (key === 'links' && value.total_links !== undefined) {
+    // SEO Scraper: Links
+    if (key === 'links' && typeof value === 'object' && !Array.isArray(value)) {
         return (
           <div className="text-xs">
-            <div className="font-semibold">{value.total_links} Links</div>
-            <div className="text-gray-500">
+            <div className="font-semibold">{value.total_links || 0} Links</div>
+            <div className="text-gray-500 mb-1">
               <span className="text-blue-600">{value.internal_links} Int</span> / 
               <span className="text-orange-600"> {value.external_links} Ext</span>
             </div>
+            <JsonPreview data={value} label="View Links" color="orange" />
           </div>
         );
-      }
+    }
 
-      // SEO Scraper: Open Graph & Twitter Card
-      if (key === 'open_graph' || key === 'twitter_card') {
+    // SEO Scraper: Open Graph & Twitter Card
+    if ((key === 'open_graph' || key === 'twitter_card') && typeof value === 'object') {
         const count = Object.keys(value).length;
         if (count === 0) return <span className="text-gray-400">None</span>;
         
-        // Show first 2 properties
-        const preview = Object.entries(value).slice(0, 2).map(([k, v]) => {
-            const valStr = String(v);
-            return `${k}: ${valStr.length > 20 ? valStr.substring(0, 20) + '...' : valStr}`;
-        }).join(', ');
-        
         return (
-          <div className="text-xs group relative cursor-help">
+          <div className="text-xs">
             <div className="font-semibold text-blue-600">{count} Tags</div>
-            <div className="text-gray-500 truncate max-w-[150px]">{preview}</div>
-            
-            {/* Hover tooltip for full details */}
-            <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-gray-900 text-white p-2 rounded shadow-lg z-50 w-64 text-xs whitespace-pre-wrap">
-               {Object.entries(value).map(([k, v]) => `${k}: ${v}`).join('\n')}
+            <div className="mb-1">
+               <JsonPreview data={value} label={`View ${key === 'open_graph' ? 'OG' : 'Twitter'} Tags`} color="blue" />
             </div>
           </div>
         );
-      }
-      
-      // SEO Scraper: Icons
-      if (key === 'icons') {
-        return value.favicon ? (
-           <div className="flex items-center gap-2">
-             <img src={value.favicon} className="w-6 h-6 rounded border bg-gray-50" alt="Favicon" onError={(e) => e.target.style.display = 'none'} />
-             {value.apple_touch_icons && value.apple_touch_icons.length > 0 && (
-                <span className="text-xs bg-gray-100 px-1 rounded">+{value.apple_touch_icons.length}</span>
-             )}
-           </div>
-        ) : '-';
-      }
-
-      if (key === 'socialMedia') {
-        // Don't render here, will be handled by special case in table
-        return null;
-      }
-      return JSON.stringify(value);
     }
     
-    // Handle URLs
+    // SEO Scraper: Icons
+    if (key === 'icons' && typeof value === 'object') {
+        return (
+           <div className="flex items-center gap-2">
+             {value.favicon ? (
+                 <img src={value.favicon} className="w-6 h-6 rounded border bg-gray-50" alt="Favicon" onError={(e) => e.target.style.display = 'none'} />
+             ) : <span className="text-xs text-gray-400">No favicon</span>}
+             <JsonPreview data={value} label="All Icons" color="gray" />
+           </div>
+        );
+    }
+    
+    // 2. Handle Arrays (Generic)
+    if (Array.isArray(value)) {
+      if (value.length === 0) return '-';
+      
+      // Check if array contains objects - This fixes the [object Object] issue
+      const hasObjects = value.some(v => typeof v === 'object' && v !== null);
+      if (hasObjects) {
+          return (
+             <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-gray-600">{value.length} items</span>
+                <JsonPreview data={value} label="View List" color="gray" />
+             </div>
+          );
+      }
+      
+      return (
+        <div className="max-w-xs truncate text-xs" title={value.join(', ')}>
+            {value.join(', ')}
+        </div>
+      );
+    }
+    
+    // 3. Handle Objects (Generic)
+    if (typeof value === 'object') {
+      if (key === 'socialMedia') return null; // Handled specially in table
+      
+      // Use JsonPreview for any other object
+      return <JsonPreview data={value} label={formatColumnName(key)} color="gray" />;
+    }
+    
+    // 4. Handle URLs
     if (typeof value === 'string' && (value.startsWith('http://') || value.startsWith('https://'))) {
-      // Check if it's an image URL (simple check)
       if (value.match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
           return (
              <a href={value} target="_blank" rel="noreferrer">
@@ -940,43 +970,40 @@ const DatasetV2 = () => {
       }
       return (
         <a href={value} target="_blank" rel="noopener noreferrer" 
-           className="text-blue-600 hover:text-blue-800 truncate max-w-xs block">
-          {value.length > 50 ? value.substring(0, 50) + '...' : value}
+           className="text-blue-600 hover:text-blue-800 truncate block max-w-[200px] text-xs" title={value}>
+          {value}
         </a>
       );
     }
     
-    // Handle arrays for JSON-LD
-    if (Array.isArray(value) && key === 'json_ld') {
-        if (value.length === 0) return <span className="text-gray-400">None</span>;
-        const types = value.map(item => item['@type']).filter(Boolean).join(', ');
-        return (
-            <div className="text-xs">
-                <div className="font-semibold text-green-600">{value.length} Schemas</div>
-                <div className="text-gray-500 truncate max-w-[150px]">{types}</div>
-            </div>
-        );
-    }
-    
-    // Handle boolean
+    // 5. Handle boolean
     if (typeof value === 'boolean') {
-      return value ? <span className="text-green-600">✓</span> : <span className="text-gray-400">✗</span>;
+      return value ? <span className="text-green-600 font-medium text-xs">Yes</span> : <span className="text-gray-400 text-xs">No</span>;
     }
     
-    // Handle numbers
+    // 6. Handle numbers
     if (typeof value === 'number') {
       return value.toLocaleString();
     }
     
-    // Handle strings
+    // 7. Handle strings (Generic)
     if (typeof value === 'string') {
-      // If it's too long, truncate
-      if (value.length > 100) {
-        return (
-          <span title={value}>
-            {value.substring(0, 100)}...
-          </span>
-        );
+      if (value.length > 50) {
+         // Check if it looks like a long text block (has spaces)
+         if (value.includes(' ')) {
+             return (
+                 <div className="group relative cursor-help">
+                    <div className="line-clamp-2 text-xs text-gray-700">{value}</div>
+                    <div className="hidden group-hover:block absolute left-0 bottom-full mb-2 bg-gray-900 text-white p-3 rounded shadow-lg z-50 w-80 text-xs whitespace-pre-wrap max-h-64 overflow-y-auto">
+                        {value}
+                    </div>
+                 </div>
+             );
+         }
+         // Long single word (like a hash or id)
+         return (
+             <div className="truncate max-w-[200px] text-xs" title={value}>{value}</div>
+         );
       }
       return value;
     }
