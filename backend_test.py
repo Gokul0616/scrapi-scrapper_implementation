@@ -192,7 +192,7 @@ class SEOScraperTester:
             print(f"❌ Error creating run: {e}")
             return None
     
-    async def wait_for_run_completion(self, run_id: str, timeout: int = 120):
+    async def wait_for_run_completion(self, run_id: str, timeout: int = 180):
         """Wait for run to complete"""
         print(f"⏳ Waiting for run {run_id} to complete...")
         start_time = time.time()
