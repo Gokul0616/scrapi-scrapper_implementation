@@ -5,7 +5,7 @@ All scrapers must inherit from this class to ensure consistency.
 
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional, Callable
-from scraper_engine import ScraperEngine
+from .scraper_engine import ScraperEngine
 import logging
 
 logger = logging.getLogger(__name__)
