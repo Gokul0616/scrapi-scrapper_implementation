@@ -9,7 +9,7 @@ import json
 import time
 
 async def quick_test():
-    base_url = "https://scheduler-fix-3.preview.emergentagent.com"
+    base_url = "https://login-signup-clone.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     async with aiohttp.ClientSession() as session:

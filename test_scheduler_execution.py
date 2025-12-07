@@ -13,7 +13,7 @@ async def test_scheduler_execution():
     """Test that the scheduler actually executes schedules at the right time"""
     
     # Get backend URL
-    base_url = "https://scheduler-fix-3.preview.emergentagent.com"
+    base_url = "https://login-signup-clone.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     async with aiohttp.ClientSession() as session:
