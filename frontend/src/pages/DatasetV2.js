@@ -301,6 +301,29 @@ const CustomVideoPlayer = ({ videoUrl, isHLS }) => {
   );
 };
 
+// Helper Component for JSON Preview
+const JsonPreview = ({ data, label, color = "blue" }) => {
+  const colorClasses = {
+    blue: "text-blue-600 bg-blue-50 border-blue-100 hover:bg-blue-100",
+    green: "text-green-600 bg-green-50 border-green-100 hover:bg-green-100",
+    purple: "text-purple-600 bg-purple-50 border-purple-100 hover:bg-purple-100",
+    orange: "text-orange-600 bg-orange-50 border-orange-100 hover:bg-orange-100",
+    gray: "text-gray-600 bg-gray-50 border-gray-100 hover:bg-gray-100",
+  };
+  
+  return (
+     <div className="group relative inline-block max-w-full">
+        <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded border cursor-pointer transition-colors ${colorClasses[color] || colorClasses.blue}`}>
+           <span className="font-mono text-[10px] opacity-70 flex-shrink-0">{'{ }'}</span>
+           <span className="truncate max-w-[150px] font-medium">{label || 'View Data'}</span>
+        </div>
+        <div className="hidden group-hover:block absolute left-0 top-full mt-1 z-50 w-80 bg-slate-900 text-slate-50 p-3 rounded-lg shadow-xl text-xs font-mono overflow-auto max-h-80 border border-slate-700">
+           <pre className="whitespace-pre-wrap break-all">{JSON.stringify(data, null, 2)}</pre>
+        </div>
+     </div>
+  );
+};
+
 const DatasetV2 = () => {
   const { runId } = useParams();
   const navigate = useNavigate();
