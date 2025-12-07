@@ -472,11 +472,46 @@ class SEOScraperTester:
             
             # Verify data structure
             print(f"   Dataset items structure: {type(items)}")
-            if isinstance(items, list) and len(items) > 0:
-                item = items[0]
-            elif isinstance(items, dict) and len(items) > 0:
-                # If items is a dict, get the first value
-                item = list(items.values())[0]
+            print(f"   Dataset items keys: {list(items.keys()) if isinstance(items, dict) else 'N/A'}")
+            
+            # Debug: print first few items
+            if isinstance(items, dict):
+                for i, (key, value) in enumerate(list(items.items())[:2]):
+                    print(f"   Item {i}: key={key}, value_type={type(value)}")
+                    if isinstance(value, dict):
+                        print(f"      Value keys: {list(value.keys())[:10]}")
+                    elif isinstance(value, list):
+                        print(f"      Value length: {len(value)}")
+                        if len(value) > 0:
+                            print(f"      First element type: {type(value[0])}")
+            
+            # Extract the actual data item
+            if isinstance(items, dict):
+                # Look for the actual data - could be under 'items' key or similar
+                if 'items' in items:
+                    data_items = items['items']
+                elif len(items) == 1:
+                    # Single key-value pair, get the value
+                    data_items = list(items.values())[0]
+                else:
+                    # Multiple keys, try to find the data
+                    data_items = items
+                
+                # Now extract the first item
+                if isinstance(data_items, list) and len(data_items) > 0:
+                    item = data_items[0]
+                elif isinstance(data_items, dict):
+                    # If it's still a dict, it might be the actual item
+                    item = data_items
+                else:
+                    print(f"❌ Cannot extract item from: {type(data_items)}")
+                    self.test_results.append({
+                        'test': f"SEO Scraper - {test_config['name']}",
+                        'status': 'FAIL',
+                        'details': f'Cannot extract item from dataset: {type(data_items)}'
+                    })
+                    all_tests_passed = False
+                    continue
             else:
                 print(f"❌ Unexpected dataset structure: {items}")
                 self.test_results.append({
