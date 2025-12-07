@@ -8,12 +8,8 @@ from models import (
     LeadChatMessage, LeadChatRequest
 )
 from auth import create_access_token, get_current_user, hash_password, verify_password
-from proxy_manager import get_proxy_manager
-from scraper_engine import ScraperEngine
-from scraper_registry import get_scraper_registry  # New: Dynamic scraper management
-from chat_service import LeadChatService
-from global_chat_service_v2 import EnhancedGlobalChatService
-from task_manager import get_task_manager
+from services import get_proxy_manager, get_task_manager, LeadChatService, EnhancedGlobalChatService
+from scrapers import ScraperEngine, get_scraper_registry
 import logging
 import asyncio
 
