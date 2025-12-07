@@ -558,6 +558,18 @@ frontend:
           agent: "main"
           comment: "🔧 WEBSOCKET PROTOCOL FIX V2: User still seeing 'Mixed Content: attempted to connect to insecure WebSocket endpoint ws://...' error and blank preview. ROOT CAUSE: Environment variable WDS_SOCKET_PROTOCOL not being properly applied by webpack-dev-server. SOLUTION: Explicitly configured client.webSocketURL in craco.config.js devServer configuration with: protocol: 'wss' (secure), hostname: visual-crawler-2.preview.emergentagent.com, port: 443, pathname: '/ws'. This ensures webpack-dev-server client always uses wss:// protocol for WebSocket connections on HTTPS pages. Frontend restarted successfully (pid 1102) and compiled without errors. WebSocket configuration now hardcoded to use secure protocol - no more mixed content errors."
 
+  - task: "SEO Metadata Scraper - Comprehensive SEO Data Extraction"
+    implemented: true
+    working: "NA"
+    file: "backend/scrapers/seo/seo_metadata_scraper.py, backend/server.py, backend/scrapers/scraper_registry.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "🔍 COMPREHENSIVE SEO METADATA SCRAPER IMPLEMENTED: Created full-featured SEO scraper similar to Apify's SEO Metadata Scraper with extensive capabilities. FEATURES IMPLEMENTED: (1) Basic SEO Elements: Page title, meta description, meta keywords, canonical URL, meta robots directives, status code, viewport, charset, language. (2) Open Graph Tags: Complete extraction of all og:* properties (title, description, image, url, type, site_name, etc.). (3) Twitter Card Tags: Full extraction of twitter:* tags (card, title, description, image, site, creator). (4) JSON-LD Structured Data: Extracts and parses all schema.org structured data (Article, Product, FAQ, Organization, etc.). (5) Headings Extraction: All H1-H6 tags for content structure analysis (optional). (6) Icon Extraction: Favicon, Apple touch icons, and all other icon formats with URLs. (7) Hreflang Tags: Multi-language and regional targeting tags. (8) Technical SEO: Robots.txt URL, sitemap.xml URL, additional meta tags (author, publisher, theme-color, generator, rating). (9) Image Metadata: Image count, alt text statistics, sample images with URLs (optional). (10) Link Analysis: Internal/external link counts and samples (optional). IMPLEMENTATION DETAILS: Follows BaseScraper pattern, uses Playwright for page loading and data extraction, comprehensive error handling with logging, progress callbacks for real-time updates, proper JSON-LD parsing with error handling, configurable extraction (headings, images, links). ACTOR CONFIGURATION: Name: 'SEO Metadata Scraper', Icon: 🔍, Category: 'SEO & Analytics', Auto-created in database on startup, Featured and verified actor. INPUT SCHEMA: Required: url (website URL to analyze), Optional: extract_headings (default: true), extract_images (default: true), extract_links (default: false). INTEGRATION: Registered in scraper_registry.py with auto-registration, SEO actor created in server.py startup event, Actor data saved to MongoDB with complete metadata. Ready for comprehensive backend testing to verify: SEO data extraction accuracy, Open Graph/Twitter Card parsing, JSON-LD structured data extraction, heading/image/link analysis, error handling for invalid URLs."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
@@ -566,7 +578,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Indeed Jobs Scraper V2 - Cloudflare Bypass Testing Complete"
+    - "SEO Metadata Scraper - Comprehensive SEO Data Extraction"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
