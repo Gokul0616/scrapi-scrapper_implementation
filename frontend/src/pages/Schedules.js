@@ -1,0 +1,647 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { 
+  Clock, Plus, Play, Pause, Trash2, Edit, Calendar, 
+  Activity, CheckCircle, XCircle, AlertCircle 
+} from 'lucide-react';
+import { useToast } from '../hooks/use-toast';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+
+const Schedules = () => {
+  const [schedules, setSchedules] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedSchedule, setSelectedSchedule] = useState(null);
+  const [actors, setActors] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchSchedules();
+    fetchActors();
+  }, [page]);
+
+  const fetchSchedules = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/api/schedules?page=${page}&limit=20`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSchedules(response.data.schedules);
+      setTotalPages(response.data.pages);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching schedules:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load schedules",
+        variant: "destructive"
+      });
+      setLoading(false);
+    }
+  };
+
+  const fetchActors = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/api/actors?page=1&limit=100`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setActors(response.data.actors);
+    } catch (error) {
+      console.error('Error fetching actors:', error);
+    }
+  };
+
+  const handleToggleSchedule = async (scheduleId, isEnabled) => {
+    try {
+      const token = localStorage.getItem('token');
+      const endpoint = isEnabled ? 'disable' : 'enable';
+      await axios.post(
+        `${API_URL}/api/schedules/${scheduleId}/${endpoint}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      toast({
+        title: "Success",
+        description: `Schedule ${isEnabled ? 'disabled' : 'enabled'} successfully`
+      });
+      
+      fetchSchedules();
+    } catch (error) {
+      console.error('Error toggling schedule:', error);
+      toast({
+        title: "Error",
+        description: "Failed to toggle schedule",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteSchedule = async (scheduleId) => {
+    if (!window.confirm('Are you sure you want to delete this schedule?')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API_URL}/api/schedules/${scheduleId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast({
+        title: "Success",
+        description: "Schedule deleted successfully"
+      });
+      
+      fetchSchedules();
+    } catch (error) {
+      console.error('Error deleting schedule:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete schedule",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleRunNow = async (scheduleId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_URL}/api/schedules/${scheduleId}/run-now`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      toast({
+        title: "Success",
+        description: `Run started: ${response.data.run_id}`
+      });
+    } catch (error) {
+      console.error('Error running schedule:', error);
+      toast({
+        title: "Error",
+        description: "Failed to start run",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const formatNextRun = (nextRun) => {
+    if (!nextRun) return 'N/A';
+    const date = new Date(nextRun);
+    const now = new Date();
+    const diff = date - now;
+    
+    if (diff < 0) return 'Overdue';
+    
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    
+    if (days > 0) return `in ${days}d ${hours % 24}h`;
+    if (hours > 0) return `in ${hours}h ${minutes % 60}m`;
+    return `in ${minutes}m`;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading schedules...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-8">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Schedules</h1>
+          <p className="text-gray-600 mt-1">Automate your scraping tasks with cron-based schedules</p>
+        </div>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          <Plus size={20} />
+          Create Schedule
+        </button>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Total Schedules</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{schedules.length}</p>
+            </div>
+            <Calendar className="text-blue-600" size={32} />
+          </div>
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Active</p>
+              <p className="text-2xl font-bold text-green-600 mt-1">
+                {schedules.filter(s => s.is_enabled).length}
+              </p>
+            </div>
+            <Activity className="text-green-600" size={32} />
+          </div>
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Paused</p>
+              <p className="text-2xl font-bold text-gray-600 mt-1">
+                {schedules.filter(s => !s.is_enabled).length}
+              </p>
+            </div>
+            <Pause className="text-gray-600" size={32} />
+          </div>
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Total Runs</p>
+              <p className="text-2xl font-bold text-purple-600 mt-1">
+                {schedules.reduce((sum, s) => sum + (s.run_count || 0), 0)}
+              </p>
+            </div>
+            <Play className="text-purple-600" size={32} />
+          </div>
+        </div>
+      </div>
+
+      {/* Schedules List */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        {schedules.length === 0 ? (
+          <div className="p-12 text-center">
+            <Clock className="mx-auto text-gray-400 mb-4" size={64} />
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No schedules yet</h3>
+            <p className="text-gray-600 mb-4">Create your first schedule to automate your scraping tasks</p>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Create Schedule
+            </button>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Schedule
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actor
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Frequency
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Next Run
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Runs
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {schedules.map((schedule) => (
+                  <tr key={schedule.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">{schedule.name}</div>
+                        {schedule.description && (
+                          <div className="text-sm text-gray-500">{schedule.description}</div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">{schedule.actor_icon || '🤖'}</span>
+                        <span className="text-sm text-gray-900">{schedule.actor_name}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{schedule.human_readable || schedule.cron_expression}</div>
+                      <div className="text-xs text-gray-500">{schedule.cron_expression}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {schedule.is_enabled ? formatNextRun(schedule.next_run) : '-'}
+                      </div>
+                      {schedule.is_enabled && schedule.next_run && (
+                        <div className="text-xs text-gray-500">
+                          {new Date(schedule.next_run).toLocaleString()}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        schedule.is_enabled 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {schedule.is_enabled ? <CheckCircle size={12} /> : <Pause size={12} />}
+                        {schedule.is_enabled ? 'Active' : 'Paused'}
+                      </span>
+                      {schedule.last_status && (
+                        <div className="mt-1">
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs ${
+                            schedule.last_status === 'success' 
+                              ? 'bg-green-50 text-green-700' 
+                              : 'bg-red-50 text-red-700'
+                          }`}>
+                            {schedule.last_status === 'success' ? <CheckCircle size={10} /> : <XCircle size={10} />}
+                            Last: {schedule.last_status}
+                          </span>
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {schedule.run_count || 0}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleRunNow(schedule.id)}
+                          className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
+                          title="Run now"
+                        >
+                          <Play size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleToggleSchedule(schedule.id, schedule.is_enabled)}
+                          className={`p-1 rounded ${
+                            schedule.is_enabled 
+                              ? 'text-yellow-600 hover:text-yellow-900 hover:bg-yellow-50' 
+                              : 'text-green-600 hover:text-green-900 hover:bg-green-50'
+                          }`}
+                          title={schedule.is_enabled ? 'Pause' : 'Activate'}
+                        >
+                          {schedule.is_enabled ? <Pause size={16} /> : <Play size={16} />}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedSchedule(schedule);
+                            setShowEditModal(true);
+                          }}
+                          className="text-gray-600 hover:text-gray-900 p-1 rounded hover:bg-gray-50"
+                          title="Edit"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteSchedule(schedule.id)}
+                          className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
+                          title="Delete"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-6 flex justify-center gap-2">
+          <button
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+          <span className="px-4 py-2 text-gray-700">
+            Page {page} of {totalPages}
+          </span>
+          <button
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
+        </div>
+      )}
+
+      {/* Create/Edit Modal */}
+      {(showCreateModal || showEditModal) && (
+        <ScheduleModal
+          isEdit={showEditModal}
+          schedule={selectedSchedule}
+          actors={actors}
+          onClose={() => {
+            setShowCreateModal(false);
+            setShowEditModal(false);
+            setSelectedSchedule(null);
+          }}
+          onSuccess={() => {
+            fetchSchedules();
+            setShowCreateModal(false);
+            setShowEditModal(false);
+            setSelectedSchedule(null);
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+// Schedule Modal Component
+const ScheduleModal = ({ isEdit, schedule, actors, onClose, onSuccess }) => {
+  const [formData, setFormData] = useState({
+    name: schedule?.name || '',
+    description: schedule?.description || '',
+    actor_id: schedule?.actor_id || '',
+    cron_expression: schedule?.cron_expression || '0 0 * * *',
+    timezone: schedule?.timezone || 'UTC',
+    input_data: schedule?.input_data || {},
+    is_enabled: schedule?.is_enabled ?? true
+  });
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+
+  const cronPresets = [
+    { label: 'Every hour', value: '0 * * * *' },
+    { label: 'Every 6 hours', value: '0 */6 * * *' },
+    { label: 'Daily at midnight', value: '0 0 * * *' },
+    { label: 'Daily at noon', value: '0 12 * * *' },
+    { label: 'Weekly (Sundays)', value: '0 0 * * 0' },
+    { label: 'Monthly (1st)', value: '0 0 1 * *' },
+  ];
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      const url = isEdit 
+        ? `${API_URL}/api/schedules/${schedule.id}` 
+        : `${API_URL}/api/schedules`;
+      
+      const method = isEdit ? 'patch' : 'post';
+      
+      await axios[method](url, formData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      toast({
+        title: "Success",
+        description: `Schedule ${isEdit ? 'updated' : 'created'} successfully`
+      });
+
+      onSuccess();
+    } catch (error) {
+      console.error('Error saving schedule:', error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.detail || `Failed to ${isEdit ? 'update' : 'create'} schedule`,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-2xl font-bold text-gray-900">
+            {isEdit ? 'Edit Schedule' : 'Create Schedule'}
+          </h2>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Schedule Name *
+            </label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="e.g., Daily Product Scrape"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Description
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Optional description"
+              rows={2}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Actor *
+            </label>
+            <select
+              value={formData.actor_id}
+              onChange={(e) => setFormData({ ...formData, actor_id: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            >
+              <option value="">Select an actor</option>
+              {actors.map(actor => (
+                <option key={actor.id} value={actor.id}>
+                  {actor.icon} {actor.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Frequency Preset
+            </label>
+            <select
+              value={formData.cron_expression}
+              onChange={(e) => setFormData({ ...formData, cron_expression: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              {cronPresets.map(preset => (
+                <option key={preset.value} value={preset.value}>
+                  {preset.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Custom Cron Expression
+            </label>
+            <input
+              type="text"
+              value={formData.cron_expression}
+              onChange={(e) => setFormData({ ...formData, cron_expression: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
+              placeholder="0 0 * * *"
+              required
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Format: minute hour day month weekday (e.g., "0 0 * * *" = daily at midnight)
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Timezone
+            </label>
+            <select
+              value={formData.timezone}
+              onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="UTC">UTC</option>
+              <option value="America/New_York">America/New_York (EST/EDT)</option>
+              <option value="America/Chicago">America/Chicago (CST/CDT)</option>
+              <option value="America/Denver">America/Denver (MST/MDT)</option>
+              <option value="America/Los_Angeles">America/Los_Angeles (PST/PDT)</option>
+              <option value="Europe/London">Europe/London (GMT/BST)</option>
+              <option value="Europe/Paris">Europe/Paris (CET/CEST)</option>
+              <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
+              <option value="Asia/Shanghai">Asia/Shanghai (CST)</option>
+              <option value="Australia/Sydney">Australia/Sydney (AEDT/AEST)</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Input Data (JSON)
+            </label>
+            <textarea
+              value={JSON.stringify(formData.input_data, null, 2)}
+              onChange={(e) => {
+                try {
+                  const parsed = JSON.parse(e.target.value);
+                  setFormData({ ...formData, input_data: parsed });
+                } catch (err) {
+                  // Invalid JSON, just update the text
+                }
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+              placeholder='{"search_terms": ["restaurants"], "location": "New York"}'
+              rows={4}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Actor input parameters in JSON format
+            </p>
+          </div>
+
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="is_enabled"
+              checked={formData.is_enabled}
+              onChange={(e) => setFormData({ ...formData, is_enabled: e.target.checked })}
+              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <label htmlFor="is_enabled" className="ml-2 text-sm text-gray-700">
+              Enable schedule immediately
+            </label>
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Saving...' : (isEdit ? 'Update Schedule' : 'Create Schedule')}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default Schedules;
