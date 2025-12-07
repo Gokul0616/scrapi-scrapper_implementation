@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Backend Testing Suite for SEO Metadata Scraper
-Tests comprehensive SEO data extraction functionality
+Backend Testing Suite for Scheduler Functionality
+Tests comprehensive scheduler API endpoints and functionality
 """
 
 import asyncio
@@ -16,7 +16,7 @@ from datetime import datetime
 # Add backend to path
 sys.path.append('/app/backend')
 
-class SEOScraperTester:
+class SchedulerTester:
     def __init__(self):
         # Get backend URL from frontend env
         self.base_url = "https://playwrite-setup-1.preview.emergentagent.com"
