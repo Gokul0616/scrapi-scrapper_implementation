@@ -2039,7 +2039,7 @@ const DatasetV2 = () => {
               <div className="text-center text-gray-500 mt-8">
                 <MessageSquare className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                 <p className="text-sm">Ask me anything about engaging with this lead!</p>
-                <p className="text-xs text-gray-400 mt-2">Try: "How should I approach this business?"</p>
+                <p className="text-xs text-gray-400 mt-2">Try: &quot;How should I approach this business?&quot;</p>
               </div>
             )}
             {chatMessages.map((msg, idx) => (
