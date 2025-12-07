@@ -4,8 +4,8 @@ Handles registration, discovery, and instantiation of all scrapers.
 """
 
 from typing import Dict, Type, List, Optional
-from base_scraper import BaseScraper
-from scraper_engine import ScraperEngine
+from .base_scraper import BaseScraper
+from .scraper_engine import ScraperEngine
 import logging
 
 logger = logging.getLogger(__name__)
