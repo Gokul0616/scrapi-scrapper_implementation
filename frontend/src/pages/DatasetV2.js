@@ -769,6 +769,11 @@ const DatasetV2 = () => {
   const isAmazonScraper = () => {
     return runDetails?.actor_name?.toLowerCase().includes('amazon') || false;
   };
+
+  // Helper function to detect if this is an SEO scraper run
+  const isSeoScraper = () => {
+    return runDetails?.actor_name?.toLowerCase().includes('seo') || false;
+  };
   
   // Helper function to format column names
   const formatColumnName = (key) => {
@@ -805,6 +810,94 @@ const DatasetV2 = () => {
     if (typeof value === 'object') {
       const entries = Object.entries(value);
       if (entries.length === 0) return '-';
+      
+      // SEO Scraper: Headings
+      if (key === 'headings') {
+        const h1 = value.h1 ? value.h1.length : 0;
+        const h2 = value.h2 ? value.h2.length : 0;
+        const h3 = value.h3 ? value.h3.length : 0;
+        const total = Object.values(value).reduce((acc, curr) => acc + (Array.isArray(curr) ? curr.length : 0), 0);
+        return (
+          <div className="text-xs">
+            <div className="font-semibold">{total} Headings</div>
+            <div className="text-gray-500">H1: {h1}, H2: {h2}, H3: {h3}</div>
+          </div>
+        );
+      }
+
+      // SEO Scraper: Images (Object with stats)
+      if (key === 'images' && value.total_images !== undefined) {
+        return (
+          <div className="text-xs">
+            <div className="font-semibold">{value.total_images} Images</div>
+            <div className="text-gray-500">{value.images_with_alt} with alt</div>
+            {value.sample_images && value.sample_images.length > 0 && (
+              <div className="flex gap-1 mt-1">
+                {value.sample_images.slice(0, 3).map((img, idx) => (
+                  <img 
+                    key={idx} 
+                    src={img.src} 
+                    alt={img.alt} 
+                    title={img.title || img.alt}
+                    className="w-6 h-6 rounded object-cover border border-gray-200" 
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      // SEO Scraper: Links
+      if (key === 'links' && value.total_links !== undefined) {
+        return (
+          <div className="text-xs">
+            <div className="font-semibold">{value.total_links} Links</div>
+            <div className="text-gray-500">
+              <span className="text-blue-600">{value.internal_links} Int</span> / 
+              <span className="text-orange-600"> {value.external_links} Ext</span>
+            </div>
+          </div>
+        );
+      }
+
+      // SEO Scraper: Open Graph & Twitter Card
+      if (key === 'open_graph' || key === 'twitter_card') {
+        const count = Object.keys(value).length;
+        if (count === 0) return <span className="text-gray-400">None</span>;
+        
+        // Show first 2 properties
+        const preview = Object.entries(value).slice(0, 2).map(([k, v]) => {
+            const valStr = String(v);
+            return `${k}: ${valStr.length > 20 ? valStr.substring(0, 20) + '...' : valStr}`;
+        }).join(', ');
+        
+        return (
+          <div className="text-xs group relative cursor-help">
+            <div className="font-semibold text-blue-600">{count} Tags</div>
+            <div className="text-gray-500 truncate max-w-[150px]">{preview}</div>
+            
+            {/* Hover tooltip for full details */}
+            <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-gray-900 text-white p-2 rounded shadow-lg z-50 w-64 text-xs whitespace-pre-wrap">
+               {Object.entries(value).map(([k, v]) => `${k}: ${v}`).join('\n')}
+            </div>
+          </div>
+        );
+      }
+      
+      // SEO Scraper: Icons
+      if (key === 'icons') {
+        return value.favicon ? (
+           <div className="flex items-center gap-2">
+             <img src={value.favicon} className="w-6 h-6 rounded border bg-gray-50" alt="Favicon" onError={(e) => e.target.style.display = 'none'} />
+             {value.apple_touch_icons && value.apple_touch_icons.length > 0 && (
+                <span className="text-xs bg-gray-100 px-1 rounded">+{value.apple_touch_icons.length}</span>
+             )}
+           </div>
+        ) : '-';
+      }
+
       if (key === 'socialMedia') {
         // Don't render here, will be handled by special case in table
         return null;
@@ -814,12 +907,32 @@ const DatasetV2 = () => {
     
     // Handle URLs
     if (typeof value === 'string' && (value.startsWith('http://') || value.startsWith('https://'))) {
+      // Check if it's an image URL (simple check)
+      if (value.match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
+          return (
+             <a href={value} target="_blank" rel="noreferrer">
+                <img src={value} className="h-8 w-8 object-cover rounded border" alt="Preview" />
+             </a>
+          );
+      }
       return (
         <a href={value} target="_blank" rel="noopener noreferrer" 
            className="text-blue-600 hover:text-blue-800 truncate max-w-xs block">
           {value.length > 50 ? value.substring(0, 50) + '...' : value}
         </a>
       );
+    }
+    
+    // Handle arrays for JSON-LD
+    if (Array.isArray(value) && key === 'json_ld') {
+        if (value.length === 0) return <span className="text-gray-400">None</span>;
+        const types = value.map(item => item['@type']).filter(Boolean).join(', ');
+        return (
+            <div className="text-xs">
+                <div className="font-semibold text-green-600">{value.length} Schemas</div>
+                <div className="text-gray-500 truncate max-w-[150px]">{types}</div>
+            </div>
+        );
     }
     
     // Handle boolean
