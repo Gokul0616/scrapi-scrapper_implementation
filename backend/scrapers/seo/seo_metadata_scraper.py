@@ -562,3 +562,184 @@ class SEOMetadataScraper(BaseScraper):
         """Get current timestamp in ISO format"""
         from datetime import datetime
         return datetime.utcnow().isoformat() + 'Z'
+
+    
+    async def _extract_microdata(self, page: Page) -> List[Dict[str, Any]]:
+        """Extract Schema.org microdata (itemscope/itemprop)"""
+        microdata_items = []
+        try:
+            items = await page.query_selector_all('[itemscope]')
+            for item in items:
+                item_type = await item.get_attribute('itemtype')
+                if item_type:
+                    item_data = {
+                        'type': item_type.split('/')[-1] if '/' in item_type else item_type,
+                        'properties': {}
+                    }
+                    
+                    # Extract all properties within this itemscope
+                    properties = await item.query_selector_all('[itemprop]')
+                    for prop in properties:
+                        prop_name = await prop.get_attribute('itemprop')
+                        prop_content = await prop.get_attribute('content')
+                        if not prop_content:
+                            prop_content = await prop.inner_text()
+                        
+                        if prop_name and prop_content:
+                            item_data['properties'][prop_name] = prop_content.strip()
+                    
+                    if item_data['properties']:
+                        microdata_items.append(item_data)
+        except Exception as e:
+            logger.debug(f"Error extracting microdata: {e}")
+        return microdata_items
+    
+    async def _extract_social_profiles(self, page: Page) -> Dict[str, str]:
+        """Extract social media profile links from the page"""
+        social_profiles = {}
+        social_patterns = {
+            'facebook': r'facebook\.com/',
+            'twitter': r'(twitter\.com/|x\.com/)',
+            'instagram': r'instagram\.com/',
+            'linkedin': r'linkedin\.com/',
+            'youtube': r'youtube\.com/',
+            'tiktok': r'tiktok\.com/',
+            'pinterest': r'pinterest\.com/',
+            'github': r'github\.com/'
+        }
+        
+        try:
+            import re
+            links = await page.query_selector_all('a[href]')
+            
+            for link in links:
+                href = await link.get_attribute('href')
+                if href:
+                    for platform, pattern in social_patterns.items():
+                        if re.search(pattern, href, re.IGNORECASE):
+                            if platform not in social_profiles:
+                                social_profiles[platform] = href
+                            break
+        except Exception as e:
+            logger.debug(f"Error extracting social profiles: {e}")
+        return social_profiles
+    
+    async def _extract_performance_hints(self, page: Page) -> Dict[str, Any]:
+        """Extract performance-related meta tags and hints"""
+        performance = {}
+        try:
+            # DNS prefetch
+            dns_prefetch = await page.query_selector_all('link[rel="dns-prefetch"]')
+            performance['dns_prefetch'] = [
+                await link.get_attribute('href') for link in dns_prefetch if await link.get_attribute('href')
+            ]
+            
+            # Preconnect
+            preconnect = await page.query_selector_all('link[rel="preconnect"]')
+            performance['preconnect'] = [
+                await link.get_attribute('href') for link in preconnect if await link.get_attribute('href')
+            ]
+            
+            # Preload
+            preload = await page.query_selector_all('link[rel="preload"]')
+            performance['preload'] = [
+                await link.get_attribute('href') for link in preload if await link.get_attribute('href')
+            ]
+            
+            # Prefetch
+            prefetch = await page.query_selector_all('link[rel="prefetch"]')
+            performance['prefetch'] = [
+                await link.get_attribute('href') for link in prefetch if await link.get_attribute('href')
+            ]
+            
+        except Exception as e:
+            logger.debug(f"Error extracting performance hints: {e}")
+        return performance
+    
+    async def _extract_security_info(self, page: Page) -> Dict[str, Any]:
+        """Extract security-related information"""
+        security = {}
+        try:
+            # Content Security Policy
+            csp = await self._get_meta_tag(page, 'http-equiv', 'Content-Security-Policy')
+            if csp:
+                security['content_security_policy'] = csp
+            
+            # X-Frame-Options
+            xframe = await self._get_meta_tag(page, 'http-equiv', 'X-Frame-Options')
+            if xframe:
+                security['x_frame_options'] = xframe
+            
+            # Referrer Policy
+            referrer = await self._get_meta_tag(page, 'name', 'referrer')
+            if referrer:
+                security['referrer_policy'] = referrer
+            
+            # HTTPS detection
+            security['uses_https'] = page.url.startswith('https://')
+            
+            # Check for mixed content warnings
+            try:
+                mixed_content = await page.evaluate('''() => {
+                    const images = document.querySelectorAll('img[src^="http:"]');
+                    const scripts = document.querySelectorAll('script[src^="http:"]');
+                    return {
+                        mixed_images: images.length,
+                        mixed_scripts: scripts.length
+                    };
+                }''')
+                security['mixed_content'] = mixed_content
+            except Exception:
+                pass
+                
+        except Exception as e:
+            logger.debug(f"Error extracting security info: {e}")
+        return security
+    
+    async def _extract_accessibility_info(self, page: Page) -> Dict[str, Any]:
+        """Extract accessibility-related information"""
+        accessibility = {}
+        try:
+            # Check for ARIA landmarks
+            landmarks = await page.evaluate('''() => {
+                const roles = ['banner', 'navigation', 'main', 'complementary', 'contentinfo', 'search', 'form'];
+                const found = {};
+                roles.forEach(role => {
+                    const elements = document.querySelectorAll(`[role="${role}"]`);
+                    if (elements.length > 0) {
+                        found[role] = elements.length;
+                    }
+                });
+                return found;
+            }''')
+            accessibility['aria_landmarks'] = landmarks
+            
+            # Check for lang attribute
+            has_lang = await page.evaluate('() => !!document.documentElement.lang')
+            accessibility['has_lang_attribute'] = has_lang
+            
+            # Check for skip links
+            skip_links = await page.query_selector_all('a[href^="#"][class*="skip"], a[href^="#main"]')
+            accessibility['has_skip_links'] = len(skip_links) > 0
+            
+            # Count images without alt text
+            images_without_alt = await page.evaluate('''() => {
+                const images = document.querySelectorAll('img:not([alt])');
+                return images.length;
+            }''')
+            accessibility['images_without_alt'] = images_without_alt
+            
+            # Check for form labels
+            forms_info = await page.evaluate('''() => {
+                const inputs = document.querySelectorAll('input, textarea, select');
+                const labeled = document.querySelectorAll('input[id] + label, label input, textarea[id] + label, label textarea, select[id] + label, label select');
+                return {
+                    total_form_elements: inputs.length,
+                    labeled_elements: labeled.length
+                };
+            }''')
+            accessibility['form_accessibility'] = forms_info
+            
+        except Exception as e:
+            logger.debug(f"Error extracting accessibility info: {e}")
+        return accessibility
