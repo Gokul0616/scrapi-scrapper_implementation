@@ -53,9 +53,11 @@ const Schedules = () => {
       const response = await axios.get(`${API_URL}/api/actors?page=1&limit=100`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setActors(response.data.actors);
+      console.log('Fetched actors:', response.data.actors); // Debug log
+      setActors(response.data.actors || []);
     } catch (error) {
       console.error('Error fetching actors:', error);
+      setActors([]);
     }
   };
 
