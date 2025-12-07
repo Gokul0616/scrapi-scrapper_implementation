@@ -1316,7 +1316,7 @@ async def get_schedules(
     
     # Get paginated results
     skip = (page - 1) * limit
-    schedules = await db.schedules.find(query).sort("created_at", -1).skip(skip).limit(limit).to_list(length=limit)
+    schedules = await db.schedules.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(length=limit)
     
     # Convert datetime strings back to datetime objects for response
     from services.scheduler_service import get_scheduler
