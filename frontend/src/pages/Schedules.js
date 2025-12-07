@@ -850,9 +850,19 @@ const ScheduleModal = ({ isEdit, schedule, actors, onClose, onSuccess }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Custom Cron Expression
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-gray-700">
+                Custom Cron Expression
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowHelp(true)}
+                className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm"
+              >
+                <HelpCircle size={16} />
+                <span>Need help?</span>
+              </button>
+            </div>
             <input
               type="text"
               value={formData.cron_expression}
