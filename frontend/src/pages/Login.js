@@ -135,6 +135,7 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
     setOtpError('');
+    setOtpSuccessMessage('');
     
     try {
       // Verify OTP via backend
@@ -149,15 +150,22 @@ const Login = () => {
       });
 
       const data = await response.json();
-      console.log('OTP Verification Response:', data);
+      console.log('OTP Verification Response:', response.status, data);
 
-      if (response.ok && data.success && data.access_token) {
-        // Store token and user data
-        localStorage.setItem('token', data.access_token);
-        setUser(data.user);
-        
-        navigate(lastPath || '/home');
+      if (response.ok) {
+        // Check if the response contains the required fields
+        if (data.success && data.access_token) {
+          // Store token and user data
+          localStorage.setItem('token', data.access_token);
+          setUser(data.user);
+          
+          navigate(lastPath || '/home');
+        } else {
+          // Response is OK but missing required fields
+          setOtpError(data.detail || data.message || 'Invalid response from server');
+        }
       } else {
+        // Response is not OK (400, 404, etc.) - display the backend error message
         setOtpError(data.detail || data.message || 'Invalid verification code');
       }
     } catch (error) {
