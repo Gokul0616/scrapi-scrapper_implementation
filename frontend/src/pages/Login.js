@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { showError } from '../components/ErrorDisplay';
-import { Check, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { Check, ArrowLeft, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import OTPInput from '../components/OTPInput';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || '';
