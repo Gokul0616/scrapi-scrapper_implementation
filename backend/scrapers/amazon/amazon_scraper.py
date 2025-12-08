@@ -242,6 +242,35 @@ class AmazonProductScraper(BaseScraper):
                 await page.goto(search_url, wait_until="domcontentloaded", timeout=30000)
                 await asyncio.sleep(5)  # Increased wait time for Amazon
                 
+                # Check for error pages (503, dogs, etc.)
+                content = await page.content()
+                if "Sorry! Something went wrong!" in content or "dogs of amazon" in content.lower():
+                    logger.warning(f"⚠️ Amazon 503/Error detected on page {current_page}!")
+                    # Retry logic
+                    retry_success = False
+                    for retry in range(3):
+                        logger.info(f"🔄 Retrying page {current_page} (Attempt {retry+1}/3)...")
+                        await asyncio.sleep(5 + (retry * 2))
+                        
+                        # Try to create a new context/page for retry to get fresh session
+                        await page.close()
+                        context_retry = await self.engine.create_context(use_proxy=False)
+                        page = await context_retry.new_page()
+                        
+                        try:
+                            await page.goto(search_url, wait_until="domcontentloaded", timeout=30000)
+                            await asyncio.sleep(5)
+                            content = await page.content()
+                            if "Sorry! Something went wrong!" not in content and "dogs of amazon" not in content.lower():
+                                retry_success = True
+                                break
+                        except Exception as e:
+                            logger.error(f"Retry failed: {e}")
+                    
+                    if not retry_success:
+                        logger.error(f"❌ Failed to bypass Amazon error page after retries.")
+                        break
+
                 # Check for CAPTCHA
                 content = await page.content()
                 if "api-services-support@amazon.com" in content or "Enter the characters you see below" in content:
