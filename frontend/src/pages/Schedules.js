@@ -678,14 +678,14 @@ const Schedules = () => {
 };
 
 // Dynamic Input Field Component
-const DynamicInputField = ({ fieldKey, schema, value, onChange }) => {
+const DynamicInputField = ({ fieldKey, schema, value, onChange, required }) => {
   const [arrayInput, setArrayInput] = useState('');
   
   // Get field properties
   const fieldType = schema.type || 'string';
   const fieldTitle = schema.title || schema.description || fieldKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   const fieldDescription = schema.description || '';
-  const isRequired = schema.required || false;
+  const isRequired = required || schema.required || false;
   const defaultValue = schema.default;
   const placeholder = schema.example ? JSON.stringify(schema.example) : '';
 
