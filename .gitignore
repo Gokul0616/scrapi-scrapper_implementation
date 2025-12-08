@@ -495,3 +495,7 @@ android-sdk/ -e
 *.env.*
 
 !backend/envcyop.txt
+-e 
+# Environment files
+*.env
+*.env.*
