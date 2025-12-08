@@ -24,12 +24,27 @@ const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [confirmPasswordError, setConfirmPasswordError] = useState('');
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
+    setEmailError('');
+    setIsCheckingEmail(true);
     
     try {
+      // Check if email already exists
+      const checkResponse = await fetch(`${API_URL}/api/users/check-email?email=${encodeURIComponent(formData.email)}`);
+      const checkData = await checkResponse.json();
+      
+      if (checkData.exists) {
+        setEmailError('Email already registered. Please login instead.');
+        setIsCheckingEmail(false);
+        return;
+      }
+      
       // Send OTP via backend
       const response = await fetch(`${API_URL}/api/auth/send-otp`, {
         method: 'POST',
@@ -43,11 +58,12 @@ const Register = () => {
         showError('Verification code sent to your email', { type: 'success', title: 'OTP Sent' });
         setStep(2);
       } else {
-        showError(data.detail || 'Failed to send verification code', { type: 'error', title: 'Error' });
+        setEmailError(data.detail || 'Failed to send verification code');
       }
     } catch (error) {
-      showError('Network error. Please try again.', { type: 'error', title: 'Error' });
+      setEmailError('Network error. Please try again.');
     } finally {
+      setIsCheckingEmail(false);
       setIsLoading(false);
     }
   };
