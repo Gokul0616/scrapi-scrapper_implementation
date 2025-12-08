@@ -139,7 +139,7 @@ const Register = () => {
   };
 
   const handleOAuthSignup = (provider) => {
-    showError(`${provider} OAuth integration coming soon!`, { type: 'info', title: 'Coming Soon' });
+    // OAuth integration coming soon - no notification needed
   };
 
   const handleBack = () => {
