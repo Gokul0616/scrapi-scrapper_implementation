@@ -141,17 +141,19 @@ const Login = () => {
       });
 
       const data = await response.json();
+      console.log('OTP Verification Response:', data);
 
-      if (response.ok && data.access_token) {
+      if (response.ok && data.success && data.access_token) {
         // Store token and user data
         localStorage.setItem('token', data.access_token);
         setUser(data.user);
         
         navigate(lastPath || '/home');
       } else {
-        setOtpError(data.detail || 'Invalid verification code');
+        setOtpError(data.detail || data.message || 'Invalid verification code');
       }
     } catch (error) {
+      console.error('OTP Verification Error:', error);
       setOtpError('Network error. Please try again.');
     } finally {
       setIsLoading(false);
