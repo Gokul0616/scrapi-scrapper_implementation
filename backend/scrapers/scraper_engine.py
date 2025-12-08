@@ -97,20 +97,26 @@ class ScraperEngine:
         # Add manual anti-detection scripts (always good as backup or if stealth fails)
         await context.add_init_script("""
             Object.defineProperty(navigator, 'webdriver', {
-                get: () => undefined
+                get: () => false
             });
             
-            window.chrome = {
-                runtime: {}
-            };
-            
+            // Overwrite the `plugins` property to use a custom getter.
             Object.defineProperty(navigator, 'plugins', {
-                get: () => [1, 2, 3, 4, 5]
+                get: () => [1, 2, 3, 4, 5],
             });
-            
+
+            // Pass the Webdriver Test.
             Object.defineProperty(navigator, 'languages', {
-                get: () => ['en-US', 'en']
+                get: () => ['en-US', 'en'],
             });
+
+            // Mock permissions
+            const originalQuery = window.navigator.permissions.query;
+            window.navigator.permissions.query = (parameters) => (
+                parameters.name === 'notifications' ?
+                    Promise.resolve({ state: Notification.permission }) :
+                    originalQuery(parameters)
+            );
         """)
         
         self.contexts.append(context)
