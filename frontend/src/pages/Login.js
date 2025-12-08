@@ -121,6 +121,7 @@ const Login = () => {
   const handleOTPSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setOtpError('');
     
     try {
       // Verify OTP via backend
@@ -141,13 +142,12 @@ const Login = () => {
         localStorage.setItem('token', data.access_token);
         setUser(data.user);
         
-        showError('Login successful!', { type: 'success', title: 'Welcome' });
         navigate(lastPath || '/home');
       } else {
-        showError(data.detail || 'Invalid verification code', { type: 'error', title: 'Verification Failed' });
+        setOtpError(data.detail || 'Invalid verification code');
       }
     } catch (error) {
-      showError('Network error. Please try again.', { type: 'error', title: 'Error' });
+      setOtpError('Network error. Please try again.');
     } finally {
       setIsLoading(false);
     }
