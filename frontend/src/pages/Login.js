@@ -25,6 +25,7 @@ const Login = () => {
   const [passwordError, setPasswordError] = useState('');
   const [otpError, setOtpError] = useState('');
   const [sendOtpError, setSendOtpError] = useState('');
+  const [otpSuccessMessage, setOtpSuccessMessage] = useState('');
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
 
   const handleEmailSubmit = async (e) => {
