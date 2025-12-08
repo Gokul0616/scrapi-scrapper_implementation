@@ -110,14 +110,16 @@ const Register = () => {
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
+    setPasswordError('');
+    setConfirmPasswordError('');
     
-    if (formData.password !== formData.confirmPassword) {
-      showError('Passwords do not match', { type: 'error', title: 'Password Mismatch' });
+    if (formData.password.length < 8) {
+      setPasswordError('Password must be at least 8 characters');
       return;
     }
-
-    if (formData.password.length < 8) {
-      showError('Password must be at least 8 characters', { type: 'error', title: 'Weak Password' });
+    
+    if (formData.password !== formData.confirmPassword) {
+      setConfirmPasswordError('Passwords do not match');
       return;
     }
 
@@ -130,7 +132,7 @@ const Register = () => {
       showError('Registration successful!', { type: 'success', title: 'Welcome' });
       navigate('/home');
     } else {
-      showError(result.error || 'Registration failed', { type: 'error', title: 'Registration Failed' });
+      setPasswordError(result.error || 'Registration failed');
     }
     
     setIsLoading(false);
