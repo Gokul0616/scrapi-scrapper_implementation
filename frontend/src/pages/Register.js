@@ -101,8 +101,9 @@ const Register = () => {
 
   const handleDetailsSubmit = async (e) => {
     e.preventDefault();
+    setFullNameError('');
     if (!formData.fullName) {
-      showError('Full name is required', { type: 'error', title: 'Required Field' });
+      setFullNameError('Full name is required');
       return;
     }
     setStep(4);
