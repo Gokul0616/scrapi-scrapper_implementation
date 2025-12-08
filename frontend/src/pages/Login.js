@@ -3,7 +3,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { showError } from '../components/ErrorDisplay';
 import { Check, ArrowLeft, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import OTPInput from '../components/OTPInput';
 
@@ -24,6 +23,7 @@ const Login = () => {
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [otpError, setOtpError] = useState('');
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
 
   const handleEmailSubmit = async (e) => {
