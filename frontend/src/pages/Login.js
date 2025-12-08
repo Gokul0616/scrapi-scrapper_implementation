@@ -67,33 +67,11 @@ const Login = () => {
     setIsLoading(false);
   };
 
-  const handleContinueWithoutPassword = async () => {
+  const handleContinueWithoutPassword = () => {
+    // Just navigate to Send OTP screen, don't send OTP yet
     setUsePasswordless(true);
-    setIsLoading(true);
     setPasswordError('');
-    
-    try {
-      // Send OTP via backend
-      const response = await fetch(`${API_URL}/api/auth/send-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email, purpose: 'login' })
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setStep(3);
-      } else {
-        setPasswordError(data.detail || 'Failed to send verification code');
-        setUsePasswordless(false);
-      }
-    } catch (error) {
-      setPasswordError('Network error. Please try again.');
-      setUsePasswordless(false);
-    } finally {
-      setIsLoading(false);
-    }
+    setStep(3);
   };
 
   const handleSendOTP = async () => {
