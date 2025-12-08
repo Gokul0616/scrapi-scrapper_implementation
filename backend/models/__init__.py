@@ -6,6 +6,7 @@ from .dataset import Dataset, DatasetItem
 from .proxy import Proxy, ProxyCreate
 from .chat import LeadChatMessage, LeadChatRequest, GlobalChatMessage, GlobalChatRequest
 from .schedule import Schedule, ScheduleCreate, ScheduleUpdate, ScheduleResponse
+from .otp import OTP, SendOTPRequest, VerifyOTPRequest, OTPResponse
 
 __all__ = [
     # User models
@@ -21,5 +22,7 @@ __all__ = [
     # Chat models
     'LeadChatMessage', 'LeadChatRequest', 'GlobalChatMessage', 'GlobalChatRequest',
     # Schedule models
-    'Schedule', 'ScheduleCreate', 'ScheduleUpdate', 'ScheduleResponse'
+    'Schedule', 'ScheduleCreate', 'ScheduleUpdate', 'ScheduleResponse',
+    # OTP models
+    'OTP', 'SendOTPRequest', 'VerifyOTPRequest', 'OTPResponse'
 ]
