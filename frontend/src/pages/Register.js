@@ -186,7 +186,7 @@ const Register = () => {
     <div className="min-h-screen flex">
       {/* Left Column - Marketing Content - Only show on step 1 */}
       {step === 1 && (
-        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#f8f5ff] via-[#ede7ff] to-[#f3efff] p-12 flex-col justify-between">
+        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#f0f9ff] via-[#e0f2fe] to-[#eff6ff] p-12 flex-col justify-between">
           {/* Logo */}
           <div className="flex items-center space-x-2">
             <img src="/logo.png" alt="SCRAPI Logo" className="w-9 h-9" />
