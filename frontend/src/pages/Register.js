@@ -357,6 +357,15 @@ const Register = () => {
                 <span className="font-medium text-gray-900">{formData.email}</span>
               </p>
 
+              {otpSuccessMessage && (
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+                  <p className="text-[12px] text-green-600 flex items-center justify-center">
+                    <Check className="w-3.5 h-3.5 mr-1" />
+                    {otpSuccessMessage}
+                  </p>
+                </div>
+              )}
+
               <form onSubmit={handleOTPSubmit} className="space-y-6">
                 <div>
                   <label className="block text-[13px] font-medium text-gray-700 mb-3 text-center">
@@ -368,6 +377,7 @@ const Register = () => {
                     onChange={(otp) => {
                       setFormData({ ...formData, otp });
                       setOtpError('');
+                      setOtpSuccessMessage('');
                     }}
                     disabled={isLoading}
                   />
