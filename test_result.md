@@ -178,6 +178,18 @@ frontend:
           agent: "main"
           comment: "Frontend scheduler interface implemented - not testing frontend per instructions"
 
+  - task: "Authentication UI Redesign - Login & Signup"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/Login.js, frontend/src/pages/Register.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Redesigned login and signup flows with new UX - Login: Email → Password (no left panel) with passwordless option → OTP. Signup: Email → OTP → Profile (Org name optional + Full name) → Password + Confirm Password with eye icons. Left panel only shown on first step."
+
 metadata:
   created_by: "testing_agent"
   version: "1.0"
