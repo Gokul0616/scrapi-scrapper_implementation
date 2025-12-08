@@ -19,7 +19,7 @@ sys.path.append('/app/backend')
 class SchedulerTester:
     def __init__(self):
         # Get backend URL from frontend env
-        self.base_url = "https://error-handle.preview.emergentagent.com"
+        self.base_url = "https://fullstack-otp-flow.preview.emergentagent.com"
         try:
             with open('/app/frontend/.env', 'r') as f:
                 for line in f:
