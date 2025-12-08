@@ -316,18 +316,27 @@ const Register = () => {
                     type="email"
                     placeholder="Enter your email"
                     value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, email: e.target.value });
+                      setEmailError('');
+                    }}
                     required
-                    className="w-full h-[38px] text-[14px] border-gray-300 rounded-md"
+                    className={`w-full h-[38px] text-[14px] rounded-md ${emailError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
                   />
+                  {emailError && (
+                    <p className="mt-1.5 text-[12px] text-red-600 flex items-center">
+                      <AlertCircle className="w-3.5 h-3.5 mr-1" />
+                      {emailError}
+                    </p>
+                  )}
                 </div>
 
                 <Button
                   type="submit"
                   className="w-full bg-gray-900 hover:bg-gray-800 text-white h-[38px] text-[14px] font-medium rounded-md mt-2"
-                  disabled={isLoading}
+                  disabled={isCheckingEmail}
                 >
-                  {isLoading ? 'Sending OTP...' : 'Next'}
+                  {isCheckingEmail ? 'Checking...' : 'Next'}
                 </Button>
               </form>
             </>
