@@ -419,10 +419,19 @@ const Register = () => {
                     type="text"
                     placeholder="Enter your full name"
                     value={formData.fullName}
-                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, fullName: e.target.value });
+                      setFullNameError('');
+                    }}
                     required
-                    className="w-full h-[38px] text-[14px] border-gray-300 rounded-md"
+                    className={`w-full h-[38px] text-[14px] rounded-md ${fullNameError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
                   />
+                  {fullNameError && (
+                    <p className="mt-1.5 text-[12px] text-red-600 flex items-center">
+                      <AlertCircle className="w-3.5 h-3.5 mr-1" />
+                      {fullNameError}
+                    </p>
+                  )}
                 </div>
 
                 <Button
