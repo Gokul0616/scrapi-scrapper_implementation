@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { toast } from '../hooks/use-toast';
-import { Check, ArrowLeft } from 'lucide-react';
+import { Check, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import OTPInput from '../components/OTPInput';
 
 const Register = () => {
@@ -16,9 +16,12 @@ const Register = () => {
     otp: '',
     fullName: '',
     organizationName: '',
-    password: ''
+    password: '',
+    confirmPassword: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
@@ -64,11 +67,26 @@ const Register = () => {
 
   const handleDetailsSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.fullName) {
+      toast({ title: 'Full name is required', variant: 'destructive' });
+      return;
+    }
     setStep(4);
   };
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
+    
+    if (formData.password !== formData.confirmPassword) {
+      toast({ title: 'Passwords do not match', variant: 'destructive' });
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      toast({ title: 'Password must be at least 8 characters', variant: 'destructive' });
+      return;
+    }
+
     setIsLoading(true);
 
     // Use email as username for registration
@@ -100,76 +118,78 @@ const Register = () => {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left Column - Marketing Content */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#f8f5ff] via-[#ede7ff] to-[#f3efff] p-12 flex-col justify-between">
-        <div>
-          {/* Logo */}
-          <div className="flex items-center space-x-2 mb-16">
-            <img src="/logo.png" alt="SCRAPI Logo" className="w-9 h-9" />
-            <span className="text-xl font-semibold text-gray-900">SCRAPI</span>
-          </div>
+      {/* Left Column - Marketing Content - Only show on step 1 */}
+      {step === 1 && (
+        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#f8f5ff] via-[#ede7ff] to-[#f3efff] p-12 flex-col justify-between">
+          <div>
+            {/* Logo */}
+            <div className="flex items-center space-x-2 mb-16">
+              <img src="/logo.png" alt="SCRAPI Logo" className="w-9 h-9" />
+              <span className="text-xl font-semibold text-gray-900">SCRAPI</span>
+            </div>
 
-          {/* Main Content */}
-          <div className="max-w-md">
-            <h1 className="text-[28px] leading-[34px] font-semibold text-gray-900 mb-7">
-              Get started with a free plan
-            </h1>
+            {/* Main Content */}
+            <div className="max-w-md">
+              <h1 className="text-[28px] leading-[34px] font-semibold text-gray-900 mb-7">
+                Get started with a free plan
+              </h1>
 
-            <div className="space-y-5">
-              {/* Feature 1 */}
-              <div className="flex items-start space-x-2.5">
-                <div className="flex-shrink-0 mt-0.5">
-                  <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
+              <div className="space-y-5">
+                {/* Feature 1 */}
+                <div className="flex items-start space-x-2.5">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
+                  </div>
+                  <div>
+                    <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">$5.00 free platform credit every month</p>
+                    <p className="text-[13px] leading-[19px] text-gray-600">
+                      No credit card required. You can upgrade any time.
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">$5.00 free platform credit every month</p>
-                  <p className="text-[13px] leading-[19px] text-gray-600">
-                    No credit card required. You can upgrade any time.
-                  </p>
-                </div>
-              </div>
 
-              {/* Feature 2 */}
-              <div className="flex items-start space-x-2.5">
-                <div className="flex-shrink-0 mt-0.5">
-                  <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
+                {/* Feature 2 */}
+                <div className="flex items-start space-x-2.5">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
+                  </div>
+                  <div>
+                    <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Start scraping immediately</p>
+                    <p className="text-[13px] leading-[19px] text-gray-600">
+                      Use one of thousands of pre-built Actors for your web scraping and automation projects.
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Start scraping immediately</p>
-                  <p className="text-[13px] leading-[19px] text-gray-600">
-                    Use one of thousands of pre-built Actors for your web scraping and automation projects.
-                  </p>
-                </div>
-              </div>
 
-              {/* Feature 3 */}
-              <div className="flex items-start space-x-2.5">
-                <div className="flex-shrink-0 mt-0.5">
-                  <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
-                </div>
-                <div>
-                  <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Build your own solution</p>
-                  <p className="text-[13px] leading-[19px] text-gray-600">
-                    Our ready to use infrastructure, proxies, and storage set you up for immediate success.
-                  </p>
+                {/* Feature 3 */}
+                <div className="flex items-start space-x-2.5">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
+                  </div>
+                  <div>
+                    <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Build your own solution</p>
+                    <p className="text-[13px] leading-[19px] text-gray-600">
+                      Our ready to use infrastructure, proxies, and storage set you up for immediate success.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Footer */}
-        <div className="text-[11px] leading-[16px] text-gray-500">
-          This site is protected by reCAPTCHA and the{' '}
-          <a href="#" className="text-blue-600 hover:underline">Google Privacy Policy</a>
-          {' '}and{' '}
-          <a href="#" className="text-blue-600 hover:underline">Terms of Service</a>
-          {' '}apply.
+          {/* Footer */}
+          <div className="text-[11px] leading-[16px] text-gray-500">
+            This site is protected by reCAPTCHA and the{' '}
+            <a href="#" className="text-blue-600 hover:underline">Google Privacy Policy</a>
+            {' '}and{' '}
+            <a href="#" className="text-blue-600 hover:underline">Terms of Service</a>
+            {' '}apply.
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Right Column - Signup Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white">
+      <div className={`w-full ${step === 1 ? 'lg:w-1/2' : ''} flex items-center justify-center p-8 bg-white`}>
         <div className="w-full max-w-[360px]">
           {/* Back button */}
           {step > 1 && (
@@ -251,7 +271,7 @@ const Register = () => {
                   className="w-full bg-gray-900 hover:bg-gray-800 text-white h-[38px] text-[14px] font-medium rounded-md mt-2"
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Sending OTP...' : 'Continue'}
+                  {isLoading ? 'Sending OTP...' : 'Next'}
                 </Button>
               </form>
             </>
@@ -303,6 +323,20 @@ const Register = () => {
             <>
               <form onSubmit={handleDetailsSubmit} className="space-y-4">
                 <div>
+                  <label htmlFor="organizationName" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                    Organization Name <span className="text-gray-500">(Optional)</span>
+                  </label>
+                  <Input
+                    id="organizationName"
+                    type="text"
+                    placeholder="Enter your organization name"
+                    value={formData.organizationName}
+                    onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })}
+                    className="w-full h-[38px] text-[14px] border-gray-300 rounded-md"
+                  />
+                </div>
+
+                <div>
                   <label htmlFor="fullName" className="block text-[13px] font-medium text-gray-700 mb-1.5">
                     Full Name
                   </label>
@@ -312,21 +346,6 @@ const Register = () => {
                     placeholder="Enter your full name"
                     value={formData.fullName}
                     onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                    required
-                    className="w-full h-[38px] text-[14px] border-gray-300 rounded-md"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="organizationName" className="block text-[13px] font-medium text-gray-700 mb-1.5">
-                    Organization Name
-                  </label>
-                  <Input
-                    id="organizationName"
-                    type="text"
-                    placeholder="Enter your organization name"
-                    value={formData.organizationName}
-                    onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })}
                     required
                     className="w-full h-[38px] text-[14px] border-gray-300 rounded-md"
                   />
@@ -349,18 +368,51 @@ const Register = () => {
                   <label htmlFor="password" className="block text-[13px] font-medium text-gray-700 mb-1.5">
                     Password
                   </label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Create a strong password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    required
-                    className="w-full h-[38px] text-[14px] border-gray-300 rounded-md"
-                  />
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Create a strong password"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      required
+                      className="w-full h-[38px] text-[14px] border-gray-300 rounded-md pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                   <p className="mt-1.5 text-[11px] text-gray-500">
                     Use at least 8 characters with a mix of letters, numbers & symbols
                   </p>
+                </div>
+
+                <div>
+                  <label htmlFor="confirmPassword" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                    Confirm Password
+                  </label>
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      placeholder="Re-enter your password"
+                      value={formData.confirmPassword}
+                      onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                      required
+                      className="w-full h-[38px] text-[14px] border-gray-300 rounded-md pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
 
                 <Button

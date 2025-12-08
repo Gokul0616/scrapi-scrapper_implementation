@@ -4,60 +4,25 @@ import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { toast } from '../hooks/use-toast';
-import { Check, ArrowLeft } from 'lucide-react';
+import { Check, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import OTPInput from '../components/OTPInput';
 
 const Login = () => {
   const navigate = useNavigate();
   const { login, lastPath } = useAuth();
-  const [step, setStep] = useState(1); // 1: Email, 2: OTP, 3: Password
+  const [step, setStep] = useState(1); // 1: Email, 2: Password, 3: OTP (passwordless)
   const [formData, setFormData] = useState({ 
     email: '', 
     otp: '',
     password: '' 
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [usePasswordless, setUsePasswordless] = useState(false);
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
-    
-    // Simulate OTP sending
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    toast({ 
-      title: 'OTP Sent', 
-      description: `Verification code sent to ${formData.email}`, 
-      variant: 'default' 
-    });
-    
-    setIsLoading(false);
     setStep(2);
-  };
-
-  const handleOTPSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    // Simulate OTP verification
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    if (formData.otp.length === 6) {
-      toast({ 
-        title: 'OTP Verified', 
-        description: 'Please enter your password', 
-        variant: 'default' 
-      });
-      setIsLoading(false);
-      setStep(3);
-    } else {
-      toast({ 
-        title: 'Invalid OTP', 
-        description: 'Please enter a valid 6-digit code', 
-        variant: 'destructive' 
-      });
-      setIsLoading(false);
-    }
   };
 
   const handlePasswordSubmit = async (e) => {
@@ -76,6 +41,54 @@ const Login = () => {
     setIsLoading(false);
   };
 
+  const handleContinueWithoutPassword = () => {
+    setUsePasswordless(true);
+    setStep(3);
+  };
+
+  const handleSendOTP = async () => {
+    setIsLoading(true);
+    
+    // Simulate OTP sending
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    toast({ 
+      title: 'OTP Sent', 
+      description: `Verification code sent to ${formData.email}`, 
+      variant: 'default' 
+    });
+    
+    setIsLoading(false);
+  };
+
+  const handleOTPSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    // Simulate OTP verification and login
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    if (formData.otp.length === 6) {
+      // Simulate successful login with OTP
+      const result = await login(formData.email, formData.password || 'otp-login');
+      
+      if (result.success) {
+        toast({ title: 'Login successful!', variant: 'default' });
+        navigate(result.redirectPath || '/home');
+      } else {
+        toast({ title: 'Invalid OTP', description: 'Please try again', variant: 'destructive' });
+      }
+    } else {
+      toast({ 
+        title: 'Invalid OTP', 
+        description: 'Please enter a valid 6-digit code', 
+        variant: 'destructive' 
+      });
+    }
+    
+    setIsLoading(false);
+  };
+
   const handleOAuthLogin = (provider) => {
     toast({ 
       title: 'OAuth Integration', 
@@ -85,83 +98,94 @@ const Login = () => {
   };
 
   const handleBack = () => {
-    if (step > 1) {
+    if (step === 3 && usePasswordless) {
+      setUsePasswordless(false);
+      setStep(2);
+    } else if (step > 1) {
       setStep(step - 1);
     }
   };
 
+  const handleUseDifferentEmail = () => {
+    setFormData({ email: '', otp: '', password: '' });
+    setUsePasswordless(false);
+    setStep(1);
+  };
+
   return (
     <div className="min-h-screen flex">
-      {/* Left Column - Marketing Content */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#f8f5ff] via-[#ede7ff] to-[#f3efff] p-12 flex-col justify-between">
-        <div>
-          {/* Logo */}
-          <div className="flex items-center space-x-2 mb-16">
-            <img src="/logo.png" alt="SCRAPI Logo" className="w-9 h-9" />
-            <span className="text-xl font-semibold text-gray-900">SCRAPI</span>
-          </div>
+      {/* Left Column - Marketing Content - Only show on step 1 */}
+      {step === 1 && (
+        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#f8f5ff] via-[#ede7ff] to-[#f3efff] p-12 flex-col justify-between">
+          <div>
+            {/* Logo */}
+            <div className="flex items-center space-x-2 mb-16">
+              <img src="/logo.png" alt="SCRAPI Logo" className="w-9 h-9" />
+              <span className="text-xl font-semibold text-gray-900">SCRAPI</span>
+            </div>
 
-          {/* Main Content */}
-          <div className="max-w-md">
-            <h1 className="text-[28px] leading-[34px] font-semibold text-gray-900 mb-7">
-              Get started with a free plan
-            </h1>
+            {/* Main Content */}
+            <div className="max-w-md">
+              <h1 className="text-[28px] leading-[34px] font-semibold text-gray-900 mb-7">
+                Get started with a free plan
+              </h1>
 
-            <div className="space-y-5">
-              {/* Feature 1 */}
-              <div className="flex items-start space-x-2.5">
-                <div className="flex-shrink-0 mt-0.5">
-                  <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
+              <div className="space-y-5">
+                {/* Feature 1 */}
+                <div className="flex items-start space-x-2.5">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
+                  </div>
+                  <div>
+                    <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">$5.00 free platform credit every month</p>
+                    <p className="text-[13px] leading-[19px] text-gray-600">
+                      No credit card required. You can upgrade any time.
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">$5.00 free platform credit every month</p>
-                  <p className="text-[13px] leading-[19px] text-gray-600">
-                    No credit card required. You can upgrade any time.
-                  </p>
-                </div>
-              </div>
 
-              {/* Feature 2 */}
-              <div className="flex items-start space-x-2.5">
-                <div className="flex-shrink-0 mt-0.5">
-                  <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
+                {/* Feature 2 */}
+                <div className="flex items-start space-x-2.5">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
+                  </div>
+                  <div>
+                    <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Start scraping immediately</p>
+                    <p className="text-[13px] leading-[19px] text-gray-600">
+                      Use one of thousands of pre-built Actors for your web scraping and automation projects.
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Start scraping immediately</p>
-                  <p className="text-[13px] leading-[19px] text-gray-600">
-                    Use one of thousands of pre-built Actors for your web scraping and automation projects.
-                  </p>
-                </div>
-              </div>
 
-              {/* Feature 3 */}
-              <div className="flex items-start space-x-2.5">
-                <div className="flex-shrink-0 mt-0.5">
-                  <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
-                </div>
-                <div>
-                  <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Build your own solution</p>
-                  <p className="text-[13px] leading-[19px] text-gray-600">
-                    Our ready to use infrastructure, proxies, and storage set you up for immediate success.
-                  </p>
+                {/* Feature 3 */}
+                <div className="flex items-start space-x-2.5">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
+                  </div>
+                  <div>
+                    <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Build your own solution</p>
+                    <p className="text-[13px] leading-[19px] text-gray-600">
+                      Our ready to use infrastructure, proxies, and storage set you up for immediate success.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Footer */}
-        <div className="text-[11px] leading-[16px] text-gray-500">
-          This site is protected by reCAPTCHA and the{' '}
-          <a href="#" className="text-blue-600 hover:underline">Google Privacy Policy</a>
-          {' '}and{' '}
-          <a href="#" className="text-blue-600 hover:underline">Terms of Service</a>
-          {' '}apply.
+          {/* Footer */}
+          <div className="text-[11px] leading-[16px] text-gray-500">
+            This site is protected by reCAPTCHA and the{' '}
+            <a href="#" className="text-blue-600 hover:underline">Google Privacy Policy</a>
+            {' '}and{' '}
+            <a href="#" className="text-blue-600 hover:underline">Terms of Service</a>
+            {' '}apply.
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Right Column - Login Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white">
+      <div className={`w-full ${step === 1 ? 'lg:w-1/2' : ''} flex items-center justify-center p-8 bg-white`}>
         <div className="w-full max-w-[360px]">
           {/* Back button */}
           {step > 1 && (
@@ -176,8 +200,8 @@ const Login = () => {
 
           <h2 className="text-[22px] leading-[28px] font-semibold text-gray-900 mb-6">
             {step === 1 && 'Log in to your account'}
-            {step === 2 && 'Enter verification code'}
-            {step === 3 && 'Enter your password'}
+            {step === 2 && 'Enter your password'}
+            {step === 3 && 'Enter verification code'}
           </h2>
 
           {step === 1 && (
@@ -242,7 +266,7 @@ const Login = () => {
                   className="w-full bg-gray-900 hover:bg-gray-800 text-white h-[38px] text-[14px] font-medium rounded-md mt-2"
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Sending OTP...' : 'Continue'}
+                  {isLoading ? 'Please wait...' : 'Next'}
                 </Button>
               </form>
             </>
@@ -250,62 +274,33 @@ const Login = () => {
 
           {step === 2 && (
             <>
-              <p className="text-[13px] text-gray-600 mb-6 text-center">
-                We sent a verification code to<br />
+              <p className="text-[13px] text-gray-600 mb-6">
                 <span className="font-medium text-gray-900">{formData.email}</span>
               </p>
 
-              <form onSubmit={handleOTPSubmit} className="space-y-6">
-                <div>
-                  <label className="block text-[13px] font-medium text-gray-700 mb-3 text-center">
-                    Enter 6-digit code
-                  </label>
-                  <OTPInput
-                    length={6}
-                    value={formData.otp}
-                    onChange={(otp) => setFormData({ ...formData, otp })}
-                    disabled={isLoading}
-                  />
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full bg-gray-900 hover:bg-gray-800 text-white h-[38px] text-[14px] font-medium rounded-md"
-                  disabled={isLoading || formData.otp.length !== 6}
-                >
-                  {isLoading ? 'Verifying...' : 'Verify'}
-                </Button>
-
-                <p className="text-center text-[13px] text-gray-600">
-                  Didn't receive the code?{' '}
-                  <button
-                    type="button"
-                    onClick={() => toast({ title: 'OTP Resent', variant: 'default' })}
-                    className="text-blue-600 hover:underline font-medium"
-                  >
-                    Resend
-                  </button>
-                </p>
-              </form>
-            </>
-          )}
-
-          {step === 3 && (
-            <>
               <form onSubmit={handlePasswordSubmit} className="space-y-4">
                 <div>
                   <label htmlFor="password" className="block text-[13px] font-medium text-gray-700 mb-1.5">
                     Password
                   </label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Enter your password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    required
-                    className="w-full h-[38px] text-[14px] border-gray-300 rounded-md"
-                  />
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Enter your password"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      required
+                      className="w-full h-[38px] text-[14px] border-gray-300 rounded-md pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
 
                 <Button
@@ -315,7 +310,92 @@ const Login = () => {
                 >
                   {isLoading ? 'Signing in...' : 'Sign in'}
                 </Button>
+
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={handleContinueWithoutPassword}
+                    className="text-[13px] text-blue-600 hover:underline font-medium"
+                  >
+                    Continue without password
+                  </button>
+                </div>
               </form>
+            </>
+          )}
+
+          {step === 3 && usePasswordless && (
+            <>
+              <p className="text-[13px] text-gray-600 mb-6">
+                We'll send a verification code to<br />
+                <span className="font-medium text-gray-900">{formData.email}</span>
+              </p>
+
+              {formData.otp === '' ? (
+                <div className="space-y-4">
+                  <Button
+                    onClick={handleSendOTP}
+                    className="w-full bg-gray-900 hover:bg-gray-800 text-white h-[38px] text-[14px] font-medium rounded-md"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Sending...' : 'Send OTP'}
+                  </Button>
+
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={handleUseDifferentEmail}
+                      className="text-[13px] text-blue-600 hover:underline font-medium"
+                    >
+                      Use different email
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={handleOTPSubmit} className="space-y-6">
+                  <div>
+                    <label className="block text-[13px] font-medium text-gray-700 mb-3 text-center">
+                      Enter 6-digit code
+                    </label>
+                    <OTPInput
+                      length={6}
+                      value={formData.otp}
+                      onChange={(otp) => setFormData({ ...formData, otp })}
+                      disabled={isLoading}
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full bg-gray-900 hover:bg-gray-800 text-white h-[38px] text-[14px] font-medium rounded-md"
+                    disabled={isLoading || formData.otp.length !== 6}
+                  >
+                    {isLoading ? 'Verifying...' : 'Verify'}
+                  </Button>
+
+                  <div className="space-y-2">
+                    <p className="text-center text-[13px] text-gray-600">
+                      Didn't receive the code?{' '}
+                      <button
+                        type="button"
+                        onClick={handleSendOTP}
+                        className="text-blue-600 hover:underline font-medium"
+                      >
+                        Resend
+                      </button>
+                    </p>
+                    <p className="text-center text-[13px] text-gray-600">
+                      <button
+                        type="button"
+                        onClick={handleUseDifferentEmail}
+                        className="text-blue-600 hover:underline font-medium"
+                      >
+                        Use different email
+                      </button>
+                    </p>
+                  </div>
+                </form>
+              )}
             </>
           )}
 
