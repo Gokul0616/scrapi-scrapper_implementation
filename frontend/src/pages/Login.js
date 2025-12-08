@@ -78,6 +78,7 @@ const Login = () => {
   const handleSendOTP = async () => {
     setIsLoading(true);
     setSendOtpError('');
+    setOtpSuccessMessage('');
     
     try {
       const response = await fetch(`${API_URL}/api/auth/send-otp`, {
@@ -89,7 +90,8 @@ const Login = () => {
       const data = await response.json();
 
       if (response.ok) {
-        // OTP sent successfully, move to OTP input step
+        // OTP sent successfully, show success message and move to OTP input step
+        setOtpSuccessMessage('OTP sent successfully to your email');
         setStep(4);
       } else {
         setSendOtpError(data.detail || 'Failed to send verification code');
