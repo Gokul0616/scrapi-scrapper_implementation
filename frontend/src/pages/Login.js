@@ -10,7 +10,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL || '';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login, setUser, lastPath } = useAuth();
+  const { login, setUser, setToken, lastPath } = useAuth();
   const [step, setStep] = useState(1); // 1: Email, 2: Password, 3: Send OTP Screen, 4: OTP Input
   const [formData, setFormData] = useState({ 
     email: '', 
