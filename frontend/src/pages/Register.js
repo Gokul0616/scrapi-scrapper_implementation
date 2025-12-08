@@ -79,23 +79,24 @@ const Register = () => {
     setOtpSuccessMessage('');
     
     try {
-      // Verify OTP via backend
-      const response = await fetch(`${API_URL}/api/auth/verify-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          email: formData.email, 
-          otp_code: formData.otp,
-          purpose: 'register'
-        })
+      // Use axios instead of fetch to avoid rrweb monitoring conflicts and properly handle errors
+      const response = await axios.post(`${API_URL}/api/auth/verify-otp`, {
+        email: formData.email,
+        otp_code: formData.otp,
+        purpose: 'register'
+      }, {
+        validateStatus: function (status) {
+          // Don't throw error for any status code
+          return true;
+        }
       });
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
+      if (response.status === 200 && response.data.success) {
         setStep(3);
       } else {
-        setOtpError(data.detail || 'Invalid verification code');
+        // Display the backend error message
+        const errorMessage = response.data.detail || response.data.message || 'Invalid verification code';
+        setOtpError(errorMessage);
       }
     } catch (error) {
       setOtpError('Network error. Please try again.');
