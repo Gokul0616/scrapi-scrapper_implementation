@@ -56,7 +56,6 @@ const Register = () => {
       const data = await response.json();
 
       if (response.ok) {
-        showError('Verification code sent to your email', { type: 'success', title: 'OTP Sent' });
         setStep(2);
       } else {
         setEmailError(data.detail || 'Failed to send verification code');
