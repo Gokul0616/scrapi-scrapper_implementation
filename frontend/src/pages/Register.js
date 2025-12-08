@@ -71,6 +71,7 @@ const Register = () => {
   const handleOTPSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setOtpError('');
     
     try {
       // Verify OTP via backend
@@ -87,13 +88,12 @@ const Register = () => {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        showError('Email verified successfully', { type: 'success', title: 'Verified' });
         setStep(3);
       } else {
-        showError(data.detail || 'Invalid verification code', { type: 'error', title: 'Verification Failed' });
+        setOtpError(data.detail || 'Invalid verification code');
       }
     } catch (error) {
-      showError('Network error. Please try again.', { type: 'error', title: 'Error' });
+      setOtpError('Network error. Please try again.');
     } finally {
       setIsLoading(false);
     }
