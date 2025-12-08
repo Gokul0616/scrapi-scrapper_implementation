@@ -184,9 +184,11 @@ async def send_otp(request: SendOTPRequest):
         await db.otps.insert_one(doc)
         
         # Send OTP email
-        await email_service.send_otp_email(request.email, otp_code, request.purpose)
-        
-        logger.info(f"OTP sent to {request.email} for {request.purpose}")
+        if os.getenv("APP_ENV") == "test":
+            logger.info(f"TEST ENV: OTP generated for {request.email} is {otp_code} (Email sending skipped)")
+        else:
+            await email_service.send_otp_email(request.email, otp_code, request.purpose)
+            logger.info(f"OTP sent to {request.email} for {request.purpose}")
         
         return OTPResponse(
             success=True,
