@@ -29,40 +29,56 @@ const Register = () => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate OTP sending
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    toast({ 
-      title: 'OTP Sent', 
-      description: `Verification code sent to ${formData.email}`, 
-      variant: 'default' 
-    });
-    
-    setIsLoading(false);
-    setStep(2);
+    try {
+      // Send OTP via backend
+      const response = await fetch(`${API_URL}/api/auth/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email, purpose: 'register' })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        showError('Verification code sent to your email', { type: 'success', title: 'OTP Sent' });
+        setStep(2);
+      } else {
+        showError(data.detail || 'Failed to send verification code', { type: 'error', title: 'Error' });
+      }
+    } catch (error) {
+      showError('Network error. Please try again.', { type: 'error', title: 'Error' });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleOTPSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate OTP verification
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    if (formData.otp.length === 6) {
-      toast({ 
-        title: 'OTP Verified', 
-        description: 'Please complete your profile', 
-        variant: 'default' 
+    try {
+      // Verify OTP via backend
+      const response = await fetch(`${API_URL}/api/auth/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email: formData.email, 
+          otp_code: formData.otp,
+          purpose: 'register'
+        })
       });
-      setIsLoading(false);
-      setStep(3);
-    } else {
-      toast({ 
-        title: 'Invalid OTP', 
-        description: 'Please enter a valid 6-digit code', 
-        variant: 'destructive' 
-      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        showError('Email verified successfully', { type: 'success', title: 'Verified' });
+        setStep(3);
+      } else {
+        showError(data.detail || 'Invalid verification code', { type: 'error', title: 'Verification Failed' });
+      }
+    } catch (error) {
+      showError('Network error. Please try again.', { type: 'error', title: 'Error' });
+    } finally {
       setIsLoading(false);
     }
   };
@@ -70,7 +86,7 @@ const Register = () => {
   const handleDetailsSubmit = async (e) => {
     e.preventDefault();
     if (!formData.fullName) {
-      toast({ title: 'Full name is required', variant: 'destructive' });
+      showError('Full name is required', { type: 'error', title: 'Required Field' });
       return;
     }
     setStep(4);
@@ -80,12 +96,12 @@ const Register = () => {
     e.preventDefault();
     
     if (formData.password !== formData.confirmPassword) {
-      toast({ title: 'Passwords do not match', variant: 'destructive' });
+      showError('Passwords do not match', { type: 'error', title: 'Password Mismatch' });
       return;
     }
 
     if (formData.password.length < 8) {
-      toast({ title: 'Password must be at least 8 characters', variant: 'destructive' });
+      showError('Password must be at least 8 characters', { type: 'error', title: 'Weak Password' });
       return;
     }
 
@@ -95,26 +111,46 @@ const Register = () => {
     const result = await register(formData.email, formData.email, formData.password, formData.organizationName);
     
     if (result.success) {
-      toast({ title: 'Registration successful!', variant: 'default' });
+      showError('Registration successful!', { type: 'success', title: 'Welcome' });
       navigate('/home');
     } else {
-      toast({ title: 'Registration failed', description: result.error, variant: 'destructive' });
+      showError(result.error || 'Registration failed', { type: 'error', title: 'Registration Failed' });
     }
     
     setIsLoading(false);
   };
 
   const handleOAuthSignup = (provider) => {
-    toast({ 
-      title: 'OAuth Integration', 
-      description: `${provider} OAuth integration coming soon!`, 
-      variant: 'default' 
-    });
+    showError(`${provider} OAuth integration coming soon!`, { type: 'info', title: 'Coming Soon' });
   };
 
   const handleBack = () => {
     if (step > 1) {
       setStep(step - 1);
+    }
+  };
+
+  const handleResendOTP = async () => {
+    setIsLoading(true);
+    
+    try {
+      const response = await fetch(`${API_URL}/api/auth/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email, purpose: 'register' })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        showError('Verification code sent to your email', { type: 'success', title: 'OTP Sent' });
+      } else {
+        showError(data.detail || 'Failed to send verification code', { type: 'error', title: 'Error' });
+      }
+    } catch (error) {
+      showError('Network error. Please try again.', { type: 'error', title: 'Error' });
+    } finally {
+      setIsLoading(false);
     }
   };
 
