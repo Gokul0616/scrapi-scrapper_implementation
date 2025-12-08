@@ -166,15 +166,28 @@ const Login = () => {
       if (response.ok) {
         // Check if the response contains the required fields
         if (data.success && data.access_token) {
-          // Store token and user data
-          localStorage.setItem('token', data.access_token);
-          setToken(data.access_token);
-          setUser(data.user);
-          
-          // Set axios authorization header
-          axios.defaults.headers.common['Authorization'] = `Bearer ${data.access_token}`;
-          
-          navigate(lastPath || '/home');
+          try {
+            // Store token and user data
+            localStorage.setItem('token', data.access_token);
+            
+            // Set token in context if function exists
+            if (typeof setToken === 'function') {
+              setToken(data.access_token);
+            }
+            
+            // Set user in context if function exists
+            if (typeof setUser === 'function') {
+              setUser(data.user);
+            }
+            
+            // Set axios authorization header
+            axios.defaults.headers.common['Authorization'] = `Bearer ${data.access_token}`;
+            
+            navigate(lastPath || '/home');
+          } catch (authError) {
+            console.error('Auth setup error:', authError);
+            setOtpError('Failed to complete login. Please try again.');
+          }
         } else {
           // Response is OK but missing required fields
           setOtpError(data.detail || data.message || 'Invalid response from server');
