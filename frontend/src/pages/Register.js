@@ -75,6 +75,7 @@ const Register = () => {
     e.preventDefault();
     setIsLoading(true);
     setOtpError('');
+    setOtpSuccessMessage('');
     
     try {
       // Verify OTP via backend
