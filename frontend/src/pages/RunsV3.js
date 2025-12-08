@@ -299,36 +299,53 @@ const RunsV3 = () => {
   const formatTaskDescription = (run) => {
     // Detect scraper type and format accordingly
     const actorName = run.actor_name || '';
-    const isAmazonScraper = actorName.toLowerCase().includes('amazon');
+    const input = run.input_data || {};
     
-    if (isAmazonScraper) {
-      // Amazon Product Scraper: Show product keywords
-      const keywords = run.input_data?.search_keywords?.join(', ') || 'N/A';
-      const maxResults = run.input_data?.max_results || '';
-      
-      let taskDescription = `Products: ${keywords}`;
-      if (maxResults) {
-        taskDescription += ` (max ${maxResults})`;
-      }
-      return taskDescription;
-    } else {
-      // Google Maps Scraper: Show search terms + location
-      const searchTerms = run.input_data?.search_terms?.join(', ') || 'N/A';
-      const location = run.input_data?.location || '';
-      const maxResults = run.input_data?.max_results || '';
-      
-      let taskDescription = searchTerms;
-      
-      if (location) {
-        taskDescription += ` in ${location}`;
-      }
-      
-      if (maxResults) {
-        taskDescription += ` (max ${maxResults})`;
-      }
-      
-      return taskDescription;
+    // 1. Amazon Product Scraper
+    if (actorName.toLowerCase().includes('amazon')) {
+      const keywords = input.search_keywords?.join(', ') || 'N/A';
+      const maxResults = input.max_results || '';
+      let desc = `Products: ${keywords}`;
+      if (maxResults) desc += ` (max ${maxResults})`;
+      return desc;
     }
+    
+    // 2. SEO Metadata Scraper
+    if (actorName.toLowerCase().includes('seo') || input.url) {
+      const url = input.url || 'N/A';
+      return `Analyze: ${url}`;
+    }
+
+    // 3. Google Maps / Generic Search Scraper
+    // Check for common search term fields
+    const searchTerms = input.search_terms?.join(', ') || input.search_queries?.join(', ') || input.keywords?.join(', ');
+    
+    if (searchTerms) {
+      const location = input.location || '';
+      const maxResults = input.max_results || '';
+      
+      let desc = searchTerms;
+      if (location) desc += ` in ${location}`;
+      if (maxResults) desc += ` (max ${maxResults})`;
+      return desc;
+    }
+    
+    // 4. Fallback: Display first meaningful input
+    const keys = Object.keys(input).filter(k => 
+      !['max_results', 'limit', 'proxy', 'extract_reviews', 'extract_images'].includes(k)
+    );
+    
+    if (keys.length > 0) {
+      const firstKey = keys[0];
+      const val = input[firstKey];
+      if (typeof val === 'string' || typeof val === 'number') {
+        return `${firstKey.replace(/_/g, ' ')}: ${val}`;
+      } else if (Array.isArray(val)) {
+        return `${firstKey.replace(/_/g, ' ')}: ${val.join(', ')}`;
+      }
+    }
+
+    return 'N/A';
   };
 
   const formatTaskWithWrapping = (text) => {
