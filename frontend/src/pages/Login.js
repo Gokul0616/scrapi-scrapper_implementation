@@ -22,10 +22,32 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [usePasswordless, setUsePasswordless] = useState(false);
   const [isEditingEmail, setIsEditingEmail] = useState(false);
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
-    setStep(2);
+    setEmailError('');
+    
+    // Check if email exists
+    setIsCheckingEmail(true);
+    try {
+      const response = await fetch(`${API_URL}/api/users/check-email?email=${encodeURIComponent(formData.email)}`);
+      const data = await response.json();
+      
+      if (!data.exists) {
+        setEmailError('No account found with this email. Please sign up first.');
+        setIsCheckingEmail(false);
+        return;
+      }
+      
+      setStep(2);
+    } catch (error) {
+      setEmailError('Unable to verify email. Please try again.');
+    } finally {
+      setIsCheckingEmail(false);
+    }
   };
 
   const handlePasswordSubmit = async (e) => {
