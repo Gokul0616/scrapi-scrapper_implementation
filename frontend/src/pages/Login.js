@@ -58,7 +58,6 @@ const Login = () => {
     const result = await login(formData.email, formData.password);
     
     if (result.success) {
-      showError('Login successful!', { type: 'success' });
       navigate(result.redirectPath || '/home');
     } else {
       setPasswordError(result.error || 'Incorrect password. Please try again.');
