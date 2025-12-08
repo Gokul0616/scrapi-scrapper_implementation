@@ -12,6 +12,7 @@ from auth import create_access_token, get_current_user, hash_password, verify_pa
 from services import get_proxy_manager, get_task_manager, LeadChatService, EnhancedGlobalChatService
 from scrapers import ScraperEngine, get_scraper_registry
 import logging
+import os
 import asyncio
 
 logger = logging.getLogger(__name__)
