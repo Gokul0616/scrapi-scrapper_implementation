@@ -139,6 +139,13 @@ async def get_last_path(current_user: dict = Depends(get_current_user)):
     
     return {"last_path": user_doc.get('last_path', '/home')}
 
+# ============= User Validation Routes =============
+@router.get("/users/check-email")
+async def check_email(email: str):
+    """Check if an email already exists in the database."""
+    user_exists = await db.users.find_one({"email": email})
+    return {"exists": bool(user_exists), "email": email}
+
 # ============= OTP Routes =============
 @router.post("/auth/send-otp", response_model=OTPResponse)
 async def send_otp(request: SendOTPRequest):
