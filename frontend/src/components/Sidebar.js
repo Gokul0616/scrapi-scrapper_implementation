@@ -210,7 +210,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
       {/* Collapse Toggle - Centered on sidebar border, always visible */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className={`absolute top-1/2 -translate-y-1/2 w-7 h-7 bg-gradient-to-br from-gray-800 to-gray-900 border-2 border-gray-700 rounded-full flex items-center justify-center shadow-lg hover:from-gray-700 hover:to-gray-800 transition-all z-[60] ${
+        className={`absolute top-1/2 -translate-y-1/2 w-7 h-7 bg-gradient-to-br from-gray-800 to-gray-900 border-2 border-gray-700 rounded-full flex items-center justify-center shadow-lg hover:from-gray-700 hover:to-gray-800 transition-all z-40 ${
           isCollapsed ? 'left-[50px]' : 'left-[242px]'
         }`}
         title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}

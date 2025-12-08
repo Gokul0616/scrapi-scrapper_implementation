@@ -766,6 +766,12 @@ const DynamicInputField = ({ fieldKey, schema, value, onChange, required }) => {
               type="text"
               value={arrayInput}
               onChange={(e) => setArrayInput(e.target.value)}
+              onBlur={() => {
+                if (arrayInput.trim()) {
+                  onChange([...currentArray, arrayInput.trim()]);
+                  setArrayInput('');
+                }
+              }}
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault();
