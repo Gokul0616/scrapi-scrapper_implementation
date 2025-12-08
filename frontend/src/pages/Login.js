@@ -138,7 +138,10 @@ const Login = () => {
     setOtpError('');
     setOtpSuccessMessage('');
     
+    console.log('Starting OTP verification...');
+    
     try {
+      console.log('Fetching verify-otp endpoint...');
       // Verify OTP via backend
       const response = await fetch(`${API_URL}/api/auth/verify-otp`, {
         method: 'POST',
@@ -150,10 +153,13 @@ const Login = () => {
         })
       });
 
+      console.log('Response received, status:', response.status);
+
       // Parse JSON response
       let data;
       try {
         data = await response.json();
+        console.log('JSON parsed successfully:', data);
       } catch (jsonError) {
         console.error('JSON Parse Error:', jsonError);
         setOtpError('Invalid response from server');
@@ -161,48 +167,49 @@ const Login = () => {
         return;
       }
 
-      console.log('OTP Verification Response:', response.status, data);
+      console.log('Checking response.ok:', response.ok);
 
       if (response.ok) {
+        console.log('Response is OK, checking for success and token...');
         // Check if the response contains the required fields
         if (data.success && data.access_token) {
-          try {
-            // Store token and user data
-            localStorage.setItem('token', data.access_token);
-            
-            // Set token in context if function exists
-            if (typeof setToken === 'function') {
-              setToken(data.access_token);
-            }
-            
-            // Set user in context if function exists
-            if (typeof setUser === 'function') {
-              setUser(data.user);
-            }
-            
-            // Set axios authorization header
-            axios.defaults.headers.common['Authorization'] = `Bearer ${data.access_token}`;
-            
-            navigate(lastPath || '/home');
-          } catch (authError) {
-            console.error('Auth setup error:', authError);
-            setOtpError('Failed to complete login. Please try again.');
-          }
+          console.log('Success! Setting up authentication...');
+          // Store token and user data
+          localStorage.setItem('token', data.access_token);
+          
+          // Set token in context
+          console.log('Calling setToken...');
+          setToken(data.access_token);
+          
+          // Set user in context
+          console.log('Calling setUser...');
+          setUser(data.user);
+          
+          // Set axios authorization header
+          console.log('Setting axios header...');
+          axios.defaults.headers.common['Authorization'] = `Bearer ${data.access_token}`;
+          
+          console.log('Navigating to home...');
+          navigate(lastPath || '/home');
         } else {
-          // Response is OK but missing required fields
+          console.log('Response OK but missing required fields');
           setOtpError(data.detail || data.message || 'Invalid response from server');
         }
       } else {
         // Response is not OK (400, 404, etc.) - display the backend error message
+        console.log('Response NOT OK. Status:', response.status);
         console.log('Error data:', data);
         const errorMessage = data.detail || data.message || 'Invalid verification code';
         console.log('Setting error message:', errorMessage);
         setOtpError(errorMessage);
+        console.log('Error message set successfully');
       }
     } catch (error) {
-      console.error('OTP Verification Error:', error);
+      console.error('Caught exception in OTP Verification:', error);
+      console.error('Error stack:', error.stack);
       setOtpError('Network error. Please try again.');
     } finally {
+      console.log('Finally block - setting isLoading to false');
       setIsLoading(false);
     }
   };
