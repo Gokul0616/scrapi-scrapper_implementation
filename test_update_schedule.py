@@ -12,7 +12,7 @@ async def test_update_schedule():
     """Test the update schedule endpoint specifically"""
     
     # Get backend URL
-    base_url = "https://login-signup-clone.preview.emergentagent.com"
+    base_url = "https://scraper-login.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     async with aiohttp.ClientSession() as session:
