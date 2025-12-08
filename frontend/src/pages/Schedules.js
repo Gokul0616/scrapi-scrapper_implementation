@@ -22,6 +22,16 @@ const Schedules = () => {
   const [filterStatus, setFilterStatus] = useState('all'); // all, active, paused
   const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
+  
+  // Alert Modal State
+  const [confirmModal, setConfirmModal] = useState({
+    show: false,
+    title: '',
+    message: '',
+    onConfirm: null,
+    confirmText: 'Confirm',
+    type: 'warning'
+  });
 
   useEffect(() => {
     fetchSchedules();
