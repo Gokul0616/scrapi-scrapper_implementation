@@ -373,75 +373,90 @@ const Login = () => {
 
           {step === 3 && usePasswordless && (
             <>
-              <p className="text-[13px] text-gray-600 mb-6">
-                We'll send a verification code to<br />
-                <span className="font-medium text-gray-900">{formData.email}</span>
-              </p>
-
-              {formData.otp === '' ? (
+              {isEditingEmail ? (
                 <div className="space-y-4">
-                  <Button
-                    onClick={handleSendOTP}
-                    className="w-full bg-gray-900 hover:bg-gray-800 text-white h-[38px] text-[14px] font-medium rounded-md"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? 'Sending...' : 'Send OTP'}
-                  </Button>
-
-                  <div className="text-center">
-                    <button
-                      type="button"
-                      onClick={handleUseDifferentEmail}
-                      className="text-[13px] text-blue-600 hover:underline font-medium"
+                  <div>
+                    <label htmlFor="edit-email" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                      Email
+                    </label>
+                    <Input
+                      id="edit-email"
+                      type="email"
+                      placeholder="Enter your email"
+                      value={formData.email}
+                      onChange={(e) => handleEmailChange(e.target.value)}
+                      required
+                      className="w-full h-[38px] text-[14px] border-gray-300 rounded-md"
+                    />
+                  </div>
+                  <div className="flex space-x-3">
+                    <Button
+                      onClick={handleSaveEmail}
+                      className="flex-1 bg-gray-900 hover:bg-gray-800 text-white h-[38px] text-[14px] font-medium rounded-md"
+                      disabled={!formData.email}
                     >
-                      Use different email
-                    </button>
+                      Save & Send OTP
+                    </Button>
+                    <Button
+                      onClick={() => setIsEditingEmail(false)}
+                      className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-900 h-[38px] text-[14px] font-medium rounded-md"
+                    >
+                      Cancel
+                    </Button>
                   </div>
                 </div>
               ) : (
-                <form onSubmit={handleOTPSubmit} className="space-y-6">
-                  <div>
-                    <label className="block text-[13px] font-medium text-gray-700 mb-3 text-center">
-                      Enter 6-digit code
-                    </label>
-                    <OTPInput
-                      length={6}
-                      value={formData.otp}
-                      onChange={(otp) => setFormData({ ...formData, otp })}
-                      disabled={isLoading}
-                    />
-                  </div>
+                <>
+                  <p className="text-[13px] text-gray-600 mb-6">
+                    Verification code sent to<br />
+                    <span className="font-medium text-gray-900">{formData.email}</span>
+                  </p>
 
-                  <Button
-                    type="submit"
-                    className="w-full bg-gray-900 hover:bg-gray-800 text-white h-[38px] text-[14px] font-medium rounded-md"
-                    disabled={isLoading || formData.otp.length !== 6}
-                  >
-                    {isLoading ? 'Verifying...' : 'Verify'}
-                  </Button>
+                  <form onSubmit={handleOTPSubmit} className="space-y-6">
+                    <div>
+                      <label className="block text-[13px] font-medium text-gray-700 mb-3 text-center">
+                        Enter 6-digit code
+                      </label>
+                      <OTPInput
+                        length={6}
+                        value={formData.otp}
+                        onChange={(otp) => setFormData({ ...formData, otp })}
+                        disabled={isLoading}
+                      />
+                    </div>
 
-                  <div className="space-y-2">
-                    <p className="text-center text-[13px] text-gray-600">
-                      Didn't receive the code?{' '}
-                      <button
-                        type="button"
-                        onClick={handleSendOTP}
-                        className="text-blue-600 hover:underline font-medium"
-                      >
-                        Resend
-                      </button>
-                    </p>
-                    <p className="text-center text-[13px] text-gray-600">
-                      <button
-                        type="button"
-                        onClick={handleUseDifferentEmail}
-                        className="text-blue-600 hover:underline font-medium"
-                      >
-                        Use different email
-                      </button>
-                    </p>
-                  </div>
-                </form>
+                    <Button
+                      type="submit"
+                      className="w-full bg-gray-900 hover:bg-gray-800 text-white h-[38px] text-[14px] font-medium rounded-md"
+                      disabled={isLoading || formData.otp.length !== 6}
+                    >
+                      {isLoading ? 'Verifying...' : 'Verify & Login'}
+                    </Button>
+
+                    <div className="space-y-2">
+                      <p className="text-center text-[13px] text-gray-600">
+                        Didn't receive the code?{' '}
+                        <button
+                          type="button"
+                          onClick={handleSendOTP}
+                          className="text-blue-600 hover:underline font-medium"
+                          disabled={isLoading}
+                        >
+                          Resend
+                        </button>
+                      </p>
+                      <p className="text-center text-[13px] text-gray-600">
+                        <button
+                          type="button"
+                          onClick={handleUseDifferentEmail}
+                          className="text-blue-600 hover:underline font-medium"
+                        >
+                          Use different email
+                        </button>
+                      </p>
+                    </div>
+                  </form>
+                </>
               )}
             </>
           )}
