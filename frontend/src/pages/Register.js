@@ -500,6 +500,76 @@ const Register = () => {
           )}
         </div>
       </div>
+
+      {/* Right Column - Marketing Content - Only show on step 1 */}
+      {step === 1 && (
+        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#f8f5ff] via-[#ede7ff] to-[#f3efff] p-12 flex-col justify-between">
+          <div>
+            {/* Logo */}
+            <div className="flex items-center space-x-2 mb-16">
+              <img src="/logo.png" alt="SCRAPI Logo" className="w-9 h-9" />
+              <span className="text-xl font-semibold text-gray-900">SCRAPI</span>
+            </div>
+
+            {/* Main Content */}
+            <div className="max-w-md">
+              <h1 className="text-[28px] leading-[34px] font-semibold text-gray-900 mb-7">
+                Powerful web scraping made simple
+              </h1>
+
+              <div className="space-y-5">
+                {/* Feature 1 */}
+                <div className="flex items-start space-x-2.5">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
+                  </div>
+                  <div>
+                    <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Pre-built scrapers ready to use</p>
+                    <p className="text-[13px] leading-[19px] text-gray-600">
+                      Extract data from Google Maps, Amazon, and more with our Playwright-based scrapers.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Feature 2 */}
+                <div className="flex items-start space-x-2.5">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
+                  </div>
+                  <div>
+                    <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Schedule & automate scraping</p>
+                    <p className="text-[13px] leading-[19px] text-gray-600">
+                      Set up cron-based schedules to run your scrapers automatically and monitor results.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Feature 3 */}
+                <div className="flex items-start space-x-2.5">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
+                  </div>
+                  <div>
+                    <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Export & manage datasets</p>
+                    <p className="text-[13px] leading-[19px] text-gray-600">
+                      Download your scraped data in JSON or CSV format with proxy rotation support.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="text-[11px] leading-[16px] text-gray-500">
+            This site is protected by reCAPTCHA and the{' '}
+            <a href="#" className="text-blue-600 hover:underline">Google Privacy Policy</a>
+            {' '}and{' '}
+            <a href="#" className="text-blue-600 hover:underline">Terms of Service</a>
+            {' '}apply.
+          </div>
+        </div>
+      )}
     </div>
   );
 };
