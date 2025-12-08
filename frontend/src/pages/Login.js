@@ -274,7 +274,8 @@ const Login = () => {
           <h2 className="text-[22px] leading-[28px] font-semibold text-gray-900 mb-6">
             {step === 1 && 'Log in to your account'}
             {step === 2 && 'Enter your password'}
-            {step === 3 && 'Enter verification code'}
+            {step === 3 && 'Verify your email'}
+            {step === 4 && 'Enter verification code'}
           </h2>
 
           {step === 1 && (
