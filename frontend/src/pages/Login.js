@@ -52,6 +52,7 @@ const Login = () => {
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
+    setPasswordError('');
     setIsLoading(true);
 
     const result = await login(formData.email, formData.password);
@@ -60,7 +61,7 @@ const Login = () => {
       showError('Login successful!', { type: 'success' });
       navigate(result.redirectPath || '/home');
     } else {
-      showError(result.error || 'Login failed', { type: 'error', title: 'Login Failed' });
+      setPasswordError(result.error || 'Incorrect password. Please try again.');
     }
     
     setIsLoading(false);
