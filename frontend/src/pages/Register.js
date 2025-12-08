@@ -440,9 +440,12 @@ const Register = () => {
                       type={showPassword ? 'text' : 'password'}
                       placeholder="Create a strong password"
                       value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      onChange={(e) => {
+                        setFormData({ ...formData, password: e.target.value });
+                        setPasswordError('');
+                      }}
                       required
-                      className="w-full h-[38px] text-[14px] border-gray-300 rounded-md pr-10"
+                      className={`w-full h-[38px] text-[14px] rounded-md pr-10 ${passwordError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
                     />
                     <button
                       type="button"
@@ -452,9 +455,16 @@ const Register = () => {
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
-                  <p className="mt-1.5 text-[11px] text-gray-500">
-                    Use at least 8 characters with a mix of letters, numbers & symbols
-                  </p>
+                  {passwordError ? (
+                    <p className="mt-1.5 text-[12px] text-red-600 flex items-center">
+                      <AlertCircle className="w-3.5 h-3.5 mr-1" />
+                      {passwordError}
+                    </p>
+                  ) : (
+                    <p className="mt-1.5 text-[11px] text-gray-500">
+                      Use at least 8 characters with a mix of letters, numbers & symbols
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -467,9 +477,12 @@ const Register = () => {
                       type={showConfirmPassword ? 'text' : 'password'}
                       placeholder="Re-enter your password"
                       value={formData.confirmPassword}
-                      onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                      onChange={(e) => {
+                        setFormData({ ...formData, confirmPassword: e.target.value });
+                        setConfirmPasswordError('');
+                      }}
                       required
-                      className="w-full h-[38px] text-[14px] border-gray-300 rounded-md pr-10"
+                      className={`w-full h-[38px] text-[14px] rounded-md pr-10 ${confirmPasswordError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
                     />
                     <button
                       type="button"
@@ -479,6 +492,12 @@ const Register = () => {
                       {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
+                  {confirmPasswordError && (
+                    <p className="mt-1.5 text-[12px] text-red-600 flex items-center">
+                      <AlertCircle className="w-3.5 h-3.5 mr-1" />
+                      {confirmPasswordError}
+                    </p>
+                  )}
                 </div>
 
                 <Button
