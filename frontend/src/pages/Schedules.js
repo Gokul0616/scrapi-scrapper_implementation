@@ -1056,20 +1056,38 @@ const ScheduleModal = ({ isEdit, schedule, actors, onClose, onSuccess }) => {
             
             {selectedActor && selectedActor.input_schema ? (
               <div className="space-y-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                {Object.entries(selectedActor.input_schema).map(([key, schema]) => (
-                  <DynamicInputField
-                    key={key}
-                    fieldKey={key}
-                    schema={schema}
-                    value={formData.input_data[key]}
-                    onChange={(value) => {
-                      setFormData({
-                        ...formData,
-                        input_data: { ...formData.input_data, [key]: value }
-                      });
-                    }}
-                  />
-                ))}
+                {(() => {
+                  const schema = selectedActor.input_schema;
+                  // Handle JSON Schema (has properties) vs Simplified Schema (is a dict of fields)
+                  const fields = schema.properties || schema;
+                  const requiredFields = Array.isArray(schema.required) ? schema.required : [];
+
+                  return Object.entries(fields).map(([key, fieldSchema]) => {
+                    // Skip metadata keys if they appear in the fields list (mostly for simplified schema safety)
+                    if (!schema.properties && ['type', 'required', 'properties', '$schema'].includes(key)) {
+                      return null;
+                    }
+                    
+                    // Ensure we have a valid schema object for the field
+                    if (typeof fieldSchema !== 'object' || fieldSchema === null) return null;
+
+                    return (
+                      <DynamicInputField
+                        key={key}
+                        fieldKey={key}
+                        schema={fieldSchema}
+                        value={formData.input_data[key]}
+                        required={requiredFields.includes(key)}
+                        onChange={(value) => {
+                          setFormData({
+                            ...formData,
+                            input_data: { ...formData.input_data, [key]: value }
+                          });
+                        }}
+                      />
+                    );
+                  });
+                })()}
               </div>
             ) : (
               <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 text-center">
