@@ -185,6 +185,7 @@ function App() {
       <AuthProvider>
         <AppRoutes />
         <Toaster />
+        <ErrorDisplayContainer />
       </AuthProvider>
     </BrowserRouter>
   );
