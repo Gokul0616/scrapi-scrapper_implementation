@@ -429,22 +429,32 @@ const Login = () => {
                       type="email"
                       placeholder="Enter your email"
                       value={formData.email}
-                      onChange={(e) => handleEmailChange(e.target.value)}
+                      onChange={(e) => {
+                        setFormData({ ...formData, email: e.target.value, otp: '' });
+                        setSendOtpError('');
+                      }}
                       required
-                      className="w-full h-[38px] text-[14px] border-gray-300 rounded-md"
+                      className={`w-full h-[38px] text-[14px] rounded-md ${sendOtpError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
                     />
+                    {sendOtpError && (
+                      <p className="mt-1.5 text-[12px] text-red-600 flex items-center">
+                        <AlertCircle className="w-3.5 h-3.5 mr-1" />
+                        {sendOtpError}
+                      </p>
+                    )}
                   </div>
                   <div className="flex space-x-3">
                     <Button
-                      onClick={handleSaveEmail}
+                      onClick={handleSendOTP}
                       className="flex-1 bg-gray-900 hover:bg-gray-800 text-white h-[38px] text-[14px] font-medium rounded-md"
-                      disabled={!formData.email}
+                      disabled={!formData.email || isLoading}
                     >
-                      Save & Send OTP
+                      {isLoading ? 'Sending...' : 'Send OTP'}
                     </Button>
                     <Button
-                      onClick={() => setIsEditingEmail(false)}
+                      onClick={handleCancelEditEmail}
                       className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-900 h-[38px] text-[14px] font-medium rounded-md"
+                      disabled={isLoading}
                     >
                       Cancel
                     </Button>
@@ -453,65 +463,95 @@ const Login = () => {
               ) : (
                 <>
                   <p className="text-[13px] text-gray-600 mb-6">
-                    Verification code sent to<br />
+                    We'll send a verification code to<br />
                     <span className="font-medium text-gray-900">{formData.email}</span>
                   </p>
 
-                  <form onSubmit={handleOTPSubmit} className="space-y-6">
-                    <div>
-                      <label className="block text-[13px] font-medium text-gray-700 mb-3 text-center">
-                        Enter 6-digit code
-                      </label>
-                      <OTPInput
-                        length={6}
-                        value={formData.otp}
-                        onChange={(otp) => {
-                          setFormData({ ...formData, otp });
-                          setOtpError('');
-                        }}
-                        disabled={isLoading}
-                      />
-                      {otpError && (
-                        <p className="mt-2 text-[12px] text-red-600 flex items-center justify-center">
-                          <AlertCircle className="w-3.5 h-3.5 mr-1" />
-                          {otpError}
-                        </p>
-                      )}
+                  {sendOtpError && (
+                    <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                      <p className="text-[12px] text-red-600 flex items-center">
+                        <AlertCircle className="w-3.5 h-3.5 mr-1" />
+                        {sendOtpError}
+                      </p>
                     </div>
+                  )}
 
+                  <div className="space-y-4">
                     <Button
-                      type="submit"
+                      onClick={handleSendOTP}
                       className="w-full bg-gray-900 hover:bg-gray-800 text-white h-[38px] text-[14px] font-medium rounded-md"
-                      disabled={isLoading || formData.otp.length !== 6}
+                      disabled={isLoading}
                     >
-                      {isLoading ? 'Verifying...' : 'Verify & Login'}
+                      {isLoading ? 'Sending...' : 'Send OTP'}
                     </Button>
 
-                    <div className="space-y-2">
-                      <p className="text-center text-[13px] text-gray-600">
-                        Didn't receive the code?{' '}
-                        <button
-                          type="button"
-                          onClick={handleSendOTP}
-                          className="text-blue-600 hover:underline font-medium"
-                          disabled={isLoading}
-                        >
-                          Resend
-                        </button>
-                      </p>
-                      <p className="text-center text-[13px] text-gray-600">
-                        <button
-                          type="button"
-                          onClick={handleUseDifferentEmail}
-                          className="text-blue-600 hover:underline font-medium"
-                        >
-                          Use different email
-                        </button>
-                      </p>
-                    </div>
-                  </form>
+                    <p className="text-center text-[13px] text-gray-600">
+                      <button
+                        type="button"
+                        onClick={handleUseDifferentEmail}
+                        className="text-blue-600 hover:underline font-medium"
+                        disabled={isLoading}
+                      >
+                        Use different email
+                      </button>
+                    </p>
+                  </div>
                 </>
               )}
+            </>
+          )}
+
+          {step === 4 && usePasswordless && (
+            <>
+              <p className="text-[13px] text-gray-600 mb-6">
+                Verification code sent to<br />
+                <span className="font-medium text-gray-900">{formData.email}</span>
+              </p>
+
+              <form onSubmit={handleOTPSubmit} className="space-y-6">
+                <div>
+                  <label className="block text-[13px] font-medium text-gray-700 mb-3 text-center">
+                    Enter 6-digit code
+                  </label>
+                  <OTPInput
+                    length={6}
+                    value={formData.otp}
+                    onChange={(otp) => {
+                      setFormData({ ...formData, otp });
+                      setOtpError('');
+                    }}
+                    disabled={isLoading}
+                  />
+                  {otpError && (
+                    <p className="mt-2 text-[12px] text-red-600 flex items-center justify-center">
+                      <AlertCircle className="w-3.5 h-3.5 mr-1" />
+                      {otpError}
+                    </p>
+                  )}
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full bg-gray-900 hover:bg-gray-800 text-white h-[38px] text-[14px] font-medium rounded-md"
+                  disabled={isLoading || formData.otp.length !== 6}
+                >
+                  {isLoading ? 'Verifying...' : 'Verify & Login'}
+                </Button>
+
+                <div className="space-y-2">
+                  <p className="text-center text-[13px] text-gray-600">
+                    Didn't receive the code?{' '}
+                    <button
+                      type="button"
+                      onClick={handleResendOTP}
+                      className="text-blue-600 hover:underline font-medium"
+                      disabled={isLoading}
+                    >
+                      Resend
+                    </button>
+                  </p>
+                </div>
+              </form>
             </>
           )}
 
