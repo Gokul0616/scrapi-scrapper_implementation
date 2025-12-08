@@ -1,0 +1,12 @@
+MONGO_URL="mongodb://localhost:27017"
+DB_NAME="test_database"
+CORS_ORIGINS="*"
+OPENAI_API_KEY=
+EMERGENT_LLM_KEY=sk-emergent-6C3E80a4b70B6A890D
+APP_ENV=test
+
+# SMTP Email Configuration
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT=587
+SMTP_EMAIL="gokul.363you@gmail.com"
+SMTP_PASSWORD="ysxz whhu kzod exqh"
