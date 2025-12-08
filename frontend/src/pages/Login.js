@@ -11,7 +11,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL || '';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login, lastPath } = useAuth();
+  const { login, setUser, lastPath } = useAuth();
   const [step, setStep] = useState(1); // 1: Email, 2: Password, 3: OTP (passwordless)
   const [formData, setFormData] = useState({ 
     email: '', 
@@ -21,6 +21,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [usePasswordless, setUsePasswordless] = useState(false);
+  const [isEditingEmail, setIsEditingEmail] = useState(false);
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
@@ -34,69 +35,103 @@ const Login = () => {
     const result = await login(formData.email, formData.password);
     
     if (result.success) {
-      toast({ title: 'Login successful!', variant: 'default' });
+      showError('Login successful!', { type: 'success' });
       navigate(result.redirectPath || '/home');
     } else {
-      toast({ title: 'Login failed', description: result.error, variant: 'destructive' });
+      showError(result.error || 'Login failed', { type: 'error', title: 'Login Failed' });
     }
     
     setIsLoading(false);
   };
 
-  const handleContinueWithoutPassword = () => {
+  const handleContinueWithoutPassword = async () => {
     setUsePasswordless(true);
-    setStep(3);
+    setIsLoading(true);
+    
+    try {
+      // Send OTP via backend
+      const response = await fetch(`${API_URL}/api/auth/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email, purpose: 'login' })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        showError('Verification code sent to your email', { type: 'success', title: 'OTP Sent' });
+        setStep(3);
+      } else {
+        showError(data.detail || 'Failed to send verification code', { type: 'error', title: 'Error' });
+      }
+    } catch (error) {
+      showError('Network error. Please try again.', { type: 'error', title: 'Error' });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSendOTP = async () => {
     setIsLoading(true);
     
-    // Simulate OTP sending
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    toast({ 
-      title: 'OTP Sent', 
-      description: `Verification code sent to ${formData.email}`, 
-      variant: 'default' 
-    });
-    
-    setIsLoading(false);
+    try {
+      const response = await fetch(`${API_URL}/api/auth/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email, purpose: 'login' })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        showError('Verification code sent to your email', { type: 'success', title: 'OTP Sent' });
+      } else {
+        showError(data.detail || 'Failed to send verification code', { type: 'error', title: 'Error' });
+      }
+    } catch (error) {
+      showError('Network error. Please try again.', { type: 'error', title: 'Error' });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleOTPSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate OTP verification and login
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    if (formData.otp.length === 6) {
-      // Simulate successful login with OTP
-      const result = await login(formData.email, formData.password || 'otp-login');
-      
-      if (result.success) {
-        toast({ title: 'Login successful!', variant: 'default' });
-        navigate(result.redirectPath || '/home');
-      } else {
-        toast({ title: 'Invalid OTP', description: 'Please try again', variant: 'destructive' });
-      }
-    } else {
-      toast({ 
-        title: 'Invalid OTP', 
-        description: 'Please enter a valid 6-digit code', 
-        variant: 'destructive' 
+    try {
+      // Verify OTP via backend
+      const response = await fetch(`${API_URL}/api/auth/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email: formData.email, 
+          otp_code: formData.otp,
+          purpose: 'login'
+        })
       });
+
+      const data = await response.json();
+
+      if (response.ok && data.access_token) {
+        // Store token and user data
+        localStorage.setItem('token', data.access_token);
+        setUser(data.user);
+        
+        showError('Login successful!', { type: 'success', title: 'Welcome' });
+        navigate(lastPath || '/home');
+      } else {
+        showError(data.detail || 'Invalid verification code', { type: 'error', title: 'Verification Failed' });
+      }
+    } catch (error) {
+      showError('Network error. Please try again.', { type: 'error', title: 'Error' });
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   const handleOAuthLogin = (provider) => {
-    toast({ 
-      title: 'OAuth Integration', 
-      description: `${provider} OAuth integration coming soon!`, 
-      variant: 'default' 
-    });
+    showError(`${provider} OAuth integration coming soon!`, { type: 'info', title: 'Coming Soon' });
   };
 
   const handleBack = () => {
@@ -109,9 +144,19 @@ const Login = () => {
   };
 
   const handleUseDifferentEmail = () => {
-    setFormData({ email: '', otp: '', password: '' });
-    setUsePasswordless(false);
-    setStep(1);
+    setIsEditingEmail(true);
+  };
+
+  const handleEmailChange = (newEmail) => {
+    setFormData({ ...formData, email: newEmail, otp: '' });
+  };
+
+  const handleSaveEmail = () => {
+    if (formData.email) {
+      setIsEditingEmail(false);
+      // Optionally resend OTP with new email
+      handleSendOTP();
+    }
   };
 
   return (
