@@ -9,7 +9,7 @@ import json
 import time
 
 async def quick_test():
-    base_url = "https://envmode-setup.preview.emergentagent.com"
+    base_url = "https://devops-setup.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     async with aiohttp.ClientSession() as session:

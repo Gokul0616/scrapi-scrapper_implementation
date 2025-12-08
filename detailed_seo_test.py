@@ -13,7 +13,7 @@ from typing import Dict, Any
 
 class DetailedSEOTest:
     def __init__(self):
-        self.base_url = "https://envmode-setup.preview.emergentagent.com"
+        self.base_url = "https://devops-setup.preview.emergentagent.com"
         self.api_url = f"{self.base_url}/api"
         self.session = None
         self.auth_token = None
