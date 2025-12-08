@@ -155,6 +155,9 @@ const Register = () => {
   const handleResendOTP = async () => {
     setIsLoading(true);
     setOtpError('');
+    setOtpSuccessMessage('');
+    // Clear the OTP input
+    setFormData({ ...formData, otp: '' });
     
     try {
       const response = await fetch(`${API_URL}/api/auth/send-otp`, {
@@ -165,7 +168,9 @@ const Register = () => {
 
       const data = await response.json();
 
-      if (!response.ok) {
+      if (response.ok) {
+        setOtpSuccessMessage('OTP sent successfully to your email');
+      } else {
         setOtpError(data.detail || 'Failed to send verification code');
       }
     } catch (error) {
