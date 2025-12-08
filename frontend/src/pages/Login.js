@@ -229,14 +229,14 @@ const Login = () => {
       {/* Left Column - Marketing Content - Only show on step 1 */}
       {step === 1 && (
         <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#f8f5ff] via-[#ede7ff] to-[#f3efff] p-12 flex-col justify-between">
-          <div>
-            {/* Logo */}
-            <div className="flex items-center space-x-2 mb-16">
-              <img src="/logo.png" alt="SCRAPI Logo" className="w-9 h-9" />
-              <span className="text-xl font-semibold text-gray-900">SCRAPI</span>
-            </div>
+          {/* Logo */}
+          <div className="flex items-center space-x-2">
+            <img src="/logo.png" alt="SCRAPI Logo" className="w-9 h-9" />
+            <span className="text-xl font-semibold text-gray-900">SCRAPI</span>
+          </div>
 
-            {/* Main Content */}
+          {/* Main Content - Centered */}
+          <div className="flex items-center justify-center flex-1">
             <div className="max-w-md">
               <h1 className="text-[28px] leading-[34px] font-semibold text-gray-900 mb-7">
                 Welcome back to SCRAPI
