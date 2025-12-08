@@ -347,8 +347,9 @@ const Register = () => {
                   Didn't receive the code?{' '}
                   <button
                     type="button"
-                    onClick={() => toast({ title: 'OTP Resent', variant: 'default' })}
+                    onClick={handleResendOTP}
                     className="text-blue-600 hover:underline font-medium"
+                    disabled={isLoading}
                   >
                     Resend
                   </button>
