@@ -356,9 +356,18 @@ const Register = () => {
                   <OTPInput
                     length={6}
                     value={formData.otp}
-                    onChange={(otp) => setFormData({ ...formData, otp })}
+                    onChange={(otp) => {
+                      setFormData({ ...formData, otp });
+                      setOtpError('');
+                    }}
                     disabled={isLoading}
                   />
+                  {otpError && (
+                    <p className="mt-2 text-[12px] text-red-600 flex items-center justify-center">
+                      <AlertCircle className="w-3.5 h-3.5 mr-1" />
+                      {otpError}
+                    </p>
+                  )}
                 </div>
 
                 <Button
