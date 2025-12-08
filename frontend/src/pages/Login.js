@@ -141,65 +141,48 @@ const Login = () => {
     console.log('Starting OTP verification...');
     
     try {
-      console.log('Fetching verify-otp endpoint...');
-      // Verify OTP via backend
-      const response = await fetch(`${API_URL}/api/auth/verify-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          email: formData.email, 
-          otp_code: formData.otp,
-          purpose: 'login'
-        })
+      console.log('Verifying OTP with axios...');
+      // Use axios instead of fetch to avoid rrweb monitoring conflicts
+      const response = await axios.post(`${API_URL}/api/auth/verify-otp`, {
+        email: formData.email,
+        otp_code: formData.otp,
+        purpose: 'login'
+      }, {
+        validateStatus: function (status) {
+          // Don't throw error for any status code
+          return true;
+        }
       });
 
       console.log('Response received, status:', response.status);
+      console.log('Response data:', response.data);
 
-      // Parse JSON response directly - monitoring tools should handle their own cloning
-      let data;
-      try {
-        data = await response.json();
-        console.log('JSON parsed successfully:', data);
-      } catch (jsonError) {
-        console.error('JSON Parse Error:', jsonError);
-        setOtpError('Invalid response from server');
-        setIsLoading(false);
-        return;
-      }
-
-      console.log('Checking response.ok:', response.ok);
-
-      if (response.ok) {
-        console.log('Response is OK, checking for success and token...');
-        // Check if the response contains the required fields
-        if (data.success && data.access_token) {
-          console.log('Success! Setting up authentication...');
-          // Store token and user data
-          localStorage.setItem('token', data.access_token);
-          
-          // Set token in context
-          console.log('Calling setToken...');
-          setToken(data.access_token);
-          
-          // Set user in context
-          console.log('Calling setUser...');
-          setUser(data.user);
-          
-          // Set axios authorization header
-          console.log('Setting axios header...');
-          axios.defaults.headers.common['Authorization'] = `Bearer ${data.access_token}`;
-          
-          console.log('Navigating to home...');
-          navigate(lastPath || '/home');
-        } else {
-          console.log('Response OK but missing required fields');
-          setOtpError(data.detail || data.message || 'Invalid response from server');
-        }
+      if (response.status === 200 && response.data.success && response.data.access_token) {
+        console.log('Success! Setting up authentication...');
+        const data = response.data;
+        
+        // Store token and user data
+        localStorage.setItem('token', data.access_token);
+        
+        // Set token in context
+        console.log('Calling setToken...');
+        setToken(data.access_token);
+        
+        // Set user in context
+        console.log('Calling setUser...');
+        setUser(data.user);
+        
+        // Set axios authorization header
+        console.log('Setting axios header...');
+        axios.defaults.headers.common['Authorization'] = `Bearer ${data.access_token}`;
+        
+        console.log('Navigating to home...');
+        navigate(lastPath || '/home');
       } else {
         // Response is not OK (400, 404, etc.) - display the backend error message
         console.log('Response NOT OK. Status:', response.status);
-        console.log('Error data:', data);
-        const errorMessage = data.detail || data.message || 'Invalid verification code';
+        console.log('Error data:', response.data);
+        const errorMessage = response.data.detail || response.data.message || 'Invalid verification code';
         console.log('Setting error message:', errorMessage);
         setOtpError(errorMessage);
         console.log('Error message set successfully');
