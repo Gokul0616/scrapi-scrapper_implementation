@@ -130,7 +130,6 @@ const Register = () => {
     const result = await register(formData.email, formData.email, formData.password, formData.organizationName);
     
     if (result.success) {
-      showError('Registration successful!', { type: 'success', title: 'Welcome' });
       navigate('/home');
     } else {
       setPasswordError(result.error || 'Registration failed');
