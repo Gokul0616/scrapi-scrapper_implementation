@@ -675,6 +675,19 @@ const Schedules = () => {
         </div>
       )}
 
+      {/* Alert Modal */}
+      <AlertModal
+        show={confirmModal.show}
+        onClose={() => setConfirmModal({ ...confirmModal, show: false })}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText={confirmModal.confirmText}
+        type={confirmModal.type}
+        showCancel={true}
+        cancelText="Cancel"
+      />
+
       {/* Create/Edit Modal */}
       {(showCreateModal || showEditModal) && (
         <ScheduleModal
