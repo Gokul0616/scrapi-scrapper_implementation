@@ -9,7 +9,7 @@ import json
 import time
 
 async def quick_test():
-    base_url = "https://auth-smtp-deploy.preview.emergentagent.com"
+    base_url = "https://quick-auth-flow.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     async with aiohttp.ClientSession() as session:

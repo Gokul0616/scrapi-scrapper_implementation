@@ -12,7 +12,7 @@ async def test_update_schedule():
     """Test the update schedule endpoint specifically"""
     
     # Get backend URL
-    base_url = "https://auth-smtp-deploy.preview.emergentagent.com"
+    base_url = "https://quick-auth-flow.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     async with aiohttp.ClientSession() as session:
