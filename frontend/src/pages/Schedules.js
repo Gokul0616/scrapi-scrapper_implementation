@@ -5,6 +5,7 @@ import {
   Activity, CheckCircle, XCircle, AlertCircle, Copy, Download, Filter, Search, HelpCircle, X, Info
 } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
+import AlertModal from '../components/AlertModal';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
