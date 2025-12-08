@@ -184,77 +184,7 @@ const Register = () => {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left Column - Marketing Content - Only show on step 1 */}
-      {step === 1 && (
-        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#f8f5ff] via-[#ede7ff] to-[#f3efff] p-12 flex-col justify-between">
-          <div>
-            {/* Logo */}
-            <div className="flex items-center space-x-2 mb-16">
-              <img src="/logo.png" alt="SCRAPI Logo" className="w-9 h-9" />
-              <span className="text-xl font-semibold text-gray-900">SCRAPI</span>
-            </div>
-
-            {/* Main Content */}
-            <div className="max-w-md">
-              <h1 className="text-[28px] leading-[34px] font-semibold text-gray-900 mb-7">
-                Get started with a free plan
-              </h1>
-
-              <div className="space-y-5">
-                {/* Feature 1 */}
-                <div className="flex items-start space-x-2.5">
-                  <div className="flex-shrink-0 mt-0.5">
-                    <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
-                  </div>
-                  <div>
-                    <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">$5.00 free platform credit every month</p>
-                    <p className="text-[13px] leading-[19px] text-gray-600">
-                      No credit card required. You can upgrade any time.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Feature 2 */}
-                <div className="flex items-start space-x-2.5">
-                  <div className="flex-shrink-0 mt-0.5">
-                    <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
-                  </div>
-                  <div>
-                    <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Start scraping immediately</p>
-                    <p className="text-[13px] leading-[19px] text-gray-600">
-                      Use one of thousands of pre-built Actors for your web scraping and automation projects.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Feature 3 */}
-                <div className="flex items-start space-x-2.5">
-                  <div className="flex-shrink-0 mt-0.5">
-                    <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
-                  </div>
-                  <div>
-                    <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Build your own solution</p>
-                    <p className="text-[13px] leading-[19px] text-gray-600">
-                      Our ready to use infrastructure, proxies, and storage set you up for immediate success.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="text-[11px] leading-[16px] text-gray-500">
-            This site is protected by reCAPTCHA and the{' '}
-            <a href="#" className="text-blue-600 hover:underline">Google Privacy Policy</a>
-            {' '}and{' '}
-            <a href="#" className="text-blue-600 hover:underline">Terms of Service</a>
-            {' '}apply.
-          </div>
-        </div>
-      )}
-
-      {/* Right Column - Signup Form */}
+      {/* Left Column - Signup Form */}
       <div className={`w-full ${step === 1 ? 'lg:w-1/2' : ''} flex items-center justify-center p-8 bg-white`}>
         <div className="w-full max-w-[360px]">
           {/* Back button */}
