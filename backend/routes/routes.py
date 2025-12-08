@@ -139,6 +139,138 @@ async def get_last_path(current_user: dict = Depends(get_current_user)):
     
     return {"last_path": user_doc.get('last_path', '/home')}
 
+# ============= OTP Routes =============
+@router.post("/auth/send-otp", response_model=OTPResponse)
+async def send_otp(request: SendOTPRequest):
+    """Send OTP to user's email for login or registration."""
+    from services.email_service import get_email_service
+    
+    try:
+        email_service = get_email_service()
+        
+        # Check if user exists for login, or doesn't exist for registration
+        user_exists = await db.users.find_one({"email": request.email})
+        
+        if request.purpose == "login" and not user_exists:
+            raise HTTPException(status_code=404, detail="No account found with this email")
+        
+        if request.purpose == "register" and user_exists:
+            raise HTTPException(status_code=400, detail="Email already registered")
+        
+        # Generate OTP
+        otp_code = email_service.generate_otp()
+        
+        # Delete any existing OTPs for this email and purpose
+        await db.otps.delete_many({"email": request.email, "purpose": request.purpose})
+        
+        # Store OTP in database
+        otp = OTP(
+            email=request.email,
+            otp_code=otp_code,
+            purpose=request.purpose
+        )
+        
+        doc = otp.model_dump()
+        doc['created_at'] = doc['created_at'].isoformat()
+        doc['expires_at'] = doc['expires_at'].isoformat()
+        await db.otps.insert_one(doc)
+        
+        # Send OTP email
+        await email_service.send_otp_email(request.email, otp_code, request.purpose)
+        
+        logger.info(f"OTP sent to {request.email} for {request.purpose}")
+        
+        return OTPResponse(
+            success=True,
+            message=f"Verification code sent to {request.email}",
+            email=request.email
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error sending OTP: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to send verification code. Please try again.")
+
+@router.post("/auth/verify-otp", response_model=dict)
+async def verify_otp(request: VerifyOTPRequest):
+    """Verify OTP and return token if valid (for login only)."""
+    try:
+        # Find the OTP
+        otp_doc = await db.otps.find_one({
+            "email": request.email,
+            "purpose": request.purpose,
+            "is_used": False
+        })
+        
+        if not otp_doc:
+            raise HTTPException(status_code=400, detail="Invalid or expired verification code")
+        
+        # Check if OTP has expired
+        expires_at = datetime.fromisoformat(otp_doc['expires_at'])
+        if datetime.now(timezone.utc) > expires_at:
+            await db.otps.delete_one({"id": otp_doc['id']})
+            raise HTTPException(status_code=400, detail="Verification code has expired")
+        
+        # Check attempts
+        if otp_doc['attempts'] >= 5:
+            await db.otps.delete_one({"id": otp_doc['id']})
+            raise HTTPException(status_code=400, detail="Too many failed attempts. Please request a new code.")
+        
+        # Verify OTP code
+        if otp_doc['otp_code'] != request.otp_code:
+            # Increment attempts
+            await db.otps.update_one(
+                {"id": otp_doc['id']},
+                {"$inc": {"attempts": 1}}
+            )
+            remaining = 5 - otp_doc['attempts'] - 1
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Invalid verification code. {remaining} attempts remaining."
+            )
+        
+        # Mark OTP as used
+        await db.otps.update_one(
+            {"id": otp_doc['id']},
+            {"$set": {"is_used": True}}
+        )
+        
+        # For login purpose, create token and return user data
+        if request.purpose == "login":
+            user_doc = await db.users.find_one({"email": request.email}, {"_id": 0})
+            if not user_doc:
+                raise HTTPException(status_code=404, detail="User not found")
+            
+            token = create_access_token({"sub": user_doc['id'], "username": user_doc['username']})
+            
+            return {
+                "success": True,
+                "message": "Verification successful",
+                "access_token": token,
+                "token_type": "bearer",
+                "user": UserResponse(
+                    id=user_doc['id'],
+                    username=user_doc['username'],
+                    email=user_doc['email'],
+                    organization_name=user_doc.get('organization_name'),
+                    plan=user_doc.get('plan', 'Free')
+                )
+            }
+        
+        # For registration, just return success
+        return {
+            "success": True,
+            "message": "Email verified successfully",
+            "email": request.email
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error verifying OTP: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to verify code. Please try again.")
+
 # ============= Actor Routes =============
 # NOTE: Specific routes MUST come before parametrized routes to avoid conflicts
 
