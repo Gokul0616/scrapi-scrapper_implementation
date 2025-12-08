@@ -239,7 +239,7 @@ const Login = () => {
             {/* Main Content */}
             <div className="max-w-md">
               <h1 className="text-[28px] leading-[34px] font-semibold text-gray-900 mb-7">
-                Get started with a free plan
+                Welcome back to SCRAPI
               </h1>
 
               <div className="space-y-5">
@@ -249,9 +249,9 @@ const Login = () => {
                     <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
                   </div>
                   <div>
-                    <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">$5.00 free platform credit every month</p>
+                    <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Access your scrapers and data</p>
                     <p className="text-[13px] leading-[19px] text-gray-600">
-                      No credit card required. You can upgrade any time.
+                      Continue managing your Google Maps, Amazon, and custom scraping projects.
                     </p>
                   </div>
                 </div>
@@ -262,9 +262,9 @@ const Login = () => {
                     <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
                   </div>
                   <div>
-                    <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Start scraping immediately</p>
+                    <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Monitor scheduled runs</p>
                     <p className="text-[13px] leading-[19px] text-gray-600">
-                      Use one of thousands of pre-built Actors for your web scraping and automation projects.
+                      Track your automated scraping schedules and view real-time run status.
                     </p>
                   </div>
                 </div>
@@ -275,9 +275,9 @@ const Login = () => {
                     <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
                   </div>
                   <div>
-                    <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Build your own solution</p>
+                    <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">AI-powered assistance</p>
                     <p className="text-[13px] leading-[19px] text-gray-600">
-                      Our ready to use infrastructure, proxies, and storage set you up for immediate success.
+                      Get instant help with our AI chat assistant for lead generation and scraping advice.
                     </p>
                   </div>
                 </div>
