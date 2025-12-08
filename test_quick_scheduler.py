@@ -9,7 +9,7 @@ import json
 import time
 
 async def quick_test():
-    base_url = "https://scraper-login.preview.emergentagent.com"
+    base_url = "https://email-edit-inline.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     async with aiohttp.ClientSession() as session:
