@@ -150,7 +150,17 @@ const Login = () => {
         })
       });
 
-      const data = await response.json();
+      // Parse JSON response
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.error('JSON Parse Error:', jsonError);
+        setOtpError('Invalid response from server');
+        setIsLoading(false);
+        return;
+      }
+
       console.log('OTP Verification Response:', response.status, data);
 
       if (response.ok) {
@@ -171,7 +181,10 @@ const Login = () => {
         }
       } else {
         // Response is not OK (400, 404, etc.) - display the backend error message
-        setOtpError(data.detail || data.message || 'Invalid verification code');
+        console.log('Error data:', data);
+        const errorMessage = data.detail || data.message || 'Invalid verification code';
+        console.log('Setting error message:', errorMessage);
+        setOtpError(errorMessage);
       }
     } catch (error) {
       console.error('OTP Verification Error:', error);
