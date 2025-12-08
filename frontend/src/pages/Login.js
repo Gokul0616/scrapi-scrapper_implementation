@@ -11,7 +11,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL || '';
 const Login = () => {
   const navigate = useNavigate();
   const { login, setUser, lastPath } = useAuth();
-  const [step, setStep] = useState(1); // 1: Email, 2: Password, 3: OTP (passwordless)
+  const [step, setStep] = useState(1); // 1: Email, 2: Password, 3: Send OTP Screen, 4: OTP Input
   const [formData, setFormData] = useState({ 
     email: '', 
     otp: '',
@@ -24,6 +24,7 @@ const Login = () => {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [otpError, setOtpError] = useState('');
+  const [sendOtpError, setSendOtpError] = useState('');
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
 
   const handleEmailSubmit = async (e) => {
