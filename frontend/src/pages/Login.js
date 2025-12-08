@@ -155,13 +155,10 @@ const Login = () => {
 
       console.log('Response received, status:', response.status);
 
-      // Clone response first to avoid "body already used" error with monitoring tools
-      const responseClone = response.clone();
-
-      // Parse JSON response
+      // Parse JSON response directly - monitoring tools should handle their own cloning
       let data;
       try {
-        data = await responseClone.json();
+        data = await response.json();
         console.log('JSON parsed successfully:', data);
       } catch (jsonError) {
         console.error('JSON Parse Error:', jsonError);
