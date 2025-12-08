@@ -4,24 +4,75 @@ import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { toast } from '../hooks/use-toast';
-import { Check } from 'lucide-react';
+import { Check, ArrowLeft } from 'lucide-react';
+import OTPInput from '../components/OTPInput';
 
 const Register = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
+  const [step, setStep] = useState(1); // 1: Email, 2: OTP, 3: Details, 4: Password
   const [formData, setFormData] = useState({
-    username: '',
     email: '',
-    password: '',
-    organizationName: ''
+    otp: '',
+    fullName: '',
+    organizationName: '',
+    password: ''
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleEmailSubmit = async (e) => {
     e.preventDefault();
-
     setIsLoading(true);
-    const result = await register(formData.username, formData.email, formData.password, formData.organizationName);
+    
+    // Simulate OTP sending
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    toast({ 
+      title: 'OTP Sent', 
+      description: `Verification code sent to ${formData.email}`, 
+      variant: 'default' 
+    });
+    
+    setIsLoading(false);
+    setStep(2);
+  };
+
+  const handleOTPSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    // Simulate OTP verification
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    if (formData.otp.length === 6) {
+      toast({ 
+        title: 'OTP Verified', 
+        description: 'Please complete your profile', 
+        variant: 'default' 
+      });
+      setIsLoading(false);
+      setStep(3);
+    } else {
+      toast({ 
+        title: 'Invalid OTP', 
+        description: 'Please enter a valid 6-digit code', 
+        variant: 'destructive' 
+      });
+      setIsLoading(false);
+    }
+  };
+
+  const handleDetailsSubmit = async (e) => {
+    e.preventDefault();
+    setStep(4);
+  };
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    // Use email as username for registration
+    const result = await register(formData.email, formData.email, formData.password, formData.organizationName);
     
     if (result.success) {
       toast({ title: 'Registration successful!', variant: 'default' });
@@ -39,6 +90,12 @@ const Register = () => {
       description: `${provider} OAuth integration coming soon!`, 
       variant: 'default' 
     });
+  };
+
+  const handleBack = () => {
+    if (step > 1) {
+      setStep(step - 1);
+    }
   };
 
   return (
