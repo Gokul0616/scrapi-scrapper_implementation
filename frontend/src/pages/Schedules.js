@@ -98,31 +98,36 @@ const Schedules = () => {
     }
   };
 
-  const handleDeleteSchedule = async (scheduleId) => {
-    if (!window.confirm('Are you sure you want to delete this schedule?')) {
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`${API_URL}/api/schedules/${scheduleId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      toast({
-        title: "Success",
-        description: "Schedule deleted successfully"
-      });
-      
-      fetchSchedules();
-    } catch (error) {
-      console.error('Error deleting schedule:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete schedule",
-        variant: "destructive"
-      });
-    }
+  const handleDeleteSchedule = (scheduleId) => {
+    setConfirmModal({
+      show: true,
+      title: 'Delete Schedule',
+      message: 'Are you sure you want to delete this schedule? This action cannot be undone.',
+      confirmText: 'Delete',
+      type: 'error',
+      onConfirm: async () => {
+        try {
+          const token = localStorage.getItem('token');
+          await axios.delete(`${API_URL}/api/schedules/${scheduleId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          toast({
+            title: "Success",
+            description: "Schedule deleted successfully"
+          });
+          
+          fetchSchedules();
+        } catch (error) {
+          console.error('Error deleting schedule:', error);
+          toast({
+            title: "Error",
+            description: "Failed to delete schedule",
+            variant: "destructive"
+          });
+        }
+      }
+    });
   };
 
   const handleRunNow = async (scheduleId) => {
