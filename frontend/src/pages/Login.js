@@ -69,6 +69,7 @@ const Login = () => {
   const handleContinueWithoutPassword = async () => {
     setUsePasswordless(true);
     setIsLoading(true);
+    setPasswordError('');
     
     try {
       // Send OTP via backend
@@ -81,13 +82,14 @@ const Login = () => {
       const data = await response.json();
 
       if (response.ok) {
-        showError('Verification code sent to your email', { type: 'success', title: 'OTP Sent' });
         setStep(3);
       } else {
-        showError(data.detail || 'Failed to send verification code', { type: 'error', title: 'Error' });
+        setPasswordError(data.detail || 'Failed to send verification code');
+        setUsePasswordless(false);
       }
     } catch (error) {
-      showError('Network error. Please try again.', { type: 'error', title: 'Error' });
+      setPasswordError('Network error. Please try again.');
+      setUsePasswordless(false);
     } finally {
       setIsLoading(false);
     }
