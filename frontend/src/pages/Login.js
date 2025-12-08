@@ -158,7 +158,11 @@ const Login = () => {
         if (data.success && data.access_token) {
           // Store token and user data
           localStorage.setItem('token', data.access_token);
+          setToken(data.access_token);
           setUser(data.user);
+          
+          // Set axios authorization header
+          axios.defaults.headers.common['Authorization'] = `Bearer ${data.access_token}`;
           
           navigate(lastPath || '/home');
         } else {
