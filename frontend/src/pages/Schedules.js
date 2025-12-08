@@ -186,38 +186,43 @@ const Schedules = () => {
     }
   };
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = () => {
     if (selectedSchedules.length === 0) return;
     
-    if (!window.confirm(`Are you sure you want to delete ${selectedSchedules.length} schedule(s)?`)) {
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('token');
-      await Promise.all(
-        selectedSchedules.map(id => 
-          axios.delete(`${API_URL}/api/schedules/${id}`, {
-            headers: { Authorization: `Bearer ${token}` }
-          })
-        )
-      );
-      
-      toast({
-        title: "Success",
-        description: `${selectedSchedules.length} schedule(s) deleted successfully`
-      });
-      
-      setSelectedSchedules([]);
-      fetchSchedules();
-    } catch (error) {
-      console.error('Error deleting schedules:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete some schedules",
-        variant: "destructive"
-      });
-    }
+    setConfirmModal({
+      show: true,
+      title: 'Delete Schedules',
+      message: `Are you sure you want to delete ${selectedSchedules.length} schedule(s)? This action cannot be undone.`,
+      confirmText: 'Delete All',
+      type: 'error',
+      onConfirm: async () => {
+        try {
+          const token = localStorage.getItem('token');
+          await Promise.all(
+            selectedSchedules.map(id => 
+              axios.delete(`${API_URL}/api/schedules/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+              })
+            )
+          );
+          
+          toast({
+            title: "Success",
+            description: `${selectedSchedules.length} schedule(s) deleted successfully`
+          });
+          
+          setSelectedSchedules([]);
+          fetchSchedules();
+        } catch (error) {
+          console.error('Error deleting schedules:', error);
+          toast({
+            title: "Error",
+            description: "Failed to delete some schedules",
+            variant: "destructive"
+          });
+        }
+      }
+    });
   };
 
   const handleBulkToggle = async (enable) => {
