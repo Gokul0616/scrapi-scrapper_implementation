@@ -163,7 +163,11 @@ const Login = () => {
   };
 
   const handleBack = () => {
-    if (step === 3 && usePasswordless) {
+    if (step === 4 && usePasswordless) {
+      // From OTP input back to Send OTP screen
+      setStep(3);
+    } else if (step === 3 && usePasswordless) {
+      // From Send OTP screen back to password
       setUsePasswordless(false);
       setStep(2);
     } else if (step > 1) {
@@ -173,18 +177,12 @@ const Login = () => {
 
   const handleUseDifferentEmail = () => {
     setIsEditingEmail(true);
+    setSendOtpError('');
   };
 
-  const handleEmailChange = (newEmail) => {
-    setFormData({ ...formData, email: newEmail, otp: '' });
-  };
-
-  const handleSaveEmail = () => {
-    if (formData.email) {
-      setIsEditingEmail(false);
-      // Optionally resend OTP with new email
-      handleSendOTP();
-    }
+  const handleCancelEditEmail = () => {
+    setIsEditingEmail(false);
+    setSendOtpError('');
   };
 
   return (
