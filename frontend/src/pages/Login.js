@@ -97,6 +97,7 @@ const Login = () => {
 
   const handleSendOTP = async () => {
     setIsLoading(true);
+    setOtpError('');
     
     try {
       const response = await fetch(`${API_URL}/api/auth/send-otp`, {
@@ -107,13 +108,11 @@ const Login = () => {
 
       const data = await response.json();
 
-      if (response.ok) {
-        showError('Verification code sent to your email', { type: 'success', title: 'OTP Sent' });
-      } else {
-        showError(data.detail || 'Failed to send verification code', { type: 'error', title: 'Error' });
+      if (!response.ok) {
+        setOtpError(data.detail || 'Failed to send verification code');
       }
     } catch (error) {
-      showError('Network error. Please try again.', { type: 'error', title: 'Error' });
+      setOtpError('Network error. Please try again.');
     } finally {
       setIsLoading(false);
     }
