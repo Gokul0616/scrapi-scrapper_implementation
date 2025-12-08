@@ -9,7 +9,7 @@ import json
 import time
 
 async def quick_test():
-    base_url = "https://fullstack-otp-flow.preview.emergentagent.com"
+    base_url = "https://app-bootstrap-8.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     async with aiohttp.ClientSession() as session:
