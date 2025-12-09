@@ -397,6 +397,7 @@ android-sdk/ -e
 # Environment files
 *.env
 *.env.*
+<<<<<<< HEAD
 -e 
 # Environment files
 *.env
@@ -507,3 +508,5 @@ android-sdk/ -e
 # Environment files
 *.env
 *.env.*
+=======
+>>>>>>> origin/admin-console-seo-setup

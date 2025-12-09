@@ -9,6 +9,7 @@ class UserCreate(BaseModel):
     email: str
     password: str
     organization_name: Optional[str] = None
+    role: Optional[str] = None  # owner or admin - only allowed when no owner exists
 
 class UserLogin(BaseModel):
     username: str
@@ -23,6 +24,9 @@ class User(BaseModel):
     hashed_password: str
     organization_name: Optional[str] = None
     plan: str = "Free"
+    role: str = "admin"  # owner or admin - default is admin
+    is_active: bool = True
+    last_login_at: Optional[datetime] = None
     last_path: Optional[str] = None  # Store last visited path for redirect after login
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     
@@ -32,6 +36,10 @@ class UserResponse(BaseModel):
     email: str
     organization_name: Optional[str] = None
     plan: str
+    role: str
+    is_active: bool
+    created_at: str
+    last_login_at: Optional[str] = None
 
 # Actor Models
 class Actor(BaseModel):
@@ -209,6 +217,18 @@ class GlobalChatMessage(BaseModel):
 class GlobalChatRequest(BaseModel):
     message: str
 
-# Visual Scraper Builder Models - REMOVED
-# ScraperField, PaginationConfig, ScraperConfig, ScraperConfigCreate, 
-# ScraperConfigUpdate, ScraperTestRequest models have been removed
+# Audit Log Models
+class AuditLog(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    admin_id: str
+    admin_username: str
+    action: str  # e.g. user_suspended, user_activated, actor_verified
+    target_type: str  # user, actor, run, system
+    target_id: Optional[str] = None
+    target_name: Optional[str] = None  # Human readable target name
+    details: Optional[str] = None
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+    ip_address: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
