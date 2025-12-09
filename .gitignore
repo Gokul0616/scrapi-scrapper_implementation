@@ -510,3 +510,7 @@ android-sdk/ -e
 *.env.*
 =======
 >>>>>>> origin/admin-console-seo-setup
+-e 
+# Environment files
+*.env
+*.env.*
