@@ -13,7 +13,7 @@ async def test_scheduler_execution():
     """Test that the scheduler actually executes schedules at the right time"""
     
     # Get backend URL
-    base_url = "https://devops-setup.preview.emergentagent.com"
+    base_url = "https://git-integrator.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     async with aiohttp.ClientSession() as session:
