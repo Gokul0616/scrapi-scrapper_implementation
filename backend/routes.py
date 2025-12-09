@@ -1576,3 +1576,97 @@ async def get_audit_logs(
         "total_pages": (total + limit - 1) // limit
     }
 
+
+@router.get("/admin/actors", response_model=List[Actor])
+async def get_admin_actors(
+    current_user: dict = Depends(get_current_user),
+    skip: int = 0,
+    limit: int = 100,
+    search: Optional[str] = None,
+    category: Optional[str] = None
+):
+    """Get all actors for admin moderation."""
+    if current_user.get('role') not in ['admin', 'owner']:
+        raise HTTPException(status_code=403, detail="Admin access required")
+        
+    query = {}
+    if search:
+        query["name"] = {"$regex": search, "$options": "i"}
+    if category and category != "All":
+        query["category"] = category
+        
+    actors = await db.actors.find(query).skip(skip).limit(limit).to_list(limit)
+    
+    # Convert datetimes
+    for actor in actors:
+        if isinstance(actor.get('created_at'), str):
+            actor['created_at'] = datetime.fromisoformat(actor['created_at'])
+        if isinstance(actor.get('updated_at'), str):
+            actor['updated_at'] = datetime.fromisoformat(actor['updated_at'])
+            
+    return actors
+
+@router.post("/admin/actors/{actor_id}/verify")
+async def verify_actor(
+    actor_id: str,
+    verified: bool = True,
+    current_user: dict = Depends(get_current_user)
+):
+    """Toggle actor verification status."""
+    if current_user.get('role') not in ['admin', 'owner']:
+        raise HTTPException(status_code=403, detail="Admin access required")
+        
+    result = await db.actors.update_one(
+        {"id": actor_id},
+        {"$set": {"is_verified": verified, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Actor not found")
+        
+    await log_admin_action(
+        db, 
+        current_user, 
+        "actor_verified" if verified else "actor_unverified", 
+        "actor", 
+        actor_id,
+        details=f"Verification set to {verified}"
+    )
+    
+    return {"message": f"Actor {'verified' if verified else 'unverified'} successfully"}
+
+@router.post("/admin/actors/{actor_id}/feature")
+async def feature_actor(
+    actor_id: str,
+    featured: bool = True,
+    current_user: dict = Depends(get_current_user)
+):
+    """Toggle actor featured status."""
+    if current_user.get('role') not in ['admin', 'owner']:
+        raise HTTPException(status_code=403, detail="Admin access required")
+        
+    # Check limit if enabling
+    if featured:
+        count = await db.actors.count_documents({"is_featured": True})
+        if count >= 10:
+            raise HTTPException(status_code=400, detail="Maximum number of featured actors (10) reached")
+            
+    result = await db.actors.update_one(
+        {"id": actor_id},
+        {"$set": {"is_featured": featured, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Actor not found")
+        
+    await log_admin_action(
+        db, 
+        current_user, 
+        "actor_featured" if featured else "actor_unfeatured", 
+        "actor", 
+        actor_id,
+        details=f"Featured set to {featured}"
+    )
+    
+    return {"message": f"Actor {'featured' if featured else 'unfeatured'} successfully"}
+
