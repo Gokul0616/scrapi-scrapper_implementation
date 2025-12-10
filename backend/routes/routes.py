@@ -320,6 +320,39 @@ async def verify_otp(request: VerifyOTPRequest):
         logger.error(f"Error verifying OTP: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to verify code. Please try again.")
 
+# ============= Role Selection Routes =============
+@router.post("/auth/select-role")
+async def select_role(
+    role_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Select user role (owner or admin) - only for first-time setup."""
+    selected_role = role_data.get('role')
+    
+    if selected_role not in ['owner', 'admin']:
+        raise HTTPException(status_code=400, detail="Invalid role. Must be 'owner' or 'admin'")
+    
+    # Check if owner already exists
+    owner_exists = await db.users.find_one({"role": "owner"})
+    
+    if owner_exists and selected_role == "owner":
+        raise HTTPException(status_code=400, detail="Owner role already assigned")
+    
+    # Update user role
+    await db.users.update_one(
+        {"id": current_user['id']},
+        {"$set": {"role": selected_role}}
+    )
+    
+    # Create new token with updated role
+    token = create_access_token({"sub": current_user['id'], "username": current_user['username'], "role": selected_role})
+    
+    return {
+        "message": "Role selected successfully",
+        "role": selected_role,
+        "access_token": token
+    }
+
 # ============= Actor Routes =============
 # NOTE: Specific routes MUST come before parametrized routes to avoid conflicts
 
