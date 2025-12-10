@@ -75,7 +75,7 @@ const OTPInput = ({ length = 6, value, onChange, disabled = false }) => {
 
     // Smooth character-by-character fill with faster animation
     const newValue = value.split('');
-    const animationDelay = 15; // Faster delay - sweet spot between instant and smooth
+    const animationDelay = 10; // Even faster - quick and snappy
     
     for (let i = 0; i < pastedData.length; i++) {
       await new Promise(resolve => setTimeout(resolve, animationDelay));
