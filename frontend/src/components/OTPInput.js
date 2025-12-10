@@ -125,12 +125,13 @@ const OTPInput = ({ length = 6, value, onChange, disabled = false }) => {
             transition-all duration-150 ease-out
             focus:outline-none
             disabled:bg-gray-100 disabled:cursor-not-allowed
+            bg-white
             ${value[index] 
-              ? 'border-gray-900 bg-[#e0f2fe] text-gray-900 filled' 
-              : 'border-gray-300 bg-white'
+              ? 'border-[#0ea5e9] text-gray-900 filled shadow-[0_0_0_3px_rgba(14,165,233,0.1)]' 
+              : 'border-gray-300'
             }
             ${!disabled && 'hover:border-gray-400'}
-            focus:border-gray-900 focus:ring-2 focus:ring-gray-900 focus:ring-opacity-20
+            focus:border-[#0ea5e9] focus:ring-2 focus:ring-[#0ea5e9] focus:ring-opacity-20
             focus:shadow-md
             ${isPasting ? 'pasting' : ''}
             ${animatingIndices.has(index) ? 'filled' : ''}
