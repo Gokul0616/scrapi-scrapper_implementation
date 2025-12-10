@@ -1,5 +1,6 @@
 # Models package
 from .user import User, UserCreate, UserLogin, UserResponse
+from .admin_user import AdminUser, AdminUserCreate, AdminUserLogin, AdminUserResponse
 from .actor import Actor, ActorCreate, ActorUpdate, ActorPublish
 from .run import Run, RunCreate, RunInput
 from .dataset import Dataset, DatasetItem
@@ -12,6 +13,8 @@ from .audit import AuditLog
 __all__ = [
     # User models
     'User', 'UserCreate', 'UserLogin', 'UserResponse',
+    # Admin User models
+    'AdminUser', 'AdminUserCreate', 'AdminUserLogin', 'AdminUserResponse',
     # Actor models
     'Actor', 'ActorCreate', 'ActorUpdate', 'ActorPublish',
     # Run models
