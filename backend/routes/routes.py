@@ -43,31 +43,53 @@ async def register(user_data: UserCreate):
     if existing_email:
         raise HTTPException(status_code=400, detail="Email already exists")
     
+    # Check if this is the first user (owner) or if role is specified
+    user_count = await db.users.count_documents({})
+    owner_exists = await db.users.find_one({"role": "owner"})
+    
+    # Determine role
+    if user_count == 0 or not owner_exists:
+        # First user or no owner - check if they need to select role
+        role = user_data.role if user_data.role else None
+        needs_role_selection = role is None
+    else:
+        # Not first user - default to admin
+        role = "admin"
+        needs_role_selection = False
+    
     # Create user
     from models import User
     user = User(
         username=user_data.username,
         email=user_data.email,
         hashed_password=hash_password(user_data.password),
-        organization_name=user_data.organization_name
+        organization_name=user_data.organization_name,
+        role=role if role else "admin"
     )
     
     doc = user.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
+    if doc.get('last_login_at'):
+        doc['last_login_at'] = doc['last_login_at'].isoformat()
     await db.users.insert_one(doc)
     
     # Create token
-    token = create_access_token({"sub": user.id, "username": user.username})
+    token = create_access_token({"sub": user.id, "username": user.username, "role": user.role})
     
     return {
         "access_token": token,
         "token_type": "bearer",
+        "needs_role_selection": needs_role_selection,
         "user": UserResponse(
             id=user.id,
             username=user.username,
             email=user.email,
             organization_name=user.organization_name,
-            plan=user.plan
+            plan=user.plan,
+            role=user.role,
+            is_active=user.is_active,
+            created_at=user.created_at.isoformat(),
+            last_login_at=user.last_login_at.isoformat() if user.last_login_at else None
         )
     }
 
@@ -85,17 +107,35 @@ async def login(credentials: UserLogin):
     if not user_doc or not verify_password(credentials.password, user_doc['hashed_password']):
         raise HTTPException(status_code=401, detail="Invalid username or password")
     
-    token = create_access_token({"sub": user_doc['id'], "username": user_doc['username']})
+    # Update last login
+    await db.users.update_one(
+        {"id": user_doc['id']},
+        {"$set": {"last_login_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    # Check if user needs role selection (no role set)
+    needs_role_selection = not user_doc.get('role') or user_doc.get('role') == ""
+    
+    token = create_access_token({
+        "sub": user_doc['id'], 
+        "username": user_doc['username'],
+        "role": user_doc.get('role', 'admin')
+    })
     
     return {
         "access_token": token,
         "token_type": "bearer",
+        "needs_role_selection": needs_role_selection,
         "user": UserResponse(
             id=user_doc['id'],
             username=user_doc['username'],
             email=user_doc['email'],
             organization_name=user_doc.get('organization_name'),
-            plan=user_doc.get('plan', 'Free')
+            plan=user_doc.get('plan', 'Free'),
+            role=user_doc.get('role', 'admin'),
+            is_active=user_doc.get('is_active', True),
+            created_at=user_doc.get('created_at', datetime.now(timezone.utc).isoformat()),
+            last_login_at=user_doc.get('last_login_at')
         )
     }
 
