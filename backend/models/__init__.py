@@ -7,6 +7,7 @@ from .proxy import Proxy, ProxyCreate
 from .chat import LeadChatMessage, LeadChatRequest, GlobalChatMessage, GlobalChatRequest
 from .schedule import Schedule, ScheduleCreate, ScheduleUpdate, ScheduleResponse
 from .otp import OTP, SendOTPRequest, VerifyOTPRequest, OTPResponse
+from .audit_log import AuditLog
 
 __all__ = [
     # User models
@@ -24,5 +25,7 @@ __all__ = [
     # Schedule models
     'Schedule', 'ScheduleCreate', 'ScheduleUpdate', 'ScheduleResponse',
     # OTP models
-    'OTP', 'SendOTPRequest', 'VerifyOTPRequest', 'OTPResponse'
+    'OTP', 'SendOTPRequest', 'VerifyOTPRequest', 'OTPResponse',
+    # Audit log models
+    'AuditLog'
 ]
