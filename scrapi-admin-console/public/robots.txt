@@ -5,4 +5,4 @@ User-agent: *
 Disallow: /
 
 # Sitemap (for reference, even though indexing is disabled)
-Sitemap: https://admin-host-setup.preview.emergentagent.com/sitemap.xml
+Sitemap: https://backend-api-scan.preview.emergentagent.com/sitemap.xml
