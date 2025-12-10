@@ -83,7 +83,7 @@ const OTPInput = ({ length = 6, value, onChange, disabled = false }) => {
 
     // Smooth character-by-character fill animation (like Grok)
     const newValue = value.split('');
-    const animationDelay = 70; // milliseconds between each character
+    const animationDelay = 35; // milliseconds between each character - faster
     
     for (let i = 0; i < pastedData.length; i++) {
       await new Promise(resolve => setTimeout(resolve, animationDelay));
@@ -107,8 +107,8 @@ const OTPInput = ({ length = 6, value, onChange, disabled = false }) => {
       inputRefs.current[focusIndex]?.focus();
       setIsPasting(false);
       // Clear all animating indices after animation completes
-      setTimeout(() => setAnimatingIndices(new Set()), 300);
-    }, 100);
+      setTimeout(() => setAnimatingIndices(new Set()), 200);
+    }, 50);
   };
 
   return (
@@ -130,11 +130,11 @@ const OTPInput = ({ length = 6, value, onChange, disabled = false }) => {
             otp-input
             w-12 h-12 text-center text-lg font-semibold 
             border-2 rounded-lg
-            transition-all duration-200 ease-out
+            transition-all duration-150 ease-out
             focus:outline-none
             disabled:bg-gray-100 disabled:cursor-not-allowed
             ${value[index] 
-              ? 'border-green-500 bg-green-50 text-green-900 filled' 
+              ? 'border-gray-900 bg-white text-gray-900 filled' 
               : 'border-gray-300 bg-white'
             }
             ${!disabled && 'hover:border-gray-400'}
