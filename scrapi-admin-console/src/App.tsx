@@ -23,7 +23,11 @@ const ProtectedRoute = () => {
     return <Navigate to="/select-role" replace />;
   }
 
-  return <Layout />;
+  return (
+    <Layout>
+      <Outlet />
+    </Layout>
+  );
 };
 
 const PublicRoute = () => {
