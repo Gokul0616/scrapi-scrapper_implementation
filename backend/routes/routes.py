@@ -551,8 +551,8 @@ async def get_admin_actors(
     category: Optional[str] = None
 ):
     """Get all actors for admin moderation."""
-    user_doc = await db.users.find_one({"id": current_user['id']})
-    if user_doc.get('role') not in ['admin', 'owner']:
+    user_doc = await db.admin_users.find_one({"id": current_user['id']})
+    if not user_doc or user_doc.get('role') not in ['admin', 'owner']:
         raise HTTPException(status_code=403, detail="Admin access required")
         
     query = {}
