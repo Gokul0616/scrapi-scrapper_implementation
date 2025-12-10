@@ -36,14 +36,14 @@ const OTPInput = ({ length = 6, value, onChange, disabled = false }) => {
           newSet.delete(index);
           return newSet;
         });
-      }, 300);
+      }, 200);
     }
 
     // Auto-focus next input with smooth transition
     if (val && index < length - 1) {
       setTimeout(() => {
         inputRefs.current[index + 1]?.focus();
-      }, 60); // Smooth delay for natural progression
+      }, 40); // Faster delay for natural progression
     }
   };
 
