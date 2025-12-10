@@ -51,23 +51,17 @@ const OTPInput = ({ length = 6, value, onChange, disabled = false }) => {
     // Handle backspace
     if (e.key === 'Backspace') {
       if (!value[index] && index > 0) {
-        // If current box is empty, go to previous box
-        setTimeout(() => {
-          inputRefs.current[index - 1]?.focus();
-        }, 60);
+        // If current box is empty, go to previous box immediately
+        inputRefs.current[index - 1]?.focus();
       }
     }
     // Handle left arrow
     else if (e.key === 'ArrowLeft' && index > 0) {
-      setTimeout(() => {
-        inputRefs.current[index - 1]?.focus();
-      }, 30);
+      inputRefs.current[index - 1]?.focus();
     }
     // Handle right arrow
     else if (e.key === 'ArrowRight' && index < length - 1) {
-      setTimeout(() => {
-        inputRefs.current[index + 1]?.focus();
-      }, 30);
+      inputRefs.current[index + 1]?.focus();
     }
   };
 
