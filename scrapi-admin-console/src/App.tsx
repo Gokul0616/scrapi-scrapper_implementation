@@ -65,13 +65,15 @@ function App() {
 
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/users" element={<UsersPage />} />
-            <Route path="/actors" element={<ActorsPage />} />
-            <Route path="/runs" element={<RunsPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/audit-logs" element={<AuditLogs />} />
+            <Route element={<Layout />}>
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/users" element={<UsersPage />} />
+              <Route path="/actors" element={<ActorsPage />} />
+              <Route path="/runs" element={<RunsPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/audit-logs" element={<AuditLogs />} />
+            </Route>
           </Route>
 
           {/* 404 */}
