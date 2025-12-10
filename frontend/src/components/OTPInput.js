@@ -71,7 +71,7 @@ const OTPInput = ({ length = 6, value, onChange, disabled = false }) => {
     }
   };
 
-  const handlePaste = async (e) => {
+  const handlePaste = (e) => {
     e.preventDefault();
     const pastedData = e.clipboardData.getData('text/plain').trim().replace(/\D/g, '').slice(0, length);
     
@@ -81,34 +81,32 @@ const OTPInput = ({ length = 6, value, onChange, disabled = false }) => {
 
     setIsPasting(true);
 
-    // Smooth character-by-character fill animation (like Grok)
+    // Fill all characters instantly
     const newValue = value.split('');
-    const animationDelay = 35; // milliseconds between each character - faster
+    const indices = [];
     
     for (let i = 0; i < pastedData.length; i++) {
-      await new Promise(resolve => setTimeout(resolve, animationDelay));
       newValue[i] = pastedData[i];
-      onChange(newValue.join('').padEnd(length, ''));
-      
-      // Add to animating indices
-      setAnimatingIndices(prev => new Set([...prev, i]));
-      
-      // Focus current input for smooth visual feedback
-      if (inputRefs.current[i]) {
-        inputRefs.current[i].focus();
-      }
+      indices.push(i);
     }
+    
+    // Update all at once
+    onChange(newValue.join('').padEnd(length, ''));
+    
+    // Trigger animation for all filled indices
+    setAnimatingIndices(new Set(indices));
 
     // Focus the next empty field or last one
     const nextEmptyIndex = newValue.findIndex(digit => !digit);
     const focusIndex = nextEmptyIndex === -1 ? pastedData.length - 1 : Math.min(nextEmptyIndex, length - 1);
     
-    setTimeout(() => {
+    // Quick focus and cleanup
+    requestAnimationFrame(() => {
       inputRefs.current[focusIndex]?.focus();
       setIsPasting(false);
-      // Clear all animating indices after animation completes
+      // Clear animating indices after brief animation
       setTimeout(() => setAnimatingIndices(new Set()), 200);
-    }, 50);
+    });
   };
 
   return (
