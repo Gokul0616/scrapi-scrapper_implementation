@@ -139,7 +139,7 @@ const OTPInput = ({ length = 6, value, onChange, disabled = false }) => {
             }
             ${!disabled && 'hover:border-gray-400'}
             focus:border-gray-900 focus:ring-2 focus:ring-gray-900 focus:ring-opacity-20
-            focus:scale-105 focus:shadow-lg
+            focus:shadow-md
             ${isPasting ? 'pasting' : ''}
             ${animatingIndices.has(index) ? 'filled' : ''}
           `}
