@@ -1807,3 +1807,353 @@ async def run_schedule_now(
     
     return {"message": "Run triggered successfully", "run_id": run.id, "run": run}
 
+
+# ============= Admin Routes =============
+@router.get("/admin/stats")
+async def get_admin_stats(current_user: dict = Depends(get_current_user)):
+    """Get admin dashboard statistics."""
+    # Check if user is admin or owner
+    if current_user.get('role') not in ['admin', 'owner']:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # 1. User stats
+    total_users = await db.users.count_documents({})
+    # Active users in last 7 days
+    seven_days_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+    active_users = await db.users.count_documents({
+        "$or": [
+            {"last_login_at": {"$gte": seven_days_ago}},
+            {"created_at": {"$gte": seven_days_ago}} # Consider new users as active
+        ]
+    })
+    
+    # 2. Run stats
+    total_runs = await db.runs.count_documents({})
+    succeeded_runs = await db.runs.count_documents({"status": "succeeded"})
+    
+    success_rate = 0
+    if total_runs > 0:
+        success_rate = (succeeded_runs / total_runs) * 100
+        
+    # 3. Recent activity
+    recent_runs = await db.runs.find(
+        {}, 
+        {"_id": 0}
+    ).sort("created_at", -1).limit(5).to_list(5)
+    
+    # Format recent runs
+    formatted_runs = []
+    for run in recent_runs:
+        if isinstance(run.get('created_at'), str):
+            created_at = datetime.fromisoformat(run['created_at'])
+        else:
+            created_at = run.get('created_at')
+            
+        # Calculate time ago roughly
+        now = datetime.now(timezone.utc)
+        diff = now - created_at
+        hours_ago = int(diff.total_seconds() / 3600)
+        
+        formatted_runs.append({
+            "id": run['id'],
+            "type": "run",
+            "status": run['status'],
+            "actor_name": run['actor_name'],
+            "hours_ago": hours_ago
+        })
+        
+    return {
+        "total_users": total_users,
+        "active_users_7d": active_users,
+        "total_runs": total_runs,
+        "success_rate": round(success_rate, 1),
+        "recent_activity": formatted_runs
+    }
+
+@router.get("/admin/users", response_model=List[UserResponse])
+async def get_admin_users(
+    current_user: dict = Depends(get_current_user),
+    skip: int = 0,
+    limit: int = 100,
+    search: Optional[str] = None
+):
+    """Get all users (admin only)."""
+    if current_user.get('role') not in ['admin', 'owner']:
+        raise HTTPException(status_code=403, detail="Admin access required")
+        
+    query = {}
+    if search:
+        query["$or"] = [
+            {"username": {"$regex": search, "$options": "i"}},
+            {"email": {"$regex": search, "$options": "i"}},
+            {"organization_name": {"$regex": search, "$options": "i"}}
+        ]
+        
+    users = await db.users.find(query, {"_id": 0}).skip(skip).limit(limit).to_list(limit)
+    
+    # Helper to clean user data for response
+    cleaned_users = []
+    for user_doc in users:
+        cleaned_users.append(UserResponse(
+            id=user_doc['id'],
+            username=user_doc['username'],
+            email=user_doc['email'],
+            organization_name=user_doc.get('organization_name'),
+            plan=user_doc.get('plan', 'Free'),
+            role=user_doc.get('role', 'admin'),
+            is_active=user_doc.get('is_active', True),
+            created_at=user_doc.get('created_at', datetime.now(timezone.utc).isoformat()),
+            last_login_at=user_doc.get('last_login_at')
+        ))
+        
+    return cleaned_users
+
+@router.post("/admin/users/{user_id}/suspend")
+async def suspend_user(
+    user_id: str,
+    request: Request,
+    reason: dict = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Suspend a user account."""
+    if current_user.get('role') not in ['admin', 'owner']:
+        raise HTTPException(status_code=403, detail="Admin access required")
+        
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    if user.get('role') == 'owner':
+         raise HTTPException(status_code=403, detail="Cannot suspend owner")
+
+    # Abort running jobs
+    running_runs = await db.runs.find({"user_id": user_id, "status": {"$in": ["running", "queued"]}}).to_list(None)
+    for run in running_runs:
+        await task_manager.cancel_task(run['id'])
+        await db.runs.update_one(
+            {"id": run['id']}, 
+            {"$set": {"status": "aborted", "finished_at": datetime.now(timezone.utc).isoformat()}}
+        )
+    
+    await db.users.update_one({"id": user_id}, {"$set": {"is_active": False}})
+    
+    await log_admin_action(
+        db, 
+        current_user, 
+        "user_suspended", 
+        "user", 
+        user_id, 
+        user['username'], 
+        details=reason.get('reason') if reason else "Suspended by admin",
+        ip_address=request.client.host
+    )
+    
+    return {"message": "User suspended successfully"}
+
+@router.post("/admin/users/{user_id}/activate")
+async def activate_user(
+    user_id: str,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """Activate a user account."""
+    if current_user.get('role') not in ['admin', 'owner']:
+        raise HTTPException(status_code=403, detail="Admin access required")
+        
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    await db.users.update_one({"id": user_id}, {"$set": {"is_active": True}})
+    
+    await log_admin_action(
+        db, 
+        current_user, 
+        "user_activated", 
+        "user", 
+        user_id, 
+        user['username'],
+        ip_address=request.client.host
+    )
+    
+    return {"message": "User activated successfully"}
+
+@router.patch("/admin/users/{user_id}")
+async def update_user_admin(
+    user_id: str,
+    updates: dict,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update user details (role, plan)."""
+    if current_user.get('role') not in ['admin', 'owner']:
+        raise HTTPException(status_code=403, detail="Admin access required")
+        
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    if user.get('role') == 'owner' and current_user['id'] != user['id']:
+         raise HTTPException(status_code=403, detail="Cannot modify owner account")
+
+    allowed_updates = ['plan', 'role', 'organization_name']
+    update_data = {k: v for k, v in updates.items() if k in allowed_updates}
+    
+    if not update_data:
+        return {"message": "No valid updates provided"}
+        
+    await db.users.update_one({"id": user_id}, {"$set": update_data})
+    
+    # Log details
+    details = ", ".join([f"{k} changed to {v}" for k, v in update_data.items()])
+    
+    await log_admin_action(
+        db, 
+        current_user, 
+        "user_updated", 
+        "user", 
+        user_id, 
+        user['username'],
+        details=details,
+        ip_address=request.client.host
+    )
+    
+    return {"message": "User updated successfully"}
+
+@router.get("/admin/audit-logs")
+async def get_audit_logs(
+    page: int = 1,
+    limit: int = 50,
+    action: Optional[str] = None,
+    target_type: Optional[str] = None,
+    admin_username: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get audit logs."""
+    if current_user.get('role') not in ['admin', 'owner']:
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    query = {}
+    if action:
+        query['action'] = action
+    if target_type:
+        query['target_type'] = target_type
+    if admin_username:
+        query['admin_username'] = {"$regex": admin_username, "$options": "i"}
+
+    total = await db.audit_logs.count_documents(query)
+    skip = (page - 1) * limit
+    
+    logs = await db.audit_logs.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    # Convert datetimes
+    for log in logs:
+         if isinstance(log.get('created_at'), str):
+            log['created_at'] = datetime.fromisoformat(log['created_at'])
+            
+    return {
+        "logs": logs,
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "total_pages": (total + limit - 1) // limit
+    }
+
+
+@router.get("/admin/actors", response_model=List[Actor])
+async def get_admin_actors(
+    current_user: dict = Depends(get_current_user),
+    skip: int = 0,
+    limit: int = 100,
+    search: Optional[str] = None,
+    category: Optional[str] = None
+):
+    """Get all actors for admin moderation."""
+    if current_user.get('role') not in ['admin', 'owner']:
+        raise HTTPException(status_code=403, detail="Admin access required")
+        
+    query = {}
+    if search:
+        query["name"] = {"$regex": search, "$options": "i"}
+    if category and category != "All":
+        query["category"] = category
+        
+    actors = await db.actors.find(query).skip(skip).limit(limit).to_list(limit)
+    
+    # Convert datetimes
+    for actor in actors:
+        if isinstance(actor.get('created_at'), str):
+            actor['created_at'] = datetime.fromisoformat(actor['created_at'])
+        if isinstance(actor.get('updated_at'), str):
+            actor['updated_at'] = datetime.fromisoformat(actor['updated_at'])
+            
+    return actors
+
+@router.post("/admin/actors/{actor_id}/verify")
+async def verify_actor(
+    actor_id: str,
+    request: Request,
+    verified: bool = True,
+    current_user: dict = Depends(get_current_user)
+):
+    """Toggle actor verification status."""
+    if current_user.get('role') not in ['admin', 'owner']:
+        raise HTTPException(status_code=403, detail="Admin access required")
+        
+    result = await db.actors.update_one(
+        {"id": actor_id},
+        {"$set": {"is_verified": verified, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Actor not found")
+        
+    await log_admin_action(
+        db, 
+        current_user, 
+        "actor_verified" if verified else "actor_unverified", 
+        "actor", 
+        actor_id,
+        details=f"Verification set to {verified}",
+        ip_address=request.client.host
+    )
+    
+    return {"message": f"Actor {'verified' if verified else 'unverified'} successfully"}
+
+@router.post("/admin/actors/{actor_id}/feature")
+async def feature_actor(
+    actor_id: str,
+    request: Request,
+    featured: bool = True,
+    current_user: dict = Depends(get_current_user)
+):
+    """Toggle actor featured status."""
+    if current_user.get('role') not in ['admin', 'owner']:
+        raise HTTPException(status_code=403, detail="Admin access required")
+        
+    # Check limit if enabling
+    if featured:
+        count = await db.actors.count_documents({"is_featured": True})
+        if count >= 10:
+            raise HTTPException(status_code=400, detail="Maximum number of featured actors (10) reached")
+            
+    result = await db.actors.update_one(
+        {"id": actor_id},
+        {"$set": {"is_featured": featured, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Actor not found")
+        
+    await log_admin_action(
+        db, 
+        current_user, 
+        "actor_featured" if featured else "actor_unfeatured", 
+        "actor", 
+        actor_id,
+        details=f"Featured set to {featured}",
+        ip_address=request.client.host
+    )
+    
+    return {"message": f"Actor {'featured' if featured else 'unfeatured'} successfully"}
+
