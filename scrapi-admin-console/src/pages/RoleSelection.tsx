@@ -40,7 +40,7 @@ export const RoleSelection: React.FC = () => {
 
                 // Call select role API with temp token
                 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
-                const response = await fetch(`${BACKEND_URL}/api/auth/select-role`, {
+                const response = await fetch(`${BACKEND_URL}/api/auth/admin/select-role`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
