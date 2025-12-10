@@ -98,7 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         try {
-            const response = await fetch(`${BACKEND_URL}/api/auth/select-role`, {
+            const response = await fetch(`${BACKEND_URL}/api/auth/admin/select-role`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
