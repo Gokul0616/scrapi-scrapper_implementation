@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request
 from typing import List, Optional
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pydantic import ValidationError
 from models import (
     UserCreate, UserLogin, UserResponse, Actor, ActorCreate, ActorUpdate, ActorPublish,
@@ -11,6 +11,7 @@ from models import (
 from auth import create_access_token, get_current_user, hash_password, verify_password
 from services import get_proxy_manager, get_task_manager, LeadChatService, EnhancedGlobalChatService
 from scrapers import ScraperEngine, get_scraper_registry
+from audit_service import log_admin_action
 import logging
 import os
 import asyncio
