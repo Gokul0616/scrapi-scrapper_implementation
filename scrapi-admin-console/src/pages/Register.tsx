@@ -42,7 +42,7 @@ export const Register: React.FC = () => {
         setIsLoading(true);
 
         try {
-            const response = await fetch(`${BACKEND_URL}/api/auth/register`, {
+            const response = await fetch(`${BACKEND_URL}/api/auth/admin/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
