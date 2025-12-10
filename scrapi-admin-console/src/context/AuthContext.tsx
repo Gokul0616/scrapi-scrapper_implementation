@@ -35,7 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const login = async (email: string, password: string): Promise<{ needs_role_selection: boolean }> => {
         try {
-            const response = await fetch(`${BACKEND_URL}/api/auth/login`, {
+            const response = await fetch(`${BACKEND_URL}/api/auth/admin/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
