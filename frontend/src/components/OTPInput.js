@@ -134,7 +134,7 @@ const OTPInput = ({ length = 6, value, onChange, disabled = false }) => {
             focus:outline-none
             disabled:bg-gray-100 disabled:cursor-not-allowed
             ${value[index] 
-              ? 'border-gray-900 bg-white text-gray-900 filled' 
+              ? 'border-gray-900 bg-[#e0f2fe] text-gray-900 filled' 
               : 'border-gray-300 bg-white'
             }
             ${!disabled && 'hover:border-gray-400'}
