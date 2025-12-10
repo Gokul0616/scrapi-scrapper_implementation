@@ -44,21 +44,37 @@ async def register(user_data: UserCreate):
     if existing_email:
         raise HTTPException(status_code=400, detail="Email already exists")
     
+    # Check if owner exists
+    owner_exists = await db.users.find_one({"role": "owner"})
+    
+    # Determine user role
+    if owner_exists:
+        # Owner exists - force admin role for all new users
+        user_role = "admin"
+    elif user_data.role == "owner":
+        # First user - can be owner
+        user_role = "owner"
+    else:
+        user_role = "admin"  # Temporary default, will be updated via role selection
+    
     # Create user
     from models import User
     user = User(
         username=user_data.username,
         email=user_data.email,
         hashed_password=hash_password(user_data.password),
-        organization_name=user_data.organization_name
+        organization_name=user_data.organization_name,
+        role=user_role
     )
     
     doc = user.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
+    if doc.get('last_login_at'):
+        doc['last_login_at'] = doc['last_login_at'].isoformat()
     await db.users.insert_one(doc)
     
     # Create token
-    token = create_access_token({"sub": user.id, "username": user.username})
+    token = create_access_token({"sub": user.id, "username": user.username, "role": user.role})
     
     return {
         "access_token": token,
@@ -68,7 +84,11 @@ async def register(user_data: UserCreate):
             username=user.username,
             email=user.email,
             organization_name=user.organization_name,
-            plan=user.plan
+            plan=user.plan,
+            role=user.role,
+            is_active=user.is_active,
+            created_at=user.created_at.isoformat(),
+            last_login_at=user.last_login_at.isoformat() if user.last_login_at else None
         )
     }
 
