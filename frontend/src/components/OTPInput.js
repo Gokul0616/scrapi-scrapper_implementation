@@ -1,9 +1,10 @@
 import React, { useRef, useEffect, useState } from 'react';
+import './OTPInput.css';
 
 const OTPInput = ({ length = 6, value, onChange, disabled = false }) => {
   const inputRefs = useRef([]);
   const [isPasting, setIsPasting] = useState(false);
-  const [filledIndices, setFilledIndices] = useState(new Set());
+  const [animatingIndices, setAnimatingIndices] = useState(new Set());
 
   useEffect(() => {
     // Focus first input on mount
@@ -11,17 +12,6 @@ const OTPInput = ({ length = 6, value, onChange, disabled = false }) => {
       inputRefs.current[0].focus();
     }
   }, []);
-
-  // Track which indices have values for animation
-  useEffect(() => {
-    const newFilledIndices = new Set();
-    for (let i = 0; i < value.length; i++) {
-      if (value[i]) {
-        newFilledIndices.add(i);
-      }
-    }
-    setFilledIndices(newFilledIndices);
-  }, [value]);
 
   const handleChange = (index, e) => {
     const val = e.target.value;
@@ -37,11 +27,23 @@ const OTPInput = ({ length = 6, value, onChange, disabled = false }) => {
     
     onChange(newOTP);
 
+    // Trigger animation for this index
+    if (val) {
+      setAnimatingIndices(prev => new Set([...prev, index]));
+      setTimeout(() => {
+        setAnimatingIndices(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(index);
+          return newSet;
+        });
+      }, 300);
+    }
+
     // Auto-focus next input with smooth transition
     if (val && index < length - 1) {
       setTimeout(() => {
         inputRefs.current[index + 1]?.focus();
-      }, 50); // Small delay for smooth transition
+      }, 60); // Smooth delay for natural progression
     }
   };
 
@@ -52,16 +54,20 @@ const OTPInput = ({ length = 6, value, onChange, disabled = false }) => {
         // If current box is empty, go to previous box
         setTimeout(() => {
           inputRefs.current[index - 1]?.focus();
-        }, 50);
+        }, 60);
       }
     }
     // Handle left arrow
     else if (e.key === 'ArrowLeft' && index > 0) {
-      inputRefs.current[index - 1]?.focus();
+      setTimeout(() => {
+        inputRefs.current[index - 1]?.focus();
+      }, 30);
     }
     // Handle right arrow
     else if (e.key === 'ArrowRight' && index < length - 1) {
-      inputRefs.current[index + 1]?.focus();
+      setTimeout(() => {
+        inputRefs.current[index + 1]?.focus();
+      }, 30);
     }
   };
 
@@ -75,15 +81,19 @@ const OTPInput = ({ length = 6, value, onChange, disabled = false }) => {
 
     setIsPasting(true);
 
-    // Animate character-by-character fill (like Grok)
+    // Smooth character-by-character fill animation (like Grok)
     const newValue = value.split('');
+    const animationDelay = 70; // milliseconds between each character
     
     for (let i = 0; i < pastedData.length; i++) {
-      await new Promise(resolve => setTimeout(resolve, 80)); // 80ms delay between each character
+      await new Promise(resolve => setTimeout(resolve, animationDelay));
       newValue[i] = pastedData[i];
       onChange(newValue.join('').padEnd(length, ''));
       
-      // Focus current input for visual feedback
+      // Add to animating indices
+      setAnimatingIndices(prev => new Set([...prev, i]));
+      
+      // Focus current input for smooth visual feedback
       if (inputRefs.current[i]) {
         inputRefs.current[i].focus();
       }
@@ -91,11 +101,13 @@ const OTPInput = ({ length = 6, value, onChange, disabled = false }) => {
 
     // Focus the next empty field or last one
     const nextEmptyIndex = newValue.findIndex(digit => !digit);
-    const focusIndex = nextEmptyIndex === -1 ? length - 1 : Math.min(nextEmptyIndex, length - 1);
+    const focusIndex = nextEmptyIndex === -1 ? pastedData.length - 1 : Math.min(nextEmptyIndex, length - 1);
     
     setTimeout(() => {
       inputRefs.current[focusIndex]?.focus();
       setIsPasting(false);
+      // Clear all animating indices after animation completes
+      setTimeout(() => setAnimatingIndices(new Set()), 300);
     }, 100);
   };
 
@@ -107,6 +119,7 @@ const OTPInput = ({ length = 6, value, onChange, disabled = false }) => {
           ref={(el) => (inputRefs.current[index] = el)}
           type="text"
           inputMode="numeric"
+          autoComplete="one-time-code"
           maxLength={1}
           value={value[index] || ''}
           onChange={(e) => handleChange(index, e)}
@@ -114,44 +127,24 @@ const OTPInput = ({ length = 6, value, onChange, disabled = false }) => {
           onPaste={handlePaste}
           disabled={disabled}
           className={`
+            otp-input
             w-12 h-12 text-center text-lg font-semibold 
-            border-2 rounded-md
-            transition-all duration-200 ease-in-out
+            border-2 rounded-lg
+            transition-all duration-200 ease-out
             focus:outline-none
             disabled:bg-gray-100 disabled:cursor-not-allowed
             ${value[index] 
-              ? 'border-green-500 bg-green-50 text-green-900' 
+              ? 'border-green-500 bg-green-50 text-green-900 filled' 
               : 'border-gray-300 bg-white'
             }
             ${!disabled && 'hover:border-gray-400'}
             focus:border-gray-900 focus:ring-2 focus:ring-gray-900 focus:ring-opacity-20
             focus:scale-105 focus:shadow-lg
-            ${isPasting ? 'animate-pulse' : ''}
-            ${filledIndices.has(index) && !isPasting ? 'animate-scale-in' : ''}
+            ${isPasting ? 'pasting' : ''}
+            ${animatingIndices.has(index) ? 'filled' : ''}
           `}
-          style={{
-            animationDelay: isPasting ? `${index * 80}ms` : '0ms'
-          }}
         />
       ))}
-      <style jsx>{`
-        @keyframes scale-in {
-          0% {
-            transform: scale(0.95);
-            opacity: 0.7;
-          }
-          50% {
-            transform: scale(1.08);
-          }
-          100% {
-            transform: scale(1);
-            opacity: 1;
-          }
-        }
-        .animate-scale-in {
-          animation: scale-in 0.3s ease-in-out;
-        }
-      `}</style>
     </div>
   );
 };
