@@ -130,7 +130,6 @@ const OTPInput = ({ length = 6, value, onChange, disabled = false }) => {
               ? 'border-[#0ea5e9] text-gray-900 filled shadow-[0_0_0_3px_rgba(14,165,233,0.1)]' 
               : 'border-gray-300'
             }
-            ${!disabled && 'hover:border-gray-400'}
             focus:border-[#0ea5e9] focus:ring-2 focus:ring-[#0ea5e9] focus:ring-opacity-20
             focus:shadow-md
             ${isPasting ? 'pasting' : ''}
