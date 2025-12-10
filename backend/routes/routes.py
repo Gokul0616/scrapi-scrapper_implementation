@@ -150,6 +150,181 @@ async def select_role(role_data: dict, current_user: dict = Depends(get_current_
         raise HTTPException(status_code=400, detail="Invalid role. Must be 'owner' or 'admin'")
     
 
+
+# ============= Admin Console Authentication Routes =============
+@router.post("/auth/admin/register", response_model=dict)
+async def admin_register(user_data: AdminUserCreate):
+    """Register a new admin user for admin console."""
+    # Check if admin user already exists
+    existing_user = await db.admin_users.find_one({"username": user_data.username})
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Username already exists")
+    
+    existing_email = await db.admin_users.find_one({"email": user_data.email})
+    if existing_email:
+        raise HTTPException(status_code=400, detail="Email already exists")
+    
+    # Check if owner exists in admin_users collection
+    owner_exists = await db.admin_users.find_one({"role": "owner"})
+    
+    # Determine role and flow
+    if not owner_exists:
+        # No owner exists - need role selection
+        role = None  # Will be set during role selection
+        needs_role_selection = True
+    else:
+        # Owner exists - auto-assign admin role
+        role = "admin"
+        needs_role_selection = False
+    
+    # Create admin user
+    from models import AdminUser
+    admin_user = AdminUser(
+        username=user_data.username,
+        email=user_data.email,
+        hashed_password=hash_password(user_data.password),
+        organization_name=user_data.organization_name,
+        role=role if role else "admin"  # Temp role until selection
+    )
+    
+    doc = admin_user.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    if doc.get('last_login_at'):
+        doc['last_login_at'] = doc['last_login_at'].isoformat()
+    await db.admin_users.insert_one(doc)
+    
+    # Create token
+    token = create_access_token({"sub": admin_user.id, "username": admin_user.username, "role": admin_user.role})
+    
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "needs_role_selection": needs_role_selection,
+        "user": AdminUserResponse(
+            id=admin_user.id,
+            username=admin_user.username,
+            email=admin_user.email,
+            organization_name=admin_user.organization_name,
+            plan=admin_user.plan,
+            role=admin_user.role,
+            is_active=admin_user.is_active,
+            created_at=admin_user.created_at.isoformat(),
+            last_login_at=admin_user.last_login_at.isoformat() if admin_user.last_login_at else None
+        )
+    }
+
+@router.post("/auth/admin/login", response_model=dict)
+async def admin_login(credentials: AdminUserLogin):
+    """Login admin user with username or email."""
+    # Search by username or email in admin_users collection
+    user_doc = await db.admin_users.find_one({
+        "$or": [
+            {"username": credentials.username},
+            {"email": credentials.username}
+        ]
+    }, {"_id": 0})
+    
+    if not user_doc or not verify_password(credentials.password, user_doc['hashed_password']):
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    
+    # Update last login
+    await db.admin_users.update_one(
+        {"id": user_doc['id']},
+        {"$set": {"last_login_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    # Check if user needs role selection (no role set or no owner exists)
+    owner_exists = await db.admin_users.find_one({"role": "owner"})
+    needs_role_selection = (not user_doc.get('role') or user_doc.get('role') == "") or not owner_exists
+    
+    token = create_access_token({
+        "sub": user_doc['id'], 
+        "username": user_doc['username'],
+        "role": user_doc.get('role', 'admin')
+    })
+    
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "needs_role_selection": needs_role_selection,
+        "user": AdminUserResponse(
+            id=user_doc['id'],
+            username=user_doc['username'],
+            email=user_doc['email'],
+            organization_name=user_doc.get('organization_name'),
+            plan=user_doc.get('plan', 'Free'),
+            role=user_doc.get('role', 'admin'),
+            is_active=user_doc.get('is_active', True),
+            created_at=user_doc.get('created_at', datetime.now(timezone.utc).isoformat()),
+            last_login_at=user_doc.get('last_login_at')
+        )
+    }
+
+@router.post("/auth/admin/select-role", response_model=dict)
+async def admin_select_role(role_data: dict, current_user: dict = Depends(get_current_user)):
+    """Select role for admin user (owner or admin) - only for first-time setup."""
+    role = role_data.get('role')
+    
+    if role not in ['owner', 'admin']:
+        raise HTTPException(status_code=400, detail="Invalid role. Must be 'owner' or 'admin'")
+    
+    # Check if owner already exists (only if trying to select owner)
+    if role == 'owner':
+        existing_owner = await db.admin_users.find_one({"role": "owner"})
+        if existing_owner and existing_owner['id'] != current_user['id']:
+            raise HTTPException(status_code=400, detail="Owner already exists")
+    
+    # Update admin user role
+    await db.admin_users.update_one(
+        {"id": current_user['id']},
+        {"$set": {"role": role}}
+    )
+    
+    # Get updated user
+    user_doc = await db.admin_users.find_one({"id": current_user['id']}, {"_id": 0})
+    
+    # Create new token with role
+    token = create_access_token({
+        "sub": user_doc['id'], 
+        "username": user_doc['username'],
+        "role": role
+    })
+    
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user": AdminUserResponse(
+            id=user_doc['id'],
+            username=user_doc['username'],
+            email=user_doc['email'],
+            organization_name=user_doc.get('organization_name'),
+            plan=user_doc.get('plan', 'Free'),
+            role=role,
+            is_active=user_doc.get('is_active', True),
+            created_at=user_doc.get('created_at', datetime.now(timezone.utc).isoformat()),
+            last_login_at=user_doc.get('last_login_at')
+        )
+    }
+
+@router.get("/auth/admin/me", response_model=AdminUserResponse)
+async def get_admin_me(current_user: dict = Depends(get_current_user)):
+    """Get current admin user info."""
+    user_doc = await db.admin_users.find_one({"id": current_user['id']}, {"_id": 0})
+    if not user_doc:
+        raise HTTPException(status_code=404, detail="Admin user not found")
+    
+    return AdminUserResponse(
+        id=user_doc['id'],
+        username=user_doc['username'],
+        email=user_doc['email'],
+        organization_name=user_doc.get('organization_name'),
+        plan=user_doc.get('plan', 'Free'),
+        role=user_doc.get('role', 'admin'),
+        is_active=user_doc.get('is_active', True),
+        created_at=user_doc.get('created_at', datetime.now(timezone.utc).isoformat()),
+        last_login_at=user_doc.get('last_login_at')
+    )
+
 # ============= Admin Routes =============
 @router.get("/admin/stats")
 async def get_admin_stats(current_user: dict = Depends(get_current_user)):
