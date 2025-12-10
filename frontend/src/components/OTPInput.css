@@ -22,22 +22,9 @@
   }
 }
 
-@keyframes otp-focus-glow {
-  0%, 100% {
-    box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.1);
-  }
-  50% {
-    box-shadow: 0 0 0 4px rgba(17, 24, 39, 0.2);
-  }
-}
-
 .otp-input {
   position: relative;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.otp-input:focus {
-  animation: otp-focus-glow 1.5s ease-in-out infinite;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .otp-input.filled {
