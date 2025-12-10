@@ -581,8 +581,8 @@ async def verify_actor(
     """Toggle actor verification status."""
     from audit_service import log_admin_action
     
-    user_doc = await db.users.find_one({"id": current_user['id']})
-    if user_doc.get('role') not in ['admin', 'owner']:
+    user_doc = await db.admin_users.find_one({"id": current_user['id']})
+    if not user_doc or user_doc.get('role') not in ['admin', 'owner']:
         raise HTTPException(status_code=403, detail="Admin access required")
         
     result = await db.actors.update_one(
