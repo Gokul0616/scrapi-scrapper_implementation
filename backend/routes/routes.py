@@ -331,12 +331,12 @@ async def get_admin_stats(current_user: dict = Depends(get_current_user)):
     """Get admin dashboard statistics."""
     from audit_service import log_admin_action
     
-    # Check if user is admin or owner
-    user_doc = await db.users.find_one({"id": current_user['id']})
-    if user_doc.get('role') not in ['admin', 'owner']:
+    # Check if user is admin or owner from admin_users collection
+    user_doc = await db.admin_users.find_one({"id": current_user['id']})
+    if not user_doc or user_doc.get('role') not in ['admin', 'owner']:
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    # 1. User stats
+    # 1. User stats (regular users, not admin users)
     total_users = await db.users.count_documents({})
     # Active users in last 7 days
     seven_days_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
