@@ -1,0 +1,69 @@
+/* OTP Input Smooth Animations */
+
+@keyframes otp-scale-in {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes otp-paste-highlight {
+  0% {
+    transform: scale(1);
+    border-color: #d1d5db;
+  }
+  50% {
+    transform: scale(1.08);
+    border-color: #f59e0b;
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.5);
+  }
+  100% {
+    transform: scale(1);
+    border-color: #10b981;
+  }
+}
+
+@keyframes otp-focus-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(17, 24, 39, 0.2);
+  }
+}
+
+.otp-input {
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.otp-input:focus {
+  animation: otp-focus-glow 1.5s ease-in-out infinite;
+}
+
+.otp-input.filled {
+  animation: otp-scale-in 0.3s ease-in-out;
+}
+
+.otp-input.pasting {
+  animation: otp-paste-highlight 0.4s ease-in-out;
+}
+
+/* Smooth transitions for all state changes */
+.otp-input {
+  transform-origin: center;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 640px) {
+  .otp-input {
+    font-size: 1.25rem;
+  }
+}
