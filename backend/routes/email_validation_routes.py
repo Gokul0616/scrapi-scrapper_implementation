@@ -83,6 +83,8 @@ async def get_blocklist_stats():
     - Total number of blocked domains
     - Last update timestamp
     - Cache age
+    - Number of sources loaded
+    - Detection layers active
     """
     from services.email_validator import get_email_validator
     from datetime import datetime
@@ -96,10 +98,21 @@ async def get_blocklist_stats():
             cache_age = datetime.now() - blocklist.last_updated
             cache_age_hours = cache_age.total_seconds() / 3600
         
+        detection_layers = [
+            "Trusted Provider Whitelist",
+            "Multi-Source Blocklist (4 sources)",
+            "Pattern Matching (20+ keywords)",
+            "Suspicious TLD Detection",
+            "Domain Structure Analysis"
+        ]
+        
         return BlocklistStatsResponse(
             total_domains=len(blocklist.blocklist),
             last_updated=blocklist.last_updated.isoformat() if blocklist.last_updated else None,
-            cache_age_hours=round(cache_age_hours, 2) if cache_age_hours else None
+            cache_age_hours=round(cache_age_hours, 2) if cache_age_hours else None,
+            sources_loaded=blocklist.load_stats.get('sources_loaded', 0),
+            sources_failed=blocklist.load_stats.get('sources_failed', 0),
+            detection_layers=detection_layers
         )
         
     except Exception as e:
