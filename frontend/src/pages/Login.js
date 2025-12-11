@@ -134,10 +134,16 @@ const Login = () => {
       if (response.ok) {
         setOtpSuccessMessage('OTP sent successfully to your email');
       } else {
-        setOtpError(data.detail || 'Failed to send verification code');
+        // Display the actual backend error message
+        setOtpError(data.detail || data.message || 'Failed to send verification code');
       }
     } catch (error) {
-      setOtpError('Network error. Please try again.');
+      // Check if error has a response with data
+      if (error.response && error.response.data) {
+        setOtpError(error.response.data.detail || error.response.data.message || 'Network error. Please try again.');
+      } else {
+        setOtpError('Network error. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
