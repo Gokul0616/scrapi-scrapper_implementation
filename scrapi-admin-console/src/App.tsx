@@ -81,7 +81,8 @@ function App() {
           {/* 404 */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </Router>
+        </Router>
+      </AlertProvider>
     </AuthProvider>
   );
 }
