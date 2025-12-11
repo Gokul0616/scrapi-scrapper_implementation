@@ -36,6 +36,14 @@ router = APIRouter()
 @router.post("/auth/register", response_model=dict)
 async def register(user_data: UserCreate):
     """Register a new user from scraper website - always creates 'user' role."""
+    from services.email_validator import validate_email_comprehensive
+    
+    # Validate email (format, disposable check)
+    is_valid, error_message = await validate_email_comprehensive(user_data.email, check_mx=False, check_smtp=False)
+    
+    if not is_valid:
+        raise HTTPException(status_code=400, detail=error_message)
+    
     # Check if user already exists
     existing_user = await db.users.find_one({"username": user_data.username})
     if existing_user:
