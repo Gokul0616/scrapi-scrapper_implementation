@@ -411,20 +411,38 @@ async def suspend_user(
     request_data: dict = {},
     current_user: dict = Depends(get_current_user)
 ):
-    """Suspend a user account."""
+    """Suspend a user account (normal users only). Admin can only suspend normal users, Owner can suspend anyone except owner."""
     from audit_service import log_admin_action
     from fastapi import Request
     
-    user_doc = await db.admin_users.find_one({"id": current_user['id']})
-    if not user_doc or user_doc.get('role') not in ['admin', 'owner']:
+    # Get current admin user's role
+    admin_doc = await db.admin_users.find_one({"id": current_user['id']})
+    if not admin_doc or admin_doc.get('role') not in ['admin', 'owner']:
         raise HTTPException(status_code=403, detail="Admin access required")
+    
+    current_admin_role = admin_doc.get('role')
         
+    # Check if target is in users collection (normal user)
     user = await db.users.find_one({"id": user_id})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-        
-    if user.get('role') == 'owner':
-        raise HTTPException(status_code=403, detail="Cannot suspend owner")
+    if user:
+        # Target is a normal user - both admin and owner can suspend
+        pass
+    else:
+        # Check if target is in admin_users collection
+        admin_user = await db.admin_users.find_one({"id": user_id})
+        if admin_user:
+            # Target is an admin user
+            if current_admin_role == 'admin':
+                # Regular admin cannot suspend other admin users
+                raise HTTPException(
+                    status_code=403, 
+                    detail="You do not have permission to suspend admin users. Only owner can perform this action."
+                )
+            elif admin_user.get('role') == 'owner':
+                # Even owner cannot suspend another owner
+                raise HTTPException(status_code=403, detail="Cannot suspend owner")
+        else:
+            raise HTTPException(status_code=404, detail="User not found")
 
     # Abort running jobs
     running_runs = await db.runs.find({"user_id": user_id, "status": {"$in": ["running", "queued"]}}).to_list(None)
