@@ -453,15 +453,25 @@ async def suspend_user(
             {"$set": {"status": "aborted", "finished_at": datetime.now(timezone.utc).isoformat()}}
         )
     
-    await db.users.update_one({"id": user_id}, {"$set": {"is_active": False}})
+    # Update the appropriate collection
+    if user:
+        # Normal user
+        await db.users.update_one({"id": user_id}, {"$set": {"is_active": False}})
+        target_username = user['username']
+        target_type = "user"
+    else:
+        # Admin user
+        await db.admin_users.update_one({"id": user_id}, {"$set": {"is_active": False}})
+        target_username = admin_user['username']
+        target_type = "admin_user"
     
     await log_admin_action(
         db, 
         current_user, 
         "user_suspended", 
-        "user", 
+        target_type, 
         user_id, 
-        user['username'], 
+        target_username, 
         details=request_data.get('reason', "Suspended by admin")
     )
     
