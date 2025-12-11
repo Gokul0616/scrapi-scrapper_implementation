@@ -35,7 +35,7 @@ class UserResponse(BaseModel):
     email: str
     organization_name: Optional[str] = None
     plan: str
-    role: str = "admin"
+    role: str = "user"
     is_active: bool = True
     created_at: str
     last_login_at: Optional[str] = None
