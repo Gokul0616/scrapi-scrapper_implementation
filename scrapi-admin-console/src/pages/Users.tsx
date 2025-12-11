@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Filter, MoreVertical, Shield, ShieldOff, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { User } from '../types';
 import { useAlert } from '../context/AlertContext';
+import { Modal } from '../components/ui/Modal';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
 
@@ -17,6 +18,19 @@ export const UsersPage: React.FC = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [totalUsers, setTotalUsers] = useState(0);
     const limit = 20;
+
+    // Modal State
+    const [modalConfig, setModalConfig] = useState<{
+        isOpen: boolean;
+        user: User | null;
+        action: 'suspend' | 'activate' | null;
+        isLoading: boolean;
+    }>({
+        isOpen: false,
+        user: null,
+        action: null,
+        isLoading: false
+    });
 
     useEffect(() => {
         fetchUsers();
@@ -66,11 +80,23 @@ export const UsersPage: React.FC = () => {
         }
     };
 
-    const toggleStatus = async (user: User) => {
-        try {
-            const action = user.is_active ? 'suspend' : 'activate';
-            if (!window.confirm(`Are you sure you want to ${action} ${user.username}?`)) return;
+    const confirmToggleStatus = (user: User) => {
+        const action = user.is_active ? 'suspend' : 'activate';
+        setModalConfig({
+            isOpen: true,
+            user,
+            action,
+            isLoading: false
+        });
+    };
 
+    const handleConfirmAction = async () => {
+        const { user, action } = modalConfig;
+        if (!user || !action) return;
+
+        setModalConfig(prev => ({ ...prev, isLoading: true }));
+
+        try {
             const token = localStorage.getItem('scrapi_admin_token');
             const response = await fetch(`${BACKEND_URL}/api/admin/users/${user.id}/${action}`, {
                 method: 'POST',
@@ -86,10 +112,12 @@ export const UsersPage: React.FC = () => {
             // Update local state optimistic or refetch
             setUsers(users.map(u => u.id === user.id ? { ...u, is_active: !u.is_active } : u));
             showAlert(`User ${action}ed successfully`, 'success');
+            setModalConfig({ isOpen: false, user: null, action: null, isLoading: false });
         } catch (err: any) {
             console.error(err);
             // Show backend error message in custom alert
             showAlert(err.message || "Failed to update user status", 'error');
+            setModalConfig(prev => ({ ...prev, isLoading: false }));
         }
     };
 
@@ -196,7 +224,7 @@ export const UsersPage: React.FC = () => {
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <div className="flex items-center justify-end space-x-3">
                                             <button
-                                                onClick={() => toggleStatus(user)}
+                                                onClick={() => confirmToggleStatus(user)}
                                                 className={`text-gray-400 hover:${user.is_active ? 'text-red-600' : 'text-green-600'} transition-colors`}
                                                 title={user.is_active ? "Suspend User" : "Activate User"}
                                             >
@@ -249,6 +277,28 @@ export const UsersPage: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            <Modal
+                isOpen={modalConfig.isOpen}
+                onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+                onConfirm={handleConfirmAction}
+                title={modalConfig.action === 'suspend' ? 'Suspend User' : 'Activate User'}
+                variant={modalConfig.action === 'suspend' ? 'danger' : 'primary'}
+                confirmText={modalConfig.action === 'suspend' ? 'Suspend' : 'Activate'}
+                isLoading={modalConfig.isLoading}
+            >
+                <div className="space-y-3">
+                    <p>
+                        Are you sure you want to <strong>{modalConfig.action}</strong> the user 
+                        <span className="font-bold"> {modalConfig.user?.username}</span>?
+                    </p>
+                    {modalConfig.action === 'suspend' && (
+                        <p className="text-gray-500 text-xs mt-2">
+                            Suspended users will not be able to log in or access the platform.
+                        </p>
+                    )}
+                </div>
+            </Modal>
         </div>
     );
 };
