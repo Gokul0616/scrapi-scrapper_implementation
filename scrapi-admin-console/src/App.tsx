@@ -53,8 +53,9 @@ const RoleSelectionRoute = () => {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
+      <AlertProvider>
+        <Router>
+          <Routes>
           {/* Public Routes */}
           <Route element={<PublicRoute />}>
             <Route path="/login" element={<Login />} />
