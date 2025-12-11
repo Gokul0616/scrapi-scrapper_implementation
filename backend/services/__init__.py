@@ -3,7 +3,6 @@ from .proxy_manager import ProxyManager, get_proxy_manager
 from .task_manager import TaskManager, get_task_manager
 from .chat_service import LeadChatService
 from .global_chat_service_v2 import EnhancedGlobalChatService
-from .email_validator import EmailValidator, get_email_validator
 
 __all__ = [
     'ProxyManager',
@@ -11,7 +10,5 @@ __all__ = [
     'TaskManager',
     'get_task_manager',
     'LeadChatService',
-    'EnhancedGlobalChatService',
-    'EmailValidator',
-    'get_email_validator'
+    'EnhancedGlobalChatService'
 ]
