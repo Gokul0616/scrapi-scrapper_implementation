@@ -205,12 +205,6 @@ async def send_otp(request: SendOTPRequest):
     from services.email_service import get_email_service
     
     try:
-        # Validate email (block temporary/disposable emails)
-        email_validator = get_email_validator()
-        is_valid, error_msg = email_validator.validate(request.email)
-        if not is_valid:
-            raise HTTPException(status_code=400, detail=error_msg)
-        
         email_service = get_email_service()
         
         # Check if user exists for login, or doesn't exist for registration
