@@ -62,10 +62,16 @@ const Register = () => {
         setOtpSuccessMessage('OTP sent successfully to your email');
         setStep(2);
       } else {
-        setEmailError(data.detail || 'Failed to send verification code');
+        // Display the actual backend error message
+        setEmailError(data.detail || data.message || 'Failed to send verification code');
       }
     } catch (error) {
-      setEmailError('Network error. Please try again.');
+      // Check if error has a response with data
+      if (error.response && error.response.data) {
+        setEmailError(error.response.data.detail || error.response.data.message || 'Network error. Please try again.');
+      } else {
+        setEmailError('Network error. Please try again.');
+      }
     } finally {
       setIsCheckingEmail(false);
       setIsLoading(false);
