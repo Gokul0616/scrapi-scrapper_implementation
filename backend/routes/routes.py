@@ -101,13 +101,13 @@ async def login(credentials: UserLogin):
         {"$set": {"last_login_at": datetime.now(timezone.utc).isoformat()}}
     )
     
-    # Check if user needs role selection (no role set)
-    needs_role_selection = not user_doc.get('role') or user_doc.get('role') == ""
+    # Normal users don't need role selection
+    needs_role_selection = False
     
     token = create_access_token({
         "sub": user_doc['id'], 
         "username": user_doc['username'],
-        "role": user_doc.get('role', 'admin')
+        "role": user_doc.get('role', 'user')
     })
     
     return {
