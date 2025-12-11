@@ -373,9 +373,9 @@ async def get_admin_users(
     limit: int = 100,
     search: Optional[str] = None
 ):
-    """Get all users (admin only)."""
-    user_doc = await db.admin_users.find_one({"id": current_user['id']})
-    if not user_doc or user_doc.get('role') not in ['admin', 'owner']:
+    """Get all users - both normal users and admin users. Owner can see everyone, Admin can see everyone but can only act on normal users."""
+    admin_doc = await db.admin_users.find_one({"id": current_user['id']})
+    if not admin_doc or admin_doc.get('role') not in ['admin', 'owner']:
         raise HTTPException(status_code=403, detail="Admin access required")
         
     query = {}
@@ -386,11 +386,31 @@ async def get_admin_users(
             {"organization_name": {"$regex": search, "$options": "i"}}
         ]
         
-    users = await db.users.find(query, {"_id": 0}).skip(skip).limit(limit).to_list(limit)
+    # Get normal users from users collection
+    normal_users = await db.users.find(query, {"_id": 0}).skip(skip).limit(limit).to_list(limit)
     
-    # Helper to clean user data for response
+    # Get admin users from admin_users collection
+    admin_users = await db.admin_users.find(query, {"_id": 0}).skip(skip).limit(limit).to_list(limit)
+    
+    # Combine and clean user data for response
     cleaned_users = []
-    for user in users:
+    
+    # Add normal users
+    for user in normal_users:
+        cleaned_users.append(UserResponse(
+            id=user['id'],
+            username=user['username'],
+            email=user['email'],
+            organization_name=user.get('organization_name'),
+            plan=user.get('plan', 'Free'),
+            role=user.get('role', 'user'),
+            is_active=user.get('is_active', True),
+            created_at=user.get('created_at', datetime.now(timezone.utc).isoformat()),
+            last_login_at=user.get('last_login_at')
+        ))
+    
+    # Add admin users
+    for user in admin_users:
         cleaned_users.append(UserResponse(
             id=user['id'],
             username=user['username'],
