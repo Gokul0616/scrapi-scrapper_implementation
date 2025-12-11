@@ -22,8 +22,6 @@ class EmailValidationRequest(BaseModel):
     enable_dynamic_checks: bool = True  # Enable real-time validation
 
 
-from typing import Union
-
 class EmailValidationResponse(BaseModel):
     """Response model for email validation."""
     email: str
