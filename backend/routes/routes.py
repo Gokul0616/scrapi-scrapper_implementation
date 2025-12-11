@@ -9,7 +9,7 @@ from models import (
     OTP, SendOTPRequest, VerifyOTPRequest, OTPResponse
 )
 from auth import create_access_token, get_current_user, hash_password, verify_password
-from services import get_proxy_manager, get_task_manager, LeadChatService, EnhancedGlobalChatService, get_email_validator
+from services import get_proxy_manager, get_task_manager, LeadChatService, EnhancedGlobalChatService
 from scrapers import ScraperEngine, get_scraper_registry
 from audit_service import log_admin_action
 import logging
