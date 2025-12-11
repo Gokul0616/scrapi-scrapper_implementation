@@ -1,25 +1,43 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, MoreVertical, Shield, ShieldOff } from 'lucide-react';
+import { Search, Filter, MoreVertical, Shield, ShieldOff, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { User } from '../types';
+import { useAlert } from '../context/AlertContext';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
 
 export const UsersPage: React.FC = () => {
+    const { showAlert } = useAlert();
     const [searchTerm, setSearchTerm] = useState('');
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    
+    // Pagination State
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalUsers, setTotalUsers] = useState(0);
+    const limit = 20;
 
     useEffect(() => {
         fetchUsers();
-    }, []);
+    }, [page, searchTerm]); // Refetch when page or search changes
 
     const fetchUsers = async () => {
+        setLoading(true);
         try {
             const token = localStorage.getItem('scrapi_admin_token');
             if (!token) throw new Error('No token found');
 
-            const response = await fetch(`${BACKEND_URL}/api/admin/users`, {
+            const queryParams = new URLSearchParams({
+                page: page.toString(),
+                limit: limit.toString(),
+            });
+            
+            if (searchTerm) {
+                queryParams.append('search', searchTerm);
+            }
+
+            const response = await fetch(`${BACKEND_URL}/api/admin/users?${queryParams}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -30,20 +48,23 @@ export const UsersPage: React.FC = () => {
             }
 
             const data = await response.json();
-            setUsers(data);
+            // Handle new response format
+            if (data.users) {
+                setUsers(data.users);
+                setTotalPages(data.total_pages);
+                setTotalUsers(data.total);
+            } else {
+                // Fallback for old format if API wasn't updated (safety)
+                setUsers(Array.isArray(data) ? data : []);
+            }
         } catch (err) {
             console.error(err);
             setError('Failed to load users');
+            showAlert('Failed to load users', 'error');
         } finally {
             setLoading(false);
         }
     };
-
-    const filteredUsers = users.filter(user =>
-        user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (user.organization_name && user.organization_name.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
 
     const toggleStatus = async (user: User) => {
         try {
@@ -57,23 +78,34 @@ export const UsersPage: React.FC = () => {
                 body: JSON.stringify(user.is_active ? { reason: "Manual suspension" } : {})
             });
 
-            if (!response.ok) throw new Error('Action failed');
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Action failed');
+            }
             
+            // Update local state optimistic or refetch
             setUsers(users.map(u => u.id === user.id ? { ...u, is_active: !u.is_active } : u));
-        } catch (err) {
+            showAlert(`User ${action}ed successfully`, 'success');
+        } catch (err: any) {
             console.error(err);
-            alert("Failed to update user status");
+            // Show backend error message in custom alert
+            showAlert(err.message || "Failed to update user status", 'error');
         }
     };
 
-    if (loading) return <div className="p-6">Loading users...</div>;
-    if (error) return <div className="p-6 text-red-600">{error}</div>;
+    const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchTerm(e.target.value);
+        setPage(1); // Reset to page 1 on search
+    };
+
+    if (loading && users.length === 0) return <div className="p-6">Loading users...</div>;
+    if (error && users.length === 0) return <div className="p-6 text-red-600">{error}</div>;
 
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h1 className="text-2xl font-bold text-aws-text">User Management</h1>
-                <button className="bg-aws-orange hover:bg-orange-600 text-white px-4 py-2 rounded-sm text-sm font-medium shadow-sm">
+                <button className="bg-aws-orange hover:bg-orange-600 text-white px-4 py-2 rounded-sm text-sm font-medium shadow-sm transition-colors">
                     Add User
                 </button>
             </div>
@@ -86,13 +118,13 @@ export const UsersPage: React.FC = () => {
                         </div>
                         <input
                             type="text"
-                            className="block w-full pl-9 pr-3 py-1.5 border border-gray-300 rounded-sm leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-aws-blue focus:border-aws-blue sm:text-sm"
+                            className="block w-full pl-9 pr-3 py-1.5 border border-gray-300 rounded-sm leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-aws-blue focus:border-aws-blue sm:text-sm transition-shadow"
                             placeholder="Search users..."
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={handleSearch}
                         />
                     </div>
-                    <button className="flex items-center space-x-2 text-aws-text hover:text-aws-blue px-3 py-1.5 border border-gray-300 rounded-sm text-sm font-medium bg-white">
+                    <button className="flex items-center space-x-2 text-aws-text hover:text-aws-blue px-3 py-1.5 border border-gray-300 rounded-sm text-sm font-medium bg-white transition-colors">
                         <Filter className="h-4 w-4" />
                         <span>Filters</span>
                     </button>
@@ -123,7 +155,7 @@ export const UsersPage: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-aws-border">
-                            {filteredUsers.map((user) => (
+                            {users.map((user) => (
                                 <tr key={user.id} className="hover:bg-blue-50 transition-colors">
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex items-center">
@@ -165,19 +197,19 @@ export const UsersPage: React.FC = () => {
                                         <div className="flex items-center justify-end space-x-3">
                                             <button
                                                 onClick={() => toggleStatus(user)}
-                                                className={`text-gray-400 hover:${user.is_active ? 'text-red-600' : 'text-green-600'}`}
+                                                className={`text-gray-400 hover:${user.is_active ? 'text-red-600' : 'text-green-600'} transition-colors`}
                                                 title={user.is_active ? "Suspend User" : "Activate User"}
                                             >
                                                 {user.is_active ? <ShieldOff size={16} /> : <Shield size={16} />}
                                             </button>
-                                            <button className="text-gray-400 hover:text-aws-text">
+                                            <button className="text-gray-400 hover:text-aws-text transition-colors">
                                                 <MoreVertical size={16} />
                                             </button>
                                         </div>
                                     </td>
                                 </tr>
                             ))}
-                            {filteredUsers.length === 0 && (
+                            {users.length === 0 && (
                                 <tr>
                                     <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
                                         No users found
@@ -187,17 +219,31 @@ export const UsersPage: React.FC = () => {
                         </tbody>
                     </table>
                 </div>
+                
+                {/* Pagination Controls */}
                 <div className="bg-white px-4 py-3 border-t border-aws-border sm:px-6">
                     <div className="flex items-center justify-between">
                         <div className="text-sm text-aws-text-secondary">
-                            Showing <span className="font-medium">{filteredUsers.length > 0 ? 1 : 0}</span> to <span className="font-medium">{filteredUsers.length}</span> of <span className="font-medium">{users.length}</span> results
+                            Showing <span className="font-medium">{(page - 1) * limit + 1}</span> to <span className="font-medium">{Math.min(page * limit, totalUsers)}</span> of <span className="font-medium">{totalUsers}</span> results
                         </div>
-                        <div className="flex-1 flex justify-end">
-                            <button className="relative inline-flex items-center px-4 py-1.5 border border-gray-300 text-sm font-medium rounded-sm text-aws-text bg-white hover:bg-gray-50">
+                        <div className="flex-1 flex justify-end space-x-3">
+                            <button 
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={page === 1}
+                                className={`relative inline-flex items-center px-4 py-1.5 border border-gray-300 text-sm font-medium rounded-sm bg-white 
+                                    ${page === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-aws-text hover:bg-gray-50 transition-colors'}`}
+                            >
+                                <ChevronLeft className="h-4 w-4 mr-1" />
                                 Previous
                             </button>
-                            <button className="ml-3 relative inline-flex items-center px-4 py-1.5 border border-gray-300 text-sm font-medium rounded-sm text-aws-text bg-white hover:bg-gray-50">
+                            <button 
+                                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                disabled={page === totalPages || totalPages === 0}
+                                className={`relative inline-flex items-center px-4 py-1.5 border border-gray-300 text-sm font-medium rounded-sm bg-white
+                                    ${(page === totalPages || totalPages === 0) ? 'text-gray-300 cursor-not-allowed' : 'text-aws-text hover:bg-gray-50 transition-colors'}`}
+                            >
                                 Next
+                                <ChevronRight className="h-4 w-4 ml-1" />
                             </button>
                         </div>
                     </div>
