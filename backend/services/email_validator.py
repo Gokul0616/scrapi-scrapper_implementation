@@ -262,6 +262,185 @@ class DisposableEmailBlocklist:
         return False
 
 
+class DynamicEmailValidator:
+    """Real-time dynamic email validation using multiple techniques."""
+    
+    @staticmethod
+    def calculate_entropy(text: str) -> float:
+        """Calculate Shannon entropy of a string (randomness measure)."""
+        if not text:
+            return 0.0
+        
+        # Count character frequencies
+        counter = Counter(text)
+        length = len(text)
+        
+        # Calculate entropy
+        entropy = 0.0
+        for count in counter.values():
+            probability = count / length
+            entropy -= probability * math.log2(probability)
+        
+        return entropy
+    
+    @staticmethod
+    def check_username_randomness(username: str) -> Tuple[bool, float]:
+        """
+        Detect if email username looks randomly generated.
+        Returns (is_suspicious, entropy_score)
+        """
+        # Remove common patterns
+        username = username.lower().strip()
+        
+        # Calculate entropy (random strings have high entropy)
+        entropy = DynamicEmailValidator.calculate_entropy(username)
+        
+        # High entropy + specific patterns = likely disposable
+        suspicious_score = 0
+        
+        # High entropy (> 3.5 is quite random)
+        if entropy > 3.5:
+            suspicious_score += 2
+        
+        # Contains many numbers
+        num_count = sum(c.isdigit() for c in username)
+        if len(username) > 0 and num_count / len(username) > 0.4:
+            suspicious_score += 2
+        
+        # Mix of random letters and numbers (like mokab46709)
+        has_letters = any(c.isalpha() for c in username)
+        has_numbers = any(c.isdigit() for c in username)
+        if has_letters and has_numbers and len(username) > 8:
+            suspicious_score += 1
+        
+        # Very long username (> 15 chars) with high entropy
+        if len(username) > 15 and entropy > 3.0:
+            suspicious_score += 1
+        
+        # No common words or patterns
+        common_patterns = ['test', 'user', 'admin', 'info', 'hello', 'mail']
+        if not any(pattern in username for pattern in common_patterns):
+            if entropy > 3.0:
+                suspicious_score += 1
+        
+        return suspicious_score >= 3, entropy
+    
+    @staticmethod
+    async def check_mx_reputation(domain: str) -> Tuple[bool, str]:
+        """
+        Check if MX records point to known disposable email services.
+        Returns (is_suspicious, reason)
+        """
+        try:
+            # Get MX records
+            mx_records = dns.resolver.resolve(domain, 'MX')
+            mx_hosts = [str(mx.exchange).lower().rstrip('.') for mx in mx_records]
+            
+            # Known disposable email MX patterns
+            suspicious_mx_patterns = [
+                'disposable', 'tempmail', 'guerrilla', 'mailinator',
+                'maildrop', 'yopmail', 'throwaway', 'trash', 'temp',
+                'fake', 'burner', '10minute', 'sharklasers'
+            ]
+            
+            for mx_host in mx_hosts:
+                for pattern in suspicious_mx_patterns:
+                    if pattern in mx_host:
+                        return True, f"MX points to suspicious service: {mx_host}"
+            
+            # Check if only one MX record (suspicious for real businesses)
+            if len(mx_hosts) == 1:
+                # Very generic or suspicious MX server names
+                mx = mx_hosts[0]
+                if any(sus in mx for sus in ['mail', 'mx', 'smtp']) and '.' not in mx.split('.')[0]:
+                    return True, "Single generic MX record"
+            
+            return False, "MX records look legitimate"
+            
+        except Exception as e:
+            logger.debug(f"MX reputation check failed for {domain}: {str(e)}")
+            return False, "Unable to check MX records"
+    
+    @staticmethod
+    async def check_realtime_api(email: str, domain: str) -> Tuple[bool, Optional[str]]:
+        """
+        Check against real-time disposable email APIs.
+        Uses multiple free API services.
+        Returns (is_disposable, api_source)
+        """
+        import aiohttp
+        
+        # API 1: emailrep.io (free, no key needed)
+        try:
+            async with aiohttp.ClientSession() as session:
+                url = f"https://emailrep.io/{email}"
+                async with session.get(url, timeout=3) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        if data.get('details', {}).get('disposable') is True:
+                            logger.info(f"🚫 Detected disposable via emailrep.io: {email}")
+                            return True, "emailrep.io"
+        except Exception as e:
+            logger.debug(f"emailrep.io check failed: {str(e)}")
+        
+        # API 2: disify.com (free disposable email checker)
+        try:
+            async with aiohttp.ClientSession() as session:
+                url = f"https://disify.com/api/email/{email}"
+                async with session.get(url, timeout=3) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        if data.get('disposable') is True or data.get('format') is False:
+                            logger.info(f"🚫 Detected disposable via disify.com: {email}")
+                            return True, "disify.com"
+        except Exception as e:
+            logger.debug(f"disify.com check failed: {str(e)}")
+        
+        # API 3: Check via open-source validator API
+        try:
+            async with aiohttp.ClientSession() as session:
+                url = f"https://open.kickbox.com/v1/disposable/{domain}"
+                async with session.get(url, timeout=3) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        if data.get('disposable') is True:
+                            logger.info(f"🚫 Detected disposable via kickbox: {domain}")
+                            return True, "kickbox"
+        except Exception as e:
+            logger.debug(f"kickbox check failed: {str(e)}")
+        
+        return False, None
+    
+    @staticmethod
+    async def check_domain_age_and_reputation(domain: str) -> Tuple[bool, str]:
+        """
+        Check domain age and online reputation.
+        Very new domains are often used for disposable emails.
+        Returns (is_suspicious, reason)
+        """
+        try:
+            # Check if domain has a website (HTTP/HTTPS)
+            import aiohttp
+            
+            try:
+                async with aiohttp.ClientSession() as session:
+                    # Try to access domain website with short timeout
+                    async with session.get(f"http://{domain}", timeout=2, allow_redirects=True) as response:
+                        # If domain has no website or returns error, suspicious
+                        if response.status >= 400:
+                            return True, "Domain has no active website"
+            except:
+                # If can't connect to website, it might be email-only domain (suspicious)
+                logger.debug(f"Domain {domain} has no accessible website")
+                return True, "No accessible website"
+            
+            return False, "Domain appears legitimate"
+            
+        except Exception as e:
+            logger.debug(f"Domain reputation check failed for {domain}: {str(e)}")
+            return False, "Unable to verify domain reputation"
+
+
 class EmailValidator:
     """Comprehensive email validator with multiple validation layers."""
     
