@@ -618,44 +618,6 @@ async def feature_actor(
     
     return {"message": f"Actor {'featured' if featured else 'unfeatured'} successfully"}
 
-    # Check if owner already exists
-    if role == 'owner':
-        existing_owner = await db.users.find_one({"role": "owner"})
-        if existing_owner and existing_owner['id'] != current_user['id']:
-            raise HTTPException(status_code=400, detail="Owner already exists")
-    
-    # Update user role
-    await db.users.update_one(
-        {"id": current_user['id']},
-        {"$set": {"role": role}}
-    )
-    
-    # Get updated user
-    user_doc = await db.users.find_one({"id": current_user['id']}, {"_id": 0})
-    
-    # Create new token with role
-    token = create_access_token({
-        "sub": user_doc['id'], 
-        "username": user_doc['username'],
-        "role": role
-    })
-    
-    return {
-        "access_token": token,
-        "token_type": "bearer",
-        "user": UserResponse(
-            id=user_doc['id'],
-            username=user_doc['username'],
-            email=user_doc['email'],
-            organization_name=user_doc.get('organization_name'),
-            plan=user_doc.get('plan', 'Free'),
-            role=role,
-            is_active=user_doc.get('is_active', True),
-            created_at=user_doc.get('created_at', datetime.now(timezone.utc).isoformat()),
-            last_login_at=user_doc.get('last_login_at')
-        )
-    }
-
 @router.get("/auth/me", response_model=UserResponse)
 async def get_me(current_user: dict = Depends(get_current_user)):
     """Get current user info."""
