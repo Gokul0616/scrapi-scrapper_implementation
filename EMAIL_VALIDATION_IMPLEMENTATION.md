@@ -10,14 +10,8 @@ Implemented email validation system to block temporary/disposable email addresse
 
 **Features:**
 - Validates email format using regex
-- Blocks **4,954+ known temporary/disposable email domains**
-- Uses `disposable-email-domains` library (4,939 domains)
-- **Plus 32 additional manually added domains** including:
-  - discounp.com (temp-mail.org provider)
-  - temp-mail.org
-  - maildrop.cc
-  - throwaway.email
-  - And 28 more common temporary email services
+- Blocks 4,939+ known temporary/disposable email domains
+- Uses `disposable-email-domains` library for comprehensive blocklist
 - Singleton pattern for efficiency
 
 **Methods:**
