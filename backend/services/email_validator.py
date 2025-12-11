@@ -598,21 +598,25 @@ class EmailValidator:
     async def validate_email(
         self,
         email: str,
-        check_mx: bool = False,
-        check_smtp: bool = False
+        check_mx: bool = True,  # Now enabled by default
+        check_smtp: bool = False,
+        enable_dynamic_checks: bool = True  # New parameter for dynamic validation
     ) -> EmailValidationResult:
         """
-        Perform comprehensive email validation.
+        Perform comprehensive email validation with dynamic real-time checks.
         
         Args:
             email: Email address to validate
-            check_mx: Whether to perform MX record verification
+            check_mx: Whether to perform MX record verification (default: True)
             check_smtp: Whether to perform SMTP verification (slower)
+            enable_dynamic_checks: Enable real-time API and advanced checks (default: True)
         
         Returns:
             EmailValidationResult object with validation details
         """
         result = EmailValidationResult()
+        domain = email.split('@')[-1].lower() if '@' in email else ''
+        username = email.split('@')[0] if '@' in email else ''
         
         # Layer 1: Format validation
         if not self.validate_format(email, result):
@@ -624,11 +628,58 @@ class EmailValidator:
         # Layer 2.5: Role-based detection
         self.check_role_based(email, result)
         
-        # Layer 3: Disposable email check (critical)
+        # Layer 3: Static disposable email check (blocklist)
         if not await self.check_disposable(email, result):
             return result
         
-        # Layer 4: MX record check (optional)
+        # === NEW DYNAMIC VALIDATION LAYERS ===
+        if enable_dynamic_checks:
+            
+            # Layer 3.5: Username entropy/randomness check
+            is_random, entropy = DynamicEmailValidator.check_username_randomness(username)
+            result.checks['username_entropy'] = entropy
+            if is_random:
+                result.add_error("Email username appears randomly generated (typical of disposable emails)")
+                logger.info(f"🚫 Blocked (random username): {email} (entropy: {entropy:.2f})")
+                return result
+            
+            # Layer 3.6: Real-time API validation (parallel check)
+            try:
+                is_disposable_api, api_source = await DynamicEmailValidator.check_realtime_api(email, domain)
+                result.checks['realtime_api'] = api_source if is_disposable_api else "passed"
+                if is_disposable_api:
+                    result.add_error(f"Email detected as disposable by {api_source}")
+                    logger.info(f"🚫 Blocked (API {api_source}): {email}")
+                    return result
+            except Exception as e:
+                logger.debug(f"Real-time API check failed: {str(e)}")
+                result.checks['realtime_api'] = "error"
+            
+            # Layer 3.7: MX reputation check
+            try:
+                mx_suspicious, mx_reason = await DynamicEmailValidator.check_mx_reputation(domain)
+                result.checks['mx_reputation'] = mx_reason
+                if mx_suspicious:
+                    result.add_error(f"Suspicious mail server: {mx_reason}")
+                    logger.info(f"🚫 Blocked (MX reputation): {email} - {mx_reason}")
+                    return result
+            except Exception as e:
+                logger.debug(f"MX reputation check failed: {str(e)}")
+                result.checks['mx_reputation'] = "error"
+            
+            # Layer 3.8: Domain reputation and website check
+            try:
+                domain_suspicious, domain_reason = await DynamicEmailValidator.check_domain_age_and_reputation(domain)
+                result.checks['domain_reputation'] = domain_reason
+                if domain_suspicious:
+                    # This is a warning, not a hard block (some legitimate services are email-only)
+                    result.add_warning(f"Domain reputation concern: {domain_reason}")
+                    logger.info(f"⚠️  Warning (domain reputation): {email} - {domain_reason}")
+            except Exception as e:
+                logger.debug(f"Domain reputation check failed: {str(e)}")
+                result.checks['domain_reputation'] = "error"
+        
+        # Layer 4: MX record check (now enabled by default)
         if check_mx:
             if not await self.check_mx_record(email, result):
                 return result
