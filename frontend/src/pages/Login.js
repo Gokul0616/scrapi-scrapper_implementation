@@ -39,6 +39,13 @@ const Login = () => {
       const response = await fetch(`${API_URL}/api/users/check-email?email=${encodeURIComponent(formData.email)}`);
       const data = await response.json();
       
+      // Check for error response (400, 403, etc.)
+      if (!response.ok) {
+        setEmailError(data.detail || 'Invalid email address');
+        setIsCheckingEmail(false);
+        return;
+      }
+      
       if (!data.exists) {
         setEmailError('No account found with this email. Please sign up first.');
         setIsCheckingEmail(false);
