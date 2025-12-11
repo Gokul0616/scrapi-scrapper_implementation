@@ -17,8 +17,9 @@ router = APIRouter(prefix="/email-validation", tags=["Email Validation"])
 class EmailValidationRequest(BaseModel):
     """Request model for email validation."""
     email: EmailStr
-    check_mx: bool = False
+    check_mx: bool = True  # Now enabled by default
     check_smtp: bool = False
+    enable_dynamic_checks: bool = True  # Enable real-time validation
 
 
 class EmailValidationResponse(BaseModel):
