@@ -120,7 +120,7 @@ async def login(credentials: UserLogin):
             email=user_doc['email'],
             organization_name=user_doc.get('organization_name'),
             plan=user_doc.get('plan', 'Free'),
-            role=user_doc.get('role', 'admin'),
+            role=user_doc.get('role', 'user'),
             is_active=user_doc.get('is_active', True),
             created_at=user_doc.get('created_at', datetime.now(timezone.utc).isoformat()),
             last_login_at=user_doc.get('last_login_at')
