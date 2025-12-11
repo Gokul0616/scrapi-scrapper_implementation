@@ -28,7 +28,7 @@ class EmailValidationResponse(BaseModel):
     is_valid: bool
     errors: List[str]
     warnings: List[str]
-    checks: Dict[str, Optional[bool]]
+    checks: Dict[str, Optional[any]]  # Can be bool, float, or string
 
 
 class BlocklistStatsResponse(BaseModel):
