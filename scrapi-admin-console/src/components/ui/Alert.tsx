@@ -21,7 +21,7 @@ export const Alert: React.FC<AlertProps> = ({ id, type, message, onClose }) => {
       setIsVisible(false); // Trigger exit animation
       // Allow animation to play before actual removal
       setTimeout(() => onClose(id), 300); 
-    }, 2500); // 2.5 seconds visible time
+    }, 2000); // 2 seconds visible time
 
     return () => clearTimeout(timer);
   }, [id, onClose, isPaused]);
