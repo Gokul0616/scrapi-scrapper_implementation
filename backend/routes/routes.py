@@ -482,26 +482,57 @@ async def activate_user(
     user_id: str,
     current_user: dict = Depends(get_current_user)
 ):
-    """Activate a user account."""
+    """Activate a user account (normal users only). Admin can only activate normal users, Owner can activate anyone except owner."""
     from audit_service import log_admin_action
     
-    user_doc = await db.admin_users.find_one({"id": current_user['id']})
-    if not user_doc or user_doc.get('role') not in ['admin', 'owner']:
+    # Get current admin user's role
+    admin_doc = await db.admin_users.find_one({"id": current_user['id']})
+    if not admin_doc or admin_doc.get('role') not in ['admin', 'owner']:
         raise HTTPException(status_code=403, detail="Admin access required")
-        
-    user = await db.users.find_one({"id": user_id})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
     
-    await db.users.update_one({"id": user_id}, {"$set": {"is_active": True}})
+    current_admin_role = admin_doc.get('role')
+        
+    # Check if target is in users collection (normal user)
+    user = await db.users.find_one({"id": user_id})
+    if user:
+        # Target is a normal user - both admin and owner can activate
+        pass
+    else:
+        # Check if target is in admin_users collection
+        admin_user = await db.admin_users.find_one({"id": user_id})
+        if admin_user:
+            # Target is an admin user
+            if current_admin_role == 'admin':
+                # Regular admin cannot activate other admin users
+                raise HTTPException(
+                    status_code=403, 
+                    detail="You do not have permission to activate admin users. Only owner can perform this action."
+                )
+            elif admin_user.get('role') == 'owner':
+                # Even owner cannot activate another owner
+                raise HTTPException(status_code=403, detail="Cannot activate owner")
+        else:
+            raise HTTPException(status_code=404, detail="User not found")
+    
+    # Update the appropriate collection
+    if user:
+        # Normal user
+        await db.users.update_one({"id": user_id}, {"$set": {"is_active": True}})
+        target_username = user['username']
+        target_type = "user"
+    else:
+        # Admin user
+        await db.admin_users.update_one({"id": user_id}, {"$set": {"is_active": True}})
+        target_username = admin_user['username']
+        target_type = "admin_user"
     
     await log_admin_action(
         db, 
         current_user, 
         "user_activated", 
-        "user", 
+        target_type, 
         user_id, 
-        user['username']
+        target_username
     )
     
     return {"message": "User activated successfully"}
