@@ -14,6 +14,44 @@ class EmailValidator:
     def __init__(self):
         # Load the blocklist of disposable email domains
         self.blocked_domains = set(blocklist)
+        
+        # Add additional known temporary email domains not in the standard list
+        additional_domains = {
+            'discounp.com',
+            'temp-mail.org',
+            'tempmail.net',
+            'throwaway.email',
+            'trashmail.com',
+            'getnada.com',
+            'maildrop.cc',
+            'mohmal.com',
+            'sharklasers.com',
+            'grr.la',
+            'guerrillamailblock.com',
+            'pokemail.net',
+            'spam4.me',
+            'incognitomail.org',
+            'fakeinbox.com',
+            'mytemp.email',
+            'emailondeck.com',
+            'mailnesia.com',
+            'yopmail.net',
+            'yopmail.fr',
+            'cool.fr.nf',
+            'jetable.fr.nf',
+            'nospam.ze.tc',
+            'nomail.xl.cx',
+            'mega.zik.dj',
+            'speed.1s.fr',
+            'courriel.fr.nf',
+            'moncourrier.fr.nf',
+            'monemail.fr.nf',
+            'monmail.fr.nf',
+            'hide.biz.st',
+            'mymail.infos.st'
+        }
+        
+        self.blocked_domains.update(additional_domains)
         logger.info(f"Email validator initialized with {len(self.blocked_domains)} blocked domains")
     
     def is_valid_format(self, email: str) -> bool:
