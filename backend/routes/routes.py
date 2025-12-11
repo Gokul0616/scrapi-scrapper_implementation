@@ -366,10 +366,10 @@ async def get_admin_stats(current_user: dict = Depends(get_current_user)):
         "recent_activity": formatted_runs
     }
 
-@router.get("/admin/users", response_model=List[UserResponse])
+@router.get("/admin/users", response_model=dict)
 async def get_admin_users(
     current_user: dict = Depends(get_current_user),
-    skip: int = 0,
+    page: int = 1,
     limit: int = 100,
     search: Optional[str] = None
 ):
@@ -386,44 +386,67 @@ async def get_admin_users(
             {"organization_name": {"$regex": search, "$options": "i"}}
         ]
         
-    # Get normal users from users collection
-    normal_users = await db.users.find(query, {"_id": 0}).skip(skip).limit(limit).to_list(limit)
+    # Fetch ALL matching users from both collections (projection only needed fields)
+    # Note: For large datasets, this approach is not efficient. 
+    # But for < 1000 users as per requirements, it allows correct sorting and pagination across two collections.
     
-    # Get admin users from admin_users collection
-    admin_users = await db.admin_users.find(query, {"_id": 0}).skip(skip).limit(limit).to_list(limit)
+    normal_users = await db.users.find(query, {"_id": 0}).to_list(10000)
+    admin_users = await db.admin_users.find(query, {"_id": 0}).to_list(10000)
     
-    # Combine and clean user data for response
-    cleaned_users = []
+    # Combine and normalize
+    all_users = []
     
     # Add normal users
     for user in normal_users:
-        cleaned_users.append(UserResponse(
-            id=user['id'],
-            username=user['username'],
-            email=user['email'],
-            organization_name=user.get('organization_name'),
-            plan=user.get('plan', 'Free'),
-            role=user.get('role', 'user'),
-            is_active=user.get('is_active', True),
-            created_at=user.get('created_at', datetime.now(timezone.utc).isoformat()),
-            last_login_at=user.get('last_login_at')
-        ))
+        all_users.append({
+            "id": user['id'],
+            "username": user['username'],
+            "email": user['email'],
+            "organization_name": user.get('organization_name'),
+            "plan": user.get('plan', 'Free'),
+            "role": user.get('role', 'user'),
+            "is_active": user.get('is_active', True),
+            "created_at": user.get('created_at', datetime.now(timezone.utc).isoformat()),
+            "last_login_at": user.get('last_login_at')
+        })
     
     # Add admin users
     for user in admin_users:
-        cleaned_users.append(UserResponse(
-            id=user['id'],
-            username=user['username'],
-            email=user['email'],
-            organization_name=user.get('organization_name'),
-            plan=user.get('plan', 'Free'),
-            role=user.get('role', 'admin'),
-            is_active=user.get('is_active', True),
-            created_at=user.get('created_at', datetime.now(timezone.utc).isoformat()),
-            last_login_at=user.get('last_login_at')
-        ))
+        all_users.append({
+            "id": user['id'],
+            "username": user['username'],
+            "email": user['email'],
+            "organization_name": user.get('organization_name'),
+            "plan": user.get('plan', 'Free'),
+            "role": user.get('role', 'admin'),
+            "is_active": user.get('is_active', True),
+            "created_at": user.get('created_at', datetime.now(timezone.utc).isoformat()),
+            "last_login_at": user.get('last_login_at')
+        })
         
-    return cleaned_users
+    # Sort by created_at desc (newest first)
+    # Handle potential None or invalid dates gracefully
+    def get_sort_key(u):
+        try:
+            return datetime.fromisoformat(u['created_at'])
+        except:
+            return datetime.min.replace(tzinfo=timezone.utc)
+            
+    all_users.sort(key=get_sort_key, reverse=True)
+    
+    # Pagination
+    total = len(all_users)
+    start = (page - 1) * limit
+    end = start + limit
+    paginated_users = all_users[start:end]
+        
+    return {
+        "users": paginated_users,
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "total_pages": (total + limit - 1) // limit if limit > 0 else 0
+    }
 
 @router.post("/admin/users/{user_id}/suspend")
 async def suspend_user(
