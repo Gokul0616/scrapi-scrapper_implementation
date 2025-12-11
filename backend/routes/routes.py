@@ -32,6 +32,10 @@ def set_db(database):
 
 router = APIRouter()
 
+# Include email validation routes
+from routes.email_validation_routes import router as email_validation_router
+router.include_router(email_validation_router)
+
 # ============= Authentication Routes =============
 @router.post("/auth/register", response_model=dict)
 async def register(user_data: UserCreate):
