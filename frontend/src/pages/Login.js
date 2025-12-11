@@ -100,10 +100,16 @@ const Login = () => {
         setOtpSuccessMessage('OTP sent successfully to your email');
         setStep(4);
       } else {
-        setSendOtpError(data.detail || 'Failed to send verification code');
+        // Display the actual backend error message
+        setSendOtpError(data.detail || data.message || 'Failed to send verification code');
       }
     } catch (error) {
-      setSendOtpError('Network error. Please try again.');
+      // Check if error has a response with data
+      if (error.response && error.response.data) {
+        setSendOtpError(error.response.data.detail || error.response.data.message || 'Network error. Please try again.');
+      } else {
+        setSendOtpError('Network error. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
