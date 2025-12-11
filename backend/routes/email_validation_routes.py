@@ -6,7 +6,7 @@ Provides endpoints for email validation testing and diagnostics.
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 import logging
 
 logger = logging.getLogger(__name__)
