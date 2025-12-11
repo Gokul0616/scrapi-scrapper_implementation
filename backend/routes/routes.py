@@ -777,8 +777,19 @@ async def check_email(email: str):
 async def send_otp(request: SendOTPRequest):
     """Send OTP to user's email for login or registration."""
     from services.email_service import get_email_service
+    from services.email_validator import validate_email_comprehensive
     
     try:
+        # Layer 1-3 validation: Format, Alias, Disposable check (always performed)
+        is_valid, error_message = await validate_email_comprehensive(
+            request.email,
+            check_mx=False,  # Optional: Set to True for MX record verification
+            check_smtp=False  # Optional: Set to True for SMTP verification (slower)
+        )
+        
+        if not is_valid:
+            raise HTTPException(status_code=400, detail=error_message)
+        
         email_service = get_email_service()
         
         # Check if user exists for login, or doesn't exist for registration
