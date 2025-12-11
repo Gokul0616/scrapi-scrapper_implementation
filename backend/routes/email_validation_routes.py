@@ -44,12 +44,15 @@ class BlocklistStatsResponse(BaseModel):
 @router.post("/validate", response_model=EmailValidationResponse)
 async def validate_email_endpoint(request: EmailValidationRequest):
     """
-    Validate an email address with comprehensive checks.
+    Validate an email address with comprehensive dynamic checks.
     
     This endpoint performs multi-layered email validation including:
     - Format validation (RFC 5322)
-    - Disposable email detection
-    - Optional MX record verification
+    - Static blocklist check (147,460+ domains)
+    - Real-time API validation (emailrep.io, disify, kickbox)
+    - Username entropy analysis (detect random usernames)
+    - MX reputation checking
+    - Domain reputation verification
     - Optional SMTP verification
     """
     from services.email_validator import get_email_validator
@@ -59,7 +62,8 @@ async def validate_email_endpoint(request: EmailValidationRequest):
         result = await validator.validate_email(
             request.email,
             check_mx=request.check_mx,
-            check_smtp=request.check_smtp
+            check_smtp=request.check_smtp,
+            enable_dynamic_checks=request.enable_dynamic_checks
         )
         
         return EmailValidationResponse(
