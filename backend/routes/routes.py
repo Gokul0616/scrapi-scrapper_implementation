@@ -67,7 +67,7 @@ async def register(user_data: UserCreate):
     return {
         "access_token": token,
         "token_type": "bearer",
-        "needs_role_selection": needs_role_selection,
+        "needs_role_selection": False,  # No role selection for normal users
         "user": UserResponse(
             id=user.id,
             username=user.username,
