@@ -37,7 +37,11 @@ class EmailValidationResult:
             'disposable': None,
             'mx_record': None,
             'smtp': None,
-            'alias_detected': None
+            'alias_detected': None,
+            'username_entropy': None,
+            'realtime_api': None,
+            'mx_reputation': None,
+            'domain_reputation': None
         }
     
     def add_error(self, message: str):
