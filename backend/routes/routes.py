@@ -35,7 +35,7 @@ router = APIRouter()
 # ============= Authentication Routes =============
 @router.post("/auth/register", response_model=dict)
 async def register(user_data: UserCreate):
-    """Register a new user."""
+    """Register a new user from scraper website - always creates 'user' role."""
     # Check if user already exists
     existing_user = await db.users.find_one({"username": user_data.username})
     if existing_user:
@@ -45,28 +45,14 @@ async def register(user_data: UserCreate):
     if existing_email:
         raise HTTPException(status_code=400, detail="Email already exists")
     
-    # Check if this is the first user (owner) or if role is specified
-    user_count = await db.users.count_documents({})
-    owner_exists = await db.users.find_one({"role": "owner"})
-    
-    # Determine role
-    if user_count == 0 or not owner_exists:
-        # First user or no owner - check if they need to select role
-        role = user_data.role if user_data.role else None
-        needs_role_selection = role is None
-    else:
-        # Not first user - default to admin
-        role = "admin"
-        needs_role_selection = False
-    
-    # Create user
+    # Create user with 'user' role (normal user from scraper website)
     from models import User
     user = User(
         username=user_data.username,
         email=user_data.email,
         hashed_password=hash_password(user_data.password),
         organization_name=user_data.organization_name,
-        role=role if role else "admin"
+        role="user"  # Always 'user' for scraper website signups
     )
     
     doc = user.model_dump()
