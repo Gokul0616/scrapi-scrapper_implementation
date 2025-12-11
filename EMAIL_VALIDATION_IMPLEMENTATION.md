@@ -80,10 +80,16 @@ test@yopmail.com → Blocked
 - **Architecture:** Singleton service pattern
 
 ## Files Modified
-1. `/app/backend/services/email_validator.py` - NEW (Email validation service)
+
+**Backend:**
+1. `/app/backend/services/email_validator.py` - NEW (Email validation service with 4,954+ domains)
 2. `/app/backend/services/__init__.py` - Updated (Export validator)
 3. `/app/backend/routes/routes.py` - Updated (Added validation to 3 endpoints)
 4. `/app/backend/requirements.txt` - Updated (Added disposable-email-domains)
+
+**Frontend:**
+5. `/app/frontend/src/pages/Login.js` - Updated (Fixed error display for validation)
+6. `/app/frontend/src/pages/Register.js` - Updated (Fixed error display for validation)
 
 ## How It Works
 
