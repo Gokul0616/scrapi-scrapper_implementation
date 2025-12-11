@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
 
 export type AlertType = 'success' | 'error' | 'info' | 'warning';
@@ -11,13 +11,20 @@ export interface AlertProps {
 }
 
 export const Alert: React.FC<AlertProps> = ({ id, type, message, onClose }) => {
+  const [isPaused, setIsPaused] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+
   useEffect(() => {
+    if (isPaused) return;
+
     const timer = setTimeout(() => {
-      onClose(id);
-    }, 6000); // Auto close after 6 seconds
+      setIsVisible(false); // Trigger exit animation
+      // Allow animation to play before actual removal
+      setTimeout(() => onClose(id), 300); 
+    }, 2500); // 2.5 seconds visible time
 
     return () => clearTimeout(timer);
-  }, [id, onClose]);
+  }, [id, onClose, isPaused]);
 
   const styles = {
     success: {
@@ -60,9 +67,12 @@ export const Alert: React.FC<AlertProps> = ({ id, type, message, onClose }) => {
         rounded-sm 
         p-4 
         mb-2
-        animate-in slide-in-from-right-5 fade-in duration-300
+        transition-all duration-300 ease-in-out
+        ${isVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}
       `}
       role="alert"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
     >
       <div className="flex-shrink-0 mt-0.5 mr-3">
         {style.icon}
@@ -76,7 +86,10 @@ export const Alert: React.FC<AlertProps> = ({ id, type, message, onClose }) => {
         </div>
       </div>
       <button 
-        onClick={() => onClose(id)}
+        onClick={() => {
+            setIsVisible(false);
+            setTimeout(() => onClose(id), 300);
+        }}
         className="flex-shrink-0 ml-4 text-[#545b64] hover:text-[#16191f] transition-colors focus:outline-none p-1 rounded-sm hover:bg-gray-100"
         aria-label="Close notification"
       >
