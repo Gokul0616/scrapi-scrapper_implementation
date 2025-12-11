@@ -769,6 +769,14 @@ async def get_last_path(current_user: dict = Depends(get_current_user)):
 @router.get("/users/check-email")
 async def check_email(email: str):
     """Check if an email already exists in the database."""
+    from services.email_validator import validate_email_comprehensive
+    
+    # Validate email format and check if disposable
+    is_valid, error_message = await validate_email_comprehensive(email, check_mx=False, check_smtp=False)
+    
+    if not is_valid:
+        raise HTTPException(status_code=400, detail=error_message)
+    
     user_exists = await db.users.find_one({"email": email})
     return {"exists": bool(user_exists), "email": email}
 
