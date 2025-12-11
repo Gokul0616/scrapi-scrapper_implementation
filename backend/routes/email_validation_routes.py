@@ -151,25 +151,78 @@ async def refresh_blocklist():
 @router.get("/check-domain/{domain}")
 async def check_if_disposable(domain: str):
     """
-    Check if a specific domain is in the disposable blocklist.
+    Check if a specific domain is in the disposable blocklist with detailed detection info.
     
     Args:
         domain: The domain to check (e.g., 'tempmail.com')
     
     Returns:
-        Whether the domain is considered disposable
+        Whether the domain is considered disposable and which detection method caught it
     """
     from services.email_validator import get_email_validator
     
     try:
         validator = await get_email_validator()
-        is_disposable = validator.blocklist.is_disposable(domain)
+        blocklist = validator.blocklist
+        domain_lower = domain.lower().strip()
         
-        return {
+        # Check each layer
+        detection_info = {
             "domain": domain,
-            "is_disposable": is_disposable,
-            "message": "This domain is blocked as disposable" if is_disposable else "This domain is allowed"
+            "is_disposable": False,
+            "detection_method": None,
+            "details": {}
         }
+        
+        # Check trusted provider
+        if blocklist._is_trusted_provider(domain_lower):
+            detection_info["details"]["trusted_provider"] = True
+            detection_info["message"] = "This domain is a trusted email provider"
+            return detection_info
+        
+        detection_info["details"]["trusted_provider"] = False
+        
+        # Check blocklist exact match
+        if domain_lower in blocklist.blocklist:
+            detection_info["is_disposable"] = True
+            detection_info["detection_method"] = "Blocklist (Exact Match)"
+            detection_info["message"] = "This domain is blocked as disposable"
+            return detection_info
+        
+        # Check parent domains
+        domain_parts = domain_lower.split(".")
+        for i in range(len(domain_parts) - 1):
+            parent_domain = ".".join(domain_parts[i:])
+            if parent_domain in blocklist.blocklist:
+                detection_info["is_disposable"] = True
+                detection_info["detection_method"] = "Blocklist (Parent Domain Match)"
+                detection_info["details"]["matched_parent"] = parent_domain
+                detection_info["message"] = f"This domain is blocked (parent domain '{parent_domain}' is disposable)"
+                return detection_info
+        
+        # Check pattern match
+        if blocklist._check_pattern_match(domain_lower):
+            detection_info["is_disposable"] = True
+            detection_info["detection_method"] = "Pattern Matching"
+            detection_info["message"] = "This domain matches disposable email patterns"
+            return detection_info
+        
+        # Check suspicious TLD
+        if blocklist._check_suspicious_tld(domain_lower):
+            detection_info["is_disposable"] = True
+            detection_info["detection_method"] = "Suspicious TLD"
+            detection_info["message"] = "This domain uses a suspicious TLD commonly used for disposable emails"
+            return detection_info
+        
+        # Check suspicious structure
+        if blocklist._check_suspicious_structure(domain_lower):
+            detection_info["is_disposable"] = True
+            detection_info["detection_method"] = "Suspicious Structure"
+            detection_info["message"] = "This domain has suspicious structural characteristics"
+            return detection_info
+        
+        detection_info["message"] = "This domain is allowed"
+        return detection_info
         
     except Exception as e:
         logger.error(f"Domain check error: {str(e)}")
