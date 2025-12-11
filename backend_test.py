@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 # Backend URL from frontend .env
-BACKEND_URL = "https://seo-admin-routes.preview.emergentagent.com/api"
+BACKEND_URL = "https://login-recovery-tool.preview.emergentagent.com/api"
 
 class AdminConsoleTestSuite:
     def __init__(self):
