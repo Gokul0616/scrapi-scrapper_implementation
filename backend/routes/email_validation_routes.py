@@ -35,6 +35,9 @@ class BlocklistStatsResponse(BaseModel):
     total_domains: int
     last_updated: Optional[str]
     cache_age_hours: Optional[float]
+    sources_loaded: int
+    sources_failed: int
+    detection_layers: List[str]
 
 
 @router.post("/validate", response_model=EmailValidationResponse)
