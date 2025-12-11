@@ -22,13 +22,15 @@ class EmailValidationRequest(BaseModel):
     enable_dynamic_checks: bool = True  # Enable real-time validation
 
 
+from typing import Union
+
 class EmailValidationResponse(BaseModel):
     """Response model for email validation."""
     email: str
     is_valid: bool
     errors: List[str]
     warnings: List[str]
-    checks: Dict[str, Optional[any]]  # Can be bool, float, or string
+    checks: Dict[str, Optional[Union[bool, float, str]]]  # Can be bool, float, or string
 
 
 class BlocklistStatsResponse(BaseModel):
