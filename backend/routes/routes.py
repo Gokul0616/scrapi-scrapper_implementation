@@ -35,6 +35,12 @@ router = APIRouter()
 @router.post("/auth/register", response_model=dict)
 async def register(user_data: UserCreate):
     """Register a new user."""
+    # Validate email (block temporary/disposable emails)
+    email_validator = get_email_validator()
+    is_valid, error_msg = email_validator.validate(user_data.email)
+    if not is_valid:
+        raise HTTPException(status_code=400, detail=error_msg)
+    
     # Check if user already exists
     existing_user = await db.users.find_one({"username": user_data.username})
     if existing_user:
