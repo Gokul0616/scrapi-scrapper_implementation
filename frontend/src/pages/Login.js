@@ -47,7 +47,12 @@ const Login = () => {
       
       setStep(2);
     } catch (error) {
-      setEmailError('Unable to verify email. Please try again.');
+      // Check if error has a response with data
+      if (error.response && error.response.data) {
+        setEmailError(error.response.data.detail || error.response.data.message || 'Unable to verify email. Please try again.');
+      } else {
+        setEmailError('Unable to verify email. Please try again.');
+      }
     } finally {
       setIsCheckingEmail(false);
     }
