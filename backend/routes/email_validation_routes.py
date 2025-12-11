@@ -104,11 +104,16 @@ async def get_blocklist_stats():
             cache_age_hours = cache_age.total_seconds() / 3600
         
         detection_layers = [
-            "Trusted Provider Whitelist",
-            "Multi-Source Blocklist (4 sources)",
-            "Pattern Matching (20+ keywords)",
-            "Suspicious TLD Detection",
-            "Domain Structure Analysis"
+            "Layer 1: Format Validation (RFC 5322)",
+            "Layer 2: Trusted Provider Whitelist (23+ providers)",
+            "Layer 3: Multi-Source Blocklist (147,460+ domains from 4 sources)",
+            "Layer 4: Pattern Matching (20+ disposable keywords)",
+            "Layer 5: Suspicious TLD Detection (8+ risky TLDs)",
+            "Layer 6: Domain Structure Analysis",
+            "Layer 7: Username Entropy Analysis (detect random usernames)",
+            "Layer 8: Real-time API Validation (3 services)",
+            "Layer 9: MX Record Reputation Check",
+            "Layer 10: Domain Age & Reputation Verification"
         ]
         
         return BlocklistStatsResponse(
