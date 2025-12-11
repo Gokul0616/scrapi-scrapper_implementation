@@ -42,13 +42,6 @@ const Register = () => {
       const checkResponse = await fetch(`${API_URL}/api/users/check-email?email=${encodeURIComponent(formData.email)}`);
       const checkData = await checkResponse.json();
       
-      // Check for error response (400, 403, etc.) - includes temporary email validation
-      if (!checkResponse.ok) {
-        setEmailError(checkData.detail || 'Invalid email address');
-        setIsCheckingEmail(false);
-        return;
-      }
-      
       if (checkData.exists) {
         setEmailError('Email already registered. Please login instead.');
         setIsCheckingEmail(false);
