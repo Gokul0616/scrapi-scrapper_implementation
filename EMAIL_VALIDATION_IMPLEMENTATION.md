@@ -64,12 +64,14 @@ test@yopmail.com → Blocked
 ```
 
 ### 5. Frontend Handling
-The frontend already has error handling in place:
-- Login page shows error messages from backend
-- Register page displays validation errors
-- OTP flow shows error messages
+**Updated error handling in:**
+- `/app/frontend/src/pages/Login.js` - Now checks response.ok before processing
+- `/app/frontend/src/pages/Register.js` - Now displays backend validation errors
 
-**No frontend changes needed** - errors are automatically displayed!
+**Changes made:**
+- Added response status check (response.ok)
+- Display backend error message (data.detail)
+- Shows validation errors for temporary emails immediately on email input
 
 ## Technical Stack
 - **Library:** `disposable-email-domains` (v0.0.152)
