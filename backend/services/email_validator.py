@@ -55,55 +55,204 @@ class EmailValidationResult:
 
 
 class DisposableEmailBlocklist:
-    """Manages the disposable email domain blocklist."""
+    """Enhanced disposable email domain blocklist with multiple sources and pattern detection."""
     
-    BLOCKLIST_URL = "https://raw.githubusercontent.com/disposable-email-domains/disposable-email-domains/refs/heads/main/disposable_email_blocklist.conf"
+    # Multiple blocklist sources for comprehensive coverage
+    BLOCKLIST_URLS = [
+        "https://raw.githubusercontent.com/disposable-email-domains/disposable-email-domains/refs/heads/main/disposable_email_blocklist.conf",
+        "https://raw.githubusercontent.com/ivolo/disposable-email-domains/master/index.json",
+        "https://raw.githubusercontent.com/FGRibreau/mailchecker/master/list.txt",
+        "https://raw.githubusercontent.com/martenson/disposable-email-domains/master/disposable_email_blocklist.conf"
+    ]
+    
+    # Trusted email providers (whitelist - skip disposable check)
+    TRUSTED_PROVIDERS = {
+        'gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com', 'live.com',
+        'yahoo.com', 'ymail.com', 'icloud.com', 'me.com', 'mac.com',
+        'aol.com', 'protonmail.com', 'proton.me', 'zoho.com', 'mail.com',
+        'gmx.com', 'gmx.net', 'yandex.com', 'yandex.ru', 'fastmail.com',
+        'tutanota.com', 'mailbox.org', 'hushmail.com', 'runbox.com'
+    }
+    
+    # Suspicious TLDs commonly used for disposable emails
+    SUSPICIOUS_TLDS = {
+        '.tk', '.ml', '.ga', '.cf', '.gq',  # Free TLDs
+        '.buzz', '.club', '.top', '.xyz'     # Often used for spam
+    }
+    
+    # Common disposable email patterns
+    DISPOSABLE_PATTERNS = [
+        'temp', 'temporary', 'disposable', 'throwaway', 'fake',
+        '10minute', '20minute', '30minute', 'minutemail', 'tempmail',
+        'guerrilla', 'mailinator', 'maildrop', 'mailnesia', 'trashmail',
+        'yopmail', 'sharklasers', 'spam', 'burner', 'trash'
+    ]
+    
     CACHE_DURATION = timedelta(hours=24)  # Refresh daily
     
     def __init__(self):
         self.blocklist: Set[str] = set()
         self.last_updated: Optional[datetime] = None
         self._lock = asyncio.Lock()
+        self.load_stats = {
+            'total_domains': 0,
+            'sources_loaded': 0,
+            'sources_failed': 0
+        }
     
     async def load_blocklist(self, force: bool = False) -> bool:
-        """Load or refresh the disposable email blocklist."""
+        """Load or refresh the disposable email blocklist from multiple sources."""
         async with self._lock:
             # Check if we need to refresh
             if not force and self.last_updated:
                 if datetime.now() - self.last_updated < self.CACHE_DURATION:
                     return True
             
-            try:
-                import aiohttp
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(self.BLOCKLIST_URL, timeout=10) as response:
-                        if response.status == 200:
-                            content = await response.text()
-                            self.blocklist = set(line.strip().lower() for line in content.splitlines() if line.strip())
-                            self.last_updated = datetime.now()
-                            logger.info(f"Loaded {len(self.blocklist)} disposable email domains")
-                            return True
-                        else:
-                            logger.error(f"Failed to load blocklist: HTTP {response.status}")
-                            return False
-            except Exception as e:
-                logger.error(f"Error loading disposable email blocklist: {str(e)}")
+            import aiohttp
+            new_blocklist = set()
+            sources_loaded = 0
+            sources_failed = 0
+            
+            async with aiohttp.ClientSession() as session:
+                for url in self.BLOCKLIST_URLS:
+                    try:
+                        logger.info(f"Loading blocklist from: {url}")
+                        async with session.get(url, timeout=15) as response:
+                            if response.status == 200:
+                                content = await response.text()
+                                
+                                # Handle JSON format (ivolo repo)
+                                if url.endswith('.json'):
+                                    import json
+                                    try:
+                                        domains = json.loads(content)
+                                        if isinstance(domains, list):
+                                            new_blocklist.update(d.strip().lower() for d in domains if d.strip())
+                                        sources_loaded += 1
+                                        logger.info(f"✅ Loaded JSON blocklist from {url.split('/')[-2]}")
+                                    except json.JSONDecodeError:
+                                        logger.error(f"Failed to parse JSON from {url}")
+                                        sources_failed += 1
+                                else:
+                                    # Handle text format
+                                    lines = content.splitlines()
+                                    domains = set()
+                                    for line in lines:
+                                        line = line.strip().lower()
+                                        # Skip comments and empty lines
+                                        if line and not line.startswith('#') and not line.startswith('//'):
+                                            domains.add(line)
+                                    new_blocklist.update(domains)
+                                    sources_loaded += 1
+                                    logger.info(f"✅ Loaded {len(domains)} domains from {url.split('/')[-2]}")
+                            else:
+                                logger.error(f"Failed to load blocklist from {url}: HTTP {response.status}")
+                                sources_failed += 1
+                    except Exception as e:
+                        logger.error(f"Error loading blocklist from {url}: {str(e)}")
+                        sources_failed += 1
+            
+            # Only update if we loaded at least one source
+            if sources_loaded > 0:
+                self.blocklist = new_blocklist
+                self.last_updated = datetime.now()
+                self.load_stats = {
+                    'total_domains': len(self.blocklist),
+                    'sources_loaded': sources_loaded,
+                    'sources_failed': sources_failed
+                }
+                logger.info(f"✅ Loaded {len(self.blocklist)} total disposable domains from {sources_loaded} sources")
+                return True
+            else:
+                logger.error(f"❌ Failed to load any blocklists")
                 return False
     
+    def _check_pattern_match(self, domain: str) -> bool:
+        """Check if domain matches known disposable patterns."""
+        domain_lower = domain.lower()
+        
+        # Check for disposable keywords
+        for pattern in self.DISPOSABLE_PATTERNS:
+            if pattern in domain_lower:
+                return True
+        
+        return False
+    
+    def _check_suspicious_tld(self, domain: str) -> bool:
+        """Check if domain uses suspicious TLD."""
+        for tld in self.SUSPICIOUS_TLDS:
+            if domain.lower().endswith(tld):
+                return True
+        return False
+    
+    def _is_trusted_provider(self, domain: str) -> bool:
+        """Check if domain is a trusted email provider."""
+        return domain.lower() in self.TRUSTED_PROVIDERS
+    
+    def _check_suspicious_structure(self, domain: str) -> bool:
+        """Check for suspicious domain structure patterns."""
+        domain_lower = domain.lower()
+        
+        # Check for very short domains (< 4 chars before TLD)
+        parts = domain_lower.split('.')
+        if len(parts) >= 2:
+            domain_name = parts[-2]
+            if len(domain_name) < 4:
+                # Too short, likely suspicious
+                return True
+        
+        # Check for excessive numbers (more than 50% of domain is numbers)
+        domain_name_only = domain_lower.split('.')[0]
+        if len(domain_name_only) > 0:
+            num_count = sum(c.isdigit() for c in domain_name_only)
+            if num_count / len(domain_name_only) > 0.5:
+                return True
+        
+        return False
+    
     def is_disposable(self, domain: str) -> bool:
-        """Check if a domain is in the disposable blocklist."""
+        """
+        Comprehensive check if a domain is disposable.
+        Uses multiple detection methods:
+        1. Trusted provider whitelist (skip if trusted)
+        2. Blocklist lookup (exact and parent domains)
+        3. Pattern matching (common disposable keywords)
+        4. Suspicious TLD detection
+        5. Suspicious structure analysis
+        """
         domain = domain.lower().strip()
         
-        # Check exact domain match
+        # LAYER 1: Check if it's a trusted provider (whitelist)
+        if self._is_trusted_provider(domain):
+            return False
+        
+        # LAYER 2: Check exact domain match in blocklist
         if domain in self.blocklist:
+            logger.info(f"🚫 Blocked (blocklist exact): {domain}")
             return True
         
-        # Check parent domains (for subdomains)
+        # LAYER 3: Check parent domains (for subdomains)
         domain_parts = domain.split(".")
         for i in range(len(domain_parts) - 1):
             parent_domain = ".".join(domain_parts[i:])
             if parent_domain in self.blocklist:
+                logger.info(f"🚫 Blocked (blocklist parent): {domain} -> {parent_domain}")
                 return True
+        
+        # LAYER 4: Pattern matching
+        if self._check_pattern_match(domain):
+            logger.info(f"🚫 Blocked (pattern match): {domain}")
+            return True
+        
+        # LAYER 5: Suspicious TLD
+        if self._check_suspicious_tld(domain):
+            logger.info(f"🚫 Blocked (suspicious TLD): {domain}")
+            return True
+        
+        # LAYER 6: Suspicious structure
+        if self._check_suspicious_structure(domain):
+            logger.info(f"🚫 Blocked (suspicious structure): {domain}")
+            return True
         
         return False
 
