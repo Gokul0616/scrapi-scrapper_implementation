@@ -127,16 +127,6 @@ async def login(credentials: UserLogin):
         )
     }
 
-@router.post("/auth/select-role", response_model=dict)
-async def select_role(role_data: dict, current_user: dict = Depends(get_current_user)):
-    """Select role for user (owner or admin) - only for first-time setup."""
-    role = role_data.get('role')
-    
-    if role not in ['owner', 'admin']:
-        raise HTTPException(status_code=400, detail="Invalid role. Must be 'owner' or 'admin'")
-    
-
-
 # ============= Admin Console Authentication Routes =============
 @router.post("/auth/admin/register", response_model=dict)
 async def admin_register(user_data: AdminUserCreate):
