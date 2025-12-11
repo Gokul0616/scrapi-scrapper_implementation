@@ -66,7 +66,18 @@ logger = logging.getLogger(__name__)
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize default actors on startup."""
+    """Initialize default actors and services on startup."""
+    logger.info("🚀 Starting initialization...")
+    
+    # Initialize email validator (load disposable email blocklist)
+    logger.info("📧 Initializing email validator...")
+    try:
+        from services.email_validator import get_email_validator
+        validator = await get_email_validator()
+        logger.info("✅ Email validator initialized successfully")
+    except Exception as e:
+        logger.error(f"❌ Failed to initialize email validator: {str(e)}")
+    
     logger.info("🚀 Starting actor initialization...")
     
     try:
