@@ -2,20 +2,25 @@
 Multi-layered Email Validation Service
 Implements comprehensive email validation including:
 - Format validation (RFC 5322)
-- Disposable email domain detection
-- MX record verification (optional)
+- Disposable email domain detection (static & dynamic)
+- Real-time API validation
+- MX record verification with reputation checks
 - SMTP verification (optional)
+- Username entropy analysis
+- Domain age verification
 """
 
 import re
 import logging
 import asyncio
+import math
 from typing import Dict, Set, Optional, Tuple
 from datetime import datetime, timedelta
 import dns.resolver
 import smtplib
 import socket
 from email.utils import parseaddr
+from collections import Counter
 
 logger = logging.getLogger(__name__)
 
