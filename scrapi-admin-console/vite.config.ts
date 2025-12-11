@@ -13,7 +13,7 @@ export default defineConfig({
       '.emergentagent.com'
     ],
     hmr: {
-      clientPort: 3000,
+      clientPort: 443,
     },
     proxy: {
       '/api': {
