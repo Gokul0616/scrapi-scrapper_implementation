@@ -23,7 +23,7 @@ class User(BaseModel):
     hashed_password: str
     organization_name: Optional[str] = None
     plan: str = "Free"
-    role: str = "admin"  # owner or admin - default is admin
+    role: str = "user"  # Normal user from scraper website - default is user
     is_active: bool = True
     last_login_at: Optional[datetime] = None
     last_path: Optional[str] = None  # Store last visited path for redirect after login
