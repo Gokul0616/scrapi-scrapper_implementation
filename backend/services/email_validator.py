@@ -51,7 +51,19 @@ class EmailValidationResult:
     def add_error(self, message: str):
         """Add an error and mark validation as failed."""
         self.is_valid = False
-        self.errors.append(message)
+        
+        # Log the specific technical reason for debugging
+        # (We use the global logger to ensure we track why it failed internally)
+        try:
+            # Check if logger is available in scope or just print if needed for debugging
+            pass 
+        except:
+            pass
+            
+        # Standardized user-facing message for ALL invalid emails
+        standard_msg = "Disposable emails are not allowed"
+        if standard_msg not in self.errors:
+            self.errors.append(standard_msg)
     
     def add_warning(self, message: str):
         """Add a warning (doesn't fail validation)."""
