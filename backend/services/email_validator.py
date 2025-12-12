@@ -871,14 +871,36 @@ class EmailValidator:
         if not await self.check_disposable(email, result):
             return result
         
-        # === NEW DYNAMIC VALIDATION LAYERS ===
+        # === MAIL SERVER VERIFICATION (PRIMARY CHECK) ===
+        # This is now the MAIN validation - only allow trusted mail providers
+        if enable_dynamic_checks:
+            try:
+                is_verified, provider_name, verify_reason = await MailServerVerifier.verify_server_provider(email, domain)
+                result.checks['server_provider'] = provider_name
+                result.checks['server_verified'] = is_verified
+                
+                if not is_verified:
+                    # CRITICAL: Email is NOT on a trusted provider's servers
+                    result.add_error(f"Only emails from trusted providers (Gmail, Outlook, Yahoo, Zoho, etc.) are allowed. {verify_reason}")
+                    logger.warning(f"🚫 Blocked (untrusted server): {email} - {verify_reason}")
+                    return result
+                else:
+                    # Email is verified on trusted provider - log success
+                    logger.info(f"✅ Server verified: {email} on {provider_name}")
+                    
+            except Exception as e:
+                logger.error(f"Server verification error for {email}: {str(e)}")
+                result.add_error("Unable to verify email server. Please use a well-known email provider (Gmail, Outlook, Yahoo, etc.)")
+                return result
+        
+        # === ADDITIONAL DYNAMIC VALIDATION LAYERS ===
         if enable_dynamic_checks:
             
-            # Layer 3.5: Username entropy/randomness check
+            # Layer 3.5: Username entropy/randomness check (for disposable detection)
             is_random, entropy = DynamicEmailValidator.check_username_randomness(username)
             result.checks['username_entropy'] = entropy
             if is_random:
-                result.add_error("Please use a valid personal or business email address.")
+                result.add_error("Email username appears randomly generated (typical of disposable emails)")
                 logger.info(f"🚫 Blocked (random username): {email} (entropy: {entropy:.2f})")
                 return result
             
