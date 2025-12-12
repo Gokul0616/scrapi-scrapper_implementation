@@ -655,3 +655,24 @@ async def get_email_validator() -> EmailValidator:
         _validator = EmailValidator()
         await _validator.initialize()
     return _validator
+
+
+async def validate_email_comprehensive(
+    email: str,
+    check_mx: bool = False,
+    check_smtp: bool = False
+) -> Tuple[bool, Optional[str]]:
+    """
+    Convenience function for email validation.
+    
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    validator = await get_email_validator()
+    result = await validator.validate_email(email, check_mx=check_mx, check_smtp=check_smtp)
+    
+    if not result.is_valid:
+        return False, result.errors[0] if result.errors else "Invalid email address"
+    
+    return True, None
+
