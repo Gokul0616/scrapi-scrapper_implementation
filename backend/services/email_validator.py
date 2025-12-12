@@ -889,18 +889,29 @@ class EmailValidator:
                 result.checks['server_verified'] = is_verified
                 
                 if not is_verified:
-                    # CRITICAL: Email is NOT on a trusted provider's servers
-                    result.add_error(f"Only emails from trusted providers (Gmail, Outlook, Yahoo, Zoho, etc.) are allowed. {verify_reason}")
-                    logger.warning(f"🚫 Blocked (untrusted server): {email} - {verify_reason}")
-                    return result
+                    # Check for critical failures (No MX or Spoofing)
+                    if "No MX records" in verify_reason:
+                        result.add_error(verify_reason)
+                        logger.warning(f"🚫 Blocked (invalid domain): {email} - {verify_reason}")
+                        return result
+                        
+                    if "Fake" in verify_reason:
+                        result.add_error(verify_reason)
+                        logger.warning(f"🚫 Blocked (spoofing detected): {email} - {verify_reason}")
+                        return result
+                        
+                    # For other cases (just not in the "Trusted Provider" list), we ALLOW it now.
+                    # This enables legitimate business emails (like idlbay.com on GoDaddy) to pass.
+                    logger.info(f"✅ Allowed untrusted provider: {email} - {verify_reason}")
+                    result.add_warning(f"Note: {verify_reason}")
                 else:
                     # Email is verified on trusted provider - log success
                     logger.info(f"✅ Server verified: {email} on {provider_name}")
                     
             except Exception as e:
                 logger.error(f"Server verification error for {email}: {str(e)}")
-                result.add_error("Unable to verify email server. Please use a well-known email provider (Gmail, Outlook, Yahoo, etc.)")
-                return result
+                # Don't block on verification errors, fall back to other checks
+                result.add_warning("Unable to verify email server connectivity")
         
         # === ADDITIONAL DYNAMIC VALIDATION LAYERS ===
         if enable_dynamic_checks:
