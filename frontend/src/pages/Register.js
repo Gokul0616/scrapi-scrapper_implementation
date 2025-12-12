@@ -39,38 +39,24 @@ const Register = () => {
     
     try {
       // Check if email already exists
-      const checkResponse = await fetch(`${API_URL}/api/users/check-email?email=${encodeURIComponent(formData.email)}`);
-      const checkData = await checkResponse.json();
+      const checkResponse = await axios.get(`${API_URL}/api/users/check-email?email=${encodeURIComponent(formData.email)}`);
       
-      if (!checkResponse.ok) {
-        setEmailError(checkData.detail || 'Invalid email address');
-        setIsCheckingEmail(false);
-        return;
-      }
-      
-      if (checkData.exists) {
+      if (checkResponse.data.exists) {
         setEmailError('Email already registered. Please login instead.');
         setIsCheckingEmail(false);
         return;
       }
       
       // Send OTP via backend
-      const response = await fetch(`${API_URL}/api/auth/send-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email, purpose: 'register' })
+      const response = await axios.post(`${API_URL}/api/auth/send-otp`, {
+        email: formData.email, 
+        purpose: 'register'
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        // OTP sent successfully, show success message and move to OTP step
-        setOtpSuccessMessage('OTP sent successfully to your email');
-        setStep(2);
-      } else {
-        // Display the actual backend error message
-        setEmailError(data.detail || data.message || 'Failed to send verification code');
-      }
+      // OTP sent successfully, show success message and move to OTP step
+      setOtpSuccessMessage('OTP sent successfully to your email');
+      setStep(2);
+      
     } catch (error) {
       // Check if error has a response with data
       if (error.response && error.response.data) {
