@@ -41,7 +41,9 @@ class EmailValidationResult:
             'username_entropy': None,
             'realtime_api': None,
             'mx_reputation': None,
-            'domain_reputation': None
+            'domain_reputation': None,
+            'server_provider': None,  # NEW: Detected mail server provider
+            'server_verified': None   # NEW: Server ownership verification
         }
     
     def add_error(self, message: str):
