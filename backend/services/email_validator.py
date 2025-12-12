@@ -586,6 +586,11 @@ class EmailValidator:
         # Layer 2: Alias detection
         self.check_alias(email, result)
         self.check_role_based(email, result)
+
+        # Layer 2.5: Blocked Usernames (test@, demo@, etc.)
+        if username.lower() in self.BLOCKED_USERNAMES:
+             result.add_error("Disposable emails are not allowed") # Using standardized message
+             return result
         
         # Layer 3: Blocklist check
         if not await self.check_disposable(email, result):
