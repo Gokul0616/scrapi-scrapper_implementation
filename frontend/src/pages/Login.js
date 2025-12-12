@@ -86,22 +86,14 @@ const Login = () => {
     setOtpSuccessMessage('');
     
     try {
-      const response = await fetch(`${API_URL}/api/auth/send-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email, purpose: 'login' })
+      const response = await axios.post(`${API_URL}/api/auth/send-otp`, {
+        email: formData.email, 
+        purpose: 'login'
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        // OTP sent successfully, show success message and move to OTP input step
-        setOtpSuccessMessage('OTP sent successfully to your email');
-        setStep(4);
-      } else {
-        // Display the actual backend error message
-        setSendOtpError(data.detail || data.message || 'Failed to send verification code');
-      }
+      // OTP sent successfully, show success message and move to OTP input step
+      setOtpSuccessMessage('OTP sent successfully to your email');
+      setStep(4);
     } catch (error) {
       // Check if error has a response with data
       if (error.response && error.response.data) {
@@ -122,20 +114,12 @@ const Login = () => {
     setFormData({ ...formData, otp: '' });
     
     try {
-      const response = await fetch(`${API_URL}/api/auth/send-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email, purpose: 'login' })
+      const response = await axios.post(`${API_URL}/api/auth/send-otp`, {
+        email: formData.email, 
+        purpose: 'login'
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setOtpSuccessMessage('OTP sent successfully to your email');
-      } else {
-        // Display the actual backend error message
-        setOtpError(data.detail || data.message || 'Failed to send verification code');
-      }
+      setOtpSuccessMessage('OTP sent successfully to your email');
     } catch (error) {
       // Check if error has a response with data
       if (error.response && error.response.data) {
