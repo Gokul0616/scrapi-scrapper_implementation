@@ -36,10 +36,9 @@ const Login = () => {
     // Check if email exists
     setIsCheckingEmail(true);
     try {
-      const response = await fetch(`${API_URL}/api/users/check-email?email=${encodeURIComponent(formData.email)}`);
-      const data = await response.json();
+      const response = await axios.get(`${API_URL}/api/users/check-email?email=${encodeURIComponent(formData.email)}`);
       
-      if (!data.exists) {
+      if (!response.data.exists) {
         setEmailError('No account found with this email. Please sign up first.');
         setIsCheckingEmail(false);
         return;
