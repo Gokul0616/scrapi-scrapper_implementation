@@ -465,6 +465,12 @@ class EmailValidator:
         'contact', 'webmaster', 'postmaster', 'noreply', 'no-reply',
         'abuse', 'marketing', 'billing', 'hostmaster'
     }
+
+    # Explicitly blocked usernames that are obviously fake
+    BLOCKED_USERNAMES = {
+        'test', 'example', 'demo', 'user', 'fake', 'email', 'sample', 
+        'foobar', 'qwerty', 'asdf'
+    }
     
     def __init__(self):
         self.blocklist = DisposableEmailBlocklist()
