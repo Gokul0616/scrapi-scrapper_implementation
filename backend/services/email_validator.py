@@ -916,14 +916,15 @@ class EmailValidator:
                 logger.debug(f"Real-time API check failed: {str(e)}")
                 result.checks['realtime_api'] = "error"
             
-            # Layer 3.7: MX reputation check
+            # Layer 3.7: MX reputation check (now only for warnings, not blocking)
+            # Since we already verified the server provider above, this is just informational
             try:
                 mx_suspicious, mx_reason = await DynamicEmailValidator.check_mx_reputation(domain)
                 result.checks['mx_reputation'] = mx_reason
                 if mx_suspicious:
-                    result.add_error(f"Suspicious mail server: {mx_reason}")
-                    logger.info(f"🚫 Blocked (MX reputation): {email} - {mx_reason}")
-                    return result
+                    # Only warn, don't block (server verification is primary)
+                    result.add_warning(f"MX note: {mx_reason}")
+                    logger.debug(f"⚠️  MX info for {email}: {mx_reason}")
             except Exception as e:
                 logger.debug(f"MX reputation check failed: {str(e)}")
                 result.checks['mx_reputation'] = "error"
