@@ -160,20 +160,13 @@ const Register = () => {
     setFormData({ ...formData, otp: '' });
     
     try {
-      const response = await fetch(`${API_URL}/api/auth/send-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email, purpose: 'register' })
+      const response = await axios.post(`${API_URL}/api/auth/send-otp`, {
+        email: formData.email, 
+        purpose: 'register'
       });
 
-      const data = await response.json();
+      setOtpSuccessMessage('OTP sent successfully to your email');
 
-      if (response.ok) {
-        setOtpSuccessMessage('OTP sent successfully to your email');
-      } else {
-        // Display the actual backend error message
-        setOtpError(data.detail || data.message || 'Failed to send verification code');
-      }
     } catch (error) {
       // Check if error has a response with data
       if (error.response && error.response.data) {
