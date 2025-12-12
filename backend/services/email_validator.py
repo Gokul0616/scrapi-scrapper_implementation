@@ -268,6 +268,243 @@ class DisposableEmailBlocklist:
         return False
 
 
+
+class MailServerVerifier:
+    """
+    Advanced mail server verification to detect ACTUAL hosting provider.
+    Prevents spoofing and ensures emails are hosted on legitimate providers only.
+    """
+    
+    # Trusted mail server patterns for major providers
+    TRUSTED_PROVIDERS = {
+        'gmail': {
+            'name': 'Gmail/Google Workspace',
+            'mx_patterns': [
+                'smtp.google.com',              # New single MX (2025)
+                'aspmx.l.google.com',           # Legacy primary
+                'alt1.aspmx.l.google.com',      # Legacy alt
+                'alt2.aspmx.l.google.com',
+                'alt3.aspmx.l.google.com',
+                'alt4.aspmx.l.google.com',
+                'googlemail.com'
+            ],
+            'spf_patterns': [
+                'include:_spf.google.com',
+                'include:spf.google.com',
+                'aspmx.l.google.com'
+            ],
+            'domains': ['gmail.com', 'googlemail.com']  # Native domains
+        },
+        'outlook': {
+            'name': 'Outlook/Hotmail/Microsoft 365',
+            'mx_patterns': [
+                '.mail.protection.outlook.com',
+                '.olc.protection.outlook.com',
+                'hotmail.com',
+                'outlook.com'
+            ],
+            'spf_patterns': [
+                'include:spf.protection.outlook.com',
+                'include:spf.protection.microsoft.com'
+            ],
+            'domains': ['outlook.com', 'hotmail.com', 'live.com', 'msn.com']
+        },
+        'yahoo': {
+            'name': 'Yahoo Mail',
+            'mx_patterns': [
+                'yahoodns.net',
+                'mta6.am0.yahoodns.net',
+                'mta5.am0.yahoodns.net',
+                'yahoo.com'
+            ],
+            'spf_patterns': [
+                'include:_spf.mail.yahoo.com',
+                'yahoodns.net'
+            ],
+            'domains': ['yahoo.com', 'ymail.com', 'rocketmail.com']
+        },
+        'zoho': {
+            'name': 'Zoho Mail',
+            'mx_patterns': [
+                'mx.zoho.com',
+                'mx2.zoho.com',
+                'mx3.zoho.com',
+                'zoho.eu',
+                'zoho.in'
+            ],
+            'spf_patterns': [
+                'include:zoho.com',
+                'include:zoho.eu',
+                'zohomail.com'
+            ],
+            'domains': ['zoho.com', 'zohomail.com']
+        },
+        'protonmail': {
+            'name': 'ProtonMail',
+            'mx_patterns': [
+                'mail.protonmail.ch',
+                'mailsec.protonmail.ch',
+                'proton.me'
+            ],
+            'spf_patterns': [
+                'include:_spf.protonmail.ch',
+                'protonmail.ch'
+            ],
+            'domains': ['protonmail.com', 'proton.me', 'pm.me']
+        },
+        'icloud': {
+            'name': 'iCloud Mail',
+            'mx_patterns': [
+                'mx01.mail.icloud.com',
+                'mx02.mail.icloud.com',
+                'mx03.mail.icloud.com',
+                'mx04.mail.icloud.com',
+                'mx05.mail.icloud.com',
+                'mx06.mail.icloud.com'
+            ],
+            'spf_patterns': [
+                'icloud.com',
+                'apple.com'
+            ],
+            'domains': ['icloud.com', 'me.com', 'mac.com']
+        },
+        'aol': {
+            'name': 'AOL Mail',
+            'mx_patterns': [
+                'mx-aol.mail.gm0.yahoodns.net',
+                'aol.com'
+            ],
+            'spf_patterns': [
+                'include:_spf.mail.aol.com',
+                'aol.com'
+            ],
+            'domains': ['aol.com']
+        },
+        'fastmail': {
+            'name': 'FastMail',
+            'mx_patterns': [
+                'in1-smtp.messagingengine.com',
+                'in2-smtp.messagingengine.com',
+                'fastmail.com'
+            ],
+            'spf_patterns': [
+                'include:spf.messagingengine.com',
+                'fastmail.com'
+            ],
+            'domains': ['fastmail.com', 'fastmail.fm']
+        }
+    }
+    
+    @staticmethod
+    async def get_mx_records(domain: str) -> list:
+        """Get MX records for a domain."""
+        try:
+            mx_records = dns.resolver.resolve(domain, 'MX')
+            return [(mx.preference, str(mx.exchange).lower().rstrip('.')) for mx in mx_records]
+        except Exception as e:
+            logger.debug(f"MX lookup failed for {domain}: {str(e)}")
+            return []
+    
+    @staticmethod
+    async def get_spf_record(domain: str) -> Optional[str]:
+        """Get SPF record from DNS TXT records."""
+        try:
+            txt_records = dns.resolver.resolve(domain, 'TXT')
+            for txt in txt_records:
+                txt_str = str(txt).strip('"')
+                if txt_str.lower().startswith('v=spf1'):
+                    return txt_str.lower()
+            return None
+        except Exception as e:
+            logger.debug(f"SPF lookup failed for {domain}: {str(e)}")
+            return None
+    
+    @staticmethod
+    async def verify_server_provider(email: str, domain: str) -> Tuple[bool, Optional[str], str]:
+        """
+        Verify that the email is hosted on a trusted mail server provider.
+        
+        Returns:
+            (is_verified, provider_name, reason)
+        """
+        mx_records = await MailServerVerifier.get_mx_records(domain)
+        spf_record = await MailServerVerifier.get_spf_record(domain)
+        
+        if not mx_records:
+            return False, None, "No MX records found - domain cannot receive email"
+        
+        # Check each trusted provider
+        for provider_key, provider_info in MailServerVerifier.TRUSTED_PROVIDERS.items():
+            provider_name = provider_info['name']
+            
+            # Check if domain is a native provider domain (gmail.com, outlook.com, etc.)
+            is_native_domain = domain in provider_info['domains']
+            
+            # Check MX records match
+            mx_match = False
+            for _, mx_host in mx_records:
+                for pattern in provider_info['mx_patterns']:
+                    if pattern in mx_host:
+                        mx_match = True
+                        break
+                if mx_match:
+                    break
+            
+            # Check SPF record matches (if available)
+            spf_match = False
+            if spf_record:
+                for pattern in provider_info['spf_patterns']:
+                    if pattern in spf_record:
+                        spf_match = True
+                        break
+            
+            # For native domains (like @gmail.com), we MUST verify MX
+            if is_native_domain:
+                if mx_match:
+                    logger.info(f"✅ Verified {email}: Native {provider_name} (MX confirmed)")
+                    return True, provider_name, f"Verified {provider_name} (native domain)"
+                else:
+                    # This is a FAKE - claims to be @gmail.com but not on Gmail servers!
+                    logger.warning(f"🚫 FAKE DETECTED: {email} claims to be {provider_name} but MX records don't match")
+                    return False, None, f"Fake {provider_name} address - MX records don't match Google/Microsoft servers"
+            
+            # For custom domains using provider's mail services
+            # Both MX and SPF should match for strong verification
+            if mx_match and spf_match:
+                logger.info(f"✅ Verified {email}: Custom domain using {provider_name} (MX + SPF confirmed)")
+                return True, provider_name, f"Verified {provider_name} (custom domain)"
+            
+            # MX match only (weaker but acceptable for custom domains)
+            elif mx_match:
+                logger.info(f"✅ Verified {email}: Using {provider_name} (MX confirmed)")
+                return True, provider_name, f"Verified {provider_name} (MX only)"
+        
+        # No trusted provider found
+        mx_list = [mx[1] for mx in mx_records[:3]]
+        logger.warning(f"🚫 Untrusted mail server: {email} uses {mx_list}")
+        return False, None, f"Email not hosted on trusted provider. MX: {', '.join(mx_list)}"
+    
+    @staticmethod
+    async def is_trusted_business_email(email: str, domain: str) -> bool:
+        """
+        Quick check if email uses a trusted provider.
+        Used to bypass aggressive checks for verified providers.
+        """
+        mx_records = await MailServerVerifier.get_mx_records(domain)
+        
+        if not mx_records:
+            return False
+        
+        # Check if ANY MX record matches trusted patterns
+        for _, mx_host in mx_records:
+            for provider_info in MailServerVerifier.TRUSTED_PROVIDERS.values():
+                for pattern in provider_info['mx_patterns']:
+                    if pattern in mx_host:
+                        return True
+        
+        return False
+
+
 class DynamicEmailValidator:
     """Real-time dynamic email validation using multiple techniques."""
     
