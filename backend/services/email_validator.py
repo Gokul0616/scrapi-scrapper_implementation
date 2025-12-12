@@ -640,7 +640,10 @@ class EmailValidator:
                 mx_suspicious, mx_reason = await DynamicEmailValidator.check_mx_reputation(domain)
                 result.checks['mx_reputation'] = mx_reason
                 if mx_suspicious:
-                    result.add_risk(1, f"Suspicious MX: {mx_reason}")
+                    if "Parked" in mx_reason:
+                        result.add_risk(3, f"Parked Domain: {mx_reason}")
+                    else:
+                        result.add_risk(1, f"Suspicious MX: {mx_reason}")
             except Exception:
                 pass
             
