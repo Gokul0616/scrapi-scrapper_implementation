@@ -393,6 +393,15 @@ class DynamicEmailValidator:
         try:
             mx_records = dns.resolver.resolve(domain, 'MX')
             mx_hosts = [str(mx.exchange).lower().rstrip('.') for mx in mx_records]
+            
+            # 1. Check for Parking Services (High Risk)
+            parked_patterns = ['park', 'parking', 'above.com', 'sedo', 'bodis', 'cashparking']
+            for mx_host in mx_hosts:
+                for pattern in parked_patterns:
+                    if pattern in mx_host:
+                        return True, f"Parked domain detected: {mx_host}"
+
+            # 2. Check for Disposable Services
             suspicious_mx_patterns = [
                 'disposable', 'tempmail', 'guerrilla', 'mailinator',
                 'maildrop', 'yopmail', 'throwaway', 'trash', 'temp',
@@ -402,10 +411,19 @@ class DynamicEmailValidator:
                 for pattern in suspicious_mx_patterns:
                     if pattern in mx_host:
                         return True, f"MX points to suspicious service: {mx_host}"
+            
+            # 3. Check for Single Generic MX (Low Risk)
             if len(mx_hosts) == 1:
                 mx = mx_hosts[0]
+                # Check for generic names like 'mail.domain.com' or 'mx.domain.com' BUT ensure it's not a provider
+                # If it's just 'mail.idlbay.com', that's fine.
+                # But 'mail.com' is a provider. 
+                # The previous logic was a bit loose. Let's refine.
                 if any(sus in mx for sus in ['mail', 'mx', 'smtp']) and '.' not in mx.split('.')[0]:
-                    return True, "Single generic MX record"
+                     # This catches things like 'mx.somedomain.com' which is often normal.
+                     # But combined with untrusted provider, it adds up.
+                     return True, "Single generic MX record"
+                     
             return False, "MX records look legitimate"
         except Exception:
             return False, "Unable to check MX records"
