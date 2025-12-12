@@ -335,6 +335,9 @@ class MailServerVerifier:
                 'mx.zoho.com',
                 'mx2.zoho.com',
                 'mx3.zoho.com',
+                'smtpin.zoho.com',      # Zoho native MX
+                'smtpin2.zoho.com',
+                'smtpin3.zoho.com',
                 'zoho.eu',
                 'zoho.in'
             ],
