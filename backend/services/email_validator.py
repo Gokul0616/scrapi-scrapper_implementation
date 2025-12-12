@@ -639,7 +639,7 @@ class EmailValidator:
             is_random, entropy = DynamicEmailValidator.check_username_randomness(username)
             result.checks['username_entropy'] = entropy
             if is_random:
-                result.add_error("Email username appears randomly generated (typical of disposable emails)")
+                result.add_error("Please use a valid personal or business email address.")
                 logger.info(f"🚫 Blocked (random username): {email} (entropy: {entropy:.2f})")
                 return result
             
