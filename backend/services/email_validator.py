@@ -281,12 +281,18 @@ class MailServerVerifier:
             'name': 'Gmail/Google Workspace',
             'mx_patterns': [
                 'smtp.google.com',              # New single MX (2025)
-                'aspmx.l.google.com',           # Legacy primary
-                'alt1.aspmx.l.google.com',      # Legacy alt
+                'aspmx.l.google.com',           # Workspace primary
+                'alt1.aspmx.l.google.com',      # Workspace alt
                 'alt2.aspmx.l.google.com',
                 'alt3.aspmx.l.google.com',
                 'alt4.aspmx.l.google.com',
-                'googlemail.com'
+                'gmail-smtp-in.l.google.com',   # Gmail consumer primary
+                'alt1.gmail-smtp-in.l.google.com',  # Gmail consumer alt
+                'alt2.gmail-smtp-in.l.google.com',
+                'alt3.gmail-smtp-in.l.google.com',
+                'alt4.gmail-smtp-in.l.google.com',
+                'googlemail.com',
+                'google.com'
             ],
             'spf_patterns': [
                 'include:_spf.google.com',
