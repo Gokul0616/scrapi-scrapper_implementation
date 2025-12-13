@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Security
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, APIKeyHeader
 from typing import List, Optional
 from datetime import datetime, timezone, timedelta
 from pydantic import ValidationError
@@ -8,7 +9,8 @@ from models import (
     Actor, ActorCreate, ActorUpdate, ActorPublish,
     Run, RunCreate, Dataset, DatasetItem, Proxy, ProxyCreate,
     LeadChatMessage, LeadChatRequest, Schedule, ScheduleCreate, ScheduleUpdate,
-    OTP, SendOTPRequest, VerifyOTPRequest, OTPResponse
+    OTP, SendOTPRequest, VerifyOTPRequest, OTPResponse,
+    ApiKey, ApiKeyCreate, ApiKeyDisplay
 )
 from auth import create_access_token, get_current_user, hash_password, verify_password
 from services import get_proxy_manager, get_task_manager, LeadChatService, EnhancedGlobalChatService
@@ -16,6 +18,8 @@ from scrapers import ScraperEngine, get_scraper_registry
 import logging
 import os
 import asyncio
+import secrets
+import hashlib
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +33,47 @@ def set_db(database):
     db = database
     proxy_manager = get_proxy_manager(db)
     task_manager = get_task_manager()
+
+api_key_security = HTTPBearer()
+
+async def get_api_user(credentials: HTTPAuthorizationCredentials = Depends(api_key_security)):
+    """Authenticate user via API Key or JWT."""
+    token = credentials.credentials
+    
+    if token.startswith("sk_"):
+        # API Key Authentication
+        token_hash = hashlib.sha256(token.encode()).hexdigest()
+        key_doc = await db.api_keys.find_one({"key_hash": token_hash})
+        
+        if not key_doc:
+            raise HTTPException(status_code=401, detail="Invalid API Key")
+            
+        if not key_doc.get("is_active", True):
+            raise HTTPException(status_code=401, detail="API Key is inactive")
+            
+        # Update last used
+        await db.api_keys.update_one(
+            {"id": key_doc['id']},
+            {"$set": {"last_used_at": datetime.now(timezone.utc).isoformat()}}
+        )
+        
+        # Get user
+        user = await db.users.find_one({"id": key_doc['user_id']})
+        if not user:
+             # Try admin user? Assuming API keys are for regular users mostly, but let's check.
+             # Current ApiKey model links to generic user_id.
+             raise HTTPException(status_code=401, detail="User associated with API key not found")
+             
+        return {
+            "id": user['id'],
+            "username": user['username'],
+            "role": user.get('role', 'user')
+        }
+    else:
+        # JWT Authentication - delegate to existing auth logic
+        # We need to call the logic of get_current_user but passing credentials
+        # auth.get_current_user is a dependency, so it's an async function taking credentials
+        return await get_current_user(credentials)
 
 router = APIRouter()
 
@@ -777,6 +822,73 @@ async def get_last_path(current_user: dict = Depends(get_current_user)):
     
     return {"last_path": user_doc.get('last_path', '/home')}
 
+# ============= API Key Routes =============
+
+@router.post("/auth/api-keys", response_model=dict)
+async def create_api_key(
+    key_data: ApiKeyCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a new API key."""
+    # Generate key
+    raw_key = f"sk_{secrets.token_urlsafe(32)}"
+    key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
+    
+    # Store
+    api_key = ApiKey(
+        user_id=current_user['id'],
+        name=key_data.name,
+        key_hash=key_hash,
+        prefix=raw_key[:8] + "..."
+    )
+    
+    doc = api_key.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    await db.api_keys.insert_one(doc)
+    
+    # Return raw key ONLY ONCE
+    return {
+        "id": api_key.id,
+        "name": api_key.name,
+        "key": raw_key,
+        "created_at": doc['created_at']
+    }
+
+@router.get("/auth/api-keys", response_model=List[ApiKeyDisplay])
+async def get_api_keys(current_user: dict = Depends(get_current_user)):
+    """Get all API keys for current user."""
+    cursor = db.api_keys.find({"user_id": current_user['id']})
+    keys = await cursor.to_list(length=100)
+    
+    result = []
+    for k in keys:
+        if isinstance(k.get('created_at'), str):
+            k['created_at'] = datetime.fromisoformat(k['created_at'])
+        if isinstance(k.get('last_used_at'), str):
+            k['last_used_at'] = datetime.fromisoformat(k['last_used_at'])
+        # Ensure fields map to ApiKeyDisplay
+        result.append(ApiKeyDisplay(
+            id=k['id'],
+            name=k['name'],
+            prefix=k['prefix'],
+            created_at=k['created_at'],
+            last_used_at=k.get('last_used_at')
+        ))
+    return result
+
+@router.delete("/auth/api-keys/{key_id}")
+async def delete_api_key(key_id: str, current_user: dict = Depends(get_current_user)):
+    """Revoke an API key."""
+    result = await db.api_keys.delete_one({
+        "id": key_id,
+        "user_id": current_user['id']
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="API Key not found")
+        
+    return {"message": "API Key revoked successfully"}
+
 # ============= User Validation Routes =============
 @router.get("/users/check-email")
 async def check_email(email: str):
@@ -1283,7 +1395,7 @@ async def execute_scraping_job(run_id: str, actor_id: str, user_id: str, input_d
 @router.post("/runs", response_model=Run)
 async def create_run(
     run_data: RunCreate,
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_api_user)
 ):
     """Create and start a new scraping run with parallel execution."""
     # Log incoming request for debugging
