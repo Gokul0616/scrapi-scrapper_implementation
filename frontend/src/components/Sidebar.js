@@ -44,7 +44,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
     { icon: Calendar, label: 'Schedules', path: '/schedules' },
     { icon: Database, label: 'Storage', path: '/storage' },
     { icon: Shield, label: 'Proxy', path: '/proxy' },
-    { icon: Key, label: 'API Access', path: '/developer' },
+    { icon: Key, label: 'API Access', path: '/keys' },
     { icon: Settings, label: 'Settings', path: '/settings' }
   ];
 
