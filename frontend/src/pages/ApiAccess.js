@@ -1,110 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { useAuth } from '../contexts/AuthContext';
-import { Loader2, Plus, Trash2, Copy, Check, Key, Clock, AlertTriangle } from 'lucide-react';
+import { Loader2, Plus, Trash2, Copy, Check, Key } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
-
-const ApiKeyTimer = ({ initialKey, onComplete, onCopy, copied }) => {
-    const [timeLeft, setTimeLeft] = useState(initialKey.expires_in || 30);
-    const [activeKey, setActiveKey] = useState(initialKey.key || '');
-    const wsRef = useRef(null);
-
-    useEffect(() => {
-        // Connect to WebSocket
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//${window.location.host.split(':')[0]}:8000/api/ws/api-key-timer/${initialKey.id}`;
-
-        wsRef.current = new WebSocket(wsUrl);
-
-        wsRef.current.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            if (data.status === 'expired') {
-                onComplete();
-            } else if (data.status === 'active') {
-                setTimeLeft(Math.ceil(data.remaining));
-                if (data.key && !activeKey) setActiveKey(data.key);
-            }
-        };
-
-        // Fallback local timer in case WS fails or lags, but prefer WS updates
-        const timer = setInterval(() => {
-            setTimeLeft((prev) => {
-                if (prev <= 1) {
-                    clearInterval(timer);
-                    // Wait for WS to confirm or just close
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-
-        return () => {
-            if (wsRef.current) wsRef.current.close();
-            clearInterval(timer);
-        };
-    }, [initialKey.id, onComplete, initialKey.key, activeKey]);
-
-    // If initial key has key data, use it. If we refreshed, we might be waiting for WS.
-    const displayKey = activeKey || initialKey.key;
-
-    return (
-        <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg animate-in fade-in duration-300">
-            <div className="flex justify-between items-start">
-                <div>
-                    <h4 className="font-semibold text-green-900 flex items-center">
-                        <Check className="w-5 h-5 mr-2" />
-                        API Key Created
-                    </h4>
-                    <div className="flex items-center gap-2 mt-2 text-sm text-green-700">
-                        <Clock className="w-4 h-4 animate-pulse" />
-                        <span>Visible for {timeLeft} seconds</span>
-                    </div>
-                </div>
-                {/* No 'Done' button, auto-hides */}
-            </div>
-
-            <div className="mt-4">
-                {/* Progress bar */}
-                <div className="h-1 w-full bg-green-200 rounded-full mb-4 overflow-hidden">
-                    <div
-                        className="h-full bg-green-500 transition-all duration-1000 ease-linear"
-                        style={{ width: `${(timeLeft / 30) * 100}%` }}
-                    />
-                </div>
-
-                <div className="flex items-center gap-2 bg-white p-3 rounded border border-green-200 shadow-sm relative overflow-hidden">
-                    {displayKey ? (
-                        <code className="flex-1 font-mono text-sm break-all text-green-800 tracking-wider font-bold">
-                            {displayKey}
-                        </code>
-                    ) : (
-                        <div className="flex-1 flex items-center gap-2 text-gray-400 italic">
-                            <Loader2 className="w-3 h-3 animate-spin" /> Syncing key...
-                        </div>
-                    )}
-
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onCopy(displayKey)}
-                        disabled={!displayKey}
-                        className="hover:bg-green-50"
-                    >
-                        {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
-                    </Button>
-                </div>
-
-                <p className="text-xs text-green-700 mt-2 flex items-center gap-1">
-                    <AlertTriangle className="w-3 h-3" />
-                    Copy this key immediately. It will disappear when the timer ends.
-                </p>
-            </div>
-        </div>
-    );
-};
 
 const ApiAccess = () => {
     const [keys, setKeys] = useState([]);
@@ -233,28 +134,54 @@ const ApiAccess = () => {
                     <CardTitle>Create New API Key</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    {!createdKey ? (
-                        <div className="flex gap-4 items-end">
-                            <div className="flex-1 space-y-2">
-                                <label className="text-sm font-medium text-gray-700">Key Name</label>
-                                <Input
-                                    placeholder="e.g. Production Scraper"
-                                    value={newKeyName}
-                                    onChange={(e) => setNewKeyName(e.target.value)}
-                                />
-                            </div>
-                            <Button onClick={handleCreateKey} disabled={isCreating}>
-                                {isCreating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
-                                Generate Key
-                            </Button>
+                    <div className="flex gap-4 items-end">
+                        <div className="flex-1 space-y-2">
+                            <label className="text-sm font-medium text-gray-700">Key Name</label>
+                            <Input
+                                placeholder="e.g. Production Scraper"
+                                value={newKeyName}
+                                onChange={(e) => setNewKeyName(e.target.value)}
+                            />
                         </div>
-                    ) : (
-                        <ApiKeyTimer
-                            initialKey={createdKey}
-                            onComplete={() => setCreatedKey(null)}
-                            onCopy={copyToClipboard}
-                            copied={copied}
-                        />
+                        <Button onClick={handleCreateKey} disabled={isCreating}>
+                            {isCreating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
+                            Generate Key
+                        </Button>
+                    </div>
+
+                    {createdKey && (
+                        <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <h4 className="font-semibold text-green-900 flex items-center">
+                                        <Check className="w-5 h-5 mr-2" />
+                                        API Key Created
+                                    </h4>
+                                    <p className="text-sm text-green-700 mt-1">
+                                        Please copy your key now. You won't be able to see it again!
+                                    </p>
+                                </div>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCreatedKey(null)}
+                                >
+                                    Done
+                                </Button>
+                            </div>
+                            <div className="mt-4 flex items-center gap-2 bg-white p-3 rounded border border-green-200">
+                                <code className="flex-1 font-mono text-sm break-all text-green-800">
+                                    {createdKey.key}
+                                </code>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => copyToClipboard(createdKey.key)}
+                                >
+                                    {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
+                                </Button>
+                            </div>
+                        </div>
                     )}
                 </CardContent>
             </Card>
@@ -328,7 +255,7 @@ const ApiAccess = () => {
                             Include your API key in the <code>Authorization</code> header of your requests.
                         </p>
                         <div className="bg-black/50 p-4 rounded-lg font-mono text-sm text-green-400">
-                            Authorization: Bearer scrapi_...
+                            Authorization: Bearer sk_...
                         </div>
                     </div>
 

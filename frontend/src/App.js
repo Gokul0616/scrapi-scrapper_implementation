@@ -22,7 +22,6 @@ import Store from './pages/Store';
 import Schedules from './pages/Schedules';
 import ApiAccess from './pages/ApiAccess';
 import GlobalChat from './components/GlobalChat';
-import Docs from './pages/Docs';
 
 // Component to handle root redirect based on last path
 const RootRedirect = () => {
@@ -175,7 +174,7 @@ function AppRoutes() {
         <Route path="/proxy" element={<ProtectedRoute><DashboardLayout><div className="p-8">Proxy</div></DashboardLayout></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><DashboardLayout><div className="p-8">Settings</div></DashboardLayout></ProtectedRoute>} />
         <Route path="/billing" element={<ProtectedRoute><DashboardLayout><div className="p-8">Billing</div></DashboardLayout></ProtectedRoute>} />
-        <Route path="/docs" element={<ProtectedRoute><DashboardLayout><Docs /></DashboardLayout></ProtectedRoute>} />
+        <Route path="/docs" element={<ProtectedRoute><DashboardLayout><div className="p-8">Documentation</div></DashboardLayout></ProtectedRoute>} />
         <Route path="/help" element={<ProtectedRoute><DashboardLayout><div className="p-8">Help</div></DashboardLayout></ProtectedRoute>} />
       </Routes>
     </>
