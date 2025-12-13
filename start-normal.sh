@@ -26,6 +26,7 @@ echo ""
 
 # Step 2: Install Playwright Browsers
 echo -e "${BLUE}[2/5]${NC} Installing Playwright browsers (Chromium)..."
+export PLAYWRIGHT_BROWSERS_PATH=/pw-browsers
 playwright install chromium > /dev/null 2>&1
 echo -e "${GREEN}✓${NC} Playwright browsers installed"
 echo ""
