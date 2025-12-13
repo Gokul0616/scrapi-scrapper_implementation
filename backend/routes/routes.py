@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Security
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Security, WebSocket, WebSocketDisconnect
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, APIKeyHeader
 from typing import List, Optional
 from datetime import datetime, timezone, timedelta
@@ -20,6 +20,7 @@ import os
 import asyncio
 import secrets
 import hashlib
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -822,6 +823,9 @@ async def get_last_path(current_user: dict = Depends(get_current_user)):
     
     return {"last_path": user_doc.get('last_path', '/home')}
 
+# Temp store for fresh API keys (key_id -> {key: str, expires_at: float})
+TEMP_KEY_STORE = {}
+
 # ============= API Key Routes =============
 
 @router.post("/auth/api-keys", response_model=dict)
@@ -846,12 +850,19 @@ async def create_api_key(
     doc['created_at'] = doc['created_at'].isoformat()
     await db.api_keys.insert_one(doc)
     
+    # Store in temp store for 30s timer
+    TEMP_KEY_STORE[api_key.id] = {
+        "key": raw_key,
+        "expires_at": time.time() + 30
+    }
+    
     # Return raw key ONLY ONCE
     return {
         "id": api_key.id,
         "name": api_key.name,
         "key": raw_key,
-        "created_at": doc['created_at']
+        "created_at": doc['created_at'],
+        "has_active_timer": True
     }
 
 @router.get("/auth/api-keys", response_model=List[ApiKeyDisplay])
@@ -866,13 +877,23 @@ async def get_api_keys(current_user: dict = Depends(get_current_user)):
             k['created_at'] = datetime.fromisoformat(k['created_at'])
         if isinstance(k.get('last_used_at'), str):
             k['last_used_at'] = datetime.fromisoformat(k['last_used_at'])
+        # Check for active timer
+        has_active = False
+        if k['id'] in TEMP_KEY_STORE:
+            if time.time() < TEMP_KEY_STORE[k['id']]['expires_at']:
+                has_active = True
+            else:
+                # Cleanup expired
+                del TEMP_KEY_STORE[k['id']]
+        
         # Ensure fields map to ApiKeyDisplay
         result.append(ApiKeyDisplay(
             id=k['id'],
             name=k['name'],
             prefix=k['prefix'],
             created_at=k['created_at'],
-            last_used_at=k.get('last_used_at')
+            last_used_at=k.get('last_used_at'),
+            has_active_timer=has_active
         ))
     return result
 
@@ -887,7 +908,46 @@ async def delete_api_key(key_id: str, current_user: dict = Depends(get_current_u
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="API Key not found")
         
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="API Key not found")
+        
+    # Cleanup temp store if exists
+    if key_id in TEMP_KEY_STORE:
+        del TEMP_KEY_STORE[key_id]
+        
     return {"message": "API Key revoked successfully"}
+
+@router.websocket("/ws/api-keys/{key_id}/timer")
+async def ws_api_key_timer(websocket: WebSocket, key_id: str):
+    await websocket.accept()
+    try:
+        while True:
+            if key_id not in TEMP_KEY_STORE:
+                await websocket.send_json({"key": None, "remaining": 0})
+                break
+            
+            data = TEMP_KEY_STORE[key_id]
+            remaining = int(data['expires_at'] - time.time())
+            
+            if remaining <= 0:
+                del TEMP_KEY_STORE[key_id]
+                await websocket.send_json({"key": None, "remaining": 0})
+                break
+            
+            await websocket.send_json({
+                "key": data['key'],
+                "remaining": remaining
+            })
+            await asyncio.sleep(1)
+            
+    except WebSocketDisconnect:
+        pass
+    except Exception as e:
+        logger.error(f"WebSocket error: {e}")
+        try:
+            await websocket.close()
+        except:
+            pass
 
 # ============= User Validation Routes =============
 @router.get("/users/check-email")
@@ -1403,18 +1463,30 @@ async def create_run(
     logger.info(f"   Actor ID: {run_data.actor_id}")
     logger.info(f"   Input data: {run_data.input_data}")
     
-    # Get actor
-    actor = await db.actors.find_one({"id": run_data.actor_id})
+    # Get actor (check by ID or API ID)
+    query = {"id": run_data.actor_id}
+    if run_data.actor_id.startswith("actor_"):
+        query = {"api_id": run_data.actor_id}
+        
+    actor = await db.actors.find_one(query)
+    
+    # If not found by API ID, could check by regular ID if it wasn't already checked
+    if not actor and run_data.actor_id.startswith("actor_"):
+         actor = await db.actors.find_one({"id": run_data.actor_id})
+
     if not actor:
         logger.error(f"❌ Actor not found: {run_data.actor_id}")
-        raise HTTPException(status_code=404, detail="Actor not found")
+        raise HTTPException(status_code=404, detail="Actor not found") 
+    
+    # Use the real ID for internal storage
+    real_actor_id = actor['id']
     
     logger.info(f"   Actor name: {actor['name']}")
     
     # Create run
     run = Run(
         user_id=current_user['id'],
-        actor_id=run_data.actor_id,
+        actor_id=real_actor_id,
         actor_name=actor['name'],
         actor_icon=actor.get('icon'),
         input_data=run_data.input_data,
@@ -1432,7 +1504,7 @@ async def create_run(
         run.id,
         execute_scraping_job(
             run.id,
-            run_data.actor_id,
+            real_actor_id,
             current_user['id'],
             run_data.input_data
         )

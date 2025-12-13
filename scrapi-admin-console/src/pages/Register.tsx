@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Lock, Mail, User, Building } from 'lucide-react';
+import { Lock, Mail, User, Building, Eye, EyeOff } from 'lucide-react';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
 
@@ -12,6 +12,8 @@ export const Register: React.FC = () => {
         confirmPassword: '',
         organization_name: ''
     });
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const navigate = useNavigate();
@@ -183,14 +185,20 @@ export const Register: React.FC = () => {
                                 <input
                                     id="password"
                                     name="password"
-                                    type="password"
+                                    type={showPassword ? 'text' : 'password'}
                                     autoComplete="new-password"
                                     required
                                     value={formData.password}
                                     onChange={handleChange}
-                                    className="focus:ring-aws-orange focus:border-aws-orange block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2"
+                                    className="focus:ring-aws-orange focus:border-aws-orange block w-full pl-10 pr-10 sm:text-sm border-gray-300 rounded-md py-2"
                                     placeholder="••••••••"
                                 />
+                                <div
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-gray-400 hover:text-gray-600"
+                                >
+                                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                </div>
                             </div>
                         </div>
 
@@ -205,14 +213,20 @@ export const Register: React.FC = () => {
                                 <input
                                     id="confirmPassword"
                                     name="confirmPassword"
-                                    type="password"
+                                    type={showConfirmPassword ? 'text' : 'password'}
                                     autoComplete="new-password"
                                     required
                                     value={formData.confirmPassword}
                                     onChange={handleChange}
-                                    className="focus:ring-aws-orange focus:border-aws-orange block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2"
+                                    className="focus:ring-aws-orange focus:border-aws-orange block w-full pl-10 pr-10 sm:text-sm border-gray-300 rounded-md py-2"
                                     placeholder="••••••••"
                                 />
+                                <div
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-gray-400 hover:text-gray-600"
+                                >
+                                    {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                </div>
                             </div>
                         </div>
 

@@ -8,7 +8,7 @@ import { Textarea } from '../components/ui/textarea';
 import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { toast } from '../hooks/use-toast';
-import { Play, Settings, Clock, Database, Info } from 'lucide-react';
+import { Play, Settings, Clock, Database, Info, Copy } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -90,7 +90,7 @@ const ActorDetail = () => {
 
     try {
       const token = localStorage.getItem('token');
-      
+
       // Parse search terms (comma or newline separated)
       const searchTerms = config.searchTerms
         .split(/[,\n]+/)
@@ -426,7 +426,7 @@ const ActorDetail = () => {
             )}
           </div>
         </div>
-        
+
         {actor.tags && actor.tags.length > 0 && (
           <div className="flex gap-2 mt-4">
             {actor.tags.map((tag) => (
@@ -456,7 +456,7 @@ const ActorDetail = () => {
               <>
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                   <p className="text-sm text-blue-900">
-                    <strong>💡 Tip:</strong> This scraper extracts businesses, places, and reviews from Google Maps. 
+                    <strong>💡 Tip:</strong> This scraper extracts businesses, places, and reviews from Google Maps.
                     Enter your search terms and location to get started.
                   </p>
                 </div>
@@ -612,6 +612,27 @@ const ActorDetail = () => {
             <div>
               <h3 className="text-lg font-semibold mb-2">Details</h3>
               <div className="space-y-2 text-sm">
+                <div className="flex items-center">
+                  <span className="font-medium w-32">API ID:</span>
+                  <div className="flex items-center gap-2">
+                    <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono text-gray-800">
+                      {actor.api_id || 'N/A'}
+                    </code>
+                    {actor.api_id && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={() => {
+                          navigator.clipboard.writeText(actor.api_id);
+                          toast({ title: "Copied", description: "API ID copied to clipboard" });
+                        }}
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
                 <div className="flex">
                   <span className="font-medium w-32">Category:</span>
                   <span className="text-gray-600">{actor.category}</span>

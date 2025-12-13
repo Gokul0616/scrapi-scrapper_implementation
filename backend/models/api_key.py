@@ -13,6 +13,7 @@ class ApiKeyDisplay(BaseModel):
     prefix: str
     created_at: datetime
     last_used_at: Optional[datetime] = None
+    has_active_timer: bool = False
 
 class ApiKey(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))

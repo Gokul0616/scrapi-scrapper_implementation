@@ -7,6 +7,7 @@ class Actor(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    api_id: str = Field(default_factory=lambda: f"actor_{uuid.uuid4().hex}")
     user_id: str
     name: str
     description: str

@@ -4,22 +4,77 @@ import { Input } from '../components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { useAuth } from '../contexts/AuthContext';
-import { Loader2, Plus, Trash2, Copy, Check, Key } from 'lucide-react';
+import { Loader2, Plus, Trash2, Copy, Check, Key, Clock } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 
 const ApiAccess = () => {
     const [keys, setKeys] = useState([]);
     const [loading, setLoading] = useState(true);
     const [newKeyName, setNewKeyName] = useState('');
-    const [createdKey, setCreatedKey] = useState(null);
+    const [activeKeyId, setActiveKeyId] = useState(null);
+    const [timerData, setTimerData] = useState(null);
     const [isCreating, setIsCreating] = useState(false);
     const { toast } = useToast();
-    const { getAuthToken } = useAuth(); // Assuming this exists or I'll use localStorage
+    const { getAuthToken } = useAuth();
     const [copied, setCopied] = useState(false);
 
     useEffect(() => {
         fetchKeys();
     }, []);
+
+    // Check for active timers on key list update
+    useEffect(() => {
+        if (keys.length > 0 && !activeKeyId) {
+            const activeKey = keys.find(k => k.has_active_timer);
+            if (activeKey) {
+                setActiveKeyId(activeKey.id);
+            }
+        }
+    }, [keys]);
+
+    // WebSocket connection for active timer
+    useEffect(() => {
+        if (!activeKeyId) return;
+
+        const wsUrl = getWsUrl(`/api/ws/api-keys/${activeKeyId}/timer`);
+        const ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+            console.log('Connected to timer WS');
+        };
+
+        ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.remaining <= 0) {
+                    setTimerData(null);
+                    setActiveKeyId(null);
+                    fetchKeys(); // Refresh list to update status if needed
+                } else {
+                    setTimerData(data);
+                }
+            } catch (e) {
+                console.error('Error parsing WS message', e);
+            }
+        };
+
+        ws.onclose = () => {
+            console.log('Timer WS closed');
+            setTimerData(null);
+            if (activeKeyId) setActiveKeyId(null);
+        };
+
+        return () => {
+            ws.close();
+        };
+    }, [activeKeyId]);
+
+    const getWsUrl = (path) => {
+        const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+        const protocol = backendUrl.startsWith('https') ? 'wss://' : 'ws://';
+        const host = backendUrl.replace(/^https?:\/\//, '');
+        return `${protocol}${host}${path}`;
+    };
 
     const fetchKeys = async () => {
         try {
@@ -44,7 +99,7 @@ const ApiAccess = () => {
         if (!newKeyName.trim()) {
             toast({
                 title: "Error",
-                description: "key name is required",
+                description: "Key name is required",
                 variant: "destructive"
             });
             return;
@@ -64,9 +119,12 @@ const ApiAccess = () => {
 
             if (response.ok) {
                 const data = await response.json();
-                setCreatedKey(data);
                 setNewKeyName('');
                 fetchKeys();
+
+                // Activate timer
+                setActiveKeyId(data.id);
+
                 toast({
                     title: "Success",
                     description: "API Key created successfully"
@@ -99,6 +157,10 @@ const ApiAccess = () => {
 
             if (response.ok) {
                 setKeys(keys.filter(k => k.id !== id));
+                if (activeKeyId === id) {
+                    setActiveKeyId(null);
+                    setTimerData(null);
+                }
                 toast({
                     title: "Revoked",
                     description: "API Key revoked successfully"
@@ -149,38 +211,51 @@ const ApiAccess = () => {
                         </Button>
                     </div>
 
-                    {createdKey && (
-                        <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    {timerData && timerData.key && (
+                        <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg animate-in fade-in duration-300">
                             <div className="flex justify-between items-start">
                                 <div>
                                     <h4 className="font-semibold text-green-900 flex items-center">
                                         <Check className="w-5 h-5 mr-2" />
                                         API Key Created
                                     </h4>
-                                    <p className="text-sm text-green-700 mt-1">
-                                        Please copy your key now. You won't be able to see it again!
+                                    <p className="text-sm text-green-700 mt-1 flex items-center">
+                                        <Clock className="w-4 h-4 mr-1 ml-1" />
+                                        Visible for {timerData.remaining}s
                                     </p>
                                 </div>
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => setCreatedKey(null)}
+                                    onClick={() => {
+                                        setTimerData(null);
+                                        setActiveKeyId(null);
+                                    }}
                                 >
                                     Done
                                 </Button>
                             </div>
-                            <div className="mt-4 flex items-center gap-2 bg-white p-3 rounded border border-green-200">
-                                <code className="flex-1 font-mono text-sm break-all text-green-800">
-                                    {createdKey.key}
+                            <div className="mt-4 flex items-center gap-2 bg-white p-3 rounded border border-green-200 shadow-sm relative overflow-hidden">
+                                {/* Progress bar for timer */}
+                                <div
+                                    className="absolute bottom-0 left-0 h-1 bg-green-500 transition-all duration-1000 ease-linear"
+                                    style={{ width: `${(timerData.remaining / 30) * 100}%` }}
+                                />
+                                <code className="flex-1 font-mono text-sm break-all text-green-800 z-10">
+                                    {timerData.key}
                                 </code>
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => copyToClipboard(createdKey.key)}
+                                    className="z-10"
+                                    onClick={() => copyToClipboard(timerData.key)}
                                 >
                                     {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
                                 </Button>
                             </div>
+                            <p className="text-xs text-green-600 mt-2">
+                                Warning: This key will be hidden forever after the timer expires.
+                            </p>
                         </div>
                     )}
                 </CardContent>
