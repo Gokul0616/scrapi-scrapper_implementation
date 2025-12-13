@@ -263,7 +263,7 @@ const ApiAccess = () => {
                         <h3 className="tex-lg font-medium mb-2">Run an Actor</h3>
                         <div className="bg-black/50 p-4 rounded-lg font-mono text-sm overflow-x-auto">
                             <pre className="text-gray-300">
-                                {`curl -X POST "${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/runs" \\
+                                {`curl -X POST "${process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001'}/api/runs" \\
   -H "Authorization: Bearer <YOUR_API_KEY>" \\
   -H "Content-Type: application/json" \\
   -d '{
