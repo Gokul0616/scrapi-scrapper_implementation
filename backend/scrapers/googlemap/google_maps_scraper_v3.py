@@ -8,6 +8,7 @@ from ..scraper_engine import ScraperEngine
 from playwright.async_api import Page, TimeoutError as PlaywrightTimeoutError
 from bs4 import BeautifulSoup
 import aiohttp
+from urllib.parse import urljoin, urlparse
 
 # Try importing stealth, but don't fail if not present
 try:
@@ -25,6 +26,7 @@ class GoogleMapsScraperV3(BaseScraper):
     - Email and phone extraction with verification
     - Retry logic for incomplete results
     - Robust selectors and stealth mode
+    - Website Enrichment (Meta data, Socials, Deep Email Search)
     """
     
     def __init__(self, scraper_engine: ScraperEngine):
@@ -81,6 +83,8 @@ class GoogleMapsScraperV3(BaseScraper):
             "phone": "string - Phone number",
             "email": "string - Email address",
             "website": "string - Website URL",
+            "websiteTitle": "string - Website Meta Title",
+            "websiteDescription": "string - Website Meta Description",
             "rating": "number - Rating score",
             "reviewsCount": "number - Number of reviews",
             "category": "string - Business category",
@@ -374,16 +378,9 @@ class GoogleMapsScraperV3(BaseScraper):
                     place_data['openingHours'] = hours_text
             except: pass
             
-            # Email & Social extraction from website
+            # 5. Enrichment: Email & Social extraction from website
             if place_data.get('website'):
-                email = await self._extract_email_from_website(place_data['website'])
-                if email:
-                    place_data['email'] = email
-                    place_data['emailVerified'] = True
-                
-                social_links = await self._extract_social_media(page, place_data['website'])
-                if social_links:
-                    place_data['socialMedia'] = social_links
+                await self._enrich_place_data(place_data)
 
             # Images
             if extract_images:
@@ -438,39 +435,114 @@ class GoogleMapsScraperV3(BaseScraper):
         except Exception as e:
             logger.debug(f"Address parsing error: {e}")
 
-    async def _extract_email_from_website(self, website_url: str) -> Optional[str]:
-        """Extract email from business website."""
+    async def _enrich_place_data(self, place_data: Dict[str, Any]):
+        """
+        Deep enrichment from website:
+        - Meta Title & Description
+        - Emails (Home + Contact Page)
+        - Social Media
+        """
+        website_url = place_data.get('website')
+        if not website_url: return
+
+        # Headers to mimic browser
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+        }
+
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(website_url, timeout=aiohttp.ClientTimeout(total=10), headers={"User-Agent": "Mozilla/5.0"}) as response:
-                    if response.status == 200:
-                        html = await response.text()
-                        soup = BeautifulSoup(html, 'html.parser')
-                        
-                        # 1. mailto: links
-                        mailto_links = soup.find_all('a', href=re.compile(r'^mailto:', re.I))
-                        if mailto_links:
-                            for link in mailto_links:
-                                email = link['href'].replace('mailto:', '').split('?')[0]
-                                if self._is_valid_email(email):
-                                    return email.lower()
-                        
-                        # 2. Text content
-                        text_content = soup.get_text()
-                        emails = self.email_pattern.findall(text_content)
-                        for email in emails:
-                            if self._is_business_email(email):
-                                return email.lower()
-        except:
-            return None
+            async with aiohttp.ClientSession(headers=headers) as session:
+                # 1. Fetch Homepage
+                async with session.get(website_url, timeout=aiohttp.ClientTimeout(total=15)) as response:
+                    if response.status != 200: return
+                    html = await response.text()
+                    soup = BeautifulSoup(html, 'html.parser')
+
+                    # Extract Meta Data
+                    if soup.title:
+                        place_data['websiteTitle'] = soup.title.string.strip()
+                    
+                    meta_desc = soup.find('meta', attrs={'name': 'description'}) or soup.find('meta', attrs={'property': 'og:description'})
+                    if meta_desc:
+                        place_data['websiteDescription'] = meta_desc.get('content', '').strip()
+
+                    # Extract Socials & Emails from Home
+                    self._extract_contacts_from_soup(soup, place_data)
+
+                    # 2. If no email, try to find Contact page
+                    if not place_data.get('email'):
+                        contact_link = self._find_contact_link(soup, website_url)
+                        if contact_link:
+                            logger.info(f"Visiting contact page for {place_data.get('title')}: {contact_link}")
+                            try:
+                                async with session.get(contact_link, timeout=aiohttp.ClientTimeout(total=10)) as contact_resp:
+                                    if contact_resp.status == 200:
+                                        contact_html = await contact_resp.text()
+                                        contact_soup = BeautifulSoup(contact_html, 'html.parser')
+                                        self._extract_contacts_from_soup(contact_soup, place_data)
+                            except Exception as e:
+                                logger.debug(f"Error visiting contact page: {e}")
+
+        except Exception as e:
+            logger.debug(f"Enrichment error for {website_url}: {e}")
+
+    def _extract_contacts_from_soup(self, soup: BeautifulSoup, place_data: Dict[str, Any]):
+        """Helper to extract emails and socials from a soup object."""
+        # Emails
+        if not place_data.get('email'):
+            # 1. Mailto links
+            mailto_links = soup.find_all('a', href=re.compile(r'^mailto:', re.I))
+            for link in mailto_links:
+                email = link['href'].replace('mailto:', '').split('?')[0]
+                if self._is_valid_email(email):
+                    place_data['email'] = email.lower()
+                    place_data['emailVerified'] = True
+                    break # Stop after first valid email
+
+            # 2. Text regex
+            if not place_data.get('email'):
+                text_content = soup.get_text()
+                emails = self.email_pattern.findall(text_content)
+                for email in emails:
+                    if self._is_business_email(email):
+                        place_data['email'] = email.lower()
+                        place_data['emailVerified'] = True
+                        break
+
+        # Socials
+        if 'socialMedia' not in place_data:
+            place_data['socialMedia'] = {}
+        
+        for platform, pattern in self.social_patterns.items():
+            if platform not in place_data['socialMedia']:
+                # Search in hrefs
+                links = soup.find_all('a', href=pattern)
+                if links:
+                    place_data['socialMedia'][platform] = links[0]['href']
+
+    def _find_contact_link(self, soup: BeautifulSoup, base_url: str) -> Optional[str]:
+        """Find a likely contact page URL."""
+        contact_keywords = ['contact', 'about', 'get in touch', 'reach us']
+        
+        for a in soup.find_all('a', href=True):
+            text = a.get_text().lower()
+            href = a['href'].lower()
+            
+            if any(k in text for k in contact_keywords) or any(k in href for k in contact_keywords):
+                # Resolve relative URL
+                full_url = urljoin(base_url, a['href'])
+                # Ensure it's the same domain
+                if urlparse(full_url).netloc == urlparse(base_url).netloc:
+                    return full_url
         return None
-    
+
     def _is_valid_email(self, email: str) -> bool:
         return bool(self.email_pattern.match(email))
     
     def _is_business_email(self, email: str) -> bool:
         email_lower = email.lower()
-        excluded = ['example.com', 'test.com', 'domain.com', 'sentry.io', 'wix.com', 'squarespace.com', 'react', 'node_modules']
+        excluded = ['example.com', 'test.com', 'domain.com', 'sentry.io', 'wix.com', 'squarespace.com', 'react', 'node_modules', 'bootstrap']
         for pattern in excluded:
             if pattern in email_lower:
                 return False
@@ -528,28 +600,6 @@ class GoogleMapsScraperV3(BaseScraper):
                     except: continue
         except: pass
         return reviews
-    
-    async def _extract_social_media(self, page: Page, website_url: str) -> Dict[str, str]:
-        """Extract social media links."""
-        social_links = {}
-        try:
-            # Check Maps page content first (sometimes links are there)
-            # Then check website
-            if website_url:
-                try:
-                    async with aiohttp.ClientSession() as session:
-                        async with session.get(website_url, timeout=aiohttp.ClientTimeout(total=10)) as response:
-                            if response.status == 200:
-                                html = await response.text()
-                                for platform, pattern in self.social_patterns.items():
-                                    matches = pattern.findall(html)
-                                    if matches:
-                                        url = matches[0]
-                                        if not url.startswith('http'): url = 'https://' + url
-                                        social_links[platform] = url
-                except: pass
-        except: pass
-        return social_links
     
     def _extract_place_id(self, url: str) -> Optional[str]:
         match = re.search(r'!1s([^!]+)', url)
