@@ -90,7 +90,7 @@ const ActorDetail = () => {
 
     try {
       const token = localStorage.getItem('token');
-      
+
       // Parse search terms (comma or newline separated)
       const searchTerms = config.searchTerms
         .split(/[,\n]+/)
@@ -415,6 +415,18 @@ const ActorDetail = () => {
             </div>
           </div>
           <div className="flex items-center space-x-3">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => navigate('/docs')}
+            >
+              <Database className="w-4 h-4" />
+              API
+            </Button>
+            <Badge variant="outline" className="px-3 py-1 font-mono">
+              {actor.api_id || actor.id}
+            </Badge>
             <Badge variant="outline" className="px-3 py-1">
               {actor.runs_count || 0} runs
             </Badge>
@@ -426,7 +438,7 @@ const ActorDetail = () => {
             )}
           </div>
         </div>
-        
+
         {actor.tags && actor.tags.length > 0 && (
           <div className="flex gap-2 mt-4">
             {actor.tags.map((tag) => (
@@ -456,7 +468,7 @@ const ActorDetail = () => {
               <>
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                   <p className="text-sm text-blue-900">
-                    <strong>💡 Tip:</strong> This scraper extracts businesses, places, and reviews from Google Maps. 
+                    <strong>💡 Tip:</strong> This scraper extracts businesses, places, and reviews from Google Maps.
                     Enter your search terms and location to get started.
                   </p>
                 </div>

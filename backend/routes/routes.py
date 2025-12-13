@@ -20,8 +20,13 @@ import os
 import asyncio
 import secrets
 import hashlib
+from fastapi import WebSocket, WebSocketDisconnect
 
 logger = logging.getLogger(__name__)
+
+# Temporary storage for unmasked keys (key_id -> {key, expires_at})
+# This is a simple in-memory solution. For production, use Redis.
+temp_api_keys = {}
 
 # This will be set by server.py
 db = None
@@ -40,7 +45,7 @@ async def get_api_user(credentials: HTTPAuthorizationCredentials = Depends(api_k
     """Authenticate user via API Key or JWT."""
     token = credentials.credentials
     
-    if token.startswith("sk_"):
+    if token.startswith("scrapi_"):
         # API Key Authentication
         token_hash = hashlib.sha256(token.encode()).hexdigest()
         key_doc = await db.api_keys.find_one({"key_hash": token_hash})
@@ -831,28 +836,77 @@ async def create_api_key(
 ):
     """Create a new API key."""
     # Generate key
-    raw_key = f"sk_{secrets.token_urlsafe(32)}"
+    raw_key = f"scrapi_{secrets.token_urlsafe(32)}"
     key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
+    prefix = raw_key[:11] + "..." # scrapi_ + 4 chars
     
-    # Store
     api_key = ApiKey(
         user_id=current_user['id'],
         name=key_data.name,
         key_hash=key_hash,
-        prefix=raw_key[:8] + "..."
+        prefix=prefix
     )
     
     doc = api_key.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
+    # Handle optional last_used_at
+    if doc.get('last_used_at'):
+        doc['last_used_at'] = doc['last_used_at'].isoformat()
+        
     await db.api_keys.insert_one(doc)
     
-    # Return raw key ONLY ONCE
+    # Store unmasked key temporarily (30 seconds)
+    expires_at = datetime.now(timezone.utc) + timedelta(seconds=30)
+    temp_api_keys[api_key.id] = {
+        "key": raw_key,
+        "expires_at": expires_at
+    }
+    
     return {
         "id": api_key.id,
         "name": api_key.name,
         "key": raw_key,
-        "created_at": doc['created_at']
+        "created_at": doc['created_at'],
+        "expires_in": 30
     }
+
+@router.websocket("/ws/api-key-timer/{key_id}")
+async def websocket_api_key_timer(websocket: WebSocket, key_id: str):
+    await websocket.accept()
+    try:
+        while True:
+            # Check if key exists in temp storage
+            if key_id not in temp_api_keys:
+                await websocket.send_json({"status": "expired"})
+                break
+                
+            data = temp_api_keys[key_id]
+            now = datetime.now(timezone.utc)
+            remaining = (data["expires_at"] - now).total_seconds()
+            
+            if remaining <= 0:
+                # Expired
+                del temp_api_keys[key_id]
+                await websocket.send_json({"status": "expired"})
+                break
+            
+            # Send current status
+            await websocket.send_json({
+                "status": "active",
+                "key": data["key"], # Send key again for refresh case
+                "remaining": remaining
+            })
+            
+            await asyncio.sleep(1)
+            
+    except WebSocketDisconnect:
+        pass
+    except Exception as e:
+        logger.error(f"WebSocket error: {e}")
+        try:
+            await websocket.close()
+        except:
+            pass
 
 @router.get("/auth/api-keys", response_model=List[ApiKeyDisplay])
 async def get_api_keys(current_user: dict = Depends(get_current_user)):
@@ -1072,6 +1126,22 @@ async def get_actors(current_user: dict = Depends(get_current_user)):
 @router.post("/actors", response_model=Actor)
 async def create_actor(actor_data: ActorCreate, current_user: dict = Depends(get_current_user)):
     """Create a new actor."""
+    import secrets
+    
+    # Generate api_id if not provided
+    if not actor_data.api_id:
+        # Simple slugify fallback
+        slug = actor_data.name.lower().replace(" ", "-").replace("/", "-")
+        # Clean slug
+        slug = "".join([c for c in slug if c.isalnum() or c == "-"])
+        actor_data.api_id = f"{current_user.get('username', 'user')}/{slug}" # Use current_user's username
+    
+    # Check if api_id exists and ensure uniqueness
+    existing_api_id = await db.actors.find_one({"api_id": actor_data.api_id})
+    if existing_api_id:
+         # Append random string if collision
+         actor_data.api_id = f"{actor_data.api_id}-{secrets.token_hex(4)}"
+    
     actor = Actor(
         user_id=current_user['id'],
         name=actor_data.name,
@@ -1206,12 +1276,23 @@ async def update_actor(actor_id: str, updates: ActorUpdate, current_user: dict =
     actor = await db.actors.find_one({"id": actor_id, "user_id": current_user['id']})
     if not actor:
         raise HTTPException(status_code=404, detail="Actor not found")
-    
-    update_data = {k: v for k, v in updates.model_dump(exclude_unset=True).items() if v is not None}
+    # If api_id is being updated, check uniqueness
+    if updates.api_id and updates.api_id != actor.get('api_id'):
+        api_id_exists = await db.actors.find_one({"api_id": updates.api_id})
+        if api_id_exists:
+            raise HTTPException(status_code=400, detail="API ID already exists")
+            
+    # Apply updates
+    update_data = updates.model_dump(exclude_unset=True)
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No updates provided")
+        
     update_data['updated_at'] = datetime.now(timezone.utc).isoformat()
     
-    await db.actors.update_one({"id": actor_id}, {"$set": update_data})
-    
+    await db.actors.update_one(
+        {"id": actor_id},
+        {"$set": update_data}
+    )
     updated_actor = await db.actors.find_one({"id": actor_id}, {"_id": 0})
     if isinstance(updated_actor.get('created_at'), str):
         updated_actor['created_at'] = datetime.fromisoformat(updated_actor['created_at'])

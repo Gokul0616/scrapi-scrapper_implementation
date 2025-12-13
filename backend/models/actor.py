@@ -22,6 +22,7 @@ class Actor(BaseModel):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     
     # New fields for scraper creation
+    api_id: Optional[str] = None # Unique identifier for API usage (e.g. user/actor-name)
     status: str = "draft"  # draft, published, archived
     tags: List[str] = Field(default_factory=list)
     readme: Optional[str] = None  # Markdown documentation
@@ -50,6 +51,7 @@ class ActorCreate(BaseModel):
     readme: Optional[str] = None
     template_type: Optional[str] = None
     visibility: str = "private"
+    api_id: Optional[str] = None
 
 class ActorUpdate(BaseModel):
     name: Optional[str] = None
@@ -64,8 +66,10 @@ class ActorUpdate(BaseModel):
     status: Optional[str] = None
     visibility: Optional[str] = None
     version: Optional[str] = None
+    api_id: Optional[str] = None
 
 class ActorPublish(BaseModel):
     readme: Optional[str] = None
     tags: Optional[List[str]] = None
     visibility: str = "public"
+
