@@ -1,12 +1,19 @@
 import asyncio
 import logging
 import re
+import math
 from typing import List, Dict, Any, Optional, Callable
 from ..base_scraper import BaseScraper
 from ..scraper_engine import ScraperEngine
 from playwright.async_api import Page, TimeoutError as PlaywrightTimeoutError
 from bs4 import BeautifulSoup
 import aiohttp
+
+# Try importing stealth, but don't fail if not present
+try:
+    from playwright_stealth import stealth_async
+except ImportError:
+    stealth_async = None
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +24,7 @@ class GoogleMapsScraperV3(BaseScraper):
     - Better scrolling and pagination
     - Email and phone extraction with verification
     - Retry logic for incomplete results
+    - Robust selectors and stealth mode
     """
     
     def __init__(self, scraper_engine: ScraperEngine):
@@ -55,7 +63,8 @@ class GoogleMapsScraperV3(BaseScraper):
     def get_tags(cls) -> List[str]:
         return ["maps", "google", "business", "leads", "local"]
     
-    def get_input_schema(self) -> Dict[str, Any]:
+    @classmethod
+    def get_input_schema(cls) -> Dict[str, Any]:
         return {
             "search_terms": {"type": "array", "description": "List of search terms"},
             "location": {"type": "string", "description": "Location to search in"},
@@ -64,7 +73,8 @@ class GoogleMapsScraperV3(BaseScraper):
             "extract_images": {"type": "boolean", "default": False}
         }
     
-    def get_output_schema(self) -> Dict[str, Any]:
+    @classmethod
+    def get_output_schema(cls) -> Dict[str, Any]:
         return {
             "title": "string - Business name",
             "address": "string - Full address",
@@ -83,9 +93,9 @@ class GoogleMapsScraperV3(BaseScraper):
         """
         search_terms = config.get('search_terms', [])
         location = config.get('location', '')
-        max_results = int(config.get('max_results', 100))  # Convert to int
-        extract_reviews = bool(config.get('extract_reviews', False))  # Convert to bool
-        extract_images = bool(config.get('extract_images', False))  # Convert to bool
+        max_results = int(config.get('max_results', 100))
+        extract_reviews = bool(config.get('extract_reviews', False))
+        extract_images = bool(config.get('extract_images', False))
         
         all_results = []
         context = await self.engine.create_context(use_proxy=True)
@@ -151,6 +161,8 @@ class GoogleMapsScraperV3(BaseScraper):
                     for result in batch_results:
                         if isinstance(result, dict):
                             all_results.append(result)
+                        elif isinstance(result, Exception):
+                            logger.error(f"Error in batch processing: {str(result)}")
                     
                     # Small delay between batches
                     await asyncio.sleep(0.5)
@@ -159,81 +171,88 @@ class GoogleMapsScraperV3(BaseScraper):
             await context.close()
         
         if progress_callback:
-            await progress_callback(f"🎉 Complete! Extracted {len(all_results)} places with verified contacts")
+            await progress_callback(f"🎉 Complete! Extracted {len(all_results)} places")
         
         return all_results
     
     async def _search_places(self, context, query: str, max_results: int) -> List[str]:
         """Enhanced search with better scrolling and pagination."""
         page = await context.new_page()
-        place_urls = set()  # Use set for automatic deduplication
+        if stealth_async:
+            await stealth_async(page)
+            
+        place_urls = set()
         
         try:
             search_url = f"{self.base_url}/search/{query.replace(' ', '+')}"
-            await page.goto(search_url, wait_until="domcontentloaded", timeout=30000)
+            await page.goto(search_url, wait_until="domcontentloaded", timeout=45000)
             
-            # Wait for results
-            await asyncio.sleep(3)
+            # Wait for results panel or list
+            try:
+                await page.wait_for_selector('div[role="feed"], div.m6QErb[aria-label]', timeout=15000)
+            except:
+                logger.info("Could not find standard feed, trying generic wait")
+                await asyncio.sleep(5)
             
             # Enhanced scrolling with more attempts
-            for scroll_attempt in range(20):  # Increased from 10 to 20
-                # Get all place links
+            no_new_content_count = 0
+            
+            for scroll_attempt in range(25): # Increased scroll attempts
+                # Get all place links - Enhanced selectors
                 links = await page.query_selector_all('a[href*="/maps/place/"]')
+                
+                initial_count = len(place_urls)
                 
                 for link in links:
                     try:
                         href = await link.get_attribute('href')
                         if href and '/maps/place/' in href:
-                            place_urls.add(href)
-                            
-                            if len(place_urls) >= max_results:
-                                break
+                            clean_href = href.split('?')[0] # Clean URL
+                            place_urls.add(clean_href)
                     except:
                         continue
                 
                 if len(place_urls) >= max_results:
                     break
                 
-                # Better scrolling logic
-                try:
-                    # Get current scroll position
-                    prev_height = await page.evaluate("""
-                        () => {
-                            const panel = document.querySelector('div[role="feed"]');
-                            return panel ? panel.scrollHeight : 0;
-                        }
-                    """)
+                if len(place_urls) == initial_count:
+                    no_new_content_count += 1
+                else:
+                    no_new_content_count = 0
                     
-                    # Scroll down
-                    await page.evaluate("""
-                        () => {
-                            const panel = document.querySelector('div[role="feed"]');
-                            if (panel) {
-                                panel.scrollTop = panel.scrollHeight;
+                if no_new_content_count > 3: # Stop if no new items found after 3 attempts
+                    logger.info("No new items found after scrolling, stopping")
+                    break
+                
+                # Scroll Logic - Try multiple selectors for the scrollable container
+                scrolled = await page.evaluate("""
+                    () => {
+                        const selectors = [
+                            'div[role="feed"]',
+                            'div.m6QErb[aria-label]', 
+                            'div.ResultListLayer',
+                            '.section-layout.section-scrollbox',
+                            '.m6QErb.DxyBCb.kA9KIf.dS8AEf'
+                        ];
+                        
+                        for (const selector of selectors) {
+                            const els = document.querySelectorAll(selector);
+                            for (const el of els) {
+                                if (el.scrollHeight > el.clientHeight) {
+                                    el.scrollTop = el.scrollHeight;
+                                    return true;
+                                }
                             }
                         }
-                    """)
-                    
-                    # Wait for new content
-                    await asyncio.sleep(2)
-                    
-                    # Check if new content loaded
-                    new_height = await page.evaluate("""
-                        () => {
-                            const panel = document.querySelector('div[role="feed"]');
-                            return panel ? panel.scrollHeight : 0;
-                        }
-                    """)
-                    
-                    # If no new content, we've reached the end
-                    if new_height == prev_height:
-                        logger.info(f"Reached end of results at {len(place_urls)} places")
-                        break
                         
-                except Exception as e:
-                    logger.debug(f"Scrolling error: {str(e)}")
-                    break
-            
+                        // Fallback: scroll window
+                        window.scrollTo(0, document.body.scrollHeight);
+                        return false;
+                    }
+                """)
+                
+                await asyncio.sleep(2) # Give time for content to load
+                
             logger.info(f"Found {len(place_urls)} unique place URLs for query: {query}")
         
         except Exception as e:
@@ -245,152 +264,139 @@ class GoogleMapsScraperV3(BaseScraper):
         return list(place_urls)
     
     async def _extract_place_details(self, context, url: str, extract_reviews: bool = False, extract_images: bool = False) -> Optional[Dict[str, Any]]:
-        """Extract detailed information with email and verified phone."""
+        """Extract detailed information with improved selectors."""
         page = await context.new_page()
-        
+        if stealth_async:
+            await stealth_async(page)
+            
         try:
-            await page.goto(url, wait_until="domcontentloaded", timeout=30000)
-            await asyncio.sleep(2)
+            await page.goto(url, wait_until="domcontentloaded", timeout=45000)
+            
+            # Wait for main content to ensure page loaded
+            try:
+                await page.wait_for_selector('h1', timeout=10000)
+            except:
+                pass # Continue anyway, might be partial load
+            
+            await asyncio.sleep(1.5) # Slight delay for dynamic content
             
             place_data = {
                 'url': url,
                 'placeId': self._extract_place_id(url)
             }
             
-            # Extract title/name
-            title_selector = 'h1.DUwDvf, h1'
-            title_elem = await page.query_selector(title_selector)
-            if title_elem:
-                place_data['title'] = await title_elem.text_content()
+            # --- Robust Extraction Logic ---
             
-            # Extract category
-            category_selector = 'button[jsaction*="category"]'
-            category_elem = await page.query_selector(category_selector)
-            if category_elem:
-                place_data['category'] = await category_elem.text_content()
-            
-            # Extract rating
-            rating_selector = 'div.F7nice span[aria-label*="stars"]'
-            rating_elem = await page.query_selector(rating_selector)
-            if rating_elem:
-                rating_text = await rating_elem.get_attribute('aria-label')
-                if rating_text:
+            # 1. Title - Try h1
+            try:
+                title_elem = await page.query_selector('h1')
+                if title_elem:
+                    place_data['title'] = (await title_elem.text_content()).strip()
+            except Exception as e:
+                logger.debug(f"Title extraction failed: {e}")
+
+            # 2. Category
+            try:
+                # Look for the category button - usually has 'jsaction' and specific class
+                category_elem = await page.query_selector('button[jsaction*="category"]')
+                if category_elem:
+                    place_data['category'] = (await category_elem.text_content()).strip()
+            except: pass
+
+            # 3. Rating & Reviews
+            try:
+                # Search for aria-label containing stars
+                rating_elem = await page.query_selector('span[role="img"][aria-label*="stars"]')
+                if rating_elem:
+                    rating_text = await rating_elem.get_attribute('aria-label')
                     match = re.search(r'([0-9.]+)', rating_text)
                     if match:
                         place_data['rating'] = float(match.group(1))
+            except: pass
             
-            # Extract reviews count
-            reviews_selector = 'div.F7nice span[aria-label*="reviews"]'
-            reviews_elem = await page.query_selector(reviews_selector)
-            if reviews_elem:
-                reviews_text = await reviews_elem.get_attribute('aria-label')
-                if reviews_text:
+            try:
+                # Reviews count
+                reviews_elem = await page.query_selector('button[aria-label*="reviews"], span[aria-label*="reviews"]')
+                if reviews_elem:
+                    reviews_text = await reviews_elem.get_attribute('aria-label')
                     match = re.search(r'([0-9,]+)', reviews_text)
                     if match:
                         place_data['reviewsCount'] = int(match.group(1).replace(',', ''))
+            except: pass
+
+            # 4. Contact Details (Address, Website, Phone)
+            # Iterate through all buttons/links with data-item-id or aria-labels
             
-            # Extract address
-            address_selector = 'button[data-item-id="address"]'
-            address_elem = await page.query_selector(address_selector)
-            if address_elem:
-                address_text = await address_elem.text_content()
-                place_data['address'] = address_text.strip() if address_text else None
+            # Address
+            try:
+                address_elem = await page.query_selector('button[data-item-id="address"]')
+                if address_elem:
+                    address_text = await address_elem.text_content()
+                    place_data['address'] = address_text.strip()
+                else:
+                    # Fallback for address
+                    content = await page.content()
+                    # Sometimes address is in a specific div class Io6YTe
+                    # But better to rely on text patterns if needed or more generic selectors
+                    pass
+            except: pass
+            
+            # Parse Address Components
+            if place_data.get('address'):
+                self._parse_address(place_data)
+
+            # Website
+            try:
+                website_elem = await page.query_selector('a[data-item-id="authority"]')
+                if website_elem:
+                    website_url = await website_elem.get_attribute('href')
+                    if website_url:
+                        place_data['website'] = website_url
+            except: pass
+
+            # Phone
+            try:
+                phone_elem = await page.query_selector('button[data-item-id*="phone"]')
+                if phone_elem:
+                    phone_text = await phone_elem.get_attribute('aria-label')
+                    if phone_text:
+                        phone = phone_text.replace('Phone: ', '').replace('Call phone number', '').strip()
+                        place_data['phone'] = phone
+                        place_data['phoneVerified'] = True
+            except: pass
+            
+            # Opening Hours
+            try:
+                hours_elem = await page.query_selector('button[data-item-id="oh"]')
+                if hours_elem:
+                    hours_text = await hours_elem.get_attribute('aria-label')
+                    place_data['openingHours'] = hours_text
+            except: pass
+            
+            # Email & Social extraction from website
+            if place_data.get('website'):
+                email = await self._extract_email_from_website(place_data['website'])
+                if email:
+                    place_data['email'] = email
+                    place_data['emailVerified'] = True
                 
-                # Parse city, state, and country from address
-                if place_data['address']:
-                    address_parts = place_data['address'].split(',')
-                    if len(address_parts) >= 3:
-                        place_data['city'] = address_parts[-2].strip()
-                        state_zip = address_parts[-1].strip().split()
-                        place_data['state'] = state_zip[0] if state_zip else None
-                    
-                    # Extract country code from address (last part usually contains country)
-                    # Common patterns: "USA", "United States", "India", etc.
-                    country_map = {
-                        'USA': 'US', 'United States': 'US', 'US': 'US',
-                        'India': 'IN', 'IN': 'IN',
-                        'United Kingdom': 'GB', 'UK': 'GB', 'GB': 'GB',
-                        'Canada': 'CA', 'CA': 'CA',
-                        'Australia': 'AU', 'AU': 'AU',
-                        'Germany': 'DE', 'DE': 'DE',
-                        'France': 'FR', 'FR': 'FR',
-                        'Spain': 'ES', 'ES': 'ES',
-                        'Italy': 'IT', 'IT': 'IT',
-                        'Mexico': 'MX', 'MX': 'MX',
-                        'Brazil': 'BR', 'BR': 'BR',
-                        'Japan': 'JP', 'JP': 'JP',
-                        'China': 'CN', 'CN': 'CN',
-                    }
-                    
-                    # Try to find country in last address part
-                    if len(address_parts) >= 2:
-                        last_part = address_parts[-1].strip()
-                        for country_name, country_code in country_map.items():
-                            if country_name in last_part:
-                                place_data['countryCode'] = country_code
-                                break
-                    
-                    # Default to US if not found and state exists (common for US addresses)
-                    if 'countryCode' not in place_data and place_data.get('state'):
-                        place_data['countryCode'] = 'US'
-            
-            # Extract phone with verification
-            phone_selector = 'button[data-item-id*="phone"]'
-            phone_elem = await page.query_selector(phone_selector)
-            if phone_elem:
-                phone_text = await phone_elem.get_attribute('aria-label')
-                if phone_text:
-                    phone = phone_text.replace('Phone: ', '').replace('Call phone number', '').strip()
-                    place_data['phone'] = phone
-                    place_data['phoneVerified'] = True  # Phone on Google Maps is verified
-            
-            # Extract website and email
-            website_selector = 'a[data-item-id="authority"]'
-            website_elem = await page.query_selector(website_selector)
-            if website_elem:
-                website_url = await website_elem.get_attribute('href')
-                place_data['website'] = website_url
-                
-                # Try to extract email and social media from website
-                if website_url:
-                    email = await self._extract_email_from_website(website_url)
-                    if email:
-                        place_data['email'] = email
-                        place_data['emailVerified'] = True  # Email from business website
-                    
-                    # Extract social media links
-                    social_links = await self._extract_social_media(page, website_url)
-                    if social_links:
-                        place_data['socialMedia'] = social_links
-            
-            # Extract opening hours
-            hours_button = await page.query_selector('button[data-item-id="oh"]')
-            if hours_button:
-                hours_text = await hours_button.get_attribute('aria-label')
-                place_data['openingHours'] = hours_text if hours_text else None
-            
-            # Extract price level
-            price_selector = 'span[aria-label*="Price"]'
-            price_elem = await page.query_selector(price_selector)
-            if price_elem:
-                price_text = await price_elem.text_content()
-                place_data['priceLevel'] = price_text.strip() if price_text else None
-            
-            # Extract images if requested
+                social_links = await self._extract_social_media(page, place_data['website'])
+                if social_links:
+                    place_data['socialMedia'] = social_links
+
+            # Images
             if extract_images:
                 place_data['images'] = await self._extract_images(page)
             
-            # Extract reviews if requested
+            # Reviews
             if extract_reviews:
                 place_data['reviews'] = await self._extract_reviews(page)
             
-            # Calculate total score based on rating and reviews
+            # Calculate score
             if 'rating' in place_data and 'reviewsCount' in place_data:
-                # Simple scoring: rating * log(reviews + 1)
-                import math
                 place_data['totalScore'] = round(place_data['rating'] * math.log(place_data['reviewsCount'] + 1, 10), 2)
             
-            logger.info(f"✅ Extracted: {place_data.get('title', 'Unknown')} - Phone: {'✓' if place_data.get('phone') else '✗'}, Email: {'✓' if place_data.get('email') else '✗'}")
+            logger.info(f"✅ Extracted: {place_data.get('title', 'Unknown')} | Phone: {place_data.get('phone')} | Addr: {place_data.get('address')}")
             return place_data
         
         except Exception as e:
@@ -400,87 +406,97 @@ class GoogleMapsScraperV3(BaseScraper):
         finally:
             await page.close()
     
+    def _parse_address(self, place_data: Dict[str, Any]):
+        """Helper to parse address components."""
+        try:
+            address_parts = place_data['address'].split(',')
+            if len(address_parts) >= 3:
+                place_data['city'] = address_parts[-2].strip()
+                state_zip = address_parts[-1].strip().split()
+                if state_zip:
+                    place_data['state'] = state_zip[0]
+            
+            # Simple country extraction
+            last_part = address_parts[-1].strip()
+            country_map = {
+                'USA': 'US', 'United States': 'US', 'US': 'US',
+                'India': 'IN', 'IN': 'IN',
+                'UK': 'GB', 'United Kingdom': 'GB',
+                'Canada': 'CA',
+                'Australia': 'AU'
+            }
+            
+            for name, code in country_map.items():
+                if name in last_part:
+                    place_data['countryCode'] = code
+                    break
+            
+            if 'countryCode' not in place_data and place_data.get('state'):
+                place_data['countryCode'] = 'US' # Default assumption
+                
+        except Exception as e:
+            logger.debug(f"Address parsing error: {e}")
+
     async def _extract_email_from_website(self, website_url: str) -> Optional[str]:
         """Extract email from business website."""
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(website_url, timeout=aiohttp.ClientTimeout(total=10)) as response:
+                async with session.get(website_url, timeout=aiohttp.ClientTimeout(total=10), headers={"User-Agent": "Mozilla/5.0"}) as response:
                     if response.status == 200:
                         html = await response.text()
                         soup = BeautifulSoup(html, 'html.parser')
                         
-                        # Look for email in common locations
                         # 1. mailto: links
                         mailto_links = soup.find_all('a', href=re.compile(r'^mailto:', re.I))
                         if mailto_links:
-                            email = mailto_links[0]['href'].replace('mailto:', '').split('?')[0]
-                            if self._is_valid_email(email):
-                                return email.lower()
+                            for link in mailto_links:
+                                email = link['href'].replace('mailto:', '').split('?')[0]
+                                if self._is_valid_email(email):
+                                    return email.lower()
                         
-                        # 2. Search in text content
+                        # 2. Text content
                         text_content = soup.get_text()
                         emails = self.email_pattern.findall(text_content)
-                        
-                        # Filter out common non-business emails
                         for email in emails:
                             if self._is_business_email(email):
                                 return email.lower()
-        
-        except Exception as e:
-            logger.debug(f"Email extraction error from {website_url}: {str(e)}")
-        
+        except:
+            return None
         return None
     
     def _is_valid_email(self, email: str) -> bool:
-        """Validate email format."""
         return bool(self.email_pattern.match(email))
     
     def _is_business_email(self, email: str) -> bool:
-        """Check if email looks like a business email."""
         email_lower = email.lower()
-        
-        # Exclude common non-business patterns
-        excluded_patterns = [
-            'example.com',
-            'test.com',
-            'domain.com',
-            'email.com',
-            'noreply',
-            'no-reply',
-            'donotreply',
-            'privacy@',
-            'legal@'
-        ]
-        
-        for pattern in excluded_patterns:
+        excluded = ['example.com', 'test.com', 'domain.com', 'sentry.io', 'wix.com', 'squarespace.com', 'react', 'node_modules']
+        for pattern in excluded:
             if pattern in email_lower:
                 return False
-        
+        # Filter out image extensions erroneously matched
+        if email_lower.endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
+            return False
         return True
     
     async def _extract_images(self, page: Page) -> List[str]:
-        """Extract image URLs from place page."""
+        """Extract image URLs."""
         images = []
         try:
             photos_button = await page.query_selector('button[aria-label*="Photo"]')
             if photos_button:
                 await photos_button.click()
                 await asyncio.sleep(2)
-                
                 img_elements = await page.query_selector_all('img[src*="googleusercontent"]')
                 for img in img_elements[:10]:
                     src = await img.get_attribute('src')
                     if src and src not in images:
                         images.append(src)
-                
                 await page.keyboard.press('Escape')
-        except Exception as e:
-            logger.debug(f"Error extracting images: {str(e)}")
-        
+        except: pass
         return images
     
     async def _extract_reviews(self, page: Page, max_reviews: int = 10) -> List[Dict[str, Any]]:
-        """Extract reviews from place page."""
+        """Extract reviews."""
         reviews = []
         try:
             reviews_button = await page.query_selector('button[aria-label*="Reviews"]')
@@ -488,94 +504,53 @@ class GoogleMapsScraperV3(BaseScraper):
                 await reviews_button.click()
                 await asyncio.sleep(2)
                 
-                for _ in range(3):
-                    await page.evaluate("""
-                        () => {
-                            const panel = document.querySelector('div[role="main"]');
-                            if (panel) {
-                                panel.scrollTop = panel.scrollHeight;
-                            }
-                        }
-                    """)
-                    await asyncio.sleep(1)
+                # Scroll a bit
+                await page.evaluate("""
+                    () => {
+                        const panel = document.querySelector('div[role="main"]');
+                        if (panel) panel.scrollTop = panel.scrollHeight;
+                    }
+                """)
+                await asyncio.sleep(1)
                 
                 review_elements = await page.query_selector_all('div[data-review-id]')
                 for elem in review_elements[:max_reviews]:
                     try:
                         review_data = {}
-                        
                         name_elem = await elem.query_selector('div.d4r55')
-                        if name_elem:
-                            review_data['reviewerName'] = await name_elem.text_content()
-                        
-                        rating_elem = await elem.query_selector('span[role="img"]')
-                        if rating_elem:
-                            rating_text = await rating_elem.get_attribute('aria-label')
-                            if rating_text:
-                                match = re.search(r'([0-9])', rating_text)
-                                if match:
-                                    review_data['rating'] = int(match.group(1))
+                        if name_elem: review_data['reviewerName'] = await name_elem.text_content()
                         
                         text_elem = await elem.query_selector('span.wiI7pd')
-                        if text_elem:
-                            review_data['text'] = await text_elem.text_content()
+                        if text_elem: review_data['text'] = await text_elem.text_content()
                         
-                        date_elem = await elem.query_selector('span.rsqaWe')
-                        if date_elem:
-                            review_data['date'] = await date_elem.text_content()
-                        
-                        if review_data:
-                            reviews.append(review_data)
-                    except:
-                        continue
-        except Exception as e:
-            logger.debug(f"Error extracting reviews: {str(e)}")
-        
+                        if review_data: reviews.append(review_data)
+                    except: continue
+        except: pass
         return reviews
     
     async def _extract_social_media(self, page: Page, website_url: str) -> Dict[str, str]:
-        """Extract social media links from Google Maps page and business website."""
+        """Extract social media links."""
         social_links = {}
-        
         try:
-            # 1. Check Google Maps page for social media links
-            page_content = await page.content()
-            
-            for platform, pattern in self.social_patterns.items():
-                matches = pattern.findall(page_content)
-                if matches:
-                    # Clean and normalize URL
-                    url = matches[0]
-                    if not url.startswith('http'):
-                        url = 'https://' + url
-                    social_links[platform] = url
-            
-            # 2. If website exists, check there too
-            if website_url and len(social_links) < 3:  # Only if we don't have many links yet
+            # Check Maps page content first (sometimes links are there)
+            # Then check website
+            if website_url:
                 try:
                     async with aiohttp.ClientSession() as session:
                         async with session.get(website_url, timeout=aiohttp.ClientTimeout(total=10)) as response:
                             if response.status == 200:
                                 html = await response.text()
-                                
                                 for platform, pattern in self.social_patterns.items():
-                                    if platform not in social_links:  # Don't override existing
-                                        matches = pattern.findall(html)
-                                        if matches:
-                                            url = matches[0]
-                                            if not url.startswith('http'):
-                                                url = 'https://' + url
-                                            social_links[platform] = url
-                except Exception as e:
-                    logger.debug(f"Error extracting social media from website: {str(e)}")
-        
-        except Exception as e:
-            logger.debug(f"Error extracting social media: {str(e)}")
-        
+                                    matches = pattern.findall(html)
+                                    if matches:
+                                        url = matches[0]
+                                        if not url.startswith('http'): url = 'https://' + url
+                                        social_links[platform] = url
+                except: pass
+        except: pass
         return social_links
     
     def _extract_place_id(self, url: str) -> Optional[str]:
-        """Extract place ID from Google Maps URL."""
         match = re.search(r'!1s([^!]+)', url)
         if match:
             return match.group(1)
