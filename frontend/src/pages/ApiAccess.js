@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { useAuth } from '../contexts/AuthContext';
 import { Loader2, Plus, Trash2, Copy, Check, Key } from 'lucide-react';
-import { useToast } from '../components/ui/use-toast';
+import { useToast } from '../hooks/use-toast';
 
 const ApiAccess = () => {
     const [keys, setKeys] = useState([]);

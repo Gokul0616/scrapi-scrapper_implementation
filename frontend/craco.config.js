@@ -91,7 +91,7 @@ webpackConfig.devServer = (devServerConfig) => {
     port: process.env.WDS_SOCKET_PORT || 443,
     pathname: '/ws'
   };
-  
+
   // Apply visual edits dev server setup if enabled
   if (config.enableVisualEdits && setupDevServer) {
     devServerConfig = setupDevServer(devServerConfig);
@@ -114,6 +114,7 @@ webpackConfig.devServer = (devServerConfig) => {
     };
   }
 
+  devServerConfig.historyApiFallback = true;
   return devServerConfig;
 };
 
