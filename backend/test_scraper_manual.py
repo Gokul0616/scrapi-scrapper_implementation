@@ -6,6 +6,9 @@ import os
 # Add backend directory to path
 sys.path.append('/app/backend')
 
+# Set Playwright browsers path
+os.environ['PLAYWRIGHT_BROWSERS_PATH'] = '/pw-browsers'
+
 from scrapers.googlemap.google_maps_scraper_v3 import GoogleMapsScraperV3
 from scrapers.scraper_engine import ScraperEngine
 
