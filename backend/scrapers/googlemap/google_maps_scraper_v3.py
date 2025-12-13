@@ -332,7 +332,8 @@ class GoogleMapsScraperV3(BaseScraper):
                 address_elem = await page.query_selector('button[data-item-id="address"]')
                 if address_elem:
                     address_text = await address_elem.text_content()
-                    place_data['address'] = address_text.strip()
+                    # Clean address: remove leading special chars/icons (like )
+                    place_data['address'] = re.sub(r'^[^\w\d]+', '', address_text.strip()).strip()
                 else:
                     # Fallback for address
                     content = await page.content()
