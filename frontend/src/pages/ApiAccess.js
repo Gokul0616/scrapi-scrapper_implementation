@@ -71,9 +71,18 @@ const ApiAccess = () => {
 
     const getWsUrl = (path) => {
         const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
-        const protocol = backendUrl.startsWith('https') ? 'wss://' : 'ws://';
-        const host = backendUrl.replace(/^https?:\/\//, '');
-        return `${protocol}${host}${path}`;
+        try {
+            const url = new URL(backendUrl);
+            const protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = url.host; // includes port if specified
+            return `${protocol}//${host}${path}`;
+        } catch (e) {
+            // Fallback for invalid URL
+            console.error('Invalid REACT_APP_BACKEND_URL:', backendUrl);
+            const protocol = backendUrl.startsWith('https') ? 'wss://' : 'ws://';
+            const host = backendUrl.replace(/^https?:\/\//, '');
+            return `${protocol}${host}${path}`;
+        }
     };
 
     const fetchKeys = async () => {
