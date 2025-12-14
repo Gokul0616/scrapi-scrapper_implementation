@@ -37,10 +37,11 @@ const ApiAccess = () => {
         if (!activeKeyId) return;
 
         const wsUrl = getWsUrl(`/api/ws/api-keys/${activeKeyId}/timer`);
+        console.log('🔌 Connecting to WebSocket:', wsUrl);
         const ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
-            console.log('Connected to timer WS');
+            console.log('✅ Connected to timer WebSocket');
         };
 
         ws.onmessage = (event) => {
