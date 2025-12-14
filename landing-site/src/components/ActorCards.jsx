@@ -72,7 +72,7 @@ const ActorCards = ({ actors }) => {
             href="#" 
             className="inline-flex items-center gap-2 text-gray-700 hover:text-gray-900 font-medium transition-colors"
           >
-            Browse 10,000+ Actors
+            Browse all scrapers
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>

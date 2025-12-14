@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowRight } from 'lucide-react';
 
-const integrationNames = ['Zapier', 'GitHub', 'Google Sheets', 'Pinecone', 'any app', 'Airbyte', 'MCP clients', 'Google Drive', 'Slack'];
+const integrationNames = ['Zapier', 'GitHub', 'Google Sheets', 'any app', 'Slack', 'Webhooks', 'Google Drive'];
 
 const IntegrationsSection = ({ integrations }) => {
   const [currentIntegration, setCurrentIntegration] = useState(0);
@@ -19,7 +19,7 @@ const IntegrationsSection = ({ integrations }) => {
         {/* Header */}
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-semibold text-gray-900 mb-4">
-            Easily integrate <span className="text-[#2BC56B]">{integrationNames[currentIntegration]}</span> with Actors
+            Easily integrate <span className="text-[#2BC56B]">{integrationNames[currentIntegration]}</span> with Scrapi
           </h2>
           
           <div className="flex items-center justify-center gap-4 mt-6">
@@ -33,7 +33,7 @@ const IntegrationsSection = ({ integrations }) => {
               href="#" 
               className="text-gray-900 font-medium hover:underline"
             >
-              View SDKs
+              View API docs
             </a>
           </div>
         </div>
