@@ -1,47 +1,62 @@
 import React, { useState } from 'react';
-import { Star } from 'lucide-react';
 
-const jsCode = `import { PuppeteerCrawler, Dataset } from "crawlee";
+const pythonCode = `from scrapi import ScrapiClient
 
-const crawler = new PuppeteerCrawler({
-  async requestHandler({ request, page, enqueueLinks }) {
-    await Dataset.pushData({
-      url: request.url,
-      title: await page.title(),
-    });
-    await enqueueLinks();
-  },
+# Initialize client
+client = ScrapiClient(api_key='your_api_key')
+
+# Run Google Maps scraper
+run = client.run_actor(
+    actor_id='google-maps-scraper-v2',
+    run_input={
+        'search_terms': ['restaurants in New York'],
+        'location': 'New York, NY',
+        'max_results': 100
+    }
+)
+
+# Get results
+results = client.get_dataset_items(run['defaultDatasetId'])
+for item in results:
+    print(item['name'], item['address'])`;
+
+const jsCode = `import { ScrapiClient } from '@scrapi/client';
+
+// Initialize client
+const client = new ScrapiClient({
+  apiKey: 'your_api_key'
 });
 
-await crawler.run(["https://crawlee.dev"]);`;
+// Run Amazon scraper
+const run = await client.runActor(
+  'amazon-product-scraper',
+  {
+    search_keywords: ['wireless headphones'],
+    max_results: 50,
+    extract_reviews: false
+  }
+);
 
-const pythonCode = `from crawlee.playwright_crawler import PlaywrightCrawler
-
-crawler = PlaywrightCrawler()
-
-@crawler.router.default_handler
-async def request_handler(context):
-    await context.push_data({
-        'url': context.request.url,
-        'title': await context.page.title()
-    })
-    await context.enqueue_links()
-
-await crawler.run(['https://crawlee.dev'])`;
+// Get results
+const dataset = await client.getDataset(
+  run.defaultDatasetId
+);
+const items = await dataset.listItems();
+console.log(items);`;
 
 const OpenSourceSection = ({ templates }) => {
-  const [activeTab, setActiveTab] = useState('javascript');
+  const [activeTab, setActiveTab] = useState('python');
 
   return (
     <section className="py-16 px-6 bg-white">
       <div className="max-w-[1400px] mx-auto">
         <h2 className="text-3xl md:text-4xl font-semibold text-gray-900 mb-4">
-          Build and deploy reliable scrapers
+          Developer-friendly API
         </h2>
         
         {/* Feature Pills */}
         <div className="flex flex-wrap gap-3 mb-12">
-          {['Open-source tools', 'Proxies', 'Unblocking', 'Cloud deployment', 'Monitoring', 'Data processing'].map((pill, idx) => (
+          {['RESTful API', 'Webhooks', 'Scheduling', 'Data Export', 'Proxy Support', 'Rate Limiting'].map((pill, idx) => (
             <span 
               key={idx}
               className="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-full"
@@ -54,24 +69,34 @@ const OpenSourceSection = ({ templates }) => {
         <div className="grid lg:grid-cols-2 gap-12 items-start">
           {/* Left - Text Content */}
           <div>
-            <h3 className="text-2xl font-semibold text-gray-900 mb-4">We love open source</h3>
+            <h3 className="text-2xl font-semibold text-gray-900 mb-4">Simple integration</h3>
             <p className="text-gray-600 mb-6 leading-relaxed">
-              Apify works great with both Python and JavaScript, as well as Playwright, Puppeteer, Selenium, Scrapy, and Crawlee - our own web crawling and browser automation library.
+              Scrapi works seamlessly with both Python and JavaScript. Our API is designed for developers,
+              with comprehensive documentation and code examples to get you started quickly.
             </p>
             
-            {/* Crawlee Badge */}
-            <div className="flex items-center gap-4 mb-8">
-              <img src="https://apify.com/img/logo/crawlee.svg" alt="Crawlee" className="h-8" />
-              <a 
-                href="https://github.com/apify/crawlee" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
-              >
-                <Star className="w-4 h-4" />
-                <span className="font-medium">Star</span>
-                <span className="text-gray-500">20,800</span>
-              </a>
+            <div className="space-y-4 mb-8">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#2BC56B] flex items-center justify-center text-white text-xs font-bold">✓</div>
+                <div>
+                  <h4 className="font-semibold text-gray-900">Easy Authentication</h4>
+                  <p className="text-sm text-gray-600">Simple API key authentication for secure access</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#2BC56B] flex items-center justify-center text-white text-xs font-bold">✓</div>
+                <div>
+                  <h4 className="font-semibold text-gray-900">Flexible Output</h4>
+                  <p className="text-sm text-gray-600">Export data in JSON, CSV, or Excel formats</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#2BC56B] flex items-center justify-center text-white text-xs font-bold">✓</div>
+                <div>
+                  <h4 className="font-semibold text-gray-900">Real-time Status</h4>
+                  <p className="text-sm text-gray-600">Monitor scraping jobs with webhooks and status APIs</p>
+                </div>
+              </div>
             </div>
             
             {/* Template Icons */}
@@ -94,16 +119,6 @@ const OpenSourceSection = ({ templates }) => {
             {/* Tabs */}
             <div className="flex border-b border-gray-700">
               <button 
-                onClick={() => setActiveTab('javascript')}
-                className={`px-4 py-3 text-sm font-medium transition-colors ${
-                  activeTab === 'javascript' 
-                    ? 'text-white bg-gray-800' 
-                    : 'text-gray-400 hover:text-gray-200'
-                }`}
-              >
-                JavaScript
-              </button>
-              <button 
                 onClick={() => setActiveTab('python')}
                 className={`px-4 py-3 text-sm font-medium transition-colors ${
                   activeTab === 'python' 
@@ -113,13 +128,23 @@ const OpenSourceSection = ({ templates }) => {
               >
                 Python
               </button>
+              <button 
+                onClick={() => setActiveTab('javascript')}
+                className={`px-4 py-3 text-sm font-medium transition-colors ${
+                  activeTab === 'javascript' 
+                    ? 'text-white bg-gray-800' 
+                    : 'text-gray-400 hover:text-gray-200'
+                }`}
+              >
+                JavaScript
+              </button>
             </div>
             
             {/* Code */}
             <div className="p-6 overflow-x-auto">
               <pre className="text-sm leading-relaxed">
                 <code className="text-gray-300 font-mono">
-                  {activeTab === 'javascript' ? jsCode : pythonCode}
+                  {activeTab === 'python' ? pythonCode : jsCode}
                 </code>
               </pre>
             </div>
