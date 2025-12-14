@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        .status {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .status.pending { background: #fff3cd; color: #856404; }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .info {
+            background: #e7f3ff;
+            padding: 15px;
+            border-left: 4px solid #2196F3;
+            margin: 20px 0;
+        }
+        .log {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+        }
+        .log-entry.info { color: #0066cc; }
+        .log-entry.success { color: #28a745; }
+        .log-entry.error { color: #dc3545; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔌 WebSocket Connection Test</h1>
+        
+        <div class="info">
+            <strong>Configuration:</strong><br>
+            Backend URL: <code id="backendUrl"></code><br>
+            WebSocket URL: <code id="wsUrl"></code>
+        </div>
+
+        <div id="status" class="status pending">
+            Status: Checking configuration...
+        </div>
+
+        <div>
+            <button onclick="testWebSocket()">Test WebSocket Connection</button>
+            <button onclick="clearLogs()">Clear Logs</button>
+        </div>
+
+        <h3>Connection Logs:</h3>
+        <div id="logs" class="log"></div>
+    </div>
+
+    <script>
+        // Configuration
+        const BACKEND_URL = 'https://link-diagnostic.preview.emergentagent.com';
+        
+        // Display configuration
+        document.getElementById('backendUrl').textContent = BACKEND_URL;
+        
+        // Function to get WebSocket URL
+        function getWsUrl(path) {
+            try {
+                const url = new URL(BACKEND_URL);
+                const protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+                const host = url.host;
+                return `${protocol}//${host}${path}`;
+            } catch (e) {
+                const protocol = BACKEND_URL.startsWith('https') ? 'wss://' : 'ws://';
+                const host = BACKEND_URL.replace(/^https?:\/\//, '');
+                return `${protocol}${host}${path}`;
+            }
+        }
+
+        // Test WebSocket URL
+        const testPath = '/api/test-ws';
+        const wsUrl = getWsUrl(testPath);
+        document.getElementById('wsUrl').textContent = wsUrl;
+
+        // Logging function
+        function log(message, type = 'info') {
+            const logsDiv = document.getElementById('logs');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            entry.textContent = `[${timestamp}] ${message}`;
+            logsDiv.appendChild(entry);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+
+        // Update status
+        function updateStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = 'Status: ' + message;
+            statusDiv.className = 'status ' + type;
+        }
+
+        // Test WebSocket connection
+        function testWebSocket() {
+            log('🔌 Testing WebSocket connection...', 'info');
+            updateStatus('Testing connection...', 'pending');
+
+            // For demo purposes, we'll test the dev server WebSocket
+            const devWsUrl = getWsUrl('/ws');
+            log(`Attempting to connect to: ${devWsUrl}`, 'info');
+
+            const ws = new WebSocket(devWsUrl);
+
+            ws.onopen = () => {
+                log('✅ WebSocket connection opened successfully!', 'success');
+                updateStatus('Connected successfully!', 'success');
+                
+                // Close after successful connection
+                setTimeout(() => {
+                    ws.close();
+                    log('Closing test connection...', 'info');
+                }, 1000);
+            };
+
+            ws.onerror = (error) => {
+                log('❌ WebSocket connection error!', 'error');
+                log(`Error details: ${error.type}`, 'error');
+                updateStatus('Connection failed! See logs for details.', 'error');
+            };
+
+            ws.onclose = (event) => {
+                if (event.wasClean) {
+                    log(`🔌 WebSocket closed cleanly (code: ${event.code})`, 'info');
+                } else {
+                    log(`❌ WebSocket connection died (code: ${event.code})`, 'error');
+                    updateStatus('Connection lost! Check configuration.', 'error');
+                }
+            };
+
+            ws.onmessage = (event) => {
+                log(`📨 Received message: ${event.data}`, 'info');
+            };
+        }
+
+        // Clear logs
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+            log('Logs cleared', 'info');
+        }
+
+        // Initial status
+        updateStatus('Ready to test. Click the button above.', 'pending');
+        log('WebSocket test page loaded', 'info');
+        log(`Backend URL configured as: ${BACKEND_URL}`, 'info');
+        log(`WebSocket URL will be: ${wsUrl}`, 'info');
+    </script>
+</body>
+</html>
