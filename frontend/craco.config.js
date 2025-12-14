@@ -119,6 +119,14 @@ webpackConfig.devServer = (devServerConfig) => {
     port: wsPort,
     pathname: '/ws'
   };
+  
+  console.log('🔌 WebSocket Configuration:', {
+    protocol: wsProtocol,
+    hostname: wsHostname,
+    port: wsPort,
+    pathname: '/ws',
+    fullUrl: `${wsProtocol}://${wsHostname}:${wsPort}/ws`
+  });
 
   // Apply visual edits dev server setup if enabled
   if (config.enableVisualEdits && setupDevServer) {
