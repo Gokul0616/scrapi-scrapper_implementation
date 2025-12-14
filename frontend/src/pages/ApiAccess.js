@@ -59,8 +59,12 @@ const ApiAccess = () => {
             }
         };
 
+        ws.onerror = (error) => {
+            console.error('❌ WebSocket error:', error);
+        };
+
         ws.onclose = () => {
-            console.log('Timer WS closed');
+            console.log('🔌 Timer WebSocket closed');
             setTimerData(null);
             if (activeKeyId) setActiveKeyId(null);
         };
