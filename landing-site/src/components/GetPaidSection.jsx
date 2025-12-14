@@ -4,16 +4,16 @@ import { Check, ArrowRight } from 'lucide-react';
 const GetPaidSection = () => {
   const benefits = [
     {
-      title: 'No upfront costs',
-      description: 'Publishing your Actor is free of charge—the customers pay for the computing resources. New creators get $500 free platform credits.',
+      title: 'Powerful Scrapers',
+      description: 'Access our collection of production-ready scrapers for Google Maps, Amazon, SEO analysis, and more.',
     },
     {
-      title: 'Rely on Apify infra',
-      description: "Actors scale automatically as you gain new users. You don't need to worry about compute, storage, proxies, or authentication.",
+      title: 'Scalable Infrastructure',
+      description: 'Built on cloud infrastructure that automatically scales based on your needs. No server management required.',
     },
     {
-      title: 'Billing is on us',
-      description: 'Handling payments, taxes, and invoicing is a painful part of running a SaaS. Apify does all that and sends you a net payout every month.',
+      title: 'Data Quality',
+      description: 'Get clean, structured data with automatic validation and error handling. Export in multiple formats.',
     },
   ];
 
@@ -24,32 +24,37 @@ const GetPaidSection = () => {
           {/* Left Content */}
           <div>
             <h2 className="text-3xl md:text-4xl font-semibold text-gray-900 mb-2">
-              Publish Actors. Get paid.
+              Built for scale and reliability
             </h2>
             <h3 className="text-2xl font-semibold text-gray-600 mb-6">
-              Reach thousands of new customers
+              Enterprise-grade web scraping
             </h3>
             <p className="text-gray-600 mb-8 leading-relaxed">
-              Building and running a SaaS is hard. Building an Actor and selling it on Apify Store is 10x easier. Get users from day one.
+              Scrapi handles the complexity of web scraping so you can focus on using the data.
+              Our platform manages proxies, handles anti-bot measures, and ensures reliable data extraction.
             </p>
             
             <a 
               href="#"
               className="inline-flex items-center gap-2 text-gray-900 font-medium hover:gap-3 transition-all"
             >
-              Learn more
+              Explore features
               <ArrowRight className="w-4 h-4" />
             </a>
           </div>
           
-          {/* Right - Animation Placeholder */}
-          <div className="bg-gray-50 rounded-xl p-8">
+          {/* Right - Illustration */}
+          <div className="bg-gradient-to-br from-[#2BC56B]/10 to-gray-50 rounded-xl p-8">
             <div className="aspect-square max-w-md mx-auto flex items-center justify-center">
-              <img 
-                src="https://apify.com/img/homepage/get-paid-animation.svg" 
-                alt="Get paid"
-                className="w-full h-full object-contain"
-              />
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-24 h-24 bg-[#2BC56B] rounded-2xl mb-6">
+                  <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Fast & Reliable</h3>
+                <p className="text-gray-600">Extract data at scale with confidence</p>
+              </div>
             </div>
           </div>
         </div>
