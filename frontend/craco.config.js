@@ -82,13 +82,41 @@ if (config.enableVisualEdits) {
 
 // Setup dev server
 webpackConfig.devServer = (devServerConfig) => {
-  // Configure WebSocket to use secure wss:// protocol
+  // Configure WebSocket dynamically based on REACT_APP_BACKEND_URL
   devServerConfig.client = devServerConfig.client || {};
   devServerConfig.client.overlay = false;
+  
+  // Extract hostname from REACT_APP_BACKEND_URL to ensure consistency
+  let wsHostname = 'localhost';
+  let wsProtocol = 'ws';
+  let wsPort = 3000;
+  
+  if (process.env.REACT_APP_BACKEND_URL) {
+    try {
+      const backendUrl = new URL(process.env.REACT_APP_BACKEND_URL);
+      wsHostname = backendUrl.hostname;
+      wsProtocol = backendUrl.protocol === 'https:' ? 'wss' : 'ws';
+      wsPort = backendUrl.protocol === 'https:' ? 443 : 80;
+    } catch (e) {
+      console.warn('Failed to parse REACT_APP_BACKEND_URL, using defaults');
+    }
+  }
+  
+  // Allow override via WDS_SOCKET_HOST if explicitly set
+  if (process.env.WDS_SOCKET_HOST) {
+    wsHostname = process.env.WDS_SOCKET_HOST;
+  }
+  if (process.env.WDS_SOCKET_PORT) {
+    wsPort = process.env.WDS_SOCKET_PORT;
+  }
+  if (process.env.WDS_SOCKET_PROTOCOL) {
+    wsProtocol = process.env.WDS_SOCKET_PROTOCOL;
+  }
+  
   devServerConfig.client.webSocketURL = {
-    protocol: 'wss',
-    hostname: process.env.WDS_SOCKET_HOST || 'visual-crawler-2.preview.emergentagent.com',
-    port: process.env.WDS_SOCKET_PORT || 443,
+    protocol: wsProtocol,
+    hostname: wsHostname,
+    port: wsPort,
     pathname: '/ws'
   };
 
