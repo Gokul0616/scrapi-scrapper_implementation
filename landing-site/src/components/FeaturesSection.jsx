@@ -22,23 +22,23 @@ const FeaturesSection = () => {
   const features = [
     {
       icon: 'https://apify.com/img/homepage/marketplace.svg',
-      title: 'Marketplace of 10,000+ Actors',
-      description: 'Apify has Actors for scraping websites, automating the web, and feeding AI with web data.',
-      linkText: 'Visit Apify Store',
+      title: 'Ready-to-use Scrapers',
+      description: 'Access powerful prebuilt scrapers for Google Maps, Amazon, SEO analysis, and more. Start extracting data in minutes.',
+      linkText: 'Explore scrapers',
       linkHref: '#',
     },
     {
       icon: 'https://apify.com/img/homepage/platform.svg',
-      title: 'Build and deploy your own',
-      description: 'Have a new use case? Start building new Actors with our code templates and extensive guides.',
-      linkText: 'Start building',
+      title: 'Scalable Infrastructure',
+      description: 'Built on robust cloud infrastructure with automatic scaling, proxy rotation, and unblocking capabilities.',
+      linkText: 'Learn more',
       linkHref: '#',
     },
     {
       icon: 'https://apify.com/img/homepage/professional-services.svg',
-      title: 'Or we can build it for you',
-      description: 'Rely on our experts to deliver and maintain custom web scraping solutions for you.',
-      linkText: 'Learn more',
+      title: 'Developer-friendly API',
+      description: 'Integrate scraping into your workflow with our RESTful API, webhooks, and comprehensive documentation.',
+      linkText: 'View API docs',
       linkHref: '#',
     },
   ];
@@ -47,7 +47,7 @@ const FeaturesSection = () => {
     <section className="py-16 px-6 bg-white">
       <div className="max-w-[1400px] mx-auto">
         <h2 className="text-3xl md:text-4xl font-semibold text-center text-gray-900 mb-12">
-          Not just a web scraping API
+          Everything you need for web scraping
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

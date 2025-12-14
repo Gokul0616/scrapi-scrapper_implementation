@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { ArrowRight } from 'lucide-react';
 
 const placeholderTexts = [
-  'Scrape TikTok profiles',
-  'Extract Google Maps data',
-  'Monitor Amazon prices',
-  'Crawl Instagram hashtags',
-  'Scrape LinkedIn profiles',
-  'Extract website content',
+  'Scrape Google Maps data',
+  'Extract Amazon products',
+  'Get SEO metadata',
+  'Monitor competitor prices',
+  'Generate business leads',
+  'Collect market insights',
 ];
 
 const HeroSection = () => {
@@ -40,27 +40,25 @@ const HeroSection = () => {
   return (
     <section className="pt-32 pb-16 px-6">
       <div className="max-w-[1400px] mx-auto">
-        {/* Challenge Badge */}
+        {/* Badge */}
         <div className="flex justify-center mb-8">
-          <a 
-            href="#" 
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-full transition-colors group"
+          <div
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-full"
           >
-            <span className="px-2 py-0.5 bg-[#2BC56B] text-white text-xs font-semibold rounded">Build</span>
-            <span className="text-sm text-gray-700">Win big in $1M Challenge</span>
-            <ArrowRight className="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
-          </a>
+            <span className="px-2 py-0.5 bg-[#2BC56B] text-white text-xs font-semibold rounded">New</span>
+            <span className="text-sm text-gray-700">Powerful web scraping made simple</span>
+          </div>
         </div>
         
         {/* Main Heading */}
         <h1 className="text-center text-[56px] md:text-[64px] font-semibold leading-[1.1] tracking-[-0.02em] text-gray-900 mb-6">
-          Get real-time web data for your AI
+          Extract web data with precision
         </h1>
         
         {/* Subtitle */}
         <p className="text-center text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-10 leading-relaxed">
-          Apify Actors scrape up-to-date web data from any website for AI apps and agents,
-          social media monitoring, competitive intelligence, lead generation, and product research.
+          Scrapi provides powerful web scraping tools for businesses, developers, and researchers.
+          Extract data from Google Maps, Amazon, and any website with our ready-to-use scrapers.
         </p>
         
         {/* Search Box */}
