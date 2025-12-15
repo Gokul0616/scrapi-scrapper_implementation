@@ -56,8 +56,8 @@ const WorldMapVisual = () => (
       {/* Simple world map outline */}
       <ellipse cx="400" cy="200" rx="350" ry="170" fill="none" stroke="#94a3b8" strokeWidth="1" strokeDasharray="4" />
       {/* Proxy nodes - dots around the map */}
-      {[
-        { x: 150, y: 120 }, { x: 200, y: 180 }, { x: 280, y: 140 }, { x: 320, y: 200 },
+      {
+        [ { x: 150, y: 120 }, { x: 200, y: 180 }, { x: 280, y: 140 }, { x: 320, y: 200 },
         { x: 400, y: 100 }, { x: 450, y: 150 }, { x: 500, y: 180 }, { x: 550, y: 120 },
         { x: 600, y: 200 }, { x: 650, y: 140 }, { x: 350, y: 280 }, { x: 450, y: 260 },
         { x: 550, y: 300 }, { x: 250, y: 250 }, { x: 380, y: 180 }, { x: 480, y: 220 },
@@ -442,19 +442,19 @@ const OpenSourceSection = ({ templates }) => {
   return (
     <section className="py-16 px-6 bg-white" data-testid="open-source-section">
       <div className="max-w-[1400px] mx-auto">
-        <h2 className="text-3xl md:text-4xl font-semibold text-gray-900 mb-8 text-center">
+        <h2 className="text-3xl md:text-5xl font-normal text-gray-900 mb-8 text-center" style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', fontWeight: 400, letterSpacing: '-0.02em' }}>
           Build and deploy reliable scrapers
         </h2>
         
-        {/* Tab Navigation - Apify style with underline */}
-        <div className="flex justify-center mb-12">
-          <div className="inline-flex border-b border-gray-200">
+        {/* Tab Navigation - Mobile Scrollable */}
+        <div className="flex justify-center mb-12 overflow-x-auto">
+          <div className="inline-flex border-b border-gray-200 min-w-max">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 data-testid={`tab-${tab.id}`}
-                className={`px-6 py-3 text-sm font-medium transition-all relative ${
+                className={`px-4 md:px-6 py-3 text-sm font-medium transition-all relative whitespace-nowrap ${
                   activeTab === tab.id
                     ? 'text-gray-900'
                     : 'text-gray-500 hover:text-gray-700'
@@ -472,8 +472,8 @@ const OpenSourceSection = ({ templates }) => {
         <div className="grid lg:grid-cols-2 gap-12 items-start">
           {/* Left - Text Content */}
           <div className="lg:pt-8">
-            <h3 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-4">{content.title}</h3>
-            <p className="text-gray-600 mb-8 leading-relaxed text-lg">
+            <h3 className="text-2xl md:text-3xl font-normal text-gray-900 mb-4" style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', fontWeight: 400, letterSpacing: '-0.01em' }}>{content.title}</h3>
+            <p className="text-gray-600 mb-8 leading-relaxed text-base md:text-lg">
               {content.description}
             </p>
             

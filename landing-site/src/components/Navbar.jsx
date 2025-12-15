@@ -48,12 +48,12 @@ const MegaMenuDropdown = ({ label, content, position = 'left' }) => {
       onMouseLeave={handleMouseLeave}
     >
       <button 
-        className="flex items-center gap-1 text-gray-700 hover:text-gray-900 transition-colors text-[15px] font-medium py-2"
+        className="flex items-center gap-1 text-gray-700 hover:text-gray-900 transition-colors text-sm font-medium py-2"
         data-testid={`nav-${label.toLowerCase()}-button`}
       >
         {label}
         <ChevronDown 
-          className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
+          className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
         />
       </button>
       
@@ -64,7 +64,7 @@ const MegaMenuDropdown = ({ label, content, position = 'left' }) => {
         }`}
         style={{ zIndex: 9999 }}
       >
-        <div className="bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-lg shadow-2xl border border-gray-100 overflow-hidden">
           {content}
         </div>
       </div>
@@ -72,29 +72,29 @@ const MegaMenuDropdown = ({ label, content, position = 'left' }) => {
   );
 };
 
-// Menu Item Component
+// Menu Item Component with Apify sizing
 const MenuItem = ({ icon: Icon, title, description, href = '#', badge = null }) => (
   <a
     href={href}
-    className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors group rounded-lg"
+    className="flex items-start gap-3 px-3 py-2.5 hover:bg-gray-50 transition-colors group rounded-md"
     data-testid={`menu-item-${title.toLowerCase().replace(/\s+/g, '-')}`}
   >
-    <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-gray-100 rounded-lg group-hover:bg-orange-50 transition-colors">
-      <Icon className="w-5 h-5 text-gray-600 group-hover:text-orange-500 transition-colors" />
+    <div className="flex-shrink-0 w-9 h-9 flex items-center justify-center bg-gray-100 rounded-md group-hover:bg-orange-50 transition-colors">
+      <Icon className="w-4 h-4 text-gray-600 group-hover:text-orange-500 transition-colors" />
     </div>
     <div className="flex-1 min-w-0">
       <div className="flex items-center gap-2">
-        <h4 className="text-sm font-semibold text-gray-900 group-hover:text-orange-500 transition-colors">
+        <h4 className="text-sm font-medium text-gray-900 group-hover:text-orange-500 transition-colors">
           {title}
         </h4>
         {badge && (
-          <span className="px-2 py-0.5 text-xs font-medium bg-gray-900 text-white rounded-full">
+          <span className="px-1.5 py-0.5 text-[10px] font-medium bg-gray-900 text-white rounded">
             {badge}
           </span>
         )}
       </div>
       {description && (
-        <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
+        <p className="text-xs text-gray-500 mt-0.5 line-clamp-2 leading-relaxed">
           {description}
         </p>
       )}
@@ -104,21 +104,21 @@ const MenuItem = ({ icon: Icon, title, description, href = '#', badge = null }) 
 
 // Section Header Component
 const SectionHeader = ({ title }) => (
-  <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 pt-4 pb-2">
+  <h3 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-3 pt-3 pb-1.5">
     {title}
   </h3>
 );
 
 // Featured Card Component
 const FeaturedCard = ({ title, description, cta, ctaLink = '#', image }) => (
-  <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4 border border-orange-200">
+  <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-md p-3.5 border border-orange-200">
     {image && (
-      <div className="mb-3 rounded-lg overflow-hidden h-32 bg-gradient-to-r from-orange-400 to-orange-600 flex items-center justify-center">
-        <Rocket className="w-12 h-12 text-white" />
+      <div className="mb-2.5 rounded-md overflow-hidden h-28 bg-gradient-to-r from-orange-400 to-orange-600 flex items-center justify-center">
+        <Rocket className="w-10 h-10 text-white" />
       </div>
     )}
-    <h4 className="text-sm font-bold text-gray-900 mb-1">{title}</h4>
-    <p className="text-xs text-gray-600 mb-3">{description}</p>
+    <h4 className="text-sm font-semibold text-gray-900 mb-1">{title}</h4>
+    <p className="text-xs text-gray-600 mb-2.5 leading-relaxed">{description}</p>
     <a
       href={ctaLink}
       className="inline-flex items-center text-xs font-semibold text-orange-600 hover:text-orange-700 transition-colors"
@@ -133,8 +133,8 @@ const FeaturedCard = ({ title, description, cta, ctaLink = '#', image }) => (
 
 // Product Dropdown Content
 const ProductDropdown = () => (
-  <div className="w-[750px] p-4">
-    <div className="grid grid-cols-3 gap-6">
+  <div className="w-[750px] p-3">
+    <div className="grid grid-cols-3 gap-4">
       {/* Column 1: Core Features */}
       <div>
         <SectionHeader title="Core Features" />
@@ -206,8 +206,8 @@ const ProductDropdown = () => (
 
 // Solutions Dropdown Content
 const SolutionsDropdown = () => (
-  <div className="w-[650px] p-4">
-    <div className="grid grid-cols-2 gap-6">
+  <div className="w-[650px] p-3">
+    <div className="grid grid-cols-2 gap-4">
       {/* Column 1: By Industry */}
       <div>
         <SectionHeader title="By Industry" />
@@ -263,8 +263,8 @@ const SolutionsDropdown = () => (
 
 // Developers Dropdown Content
 const DevelopersDropdown = () => (
-  <div className="w-[800px] p-4">
-    <div className="grid grid-cols-12 gap-6">
+  <div className="w-[800px] p-3">
+    <div className="grid grid-cols-12 gap-4">
       {/* Column 1: Get Started - spans 4 columns */}
       <div className="col-span-4">
         <SectionHeader title="Get Started" />
@@ -334,8 +334,8 @@ const DevelopersDropdown = () => (
 
 // Resources Dropdown Content
 const ResourcesDropdown = () => (
-  <div className="w-[750px] p-4">
-    <div className="grid grid-cols-12 gap-6">
+  <div className="w-[750px] p-3">
+    <div className="grid grid-cols-12 gap-4">
       {/* Column 1: Resources - spans 4 columns */}
       <div className="col-span-4">
         <SectionHeader title="Resources" />
@@ -401,14 +401,14 @@ const ResourcesDropdown = () => (
       <div className="col-span-4">
         <div className="h-full flex flex-col">
           <div className="flex-1" />
-          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
-            <div className="mb-3 flex items-center justify-center">
-              <div className="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center">
-                <Users className="w-8 h-8 text-white" />
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-md p-3.5 border border-purple-200">
+            <div className="mb-2.5 flex items-center justify-center">
+              <div className="w-14 h-14 bg-purple-500 rounded-full flex items-center justify-center">
+                <Users className="w-7 h-7 text-white" />
               </div>
             </div>
-            <h4 className="text-sm font-bold text-gray-900 mb-1 text-center">Join our Discord</h4>
-            <p className="text-xs text-gray-600 mb-3 text-center">Talk to scraping experts</p>
+            <h4 className="text-sm font-semibold text-gray-900 mb-1 text-center">Join our Discord</h4>
+            <p className="text-xs text-gray-600 mb-2.5 text-center leading-relaxed">Talk to scraping experts</p>
             <a
               href="#"
               className="w-full inline-flex items-center justify-center text-xs font-semibold text-purple-600 hover:text-purple-700 transition-colors"
@@ -459,7 +459,7 @@ const Navbar = () => {
           />
           <a 
             href="#" 
-            className="text-gray-700 hover:text-gray-900 transition-colors text-[15px] font-medium"
+            className="text-gray-700 hover:text-gray-900 transition-colors text-sm font-medium"
             data-testid="nav-pricing-link"
           >
             Pricing
@@ -470,7 +470,7 @@ const Navbar = () => {
         <div className="flex items-center gap-4">
           <a 
             href="#" 
-            className="hidden md:inline-block text-gray-700 hover:text-gray-900 transition-colors text-[15px] font-medium"
+            className="hidden md:inline-block text-gray-700 hover:text-gray-900 transition-colors text-sm font-medium"
             data-testid="nav-login-link"
           >
             Log in
