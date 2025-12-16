@@ -440,32 +440,34 @@ const OpenSourceSection = ({ templates }) => {
   };
 
   return (
-    <section className="py-16 px-6 bg-white" data-testid="open-source-section">
+    <section className="py-16 px-6 bg-white overflow-hidden" data-testid="open-source-section">
       <div className="max-w-[1400px] mx-auto">
         <h2 className="text-3xl md:text-5xl font-normal text-gray-900 mb-8 text-center" style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', fontWeight: 400, letterSpacing: '-0.02em' }}>
           Build and deploy reliable scrapers
         </h2>
         
-        {/* Tab Navigation - Mobile Scrollable */}
-        <div className="flex justify-center mb-12 overflow-x-auto">
-          <div className="inline-flex border-b border-gray-200 min-w-max">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                data-testid={`tab-${tab.id}`}
-                className={`px-4 md:px-6 py-3 text-sm font-medium transition-all relative whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? 'text-gray-900'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                {tab.label}
-                {activeTab === tab.id && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900"></div>
-                )}
-              </button>
-            ))}
+        {/* Tab Navigation - Mobile Scrollable without visible scrollbar */}
+        <div className="flex justify-center mb-12 -mx-6 px-6">
+          <div className="overflow-x-auto scrollbar-hide w-full">
+            <div className="inline-flex border-b border-gray-200 min-w-max mx-auto">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  data-testid={`tab-${tab.id}`}
+                  className={`px-4 md:px-6 py-3 text-sm font-medium transition-all relative whitespace-nowrap ${
+                    activeTab === tab.id
+                      ? 'text-gray-900'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  {tab.label}
+                  {activeTab === tab.id && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900"></div>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
         
