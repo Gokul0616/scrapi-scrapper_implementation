@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Layers, Zap, Database, Clock, Target, Briefcase, Building2, GraduationCap, Heart, Search, TrendingUp, BarChart3, ShoppingCart, FileText, Code, BookOpen, Rocket, Wrench, DollarSign, HelpCircle, Lightbulb, FileCheck, MessageSquare, Info, Mail, Users, Calendar, Handshake, BriefcaseBusiness } from 'lucide-react';
+import { ChevronDown, ChevronRight, Menu, X, ArrowLeft, Layers, Zap, Database, Clock, Target, Briefcase, Building2, GraduationCap, Heart, Search, TrendingUp, BarChart3, ShoppingCart, FileText, Code, BookOpen, Rocket, Wrench, DollarSign, HelpCircle, Lightbulb, FileCheck, MessageSquare, Info, Mail, Users, Calendar, Handshake, BriefcaseBusiness } from 'lucide-react';
 
 const ScrapiLogo = () => (
   <img src="/logo.png" alt="Scrapi Logo" width="32" height="32" />
