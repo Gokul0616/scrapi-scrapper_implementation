@@ -395,12 +395,12 @@ const OpenSourceSection = ({ templates }) => {
           </div>
           
           {/* Code */}
-          <div className="p-6 overflow-x-auto">
-            <pre className="text-sm leading-relaxed">
+          <div className="p-4 md:p-6 overflow-x-auto scrollbar-hide">
+            <pre className="text-xs md:text-sm leading-relaxed">
               <code className="text-gray-300 font-mono">
                 {(activeCodeTab === 'javascript' ? jsCode : pythonCode).split('\n').map((line, i) => (
                   <div key={i} className="flex">
-                    <span className="text-gray-500 w-6 text-right mr-4 select-none">{i + 1}</span>
+                    <span className="text-gray-500 w-6 text-right mr-3 md:mr-4 select-none">{i + 1}</span>
                     <span>{line}</span>
                   </div>
                 ))}
