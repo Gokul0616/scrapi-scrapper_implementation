@@ -2,7 +2,13 @@ import React from 'react';
 import { Twitter, Linkedin, Github, Youtube } from 'lucide-react';
 
 const ScrapiLogo = () => (
-  <img src="/logo.png" alt="Scrapi Logo" width="28" height="28" />
+  <img 
+    src="/logo.png" 
+    alt="Scrapi Logo" 
+    width="28" 
+    height="28" 
+    className="brightness-0 invert"
+  />
 );
 
 const Footer = () => {
