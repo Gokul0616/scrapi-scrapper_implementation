@@ -479,31 +479,31 @@ const OpenSourceSection = ({ templates }) => {
             {activeTab === 'open-source' && (
               <>
                 {/* Crawlee badge */}
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
-                    <svg className="w-6 h-6" viewBox="0 0 24 24">
+                <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-4 md:mb-6">
+                  <div className="flex items-center gap-2 px-2.5 md:px-3 py-1.5 md:py-2 bg-gray-50 rounded-lg border border-gray-200">
+                    <svg className="w-5 h-5 md:w-6 md:h-6" viewBox="0 0 24 24">
                       <path fill="#2BC56B" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                     </svg>
-                    <span className="font-semibold text-gray-800">crawlee</span>
+                    <span className="font-semibold text-gray-800 text-sm md:text-base">crawlee</span>
                   </div>
                   <a href="https://github.com/apify/crawlee" target="_blank" rel="noopener noreferrer" 
-                     className="flex items-center gap-2 px-3 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors">
-                    <Github className="w-4 h-4" />
-                    <span className="text-sm text-gray-600">Star</span>
+                     className="flex items-center gap-1.5 md:gap-2 px-2.5 md:px-3 py-1.5 md:py-2 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors">
+                    <Github className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                    <span className="text-xs md:text-sm text-gray-600">Star</span>
                   </a>
-                  <span className="text-sm font-medium text-gray-700">20,804</span>
+                  <span className="text-xs md:text-sm font-medium text-gray-700">20,804</span>
                 </div>
                 
                 {/* Template Icons */}
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-2 md:gap-3">
                   {templates?.map((template, idx) => (
                     <a 
                       key={idx}
                       href="#"
-                      className="flex items-center gap-2 px-3 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200"
+                      className="flex items-center gap-1.5 md:gap-2 px-2.5 md:px-3 py-1.5 md:py-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200"
                     >
-                      <img src={template.icon} alt={template.name} className="w-5 h-5" />
-                      <span className="text-sm text-gray-700">{template.name}</span>
+                      <img src={template.icon} alt={template.name} className="w-4 h-4 md:w-5 md:h-5" />
+                      <span className="text-xs md:text-sm text-gray-700">{template.name}</span>
                     </a>
                   ))}
                 </div>
