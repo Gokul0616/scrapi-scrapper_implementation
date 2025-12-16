@@ -89,7 +89,7 @@ const WorldMapVisual = () => (
 
 // Monitoring Chart Visual
 const MonitoringVisual = () => (
-  <div className="flex gap-4 h-full">
+  <div className="flex flex-col md:flex-row gap-4 h-full">
     {/* Chart area */}
     <div className="flex-1 bg-white rounded-lg p-4 shadow-sm border border-gray-200">
       <div className="flex items-center justify-between mb-4">
@@ -117,7 +117,7 @@ const MonitoringVisual = () => (
       </svg>
     </div>
     {/* Alert panel */}
-    <div className="w-56 bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+    <div className="w-full md:w-56 bg-white rounded-lg p-4 shadow-sm border border-gray-200">
       <div className="flex items-center gap-2 mb-3">
         <AlertCircle className="w-4 h-4 text-gray-600" />
         <span className="text-sm font-medium text-gray-700">Create alert</span>
