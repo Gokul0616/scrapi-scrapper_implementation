@@ -338,8 +338,8 @@ const OpenSourceSection = ({ templates }) => {
                 </div>
                 <span className="text-gray-400 text-xs ml-2">Terminal</span>
               </div>
-              <div className="p-6 overflow-x-auto">
-                <pre className="text-sm leading-relaxed font-mono">
+              <div className="p-4 md:p-6 overflow-x-auto scrollbar-hide">
+                <pre className="text-xs md:text-sm leading-relaxed font-mono">
                   {deploymentOutput.split('\n').map((line, i) => (
                     <div key={i} className={
                       line.startsWith('>') ? 'text-green-400' :
