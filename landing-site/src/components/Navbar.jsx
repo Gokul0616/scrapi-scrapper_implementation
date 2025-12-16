@@ -578,86 +578,80 @@ const MobileMenu = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        {/* Menu Content */}
-        <div className="overflow-y-auto h-[calc(100vh-64px)]">
+        {/* Menu Content with sliding animation */}
+        <div className="overflow-y-auto h-[calc(100vh-64px)] relative">
           {/* Main Menu View */}
           <div
-            className={`transition-transform duration-300 ease-out ${
+            className={`absolute inset-0 bg-white transition-transform duration-300 ease-out ${
               activeSubmenu ? '-translate-x-full' : 'translate-x-0'
             }`}
           >
-            {!activeSubmenu && (
-              <div>
-                {/* CTA Buttons */}
-                <div className="px-6 py-6 space-y-3 border-b border-gray-200">
-                  <a
-                    href="#"
-                    className="block w-full px-4 py-3 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition-colors text-center"
-                    data-testid="mobile-menu-get-started-button"
-                  >
-                    Get started
-                  </a>
-                  <a
-                    href="#"
-                    className="block w-full px-4 py-3 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 transition-colors text-center"
-                    data-testid="mobile-menu-login-button"
-                  >
-                    Log in
-                  </a>
-                </div>
+            {/* CTA Buttons */}
+            <div className="px-6 py-6 space-y-3 border-b border-gray-200">
+              <a
+                href="#"
+                className="block w-full px-4 py-3 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition-colors text-center"
+                data-testid="mobile-menu-get-started-button"
+              >
+                Get started
+              </a>
+              <a
+                href="#"
+                className="block w-full px-4 py-3 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 transition-colors text-center"
+                data-testid="mobile-menu-login-button"
+              >
+                Log in
+              </a>
+            </div>
 
-                {/* Menu Items */}
-                <div className="py-2">
-                  <MobileMenuItem
-                    title="Product"
-                    hasSubmenu
-                    onClick={() => setActiveSubmenu('product')}
-                  />
-                  <MobileMenuItem
-                    title="Solutions"
-                    hasSubmenu
-                    onClick={() => setActiveSubmenu('solutions')}
-                  />
-                  <MobileMenuItem
-                    title="Developers"
-                    hasSubmenu
-                    onClick={() => setActiveSubmenu('developers')}
-                  />
-                  <MobileMenuItem
-                    title="Resources"
-                    hasSubmenu
-                    onClick={() => setActiveSubmenu('resources')}
-                  />
-                  <MobileMenuItem title="Pricing" onClick={() => {}} />
-                  <MobileMenuItem
-                    title="Contact sales"
-                    onClick={() => {}}
-                  />
-                </div>
-              </div>
-            )}
+            {/* Menu Items */}
+            <div className="py-2">
+              <MobileMenuItem
+                title="Product"
+                hasSubmenu
+                onClick={() => setActiveSubmenu('product')}
+              />
+              <MobileMenuItem
+                title="Solutions"
+                hasSubmenu
+                onClick={() => setActiveSubmenu('solutions')}
+              />
+              <MobileMenuItem
+                title="Developers"
+                hasSubmenu
+                onClick={() => setActiveSubmenu('developers')}
+              />
+              <MobileMenuItem
+                title="Resources"
+                hasSubmenu
+                onClick={() => setActiveSubmenu('resources')}
+              />
+              <MobileMenuItem title="Pricing" onClick={() => {}} />
+              <MobileMenuItem
+                title="Contact sales"
+                onClick={() => {}}
+              />
+            </div>
           </div>
 
-          {/* Submenu View */}
-          {activeSubmenu && (
-            <div
-              className={`absolute top-16 left-0 right-0 bottom-0 bg-white transition-transform duration-300 ease-out ${
-                activeSubmenu ? 'translate-x-0' : 'translate-x-full'
-              }`}
-            >
-              <div className="py-2">
-                {submenuContent[activeSubmenu]?.map((item, index) => (
-                  <MobileSubmenuItem
-                    key={index}
-                    icon={item.icon}
-                    title={item.title}
-                    description={item.description}
-                    onClick={() => {}}
-                  />
-                ))}
-              </div>
+          {/* Submenu View with sliding animation from right */}
+          <div
+            className={`absolute inset-0 bg-white transition-transform duration-300 ease-out overflow-y-auto ${
+              activeSubmenu ? 'translate-x-0' : 'translate-x-full'
+            }`}
+          >
+            <div className="py-2">
+              {submenuContent[activeSubmenu]?.map((item, index) => (
+                <MobileSubmenuItem
+                  key={index}
+                  icon={item.icon}
+                  title={item.title}
+                  description={item.description}
+                  onClick={() => {}}
+                />
+              ))}
             </div>
-          )}
+          </div>
         </div>
       </div>
     </>
