@@ -440,9 +440,9 @@ const OpenSourceSection = ({ templates }) => {
   };
 
   return (
-    <section className="py-16 px-6 bg-white overflow-hidden" data-testid="open-source-section">
+    <section className="py-12 md:py-16 px-4 md:px-6 bg-white overflow-hidden" data-testid="open-source-section">
       <div className="max-w-[1400px] mx-auto">
-        <h2 className="text-3xl md:text-5xl font-normal text-gray-900 mb-8 text-center" style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', fontWeight: 400, letterSpacing: '-0.02em' }}>
+        <h2 className="text-2xl md:text-4xl lg:text-5xl font-normal text-gray-900 mb-6 md:mb-8 text-center px-2" style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', fontWeight: 400, letterSpacing: '-0.02em' }}>
           Build and deploy reliable scrapers
         </h2>
         
