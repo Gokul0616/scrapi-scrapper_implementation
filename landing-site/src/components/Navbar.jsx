@@ -458,7 +458,7 @@ const MobileMenuItem = ({ icon: Icon, title, onClick, hasSubmenu, badge }) => (
 const MobileSubmenuItem = ({ icon: Icon, title, description, onClick }) => (
   <button
     onClick={onClick}
-    className="w-full flex items-start gap-3 px-6 py-4 hover:bg-gray-50 transition-colors text-left border-b border-gray-100"
+    className="w-full flex items-start gap-3 px-6 py-3 hover:bg-gray-50 transition-colors text-left border-b border-gray-100"
     data-testid={`mobile-submenu-item-${title.toLowerCase().replace(/\s+/g, '-')}`}
   >
     {Icon && (
@@ -469,7 +469,7 @@ const MobileSubmenuItem = ({ icon: Icon, title, description, onClick }) => (
     <div className="flex-1">
       <h4 className="text-sm font-medium text-gray-900">{title}</h4>
       {description && (
-        <p className="text-xs text-gray-500 mt-1">{description}</p>
+        <p className="text-xs text-gray-500 mt-0.5">{description}</p>
       )}
     </div>
   </button>
