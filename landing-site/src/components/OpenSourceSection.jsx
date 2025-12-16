@@ -513,7 +513,7 @@ const OpenSourceSection = ({ templates }) => {
             {activeTab !== 'open-source' && (
               <a 
                 href="#"
-                className="inline-block px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                className="inline-block px-5 md:px-6 py-2 md:py-2.5 border border-gray-300 text-gray-700 text-sm md:text-base font-medium rounded-lg hover:bg-gray-50 transition-colors"
                 data-testid={`learn-more-${activeTab}`}
               >
                 Learn more
@@ -522,7 +522,7 @@ const OpenSourceSection = ({ templates }) => {
           </div>
           
           {/* Right - Visual Content */}
-          <div>
+          <div className="w-full overflow-hidden px-2 md:px-0">
             {renderVisual()}
           </div>
         </div>
