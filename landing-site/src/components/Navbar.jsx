@@ -53,16 +53,21 @@ const MegaMenuDropdown = ({ label, content, position = 'left' }) => {
       >
         {label}
         <ChevronDown 
-          className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
+          className={`w-3.5 h-3.5 transition-transform duration-300 ease-out ${isOpen ? 'rotate-180' : ''}`} 
         />
       </button>
       
-      {/* Mega Menu Dropdown */}
+      {/* Mega Menu Dropdown with Apify-style transitions */}
       <div
-        className={`absolute top-full ${getDropdownPosition()} mt-1 transition-all duration-200 ${
-          isOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'
+        className={`absolute top-full ${getDropdownPosition()} mt-1 transition-all duration-300 ease-out ${
+          isOpen 
+            ? 'opacity-100 visible translate-y-0 scale-100' 
+            : 'opacity-0 invisible -translate-y-4 scale-95 pointer-events-none'
         }`}
-        style={{ zIndex: 9999 }}
+        style={{ 
+          zIndex: 9999,
+          transformOrigin: position === 'right' ? 'top right' : position === 'center' ? 'top center' : 'top left'
+        }}
       >
         <div className="bg-white rounded-lg shadow-2xl border border-gray-100 overflow-hidden">
           {content}
