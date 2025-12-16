@@ -434,7 +434,7 @@ const ResourcesDropdown = () => (
 const MobileMenuItem = ({ icon: Icon, title, onClick, hasSubmenu, badge }) => (
   <button
     onClick={onClick}
-    className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors text-left border-b border-gray-100"
+    className="w-full flex items-center justify-between px-6 py-3.5 hover:bg-gray-50 transition-colors text-left border-b border-gray-100"
     data-testid={`mobile-menu-item-${title.toLowerCase().replace(/\s+/g, '-')}`}
   >
     <div className="flex items-center gap-3">
