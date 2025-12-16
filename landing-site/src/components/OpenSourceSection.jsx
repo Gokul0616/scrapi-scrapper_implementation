@@ -446,25 +446,22 @@ const OpenSourceSection = ({ templates }) => {
           Build and deploy reliable scrapers
         </h2>
         
-        {/* Tab Navigation - Mobile Scrollable without visible scrollbar */}
+        {/* Tab Navigation - Pill Style like Apify */}
         <div className="flex justify-center mb-12 -mx-6 px-6">
           <div className="overflow-x-auto scrollbar-hide w-full">
-            <div className="inline-flex border-b border-gray-200 min-w-max mx-auto">
+            <div className="inline-flex gap-2 min-w-max mx-auto">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   data-testid={`tab-${tab.id}`}
-                  className={`px-4 md:px-6 py-3 text-sm font-medium transition-all relative whitespace-nowrap ${
+                  className={`px-5 md:px-6 py-2.5 text-sm font-medium transition-all whitespace-nowrap rounded-lg ${
                     activeTab === tab.id
-                      ? 'text-gray-900'
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? 'bg-white text-gray-900 shadow-sm border border-gray-200'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900'
                   }`}
                 >
                   {tab.label}
-                  {activeTab === tab.id && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900"></div>
-                  )}
                 </button>
               ))}
             </div>
