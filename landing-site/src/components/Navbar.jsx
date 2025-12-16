@@ -579,25 +579,25 @@ const MobileMenu = ({ isOpen, onClose }) => {
         </div>
 
         {/* Menu Content with sliding animation */}
-        <div className="overflow-y-auto h-[calc(100vh-64px)] relative">
+        <div className="h-[calc(100vh-64px)] relative overflow-hidden">
           {/* Main Menu View */}
           <div
-            className={`absolute inset-0 bg-white transition-transform duration-300 ease-out ${
+            className={`absolute inset-0 bg-white transition-transform duration-300 ease-out overflow-y-auto ${
               activeSubmenu ? '-translate-x-full' : 'translate-x-0'
             }`}
           >
             {/* CTA Buttons */}
-            <div className="px-6 py-6 space-y-3 border-b border-gray-200">
+            <div className="px-6 py-4 space-y-2.5 border-b border-gray-200">
               <a
                 href="#"
-                className="block w-full px-4 py-3 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition-colors text-center"
+                className="block w-full px-4 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition-colors text-center"
                 data-testid="mobile-menu-get-started-button"
               >
                 Get started
               </a>
               <a
                 href="#"
-                className="block w-full px-4 py-3 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 transition-colors text-center"
+                className="block w-full px-4 py-2.5 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 transition-colors text-center"
                 data-testid="mobile-menu-login-button"
               >
                 Log in
@@ -605,7 +605,7 @@ const MobileMenu = ({ isOpen, onClose }) => {
             </div>
 
             {/* Menu Items */}
-            <div className="py-2">
+            <div>
               <MobileMenuItem
                 title="Product"
                 hasSubmenu
@@ -640,17 +640,15 @@ const MobileMenu = ({ isOpen, onClose }) => {
               activeSubmenu ? 'translate-x-0' : 'translate-x-full'
             }`}
           >
-            <div className="py-2">
-              {submenuContent[activeSubmenu]?.map((item, index) => (
-                <MobileSubmenuItem
-                  key={index}
-                  icon={item.icon}
-                  title={item.title}
-                  description={item.description}
-                  onClick={() => {}}
-                />
-              ))}
-            </div>
+            {submenuContent[activeSubmenu]?.map((item, index) => (
+              <MobileSubmenuItem
+                key={index}
+                icon={item.icon}
+                title={item.title}
+                description={item.description}
+                onClick={() => {}}
+              />
+            ))}
           </div>
         </div>
       </div>
