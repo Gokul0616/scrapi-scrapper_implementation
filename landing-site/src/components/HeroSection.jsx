@@ -62,14 +62,18 @@ const HeroSection = () => {
         </p>
         
         {/* Search Box */}
-        <div className="max-w-2xl mx-auto">
-          <div className="flex items-center bg-white border-2 border-gray-200 rounded-lg overflow-hidden focus-within:border-gray-400 transition-colors shadow-sm">
+        <div className="max-w-2xl mx-auto px-4 sm:px-0">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center bg-white border-2 border-gray-200 rounded-lg sm:overflow-hidden focus-within:border-gray-400 transition-colors shadow-sm gap-2 sm:gap-0 p-2 sm:p-0">
             <input 
               type="text"
               placeholder={displayText || 'Ex: '}
-              className="flex-1 px-5 py-4 text-base text-gray-900 placeholder-gray-400 outline-none"
+              className="flex-1 px-4 sm:px-5 py-3 sm:py-4 text-base text-gray-900 placeholder-gray-400 outline-none rounded-md sm:rounded-none"
+              data-testid="hero-search-input"
             />
-            <button className="px-6 py-4 bg-gray-900 text-white font-medium hover:bg-gray-800 transition-colors whitespace-nowrap">
+            <button 
+              className="px-5 sm:px-6 py-3 sm:py-4 bg-gray-900 text-white font-medium hover:bg-gray-800 transition-colors whitespace-nowrap rounded-md sm:rounded-none"
+              data-testid="hero-try-now-button"
+            >
               Try it now
             </button>
           </div>
