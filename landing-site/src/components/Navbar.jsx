@@ -425,66 +425,316 @@ const ResourcesDropdown = () => (
   </div>
 );
 
-const Navbar = () => {
-  return (
-    <nav className="fixed w-full top-0 z-50 bg-white border-b border-gray-200">
-      <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between">
-        {/* Logo */}
-        <a href="/" className="flex items-center gap-2" data-testid="nav-logo">
-          <ScrapiLogo />
-          <span className="text-xl font-semibold text-gray-900">Scrapi</span>
-        </a>
+// Mobile Menu Item Component
+const MobileMenuItem = ({ icon: Icon, title, onClick, hasSubmenu, badge }) => (
+  <button
+    onClick={onClick}
+    className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors text-left border-b border-gray-100"
+    data-testid={`mobile-menu-item-${title.toLowerCase().replace(/\s+/g, '-')}`}
+  >
+    <div className="flex items-center gap-3">
+      {Icon && (
+        <div className="w-9 h-9 flex items-center justify-center bg-gray-100 rounded-md">
+          <Icon className="w-4 h-4 text-gray-600" />
+        </div>
+      )}
+      <span className="text-base font-medium text-gray-900">{title}</span>
+      {badge && (
+        <span className="px-2 py-0.5 text-[10px] font-medium bg-gray-900 text-white rounded">
+          {badge}
+        </span>
+      )}
+    </div>
+    {hasSubmenu && <ChevronRight className="w-5 h-5 text-gray-400" />}
+  </button>
+);
 
-        {/* Nav Links */}
-        <div className="hidden lg:flex items-center gap-8">
-          <MegaMenuDropdown 
-            label="Product" 
-            content={<ProductDropdown />}
-            position="left"
-          />
-          <MegaMenuDropdown 
-            label="Solutions" 
-            content={<SolutionsDropdown />}
-            position="left"
-          />
-          <MegaMenuDropdown 
-            label="Developers" 
-            content={<DevelopersDropdown />}
-            position="center"
-          />
-          <MegaMenuDropdown 
-            label="Resources" 
-            content={<ResourcesDropdown />}
-            position="right"
-          />
-          <a 
-            href="#" 
-            className="text-gray-700 hover:text-gray-900 transition-colors text-sm font-medium"
-            data-testid="nav-pricing-link"
+// Mobile Submenu Item Component
+const MobileSubmenuItem = ({ icon: Icon, title, description, onClick }) => (
+  <button
+    onClick={onClick}
+    className="w-full flex items-start gap-3 px-6 py-4 hover:bg-gray-50 transition-colors text-left border-b border-gray-100"
+    data-testid={`mobile-submenu-item-${title.toLowerCase().replace(/\s+/g, '-')}`}
+  >
+    {Icon && (
+      <div className="flex-shrink-0 w-9 h-9 flex items-center justify-center bg-gray-100 rounded-md">
+        <Icon className="w-4 h-4 text-gray-600" />
+      </div>
+    )}
+    <div className="flex-1">
+      <h4 className="text-sm font-medium text-gray-900">{title}</h4>
+      {description && (
+        <p className="text-xs text-gray-500 mt-1">{description}</p>
+      )}
+    </div>
+  </button>
+);
+
+// Mobile Menu Component
+const MobileMenu = ({ isOpen, onClose }) => {
+  const [activeSubmenu, setActiveSubmenu] = useState(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+      setActiveSubmenu(null);
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  const handleBack = () => {
+    setActiveSubmenu(null);
+  };
+
+  const submenuContent = {
+    product: [
+      { icon: Layers, title: 'Web Scrapers', description: 'Extract data from any website' },
+      { icon: Zap, title: 'API Access', description: 'RESTful API for integration' },
+      { icon: Database, title: 'Datasets', description: 'Store and manage data' },
+      { icon: Clock, title: 'Scheduling', description: 'Automate scraping tasks' },
+      { icon: Target, title: 'Lead Generation', description: 'Find potential customers' },
+      { icon: TrendingUp, title: 'Market Research', description: 'Track competitors' },
+      { icon: ShoppingCart, title: 'E-commerce Monitoring', description: 'Monitor prices' },
+      { icon: BarChart3, title: 'SEO Analysis', description: 'Gather SEO metrics' },
+    ],
+    solutions: [
+      { icon: Building2, title: 'Enterprise', description: 'Solutions for large organizations' },
+      { icon: Rocket, title: 'Startups', description: 'Scale data collection' },
+      { icon: GraduationCap, title: 'Universities', description: 'Research use cases' },
+      { icon: Heart, title: 'Nonprofits', description: 'Special pricing' },
+      { icon: Target, title: 'Lead Generation', description: 'Build prospect lists' },
+      { icon: Search, title: 'Competitive Intelligence', description: 'Monitor competition' },
+    ],
+    developers: [
+      { icon: FileText, title: 'Documentation', description: 'Full platform reference' },
+      { icon: Code, title: 'Code Templates', description: 'Python, JS, TypeScript' },
+      { icon: BookOpen, title: 'Web Scraping Academy', description: 'Courses for all levels' },
+      { icon: DollarSign, title: 'Monetize Your Code', description: 'Publish and get paid' },
+      { icon: Layers, title: 'SDK', description: 'Software development kits' },
+      { icon: Wrench, title: 'Crawlee', description: 'Open-source library' },
+    ],
+    resources: [
+      { icon: HelpCircle, title: 'Help and Support', description: 'Advice and answers' },
+      { icon: Lightbulb, title: 'Scraper Ideas', description: 'Get inspired' },
+      { icon: FileCheck, title: 'Changelog', description: "What's new" },
+      { icon: MessageSquare, title: 'Customer Stories', description: 'User experiences' },
+      { icon: Info, title: 'About Scrapi', description: 'Our mission' },
+      { icon: Mail, title: 'Contact Us', description: 'Get in touch' },
+      { icon: FileText, title: 'Blog', description: 'News and insights' },
+      { icon: BriefcaseBusiness, title: 'Jobs', description: "We're hiring" },
+    ],
+  };
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        className={`fixed inset-0 bg-black z-40 transition-opacity duration-300 lg:hidden ${
+          isOpen ? 'opacity-50' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={onClose}
+        data-testid="mobile-menu-backdrop"
+      />
+
+      {/* Mobile Menu Panel */}
+      <div
+        className={`fixed top-0 right-0 bottom-0 w-full bg-white z-50 transform transition-transform duration-300 ease-out lg:hidden ${
+          isOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
+        data-testid="mobile-menu-panel"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 h-16 border-b border-gray-200">
+          {activeSubmenu ? (
+            <button
+              onClick={handleBack}
+              className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
+              data-testid="mobile-menu-back-button"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span className="text-sm font-medium">Back</span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-2">
+              <ScrapiLogo />
+              <span className="text-xl font-semibold text-gray-900">Scrapi</span>
+            </div>
+          )}
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+            data-testid="mobile-menu-close-button"
           >
-            Pricing
-          </a>
+            <X className="w-6 h-6 text-gray-700" />
+          </button>
         </div>
 
-        {/* Right Actions */}
-        <div className="flex items-center gap-4">
-          <a 
-            href="#" 
-            className="hidden md:inline-block text-gray-700 hover:text-gray-900 transition-colors text-sm font-medium"
-            data-testid="nav-login-link"
+        {/* Menu Content */}
+        <div className="overflow-y-auto h-[calc(100vh-64px)]">
+          {/* Main Menu View */}
+          <div
+            className={`transition-transform duration-300 ease-out ${
+              activeSubmenu ? '-translate-x-full' : 'translate-x-0'
+            }`}
           >
-            Log in
-          </a>
-          <a
-            href="#"
-            className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition-colors"
-            data-testid="nav-get-started-button"
-          >
-            Get started
-          </a>
+            {!activeSubmenu && (
+              <div>
+                {/* CTA Buttons */}
+                <div className="px-6 py-6 space-y-3 border-b border-gray-200">
+                  <a
+                    href="#"
+                    className="block w-full px-4 py-3 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition-colors text-center"
+                    data-testid="mobile-menu-get-started-button"
+                  >
+                    Get started
+                  </a>
+                  <a
+                    href="#"
+                    className="block w-full px-4 py-3 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 transition-colors text-center"
+                    data-testid="mobile-menu-login-button"
+                  >
+                    Log in
+                  </a>
+                </div>
+
+                {/* Menu Items */}
+                <div className="py-2">
+                  <MobileMenuItem
+                    title="Product"
+                    hasSubmenu
+                    onClick={() => setActiveSubmenu('product')}
+                  />
+                  <MobileMenuItem
+                    title="Solutions"
+                    hasSubmenu
+                    onClick={() => setActiveSubmenu('solutions')}
+                  />
+                  <MobileMenuItem
+                    title="Developers"
+                    hasSubmenu
+                    onClick={() => setActiveSubmenu('developers')}
+                  />
+                  <MobileMenuItem
+                    title="Resources"
+                    hasSubmenu
+                    onClick={() => setActiveSubmenu('resources')}
+                  />
+                  <MobileMenuItem title="Pricing" onClick={() => {}} />
+                  <MobileMenuItem
+                    title="Contact sales"
+                    onClick={() => {}}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Submenu View */}
+          {activeSubmenu && (
+            <div
+              className={`absolute top-16 left-0 right-0 bottom-0 bg-white transition-transform duration-300 ease-out ${
+                activeSubmenu ? 'translate-x-0' : 'translate-x-full'
+              }`}
+            >
+              <div className="py-2">
+                {submenuContent[activeSubmenu]?.map((item, index) => (
+                  <MobileSubmenuItem
+                    key={index}
+                    icon={item.icon}
+                    title={item.title}
+                    description={item.description}
+                    onClick={() => {}}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
-    </nav>
+    </>
+  );
+};
+
+const Navbar = () => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  return (
+    <>
+      <nav className="fixed w-full top-0 z-50 bg-white border-b border-gray-200">
+        <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between">
+          {/* Logo */}
+          <a href="/" className="flex items-center gap-2" data-testid="nav-logo">
+            <ScrapiLogo />
+            <span className="text-xl font-semibold text-gray-900">Scrapi</span>
+          </a>
+
+          {/* Desktop Nav Links */}
+          <div className="hidden lg:flex items-center gap-8">
+            <MegaMenuDropdown 
+              label="Product" 
+              content={<ProductDropdown />}
+              position="left"
+            />
+            <MegaMenuDropdown 
+              label="Solutions" 
+              content={<SolutionsDropdown />}
+              position="left"
+            />
+            <MegaMenuDropdown 
+              label="Developers" 
+              content={<DevelopersDropdown />}
+              position="center"
+            />
+            <MegaMenuDropdown 
+              label="Resources" 
+              content={<ResourcesDropdown />}
+              position="right"
+            />
+            <a 
+              href="#" 
+              className="text-gray-700 hover:text-gray-900 transition-colors text-sm font-medium"
+              data-testid="nav-pricing-link"
+            >
+              Pricing
+            </a>
+          </div>
+
+          {/* Right Actions */}
+          <div className="flex items-center gap-4">
+            <a 
+              href="#" 
+              className="hidden md:inline-block text-gray-700 hover:text-gray-900 transition-colors text-sm font-medium"
+              data-testid="nav-login-link"
+            >
+              Log in
+            </a>
+            <a
+              href="#"
+              className="hidden md:inline-block px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition-colors"
+              data-testid="nav-get-started-button"
+            >
+              Get started
+            </a>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="lg:hidden p-2 hover:bg-gray-100 rounded-md transition-colors"
+              data-testid="mobile-menu-hamburger-button"
+            >
+              <Menu className="w-6 h-6 text-gray-700" />
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Mobile Menu */}
+      <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+    </>
   );
 };
 
