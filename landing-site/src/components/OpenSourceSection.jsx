@@ -471,11 +471,11 @@ const OpenSourceSection = ({ templates }) => {
           </div>
         </div>
         
-        <div className="grid lg:grid-cols-2 gap-12 items-start">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
           {/* Left - Text Content */}
           <div className="lg:pt-8">
-            <h3 className="text-2xl md:text-3xl font-normal text-gray-900 mb-4" style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', fontWeight: 400, letterSpacing: '-0.01em' }}>{content.title}</h3>
-            <p className="text-gray-600 mb-8 leading-relaxed text-base md:text-lg">
+            <h3 className="text-xl md:text-2xl lg:text-3xl font-normal text-gray-900 mb-4" style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', fontWeight: 400, letterSpacing: '-0.01em' }}>{content.title}</h3>
+            <p className="text-gray-600 mb-6 md:mb-8 leading-relaxed text-base md:text-lg">
               {content.description}
             </p>
             
