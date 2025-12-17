@@ -460,7 +460,7 @@ const OpenSourceSection = ({ templates }) => {
                   data-testid={`tab-${tab.id}`}
                   className={`px-4 md:px-6 py-2 md:py-2.5 text-sm md:text-base font-medium transition-all whitespace-nowrap rounded-full flex-shrink-0 ${
                     activeTab === tab.id
-                      ? 'bg-gray-900 text-white shadow-md'
+                      ? 'bg-white text-gray-900 shadow-sm ring-1 ring-gray-200'
                       : 'bg-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                   }`}
                 >
