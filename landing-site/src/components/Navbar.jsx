@@ -47,24 +47,23 @@ const MegaMenuDropdown = ({ label, content, position = 'left' }) => {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <button 
+      <button
         className="flex items-center gap-1 text-gray-700 hover:text-gray-900 transition-colors text-sm font-medium py-2"
         data-testid={`nav-${label.toLowerCase()}-button`}
       >
         {label}
-        <ChevronDown 
-          className={`w-3.5 h-3.5 transition-transform duration-300 ease-out ${isOpen ? 'rotate-180' : ''}`} 
+        <ChevronDown
+          className={`w-3.5 h-3.5 transition-transform duration-300 ease-out ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
-      
+
       {/* Mega Menu Dropdown with Apify-style transitions */}
       <div
-        className={`absolute top-full ${getDropdownPosition()} mt-1 transition-all duration-300 ease-out ${
-          isOpen 
-            ? 'opacity-100 visible translate-y-0 scale-100' 
-            : 'opacity-0 invisible -translate-y-4 scale-95 pointer-events-none'
-        }`}
-        style={{ 
+        className={`absolute top-full ${getDropdownPosition()} mt-1 transition-all duration-300 ease-out ${isOpen
+          ? 'opacity-100 visible translate-y-0 scale-100'
+          : 'opacity-0 invisible -translate-y-4 scale-95 pointer-events-none'
+          }`}
+        style={{
           zIndex: 9999,
           transformOrigin: position === 'right' ? 'top right' : position === 'center' ? 'top center' : 'top left'
         }}
@@ -505,6 +504,8 @@ const MobileMenu = ({ isOpen, onClose }) => {
       { icon: TrendingUp, title: 'Market Research', description: 'Track competitors' },
       { icon: ShoppingCart, title: 'E-commerce Monitoring', description: 'Monitor prices' },
       { icon: BarChart3, title: 'SEO Analysis', description: 'Gather SEO metrics' },
+      { icon: Building2, title: 'Enterprise', description: 'Advanced features for large teams', badge: 'Popular' },
+      { icon: Briefcase, title: 'Professional Services', description: 'Custom scraping solutions' },
     ],
     solutions: [
       { icon: Building2, title: 'Enterprise', description: 'Solutions for large organizations' },
@@ -513,12 +514,16 @@ const MobileMenu = ({ isOpen, onClose }) => {
       { icon: Heart, title: 'Nonprofits', description: 'Special pricing' },
       { icon: Target, title: 'Lead Generation', description: 'Build prospect lists' },
       { icon: Search, title: 'Competitive Intelligence', description: 'Monitor competition' },
+      { icon: TrendingUp, title: 'Market Research', description: 'Gather market insights' },
+      { icon: BarChart3, title: 'Data for AI', description: 'Feed your AI models with fresh data' },
     ],
     developers: [
       { icon: FileText, title: 'Documentation', description: 'Full platform reference' },
       { icon: Code, title: 'Code Templates', description: 'Python, JS, TypeScript' },
       { icon: BookOpen, title: 'Web Scraping Academy', description: 'Courses for all levels' },
       { icon: DollarSign, title: 'Monetize Your Code', description: 'Publish and get paid' },
+      { icon: FileText, title: 'API Reference', description: 'Complete API documentation' },
+      { icon: Code, title: 'CLI', description: 'Command line interface' },
       { icon: Layers, title: 'SDK', description: 'Software development kits' },
       { icon: Wrench, title: 'Crawlee', description: 'Open-source library' },
     ],
@@ -530,26 +535,62 @@ const MobileMenu = ({ isOpen, onClose }) => {
       { icon: Info, title: 'About Scrapi', description: 'Our mission' },
       { icon: Mail, title: 'Contact Us', description: 'Get in touch' },
       { icon: FileText, title: 'Blog', description: 'News and insights' },
-      { icon: BriefcaseBusiness, title: 'Jobs', description: "We're hiring" },
+      { icon: Calendar, title: 'Live Events', description: 'Webinars and workshops' },
+      { icon: Handshake, title: 'Partners', description: 'Become a Scrapi partner' },
+      { icon: BriefcaseBusiness, title: 'Jobs', description: "We're hiring", badge: 'New' },
     ],
+  };
+
+  const featuredContent = {
+    developers: (
+      <div className="p-6 pt-2 pb-32">
+        <FeaturedCard
+          title="Build & Win Big"
+          description="Publish tools on Scrapi and win exciting prizes"
+          cta="Join the challenge"
+          ctaLink="#"
+          image={true}
+        />
+      </div>
+    ),
+    resources: (
+      <div className="p-6 pt-2 pb-32">
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-md p-3.5 border border-purple-200">
+          <div className="mb-2.5 flex items-center justify-center">
+            <div className="w-14 h-14 bg-purple-500 rounded-full flex items-center justify-center">
+              <Users className="w-7 h-7 text-white" />
+            </div>
+          </div>
+          <h4 className="text-sm font-semibold text-gray-900 mb-1 text-center">Join our Discord</h4>
+          <p className="text-xs text-gray-600 mb-2.5 text-center leading-relaxed">Talk to scraping experts</p>
+          <a
+            href="#"
+            className="w-full flex items-center justify-center text-xs font-semibold text-purple-600 hover:text-purple-700 transition-colors mt-2"
+          >
+            Join community
+            <svg className="w-3 h-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    )
   };
 
   return (
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 bg-black z-40 transition-opacity duration-300 lg:hidden ${
-          isOpen ? 'opacity-50' : 'opacity-0 pointer-events-none'
-        }`}
+        className={`fixed inset-0 bg-black z-40 transition-opacity duration-300 lg:hidden ${isOpen ? 'opacity-50' : 'opacity-0 pointer-events-none'
+          }`}
         onClick={onClose}
         data-testid="mobile-menu-backdrop"
       />
 
       {/* Mobile Menu Panel */}
       <div
-        className={`fixed top-0 right-0 bottom-0 w-full bg-white z-50 transform transition-transform duration-300 ease-out lg:hidden ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
+        className={`fixed top-0 right-0 bottom-0 w-full bg-white z-50 transform transition-transform duration-300 ease-out lg:hidden ${isOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
         data-testid="mobile-menu-panel"
       >
         {/* Header */}
@@ -582,9 +623,8 @@ const MobileMenu = ({ isOpen, onClose }) => {
         <div className="h-[calc(100vh-64px)] relative overflow-hidden">
           {/* Main Menu View */}
           <div
-            className={`absolute inset-0 bg-white transition-transform duration-300 ease-out overflow-y-auto ${
-              activeSubmenu ? '-translate-x-full' : 'translate-x-0'
-            }`}
+            className={`absolute inset-0 bg-white transition-transform duration-300 ease-out overflow-y-auto ${activeSubmenu ? '-translate-x-full' : 'translate-x-0'
+              }`}
           >
             {/* CTA Buttons */}
             <div className="px-6 py-4 space-y-2.5 border-b border-gray-200">
@@ -626,19 +666,18 @@ const MobileMenu = ({ isOpen, onClose }) => {
                 hasSubmenu
                 onClick={() => setActiveSubmenu('resources')}
               />
-              <MobileMenuItem title="Pricing" onClick={() => {}} />
+              <MobileMenuItem title="Pricing" onClick={() => { }} />
               <MobileMenuItem
                 title="Contact sales"
-                onClick={() => {}}
+                onClick={() => { }}
               />
             </div>
           </div>
 
           {/* Submenu View with sliding animation from right */}
           <div
-            className={`absolute inset-0 bg-white transition-transform duration-300 ease-out overflow-y-auto ${
-              activeSubmenu ? 'translate-x-0' : 'translate-x-full'
-            }`}
+            className={`absolute inset-0 bg-white transition-transform duration-300 ease-out overflow-y-auto ${activeSubmenu ? 'translate-x-0' : 'translate-x-full'
+              }`}
           >
             {submenuContent[activeSubmenu]?.map((item, index) => (
               <MobileSubmenuItem
@@ -646,9 +685,10 @@ const MobileMenu = ({ isOpen, onClose }) => {
                 icon={item.icon}
                 title={item.title}
                 description={item.description}
-                onClick={() => {}}
+                onClick={() => { }}
               />
             ))}
+            {featuredContent[activeSubmenu] && featuredContent[activeSubmenu]}
           </div>
         </div>
       </div>
@@ -671,28 +711,28 @@ const Navbar = () => {
 
           {/* Desktop Nav Links */}
           <div className="hidden lg:flex items-center gap-8">
-            <MegaMenuDropdown 
-              label="Product" 
+            <MegaMenuDropdown
+              label="Product"
               content={<ProductDropdown />}
               position="left"
             />
-            <MegaMenuDropdown 
-              label="Solutions" 
+            <MegaMenuDropdown
+              label="Solutions"
               content={<SolutionsDropdown />}
               position="left"
             />
-            <MegaMenuDropdown 
-              label="Developers" 
+            <MegaMenuDropdown
+              label="Developers"
               content={<DevelopersDropdown />}
               position="center"
             />
-            <MegaMenuDropdown 
-              label="Resources" 
+            <MegaMenuDropdown
+              label="Resources"
               content={<ResourcesDropdown />}
               position="right"
             />
-            <a 
-              href="#" 
+            <a
+              href="#"
               className="text-gray-700 hover:text-gray-900 transition-colors text-sm font-medium"
               data-testid="nav-pricing-link"
             >
@@ -702,8 +742,8 @@ const Navbar = () => {
 
           {/* Right Actions */}
           <div className="flex items-center gap-4">
-            <a 
-              href="#" 
+            <a
+              href="#"
               className="hidden md:inline-block text-gray-700 hover:text-gray-900 transition-colors text-sm font-medium"
               data-testid="nav-login-link"
             >
