@@ -5,4 +5,4 @@ User-agent: *
 Disallow: /
 
 # Sitemap (for reference, even though indexing is disabled)
-Sitemap: https://landing-ui-optimize.preview.emergentagent.com/sitemap.xml
+Sitemap: https://deploy-landing.preview.emergentagent.com/sitemap.xml
