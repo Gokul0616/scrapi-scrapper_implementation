@@ -458,10 +458,10 @@ const OpenSourceSection = ({ templates }) => {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   data-testid={`tab-${tab.id}`}
-                  className={`px-3.5 md:px-6 py-2 md:py-2.5 text-xs md:text-sm font-medium transition-all whitespace-nowrap rounded-lg flex-shrink-0 ${
+                  className={`px-4 md:px-6 py-2 md:py-2.5 text-sm md:text-base font-medium transition-all whitespace-nowrap rounded-full flex-shrink-0 ${
                     activeTab === tab.id
-                      ? 'bg-white text-gray-900 shadow-sm border border-gray-200'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900 active:bg-gray-200'
+                      ? 'bg-gray-900 text-white shadow-md'
+                      : 'bg-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                   }`}
                 >
                   {tab.label}
