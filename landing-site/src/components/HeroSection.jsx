@@ -14,7 +14,7 @@ const HeroSection = () => {
   const [currentPlaceholder, setCurrentPlaceholder] = useState(0);
   const [displayText, setDisplayText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
-  
+
   useEffect(() => {
     const text = placeholderTexts[currentPlaceholder];
     const timer = setTimeout(() => {
@@ -33,7 +33,7 @@ const HeroSection = () => {
         }
       }
     }, isDeleting ? 50 : 100);
-    
+
     return () => clearTimeout(timer);
   }, [displayText, isDeleting, currentPlaceholder]);
 
@@ -49,29 +49,29 @@ const HeroSection = () => {
             <span className="text-sm text-gray-700">Powerful web scraping made simple</span>
           </div>
         </div>
-        
+
         {/* Main Heading */}
         <h1 className="text-center text-[56px] md:text-[64px] font-semibold leading-[1.1] tracking-[-0.02em] text-gray-900 mb-6">
           Extract web data with precision
         </h1>
-        
+
         {/* Subtitle */}
         <p className="text-center text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-10 leading-relaxed">
           Scrapi provides powerful web scraping tools for businesses, developers, and researchers.
           Extract data from Google Maps, Amazon, and any website with our ready-to-use scrapers.
         </p>
-        
+
         {/* Search Box */}
         <div className="max-w-2xl mx-auto">
-          <div className="flex flex-col gap-3">
-            <input 
+          <div className="flex flex-col md:flex-row gap-3">
+            <input
               type="text"
               placeholder={displayText || 'Ex: '}
-              className="w-full px-5 py-4 text-base text-gray-900 placeholder-gray-400 outline-none bg-white border-2 border-gray-200 rounded-lg focus:border-gray-400 transition-colors shadow-sm"
+              className="w-full md:flex-1 px-5 py-4 text-base text-gray-900 placeholder-gray-400 outline-none bg-white border-2 border-gray-200 rounded-lg focus:border-gray-400 transition-colors shadow-sm"
               data-testid="hero-search-input"
             />
-            <button 
-              className="w-full px-6 py-4 bg-[#1B1D1F] text-white text-base font-medium hover:bg-gray-800 transition-colors rounded-lg shadow-sm"
+            <button
+              className="w-full md:w-auto px-6 py-4 bg-[#1B1D1F] text-white text-base font-medium hover:bg-gray-800 transition-colors rounded-lg shadow-sm"
               data-testid="hero-try-now-button"
             >
               Try it now
