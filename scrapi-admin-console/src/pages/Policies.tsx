@@ -57,7 +57,7 @@ export const PoliciesPage: React.FC = () => {
   const fetchPolicies = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('scrapi_admin_token');
       const response = await fetch(`${BACKEND_URL}/api/policies`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -98,7 +98,7 @@ export const PoliciesPage: React.FC = () => {
     if (!editedPolicy) return;
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('scrapi_admin_token');
       const url = isCreating 
         ? `${BACKEND_URL}/api/policies`
         : `${BACKEND_URL}/api/policies/${editedPolicy.doc_id}`;
@@ -131,7 +131,7 @@ export const PoliciesPage: React.FC = () => {
     if (!confirm('Are you sure you want to delete this policy?')) return;
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('scrapi_admin_token');
       const response = await fetch(`${BACKEND_URL}/api/policies/${docId}`, {
         method: 'DELETE',
         headers: {
