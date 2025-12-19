@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, ExternalLink, Cookie, Shield, BarChart3, Tar
 import Navbar from './Navbar';
 import Footer from './Footer';
 
-const CookiePolicy = () => {
+const CookiePolicy = ({ onOpenCookieSettings }) => {
   const [activeSection, setActiveSection] = useState('introduction');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
