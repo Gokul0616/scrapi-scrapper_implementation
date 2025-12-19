@@ -2580,6 +2580,113 @@ async def run_schedule_now(
     return {"message": "Run triggered successfully", "run_id": run.id, "run": run}
 
 
+# ============= Policy Management Routes =============
+
+async def check_owner_role(credentials: HTTPAuthorizationCredentials = Depends(api_key_security)):
+    """Check if user has owner role."""
+    user = await get_api_user(credentials)
+    if user.get("role") != "owner":
+        raise HTTPException(status_code=403, detail="Only owners can perform this action")
+    return user
+
+
+async def check_admin_or_owner_role(credentials: HTTPAuthorizationCredentials = Depends(api_key_security)):
+    """Check if user has admin or owner role."""
+    user = await get_api_user(credentials)
+    if user.get("role") not in ["admin", "owner"]:
+        raise HTTPException(status_code=403, detail="Admin or owner access required")
+    return user
+
+
+@router.get("/policies", response_model=List[dict])
+async def get_all_policies(current_user: dict = Depends(check_admin_or_owner_role)):
+    """Get all policies (admin and owner can view)."""
+    policies = await db.policies.find().to_list(length=100)
+    
+    # Remove MongoDB _id field
+    for policy in policies:
+        if "_id" in policy:
+            del policy["_id"]
+    
+    return policies
+
+
+@router.get("/policies/{doc_id}", response_model=dict)
+async def get_policy_by_id(doc_id: str, current_user: dict = Depends(check_admin_or_owner_role)):
+    """Get a specific policy by doc_id (admin and owner can view)."""
+    policy = await db.policies.find_one({"doc_id": doc_id})
+    
+    if not policy:
+        raise HTTPException(status_code=404, detail="Policy not found")
+    
+    if "_id" in policy:
+        del policy["_id"]
+    
+    return policy
+
+
+@router.post("/policies", response_model=dict)
+async def create_policy(policy_data: PolicyCreate, current_user: dict = Depends(check_owner_role)):
+    """Create a new policy (only owner can create)."""
+    # Check if policy with same doc_id already exists
+    existing = await db.policies.find_one({"doc_id": policy_data.doc_id})
+    if existing:
+        raise HTTPException(status_code=400, detail="Policy with this doc_id already exists")
+    
+    policy = Policy(
+        **policy_data.dict(),
+        created_by=current_user["id"],
+        updated_by=current_user["id"],
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc)
+    )
+    
+    policy_dict = policy.dict()
+    await db.policies.insert_one(policy_dict)
+    
+    if "_id" in policy_dict:
+        del policy_dict["_id"]
+    
+    return policy_dict
+
+
+@router.put("/policies/{doc_id}", response_model=dict)
+async def update_policy(doc_id: str, policy_data: PolicyUpdate, current_user: dict = Depends(check_owner_role)):
+    """Update an existing policy (only owner can update)."""
+    # Check if policy exists
+    existing = await db.policies.find_one({"doc_id": doc_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Policy not found")
+    
+    # Prepare update data
+    update_data = {k: v for k, v in policy_data.dict(exclude_unset=True).items() if v is not None}
+    update_data["updated_by"] = current_user["id"]
+    update_data["updated_at"] = datetime.now(timezone.utc)
+    
+    # Update the policy
+    await db.policies.update_one(
+        {"doc_id": doc_id},
+        {"$set": update_data}
+    )
+    
+    # Fetch and return updated policy
+    updated_policy = await db.policies.find_one({"doc_id": doc_id})
+    if "_id" in updated_policy:
+        del updated_policy["_id"]
+    
+    return updated_policy
+
+
+@router.delete("/policies/{doc_id}")
+async def delete_policy(doc_id: str, current_user: dict = Depends(check_owner_role)):
+    """Delete a policy (only owner can delete)."""
+    result = await db.policies.delete_one({"doc_id": doc_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Policy not found")
+    
+    return {"message": "Policy deleted successfully", "doc_id": doc_id}
+
 
 @router.get("/legal/{doc_id}")
 async def get_legal_document(doc_id: str):
