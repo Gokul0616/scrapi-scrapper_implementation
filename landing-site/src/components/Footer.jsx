@@ -1,5 +1,6 @@
 import React from 'react';
 import { Twitter, Linkedin, Github, Youtube } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const ScrapiLogo = () => (
   <img 
@@ -11,7 +12,7 @@ const ScrapiLogo = () => (
   />
 );
 
-const Footer = () => {
+const Footer = ({ onOpenCookieSettings }) => {
   const footerLinks = {
     product: {
       title: 'Product',
