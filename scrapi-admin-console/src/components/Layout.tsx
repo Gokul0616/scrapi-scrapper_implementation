@@ -151,6 +151,16 @@ export const Layout: React.FC = () => {
                             collapsed={!sidebarOpen}
                         />
                         <div className={clsx("px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4 mb-1", !sidebarOpen && "hidden")}>
+                            Content
+                        </div>
+                        <SidebarItem
+                            icon={FileText}
+                            label="Policies"
+                            to="/policies"
+                            active={location.pathname.startsWith('/policies')}
+                            collapsed={!sidebarOpen}
+                        />
+                        <div className={clsx("px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4 mb-1", !sidebarOpen && "hidden")}>
                             Configuration
                         </div>
                         <SidebarItem
