@@ -85,7 +85,7 @@ function App() {
             <LandingPage onOpenCookieSettings={handleOpenCookieSettings} />
           } 
         />
-        <Route path="/cookie-policy" element={<CookiePolicy />} />
+        <Route path="/cookie-policy" element={<CookiePolicy onOpenCookieSettings={handleOpenCookieSettings} />} />
       </Routes>
       
       {/* Cookie Banner - shows on all pages */}
