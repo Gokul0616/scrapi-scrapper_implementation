@@ -74,6 +74,7 @@ function App() {
               <Route path="/users" element={<UsersPage />} />
               <Route path="/actors" element={<ActorsPage />} />
               <Route path="/runs" element={<RunsPage />} />
+              <Route path="/policies" element={<PoliciesPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/audit-logs" element={<AuditLogs />} />
             </Route>
