@@ -75,12 +75,12 @@ const CookieSettingsModal = ({ isOpen, onClose, onSave }) => {
   ];
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-[60] flex items-center justify-center"
       data-testid="cookie-settings-modal"
     >
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={onClose}
       />
@@ -98,21 +98,18 @@ const CookieSettingsModal = ({ isOpen, onClose, onSave }) => {
         </button>
 
         {/* Header */}
-        <div className="p-6 pb-0">
+        <div className="p-4 sm:p-6 pb-0">
           {/* Logo */}
           <div className="flex items-center gap-2 mb-5">
-            <svg width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="40" height="40" rx="8" fill="#2BC56B"/>
-              <path d="M12 20L18 26L28 14" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <span className="text-xl font-bold text-gray-900">scrapi</span>
+            <img src="/logo.png" alt="Scrapi" className="w-8 h-8 object-contain" />
+            <span className="text-xl font-bold text-gray-900">Scrapi</span>
           </div>
 
           {/* Description */}
           <p className="text-sm text-gray-600 leading-relaxed mb-4">
             Cookies enable us to store your preferences and give you a personalized website experience. We also use cookies for analytics and targeted marketing. We respect your right to privacy, so you can choose not to allow some types of cookies. Click on the category headings to learn more and change your settings.{' '}
-            <a 
-              href="/cookie-policy" 
+            <a
+              href="/cookie-policy"
               data-testid="cookie-settings-policy-link"
               className="text-blue-600 hover:text-blue-700 hover:underline font-medium"
             >
@@ -122,29 +119,29 @@ const CookieSettingsModal = ({ isOpen, onClose, onSave }) => {
         </div>
 
         {/* Cookie Categories */}
-        <div className="px-6">
+        <div className="px-4 sm:px-6">
           <h4 className="text-sm font-semibold text-gray-900 mb-3">Manage Consent Preferences</h4>
-          
+
           <div className="border border-gray-200 rounded-lg overflow-hidden">
             {cookieCategories.map((category, index) => (
-              <div 
+              <div
                 key={category.key}
                 className={`${index > 0 ? 'border-t border-gray-200' : ''}`}
               >
                 {/* Category Header */}
-                <div 
+                <div
                   className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
                   onClick={() => toggleCategory(category.key)}
                   data-testid={`cookie-category-${category.key}`}
                 >
                   <div className="flex items-center gap-3">
-                    <ChevronRight 
-                      size={16} 
+                    <ChevronRight
+                      size={16}
                       className={`text-gray-400 transition-transform ${expandedCategory === category.key ? 'rotate-90' : ''}`}
                     />
                     <span className="text-sm font-medium text-gray-800">{category.title}</span>
                   </div>
-                  
+
                   {category.alwaysActive ? (
                     <span className="text-xs font-medium text-blue-600">Always Active</span>
                   ) : (
@@ -154,34 +151,37 @@ const CookieSettingsModal = ({ isOpen, onClose, onSave }) => {
                         handleToggle(category.key);
                       }}
                       data-testid={`cookie-toggle-${category.key}`}
-                      className={`relative w-11 h-6 rounded-full transition-colors ${
-                        settings[category.key] ? 'bg-blue-600' : 'bg-gray-300'
-                      }`}
-                    >
-                      <div 
-                        className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                          settings[category.key] ? 'translate-x-6' : 'translate-x-1'
+                      className={`relative w-11 h-6 rounded-full transition-colors ${settings[category.key] ? 'bg-blue-600' : 'bg-gray-300'
                         }`}
+                    >
+                      <div
+                        className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${settings[category.key] ? 'translate-x-6' : 'translate-x-1'
+                          }`}
                       />
                     </button>
                   )}
                 </div>
 
                 {/* Category Description */}
-                {expandedCategory === category.key && (
-                  <div className="px-4 pb-4 pl-11">
-                    <p className="text-sm text-gray-600 leading-relaxed">
-                      {category.description}
-                    </p>
+                <div
+                  className={`grid transition-[grid-template-rows] duration-300 ease-out ${expandedCategory === category.key ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+                    }`}
+                >
+                  <div className="overflow-hidden">
+                    <div className="px-4 pb-4 pl-11">
+                      <p className="text-sm text-gray-600 leading-relaxed">
+                        {category.description}
+                      </p>
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
             ))}
           </div>
         </div>
 
         {/* Footer Buttons */}
-        <div className="p-6 flex justify-end gap-3">
+        <div className="p-4 sm:p-6 flex justify-end gap-3">
           <button
             data-testid="cookie-reject-all"
             onClick={handleRejectAll}
@@ -199,11 +199,11 @@ const CookieSettingsModal = ({ isOpen, onClose, onSave }) => {
         </div>
 
         {/* Powered by */}
-        <div className="px-6 pb-4 text-center">
+        <div className="px-4 sm:px-6 pb-4 text-center">
           <span className="text-xs text-gray-400">Powered by Scrapi</span>
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 };
 
