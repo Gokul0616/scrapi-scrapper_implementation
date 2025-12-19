@@ -58,7 +58,7 @@ export const PoliciesPage: React.FC = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/policies`, {
+      const response = await fetch(`${BACKEND_URL}/api/policies`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
