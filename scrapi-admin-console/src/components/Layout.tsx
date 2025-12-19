@@ -155,7 +155,7 @@ export const Layout: React.FC = () => {
                             Content
                         </div>
                         <SidebarItem
-                            icon={FileText}
+                            icon={ScrollText}
                             label="Policies"
                             to="/policies"
                             active={location.pathname.startsWith('/policies')}
