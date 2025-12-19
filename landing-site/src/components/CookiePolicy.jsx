@@ -316,7 +316,7 @@ const CookiePolicy = ({ onOpenCookieSettings }) => {
         </div>
       </main>
 
-      <Footer />
+      <Footer onOpenCookieSettings={onOpenCookieSettings} />
     </div>
   );
 };
