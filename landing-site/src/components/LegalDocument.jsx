@@ -80,9 +80,54 @@ const LegalDocument = ({ onOpenCookieSettings }) => {
   const [activeSection, setActiveSection] = useState(null);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sidebarLinks, setSidebarLinks] = useState([
+    { 
+      title: 'Legal Documents', 
+      items: [] 
+    },
+    { 
+      title: 'Compliance', 
+      items: []
+    },
+  ]);
 
   // Default to terms if no docId provided
   const currentDoc = docId || 'terms-of-service';
+
+  // Fetch sidebar links on mount
+  useEffect(() => {
+    const fetchSidebarLinks = async () => {
+      try {
+        const response = await fetch('/api/legal');
+        if (response.ok) {
+          const result = await response.json();
+          
+          // Group documents by category
+          const legalDocs = [];
+          const complianceDocs = [];
+          
+          result.documents.forEach(doc => {
+            const item = { label: doc.label, id: doc.id };
+            if (doc.category === 'Compliance') {
+              complianceDocs.push(item);
+            } else {
+              legalDocs.push(item);
+            }
+          });
+          
+          setSidebarLinks([
+            { title: 'Legal Documents', items: legalDocs },
+            { title: 'Compliance', items: complianceDocs }
+          ]);
+        }
+      } catch (error) {
+        console.error('Failed to fetch sidebar links:', error);
+        // Keep default empty structure if fetch fails
+      }
+    };
+    
+    fetchSidebarLinks();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -112,27 +157,6 @@ const LegalDocument = ({ onOpenCookieSettings }) => {
 
     fetchData();
   }, [currentDoc]);
-
-  const sidebarLinks = [
-    { 
-      title: 'Legal Documents', 
-      items: [
-        { label: 'Terms of Service', id: 'terms-of-service' },
-        { label: 'Privacy Policy', id: 'privacy-policy' },
-        { label: 'Acceptable Use Policy', id: 'acceptable-use-policy' },
-        { label: 'Cookie Policy', id: 'cookie-policy' }
-      ] 
-    },
-    { 
-      title: 'Compliance', 
-      items: [
-        { label: 'GDPR', id: 'gdpr' },
-        { label: 'CCPA', id: 'ccpa' },
-        { label: 'Security', id: 'security' },
-        { label: 'Subprocessors', id: 'subprocessors' }
-      ] 
-    },
-  ];
 
   const scrollToSection = (sectionId) => {
     setActiveSection(sectionId);
@@ -188,7 +212,7 @@ const LegalDocument = ({ onOpenCookieSettings }) => {
               </div>
             )}
 
-            {section.table && (
+            {section.table && section.table.length > 0 && (
               <div className="mt-6 overflow-hidden border border-gray-200 rounded-lg shadow-sm">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
