@@ -6,6 +6,47 @@ import { Modal } from '../components/ui/Modal';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
 
+// Table Skeleton
+const TableSkeleton = () => (
+    <div className="space-y-6 animate-pulse">
+        <div className="flex justify-between items-center mb-4">
+             <div className="h-8 w-48 bg-gray-200 rounded"></div>
+             <div className="h-9 w-24 bg-gray-200 rounded"></div>
+        </div>
+        
+        <div className="bg-white shadow-sm rounded border border-aws-border overflow-hidden">
+             {/* Toolbar Skeleton */}
+            <div className="p-4 border-b border-aws-border flex flex-col sm:flex-row gap-4 justify-between items-center bg-gray-50">
+                <div className="h-9 w-full sm:w-96 bg-gray-200 rounded"></div>
+                <div className="h-9 w-24 bg-gray-200 rounded"></div>
+            </div>
+
+            {/* Table Header */}
+            <div className="bg-gray-50 px-6 py-3 border-b border-aws-border flex gap-4">
+                {[1, 2, 3, 4, 5].map(i => (
+                    <div key={i} className="h-4 bg-gray-200 rounded flex-1"></div>
+                ))}
+            </div>
+
+            {/* Rows */}
+            <div className="divide-y divide-aws-border">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div key={i} className="px-6 py-4 flex gap-4 items-center">
+                        <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
+                        <div className="flex-1 space-y-2">
+                             <div className="h-4 w-32 bg-gray-200 rounded"></div>
+                             <div className="h-3 w-48 bg-gray-100 rounded"></div>
+                        </div>
+                        <div className="h-6 w-20 bg-gray-200 rounded-full"></div>
+                        <div className="h-4 w-24 bg-gray-200 rounded"></div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    </div>
+);
+
+
 export const UsersPage: React.FC = () => {
     const { showAlert } = useAlert();
     const [searchTerm, setSearchTerm] = useState('');
@@ -126,7 +167,7 @@ export const UsersPage: React.FC = () => {
         setPage(1); // Reset to page 1 on search
     };
 
-    if (loading && users.length === 0) return <div className="p-6">Loading users...</div>;
+    if (loading && users.length === 0) return <TableSkeleton />;
     if (error && users.length === 0) return <div className="p-6 text-red-600">{error}</div>;
 
     return (
