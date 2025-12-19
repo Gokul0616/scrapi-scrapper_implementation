@@ -9,6 +9,7 @@ export default defineConfig({
     host: '0.0.0.0',
     allowedHosts: [
       'admin-host-setup.preview.emergentagent.com',
+      'visual-crawler-2.preview.emergentagent.com',
       'localhost',
       '.emergentagent.com'
     ],
