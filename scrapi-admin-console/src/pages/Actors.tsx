@@ -1,9 +1,49 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Filter, Star, CheckCircle, MoreVertical, Box, Shield, Trash2, AlertCircle } from 'lucide-react';
+import { Search, Filter, Star, CheckCircle, Box, Shield } from 'lucide-react';
 import { clsx } from 'clsx';
 import type { Actor } from '../types';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
+
+// Card Grid Skeleton
+const ActorsSkeleton = () => (
+    <div className="space-y-6 animate-pulse">
+        <div className="h-8 w-48 bg-gray-200 rounded"></div>
+        <div className="h-4 w-64 bg-gray-200 rounded"></div>
+
+        {/* Filters */}
+        <div className="flex space-x-4 bg-white p-4 rounded shadow-sm border border-aws-border">
+            <div className="flex-1 h-10 bg-gray-200 rounded"></div>
+            <div className="w-48 h-10 bg-gray-200 rounded"></div>
+        </div>
+
+        {/* Grid */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="bg-white rounded-lg shadow-sm border border-aws-border p-5">
+                    <div className="flex items-start justify-between">
+                        <div className="flex items-start space-x-4 flex-1">
+                            <div className="h-12 w-12 bg-gray-200 rounded"></div>
+                            <div className="flex-1 space-y-2">
+                                <div className="h-5 w-40 bg-gray-200 rounded"></div>
+                                <div className="h-4 w-full bg-gray-100 rounded"></div>
+                                <div className="h-4 w-3/4 bg-gray-100 rounded"></div>
+                                <div className="flex space-x-4 mt-3">
+                                    <div className="h-3 w-16 bg-gray-200 rounded"></div>
+                                    <div className="h-3 w-24 bg-gray-200 rounded"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex space-x-2">
+                            <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
+                            <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
+                        </div>
+                    </div>
+                </div>
+            ))}
+        </div>
+    </div>
+);
 
 export const ActorsPage: React.FC = () => {
     const [actors, setActors] = useState<Actor[]>([]);
@@ -80,6 +120,8 @@ export const ActorsPage: React.FC = () => {
         }
     };
 
+    if (loading && actors.length === 0) return <ActorsSkeleton />;
+
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -119,9 +161,7 @@ export const ActorsPage: React.FC = () => {
             </div>
 
             {/* Actors List */}
-            {loading ? (
-                <div className="text-center py-12 text-gray-500">Loading actors...</div>
-            ) : error ? (
+            {error ? (
                 <div className="text-center py-12 text-red-500">{error}</div>
             ) : actors.length === 0 ? (
                 <div className="text-center py-12 bg-white rounded shadow-sm border border-dashed border-gray-300">
