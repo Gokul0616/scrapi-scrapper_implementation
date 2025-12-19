@@ -13,7 +13,8 @@ import {
     Search,
     ChevronDown,
     X,
-    FileText
+    FileText,
+    ScrollText
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
