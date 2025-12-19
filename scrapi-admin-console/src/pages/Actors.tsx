@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Filter, Star, CheckCircle, Box, Shield } from 'lucide-react';
+import { Search, Star, CheckCircle, Box, Shield } from 'lucide-react';
 import { clsx } from 'clsx';
 import type { Actor } from '../types';
 

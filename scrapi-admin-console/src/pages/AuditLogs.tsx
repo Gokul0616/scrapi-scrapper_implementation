@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Search, Filter } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import type { AuditLog } from '../types';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Users, Activity, Play, CheckCircle, ArrowUp, ArrowDown } from 'lucide-react';
+import { Users, Activity, Play, CheckCircle } from 'lucide-react';
 import { clsx } from 'clsx';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
@@ -13,7 +13,7 @@ interface MetricCardProps {
     color: 'blue' | 'green' | 'orange' | 'purple';
 }
 
-const MetricCard: React.FC<MetricCardProps> = ({ title, value, trend, trendDirection, icon: Icon, color }) => {
+const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon: Icon, color }) => {
     const colorClasses = {
         blue: 'text-aws-blue',
         green: 'text-green-600',
