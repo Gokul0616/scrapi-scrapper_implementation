@@ -78,6 +78,15 @@ async def startup_event():
     except Exception as e:
         logger.error(f"❌ Failed to initialize email validator: {str(e)}")
     
+    # Seed initial policy documents
+    logger.info("📜 Initializing policy documents...")
+    try:
+        from services.policy_seeder import seed_initial_policies
+        await seed_initial_policies(db)
+        logger.info("✅ Policy documents initialized successfully")
+    except Exception as e:
+        logger.error(f"❌ Failed to initialize policy documents: {str(e)}")
+    
     logger.info("🚀 Starting actor initialization...")
     
     try:
