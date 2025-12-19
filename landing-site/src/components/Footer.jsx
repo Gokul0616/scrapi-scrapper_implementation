@@ -73,12 +73,29 @@ const Footer = ({ onOpenCookieSettings }) => {
               <ul className="space-y-3">
                 {section.links.map((link, linkIdx) => (
                   <li key={linkIdx}>
-                    <a
-                      href={link.href}
-                      className="text-sm hover:text-white transition-colors"
-                    >
-                      {link.label}
-                    </a>
+                    {link.isButton ? (
+                      <button
+                        onClick={onOpenCookieSettings}
+                        data-testid="footer-cookie-settings-btn"
+                        className="text-sm hover:text-white transition-colors cursor-pointer"
+                      >
+                        {link.label}
+                      </button>
+                    ) : link.isLink ? (
+                      <Link
+                        to={link.href}
+                        className="text-sm hover:text-white transition-colors"
+                      >
+                        {link.label}
+                      </Link>
+                    ) : (
+                      <a
+                        href={link.href}
+                        className="text-sm hover:text-white transition-colors"
+                      >
+                        {link.label}
+                      </a>
+                    )}
                   </li>
                 ))}
               </ul>
