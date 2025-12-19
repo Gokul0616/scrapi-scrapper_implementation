@@ -315,7 +315,6 @@ const CookiePolicy = ({ onOpenCookieSettings }) => {
   );
 };
 
-// Missing icon import needed
-import { Info } from 'lucide-react';
+// End of file
 
 export default CookiePolicy;
