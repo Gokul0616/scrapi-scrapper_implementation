@@ -1,58 +1,5 @@
 
-@router.get("/legal/cookie-policy")
-async def get_cookie_policy():
-    """Get cookie policy content."""
-    return {
-        "last_updated": "August 15, 2025",
-        "intro": "Scrapi Technologies, with its registered seat in San Francisco, CA, welcomes you on our website. This Cookie Policy describes the way we use cookies on our Website and on our platform.",
-        "sections": [
-            {
-                "id": "cookies",
-                "title": "Cookies",
-                "content": "When you access our Website, Platform or use our Services, we may collect information regarding your IP address for the purposes of administering the Website or Platform and tracking Website or Platform usage. We may also use \"cookies\" and your personal information to enhance your experience on the Website, Platform and with the Services and to provide you with personalized offers."
-            },
-            {
-                "id": "types",
-                "title": "What types of cookies do we use?",
-                "subsections": [
-                    {
-                        "title": "Strictly Necessary Cookies",
-                        "id": "strictly-necessary",
-                        "content": "These cookies are necessary for the website to function and cannot be switched off in our systems. They are usually only set in response to actions made by you which amount to a request for services, such as setting your privacy preferences, logging in or filling in forms."
-                    },
-                    {
-                        "title": "Performance Cookies",
-                        "id": "performance",
-                        "content": "These cookies allow us to count visits and traffic sources, so we can measure and improve the performance of our site. They help us to know which pages are the most and least popular and see how visitors move around the site."
-                    },
-                    {
-                        "title": "Functional Cookies",
-                        "id": "functional",
-                        "content": "These cookies enable the website to provide enhanced functionality and personalisation. They may be set by us or by third party providers whose services we have added to our pages."
-                    },
-                    {
-                        "title": "Targeting Cookies",
-                        "id": "targeting",
-                        "content": "These cookies may be set through our site by our advertising partners. They may be used by those companies to build a profile of your interests and show you relevant adverts on other sites."
-                    }
-                ]
-            },
-            {
-                "id": "duration",
-                "title": "How long do cookies last?",
-                "content": "None of our cookies last forever. You can always choose to delete cookies from your computer at any time. Even if you do not delete them yourself, our cookies are set to expire automatically after some time. You can see from the table below the lifespan of each type of cookie that we use.",
-                "table": [
-                     {"name": "AWSALB", "description": "AWS ELB application load balancer", "type": "Strictly necessary", "expiration": "6 days"},
-                     {"name": "OptanonConsent", "description": "Stores information about the categories of cookies the site uses.", "type": "Strictly necessary", "expiration": "364 days"},
-                     {"name": "ScrapiProdUserId", "description": "Identifies if the user is signed in.", "type": "Strictly necessary", "expiration": "Session"},
-                     {"name": "intercom-id", "description": "This cookie is used by Intercom service to identify user sessions.", "type": "Strictly necessary", "expiration": "270 days"},
-                     {"name": "_ga", "description": "Google Analytics - distinguishes users", "type": "Performance", "expiration": "2 years"},
-                     {"name": "_gid", "description": "Google Analytics - distinguishes users", "type": "Performance", "expiration": "24 hours"},
-                     {"name": "hubspotutk", "description": "HubSpot user authentication.", "type": "Functional", "expiration": "389 days"}
-                ]
-            }
-        ]
-    }
+# removed incorrect insertion
 
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Security, WebSocket, WebSocketDisconnect
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, APIKeyHeader
