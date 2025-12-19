@@ -796,7 +796,7 @@ export const PoliciesPage: React.FC = () => {
       {/* AWS Style Side Drawer */}
       {/* Overlay Backdrop */}
       <div 
-        className={`fixed inset-0 bg-gray-900 bg-opacity-50 z-40 transition-opacity duration-300 ease-in-out ${
+        className={`fixed inset-0 bg-gray-900 bg-opacity-25 z-40 transition-opacity duration-300 ease-in-out ${
           drawerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={closeDrawer}
