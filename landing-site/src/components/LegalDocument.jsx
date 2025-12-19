@@ -41,50 +41,35 @@ const DocsNavbar = () => {
   );
 };
 
-// Skeleton Loader Component
-const PageSkeleton = () => (
-  <div className="flex gap-12 animate-pulse">
-    {/* Left Sidebar Skeleton */}
-    <div className="hidden lg:block w-64 flex-shrink-0 space-y-8 mt-28">
-      {[1, 2].map((i) => (
-        <div key={i} className="space-y-4">
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-          <div className="space-y-2">
-            {[1, 2, 3, 4].map((j) => (
-              <div key={j} className="h-8 bg-gray-100 rounded w-full"></div>
-            ))}
-          </div>
-        </div>
-      ))}
+// Content Skeleton Loader (Only for main content)
+const ContentSkeleton = () => (
+  <div className="flex-1 max-w-3xl space-y-8 pt-24 animate-pulse">
+    <div className="space-y-4">
+      <div className="h-10 bg-gray-200 rounded w-3/4"></div>
+      <div className="h-4 bg-gray-200 rounded w-1/4"></div>
     </div>
-
-    {/* Main Content Skeleton */}
-    <div className="flex-1 max-w-3xl space-y-8 pt-24">
-      <div className="space-y-4">
-        <div className="h-10 bg-gray-200 rounded w-3/4"></div>
-        <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-      </div>
-      
-      {[1, 2, 3].map((i) => (
-        <div key={i} className="space-y-4">
-          <div className="h-6 bg-gray-200 rounded w-1/3"></div>
-          <div className="space-y-2">
-            <div className="h-4 bg-gray-100 rounded w-full"></div>
-            <div className="h-4 bg-gray-100 rounded w-full"></div>
-            <div className="h-4 bg-gray-100 rounded w-5/6"></div>
-          </div>
+    
+    {[1, 2, 3].map((i) => (
+      <div key={i} className="space-y-4">
+        <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+        <div className="space-y-2">
+          <div className="h-4 bg-gray-100 rounded w-full"></div>
+          <div className="h-4 bg-gray-100 rounded w-full"></div>
+          <div className="h-4 bg-gray-100 rounded w-5/6"></div>
         </div>
-      ))}
-    </div>
-
-    {/* Right Sidebar Skeleton */}
-    <div className="hidden lg:block w-56 flex-shrink-0 space-y-4 mt-28">
-      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-      <div className="space-y-2">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="h-4 bg-gray-100 rounded w-3/4"></div>
-        ))}
       </div>
+    ))}
+  </div>
+);
+
+// Right Sidebar Skeleton
+const RightSidebarSkeleton = () => (
+  <div className="hidden lg:block w-56 flex-shrink-0 space-y-4 mt-28 animate-pulse">
+    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+    <div className="space-y-2">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <div key={i} className="h-4 bg-gray-100 rounded w-3/4"></div>
+      ))}
     </div>
   </div>
 );
@@ -161,7 +146,7 @@ const LegalDocument = ({ onOpenCookieSettings }) => {
     if (!data) return null;
 
     return (
-      <article className="prose prose-gray max-w-none" data-testid="legal-content">
+      <article className="prose prose-gray max-w-none pt-24 pb-24" data-testid="legal-content">
         <h1 className="text-4xl font-bold text-gray-900 mb-2">{data.title}</h1>
         <p className="text-gray-500 mb-8">Last Updated: {data.last_updated}</p>
 
@@ -256,11 +241,8 @@ const LegalDocument = ({ onOpenCookieSettings }) => {
       
       <main className="min-h-screen">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-          {loading ? (
-            <PageSkeleton />
-          ) : (
             <div className="flex gap-12">
-              {/* Left Sidebar - Navigation */}
+              {/* Left Sidebar - Navigation (Always Visible) */}
               <aside className={`hidden lg:block w-64 flex-shrink-0 transition-all duration-300`}>
                 <div className="sticky top-28 space-y-8">
                   {sidebarLinks.map((group, idx) => (
@@ -300,39 +282,47 @@ const LegalDocument = ({ onOpenCookieSettings }) => {
                 </div>
               </aside>
 
-              {/* Main Content */}
-              <div className="flex-1 min-w-0 pt-24 pb-24">
-                {renderContent()}
-              </div>
+              {/* Main Content Area */}
+              {loading ? (
+                 <>
+                   <ContentSkeleton />
+                   <RightSidebarSkeleton />
+                 </>
+              ) : (
+                <>
+                  <div className="flex-1 min-w-0">
+                    {renderContent()}
+                  </div>
 
-              {/* Right Sidebar - Table of Contents */}
-              <aside className="hidden lg:block w-56 flex-shrink-0">
-                <div className="sticky top-28">
-                  <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
-                    On this page
-                  </h4>
-                  <nav>
-                    <ul className="space-y-1">
-                      {getTableOfContents().map((item) => (
-                        <li key={item.id} className={item.level === 2 ? 'ml-4' : ''}>
-                          <button
-                            onClick={() => scrollToSection(item.id)}
-                            className={`block w-full text-left py-1 text-sm transition-colors ${
-                              activeSection === item.id
-                                ? 'text-blue-600 font-medium'
-                                : 'text-gray-600 hover:text-gray-900'
-                            }`}
-                          >
-                            {item.title}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </nav>
-                </div>
-              </aside>
+                  {/* Right Sidebar - Table of Contents */}
+                  <aside className="hidden lg:block w-56 flex-shrink-0">
+                    <div className="sticky top-28">
+                      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                        On this page
+                      </h4>
+                      <nav>
+                        <ul className="space-y-1">
+                          {getTableOfContents().map((item) => (
+                            <li key={item.id} className={item.level === 2 ? 'ml-4' : ''}>
+                              <button
+                                onClick={() => scrollToSection(item.id)}
+                                className={`block w-full text-left py-1 text-sm transition-colors ${
+                                  activeSection === item.id
+                                    ? 'text-blue-600 font-medium'
+                                    : 'text-gray-600 hover:text-gray-900'
+                                }`}
+                              >
+                                {item.title}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </nav>
+                    </div>
+                  </aside>
+                </>
+              )}
             </div>
-          )}
         </div>
       </main>
 
