@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, ExternalLink, Cookie, Shield, BarChart3, Target, Settings, Search, Menu, X, Home, Book, FileText, ChevronDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ExternalLink, Cookie, Shield, BarChart3, Target, Settings, Search, Menu, X, Home, Book, FileText, ChevronDown, Info } from 'lucide-react';
 import Footer from './Footer';
 
 // Docs Navbar Component
