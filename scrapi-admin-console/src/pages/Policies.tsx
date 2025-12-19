@@ -36,7 +36,7 @@ interface Policy {
   updated_by?: string;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
 
 export const PoliciesPage: React.FC = () => {
   const { user } = useAuth();
