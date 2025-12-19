@@ -2580,57 +2580,180 @@ async def run_schedule_now(
 
 
 
-@router.get("/legal/cookie-policy")
-async def get_cookie_policy():
-    """Get cookie policy content."""
-    return {
-        "last_updated": "August 15, 2025",
-        "intro": "Scrapi Technologies, with its registered seat in San Francisco, CA, welcomes you on our website. This Cookie Policy describes the way we use cookies on our Website and on our platform.",
-        "sections": [
-            {
-                "id": "cookies",
-                "title": "Cookies",
-                "content": "When you access our Website, Platform or use our Services, we may collect information regarding your IP address for the purposes of administering the Website or Platform and tracking Website or Platform usage. We may also use \"cookies\" and your personal information to enhance your experience on the Website, Platform and with the Services and to provide you with personalized offers."
-            },
-            {
-                "id": "types",
-                "title": "What types of cookies do we use?",
-                "subsections": [
-                    {
-                        "title": "Strictly Necessary Cookies",
-                        "id": "strictly-necessary",
-                        "content": "These cookies are necessary for the website to function and cannot be switched off in our systems. They are usually only set in response to actions made by you which amount to a request for services, such as setting your privacy preferences, logging in or filling in forms."
-                    },
-                    {
-                        "title": "Performance Cookies",
-                        "id": "performance",
-                        "content": "These cookies allow us to count visits and traffic sources, so we can measure and improve the performance of our site. They help us to know which pages are the most and least popular and see how visitors move around the site."
-                    },
-                    {
-                        "title": "Functional Cookies",
-                        "id": "functional",
-                        "content": "These cookies enable the website to provide enhanced functionality and personalisation. They may be set by us or by third party providers whose services we have added to our pages."
-                    },
-                    {
-                        "title": "Targeting Cookies",
-                        "id": "targeting",
-                        "content": "These cookies may be set through our site by our advertising partners. They may be used by those companies to build a profile of your interests and show you relevant adverts on other sites."
-                    }
-                ]
-            },
-            {
-                "id": "duration",
-                "title": "How long do cookies last?",
-                "content": "None of our cookies last forever. You can always choose to delete cookies from your computer at any time. Even if you do not delete them yourself, our cookies are set to expire automatically after some time. You can see from the table below the lifespan of each type of cookie that we use.",
-                "table": [
-                     {"name": "AWSALB", "description": "AWS ELB application load balancer", "type": "Strictly necessary", "expiration": "6 days"},
-                     {"name": "OptanonConsent", "description": "Stores information about the categories of cookies the site uses.", "type": "Strictly necessary", "expiration": "364 days"},
-                     {"name": "ScrapiProdUserId", "description": "Identifies if the user is signed in.", "type": "Strictly necessary", "expiration": "Session"},
-                     {"name": "intercom-id", "description": "This cookie is used by Intercom service to identify user sessions.", "type": "Strictly necessary", "expiration": "270 days"},
-                     {"name": "_ga", "description": "Google Analytics - distinguishes users", "type": "Performance", "expiration": "2 years"},
-                     {"name": "_gid", "description": "Google Analytics - distinguishes users", "type": "Performance", "expiration": "24 hours"},
-                     {"name": "hubspotutk", "description": "HubSpot user authentication.", "type": "Functional", "expiration": "389 days"}
-                ]
-            }
-        ]
+@router.get("/legal/{doc_id}")
+async def get_legal_document(doc_id: str):
+    """Get content for a specific legal document."""
+    
+    # Common intro text
+    base_intro = "Scrapi Technologies, with its registered seat in San Francisco, CA, welcomes you. This document outlines our policies and your rights."
+    
+    # Database of legal documents (Mock Data)
+    documents = {
+        "cookie-policy": {
+            "title": "Cookie Policy",
+            "last_updated": "August 15, 2025",
+            "intro": "This Cookie Policy describes the way we use cookies on our Website and on our platform.",
+            "sections": [
+                {
+                    "id": "cookies",
+                    "title": "Cookies",
+                    "content": "When you access our Website, Platform or use our Services, we may collect information regarding your IP address for the purposes of administering the Website or Platform and tracking Website or Platform usage."
+                },
+                {
+                    "id": "types",
+                    "title": "What types of cookies do we use?",
+                    "subsections": [
+                        {"title": "Strictly Necessary Cookies", "id": "strictly-necessary", "content": "These cookies are necessary for the website to function."},
+                        {"title": "Performance Cookies", "id": "performance", "content": "These cookies allow us to count visits and traffic sources."},
+                    ]
+                },
+                {
+                    "id": "duration",
+                    "title": "How long do cookies last?",
+                    "content": "None of our cookies last forever. You can always choose to delete cookies from your computer at any time.",
+                    "table": [
+                        {"name": "AWSALB", "description": "AWS ELB application load balancer", "type": "Strictly necessary", "expiration": "6 days"},
+                        {"name": "OptanonConsent", "description": "Stores information about the categories of cookies the site uses.", "type": "Strictly necessary", "expiration": "364 days"},
+                        {"name": "ScrapiProdUserId", "description": "Identifies if the user is signed in.", "type": "Strictly necessary", "expiration": "Session"},
+                    ]
+                }
+            ]
+        },
+        "terms-of-service": {
+            "title": "Terms of Service",
+            "last_updated": "September 1, 2025",
+            "intro": "These Terms of Service ('Terms') govern your access to and use of Scrapi's website, products, and services.",
+            "sections": [
+                {
+                    "id": "acceptance",
+                    "title": "Acceptance of Terms",
+                    "content": "By accessing or using our Services, you agree to be bound by these Terms. If you do not agree to these Terms, you may not access or use the Services."
+                },
+                {
+                    "id": "account",
+                    "title": "User Accounts",
+                    "content": "To access certain features of the Services, you may be required to create an account. You are responsible for maintaining the confidentiality of your account credentials."
+                },
+                {
+                    "id": "usage",
+                    "title": "Usage Restrictions",
+                    "content": "You agree not to misuse the Services or help anyone else to do so. You may not use the Services for any illegal or unauthorized purpose."
+                }
+            ]
+        },
+        "privacy-policy": {
+            "title": "Privacy Policy",
+            "last_updated": "August 20, 2025",
+            "intro": "We are committed to protecting your privacy. This Privacy Policy explains how we collect, use, and share your personal information.",
+            "sections": [
+                {
+                    "id": "collection",
+                    "title": "Information We Collect",
+                    "content": "We collect information you provide directly to us, such as when you create an account, subscribe to our newsletter, or contact us for support."
+                },
+                {
+                    "id": "usage",
+                    "title": "How We Use Your Information",
+                    "content": "We use the information we collect to provide, maintain, and improve our Services, to communicate with you, and to protect our users."
+                },
+                {
+                    "id": "sharing",
+                    "title": "Sharing of Information",
+                    "content": "We do not share your personal information with third parties except as described in this policy."
+                }
+            ]
+        },
+        "acceptable-use-policy": {
+            "title": "Acceptable Use Policy",
+            "last_updated": "July 10, 2025",
+            "intro": "This Acceptable Use Policy sets out the rules for using Scrapi's Services. It is designed to ensure that everyone can use our Services safely and responsibly.",
+            "sections": [
+                {
+                    "id": "prohibited",
+                    "title": "Prohibited Activities",
+                    "content": "You may not use the Services to engage in any illegal, harmful, or offensive activities, including but not limited to: Sending spam or unsolicited messages, Distributing malware or viruses, scraping data in violation of third-party terms."
+                },
+                {
+                    "id": "enforcement",
+                    "title": "Enforcement",
+                    "content": "We reserve the right to investigate and take appropriate action against anyone who violates this policy, including suspending or terminating their account."
+                }
+            ]
+        },
+        "gdpr": {
+            "title": "GDPR Compliance",
+            "last_updated": "May 25, 2025",
+            "intro": "Scrapi is committed to compliance with the General Data Protection Regulation (GDPR). This page outlines our approach to data protection and your rights under the GDPR.",
+            "sections": [
+                {
+                    "id": "rights",
+                    "title": "Your Rights",
+                    "content": "Under the GDPR, you have the right to access, correct, delete, and restrict the processing of your personal data. You also have the right to data portability and the right to object to processing."
+                },
+                {
+                    "id": "transfer",
+                    "title": "Data Transfers",
+                    "content": "We may transfer your personal data to countries outside the European Economic Area (EEA). When we do so, we ensure that appropriate safeguards are in place to protect your data."
+                }
+            ]
+        },
+        "ccpa": {
+            "title": "CCPA Notice",
+            "last_updated": "January 1, 2025",
+            "intro": "This notice for California residents supplements the information contained in our Privacy Policy and applies solely to visitors, users, and others who reside in the State of California.",
+            "sections": [
+                {
+                    "id": "rights",
+                    "title": "Your California Privacy Rights",
+                    "content": "California residents have the right to request that we disclose what personal information we collect, use, disclose, and sell. You also have the right to request the deletion of your personal information."
+                },
+                {
+                    "id": "sales",
+                    "title": "No Sale of Personal Information",
+                    "content": "Scrapi does not sell your personal information to third parties."
+                }
+            ]
+        },
+        "security": {
+            "title": "Security Measures",
+            "last_updated": "August 1, 2025",
+            "intro": "Security is a top priority at Scrapi. We employ industry-standard security measures to protect your data and ensure the reliability of our Services.",
+            "sections": [
+                {
+                    "id": "infrastructure",
+                    "title": "Infrastructure Security",
+                    "content": "Our infrastructure is hosted on Amazon Web Services (AWS), which provides a secure and scalable environment. We use firewalls, encryption, and access controls to protect our systems."
+                },
+                {
+                    "id": "data",
+                    "title": "Data Encryption",
+                    "content": "All data transmitted between your device and our servers is encrypted using TLS/SSL. Sensitive data at rest is also encrypted."
+                }
+            ]
+        },
+        "subprocessors": {
+            "title": "List of Subprocessors",
+            "last_updated": "June 15, 2025",
+            "intro": "Scrapi uses third-party subprocessors to assist in providing our Services. This page lists the subprocessors we currently use.",
+            "sections": [
+                {
+                    "id": "list",
+                    "title": "Current Subprocessors",
+                    "content": "The following is a list of third-party subprocessors that may process customer data:",
+                    "table": [
+                        {"name": "Amazon Web Services", "description": "Cloud Infrastructure", "type": "Infrastructure", "location": "USA"},
+                        {"name": "MongoDB Atlas", "description": "Database Hosting", "type": "Database", "location": "USA"},
+                        {"name": "Stripe", "description": "Payment Processing", "type": "Payments", "location": "USA"},
+                        {"name": "Intercom", "description": "Customer Support", "type": "Support", "location": "USA"},
+                        {"name": "SendGrid", "description": "Email Delivery", "type": "Communication", "location": "USA"}
+                    ]
+                }
+            ]
+        }
     }
+    
+    doc = documents.get(doc_id)
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+        
+    return doc
