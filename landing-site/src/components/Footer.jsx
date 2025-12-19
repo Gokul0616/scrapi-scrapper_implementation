@@ -56,7 +56,8 @@ const Footer = ({ onOpenCookieSettings }) => {
       links: [
         { label: 'Privacy Policy', href: '#' },
         { label: 'Terms of Service', href: '#' },
-        { label: 'Cookie Settings', href: '#' },
+        { label: 'Cookie Policy', href: '/cookie-policy', isLink: true },
+        { label: 'Cookie Settings', href: '#', isButton: true },
       ],
     },
   };
