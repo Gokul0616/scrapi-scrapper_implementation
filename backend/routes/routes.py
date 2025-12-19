@@ -2690,12 +2690,22 @@ async def delete_policy(doc_id: str, current_user: dict = Depends(check_owner_ro
 
 @router.get("/legal/{doc_id}")
 async def get_legal_document(doc_id: str):
-    """Get content for a specific legal document."""
+    """Get content for a specific legal document (public endpoint)."""
     
+    # Try to fetch from database first
+    policy = await db.policies.find_one({"doc_id": doc_id})
+    
+    if policy:
+        # Remove MongoDB _id field
+        if "_id" in policy:
+            del policy["_id"]
+        return policy
+    
+    # Fallback to hardcoded data if not in database (for backward compatibility)
     # Common intro text
     base_intro = "Scrapi Technologies Private Limited, with its registered office in Bengaluru, India, welcomes you. This document outlines our policies and your rights under Indian Law."
     
-    # Database of legal documents (Mock Data)
+    # Database of legal documents (Mock Data - Fallback)
     documents = {
         "cookie-policy": {
             "title": "Cookie Policy",
