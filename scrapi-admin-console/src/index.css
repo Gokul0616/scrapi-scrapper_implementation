@@ -17,3 +17,12 @@ body {
   color: var(--color-aws-text);
   font-family: "Amazon Ember", "Helvetica Neue", Roboto, Arial, sans-serif;
 }
+
+/* Global cursor pointer for interactive elements */
+button, 
+[type="button"], 
+[type="reset"], 
+[type="submit"], 
+[role="button"] {
+  cursor: pointer;
+}
