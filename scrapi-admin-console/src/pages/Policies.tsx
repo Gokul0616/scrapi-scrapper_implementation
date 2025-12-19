@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Plus, Edit2, Trash2, Save, X, Eye, AlertCircle, Search, Filter, ChevronRight } from 'lucide-react';
+import { FileText, Plus, Edit2, Trash2, Save, X, Eye, AlertCircle, Search, Filter, ChevronRight, Copy, Check, Clock, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useAlert } from '../context/AlertContext';
 
@@ -38,11 +38,10 @@ interface Policy {
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
 
-// AWS-style Skeleton Loader Component
+// AWS-style Skeleton Loader
 const SkeletonLoader: React.FC = () => {
   return (
     <div className="animate-pulse">
-      {/* Header skeleton */}
       <div className="flex justify-between items-center mb-6">
         <div>
           <div className="h-7 w-48 bg-gray-200 rounded mb-2"></div>
@@ -50,28 +49,20 @@ const SkeletonLoader: React.FC = () => {
         </div>
         <div className="h-9 w-32 bg-gray-200 rounded"></div>
       </div>
-      
-      {/* Table skeleton */}
       <div className="bg-white shadow-sm rounded border border-aws-border overflow-hidden">
-        {/* Search bar skeleton */}
         <div className="p-4 border-b border-aws-border bg-gray-50">
           <div className="flex gap-4">
             <div className="h-8 w-96 bg-gray-200 rounded"></div>
             <div className="h-8 w-24 bg-gray-200 rounded"></div>
           </div>
         </div>
-        
-        {/* Table header skeleton */}
         <div className="bg-gray-50 px-6 py-3 border-b border-aws-border">
           <div className="flex gap-8">
             <div className="h-4 w-32 bg-gray-200 rounded"></div>
             <div className="h-4 w-24 bg-gray-200 rounded"></div>
             <div className="h-4 w-28 bg-gray-200 rounded"></div>
-            <div className="h-4 w-20 bg-gray-200 rounded"></div>
           </div>
         </div>
-        
-        {/* Table rows skeleton */}
         {[1, 2, 3, 4].map((i) => (
           <div key={i} className="px-6 py-4 border-b border-aws-border">
             <div className="flex items-center gap-4">
@@ -79,13 +70,6 @@ const SkeletonLoader: React.FC = () => {
               <div className="flex-1">
                 <div className="h-5 w-40 bg-gray-200 rounded mb-2"></div>
                 <div className="h-3 w-64 bg-gray-100 rounded"></div>
-              </div>
-              <div className="h-4 w-24 bg-gray-100 rounded"></div>
-              <div className="h-4 w-16 bg-gray-100 rounded"></div>
-              <div className="flex gap-2">
-                <div className="h-8 w-8 bg-gray-100 rounded"></div>
-                <div className="h-8 w-8 bg-gray-100 rounded"></div>
-                <div className="h-8 w-8 bg-gray-100 rounded"></div>
               </div>
             </div>
           </div>
@@ -105,12 +89,22 @@ export const PoliciesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [editedPolicy, setEditedPolicy] = useState<Policy | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const isOwner = user?.role === 'owner';
 
   useEffect(() => {
     fetchPolicies();
   }, []);
+
+  // Sync drawer state with selected policy
+  useEffect(() => {
+    if (selectedPolicy) {
+      setDrawerOpen(true);
+    } else {
+      setDrawerOpen(false);
+    }
+  }, [selectedPolicy]);
 
   const fetchPolicies = async () => {
     try {
@@ -137,6 +131,11 @@ export const PoliciesPage: React.FC = () => {
   const handleEdit = (policy: Policy) => {
     setEditedPolicy({ ...policy });
     setIsEditing(true);
+    // If we are editing, we might want to close the view drawer or keep it open?
+    // AWS usually opens a full page or a different modal for editing.
+    // For now, let's keep the existing behavior: Edit mode replaces the list view or opens a form.
+    // In the previous code, it replaced the list view. Let's stick to that but maybe close the drawer if open.
+    setSelectedPolicy(null); 
   };
 
   const handleCreate = () => {
@@ -150,6 +149,7 @@ export const PoliciesPage: React.FC = () => {
     });
     setIsCreating(true);
     setIsEditing(true);
+    setSelectedPolicy(null);
   };
 
   const handleSave = async () => {
@@ -254,6 +254,11 @@ export const PoliciesPage: React.FC = () => {
     policy.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     policy.doc_id.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const closeDrawer = () => {
+    setDrawerOpen(false);
+    setTimeout(() => setSelectedPolicy(null), 300); // Clear after animation
+  };
 
   if (loading) {
     return (
@@ -502,10 +507,12 @@ export const PoliciesPage: React.FC = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <button className="flex items-center space-x-2 text-aws-text hover:text-aws-blue px-3 py-1.5 border border-gray-300 rounded-sm text-sm font-medium bg-white transition-colors">
-              <Filter className="h-4 w-4" />
-              <span>Filters</span>
-            </button>
+            <div className="flex gap-2">
+              <button className="flex items-center space-x-2 text-aws-text hover:text-aws-blue px-3 py-1.5 border border-gray-300 rounded-sm text-sm font-medium bg-white transition-colors">
+                <Filter className="h-4 w-4" />
+                <span>Filters</span>
+              </button>
+            </div>
           </div>
 
           {/* Table */}
@@ -532,14 +539,19 @@ export const PoliciesPage: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-aws-border">
                 {filteredPolicies.map((policy) => (
-                  <tr key={policy.doc_id} className="hover:bg-blue-50 transition-colors" data-testid={`policy-row-${policy.doc_id}`}>
+                  <tr 
+                    key={policy.doc_id} 
+                    className={`hover:bg-blue-50 transition-colors cursor-pointer ${selectedPolicy?.doc_id === policy.doc_id ? 'bg-blue-50 border-l-4 border-l-aws-blue' : ''}`}
+                    onClick={() => setSelectedPolicy(policy)}
+                    data-testid={`policy-row-${policy.doc_id}`}
+                  >
                     <td className="px-6 py-4">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10 bg-aws-blue/10 rounded flex items-center justify-center">
                           <FileText className="h-5 w-5 text-aws-blue" />
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-aws-blue hover:underline cursor-pointer" onClick={() => setSelectedPolicy(policy)}>
+                          <div className="text-sm font-medium text-aws-blue hover:underline">
                             {policy.title}
                           </div>
                           <div className="text-xs text-aws-text-secondary mt-0.5">{policy.doc_id}</div>
@@ -560,15 +572,7 @@ export const PoliciesPage: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex items-center justify-end space-x-2">
-                        <button
-                          onClick={() => setSelectedPolicy(policy)}
-                          className="p-1.5 text-gray-400 hover:text-aws-blue hover:bg-blue-50 rounded transition-colors"
-                          title="View"
-                          data-testid={`view-policy-${policy.doc_id}`}
-                        >
-                          <Eye size={16} />
-                        </button>
+                      <div className="flex items-center justify-end space-x-2" onClick={(e) => e.stopPropagation()}>
                         {isOwner && (
                           <>
                             <button
@@ -589,6 +593,7 @@ export const PoliciesPage: React.FC = () => {
                             </button>
                           </>
                         )}
+                        <ChevronRight className="h-5 w-5 text-gray-300" />
                       </div>
                     </td>
                   </tr>
@@ -601,22 +606,13 @@ export const PoliciesPage: React.FC = () => {
                       <p className="mt-1 text-sm text-aws-text-secondary">
                         {searchTerm ? 'Try adjusting your search terms.' : 'Get started by creating a new policy.'}
                       </p>
-                      {isOwner && !searchTerm && (
-                        <button
-                          onClick={handleCreate}
-                          className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-aws-orange hover:bg-orange-600 text-white text-sm font-medium rounded-sm transition-colors"
-                        >
-                          <Plus size={16} />
-                          Create Policy
-                        </button>
-                      )}
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
-
+          
           {/* Footer */}
           {filteredPolicies.length > 0 && (
             <div className="bg-white px-4 py-3 border-t border-aws-border sm:px-6">
@@ -630,102 +626,134 @@ export const PoliciesPage: React.FC = () => {
         </div>
       )}
 
-      {/* View Modal - AWS Style */}
-      {selectedPolicy && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-aws-border">
-            <div className="flex justify-between items-center px-6 py-4 border-b border-aws-border bg-gray-50">
-              <div className="flex items-center gap-3">
-                <FileText className="h-5 w-5 text-aws-blue" />
-                <h2 className="text-lg font-semibold text-aws-text">{selectedPolicy.title}</h2>
+      {/* AWS Style Side Drawer */}
+      {/* Overlay Backdrop */}
+      <div 
+        className={`fixed inset-0 bg-gray-900 bg-opacity-50 z-40 transition-opacity duration-300 ease-in-out ${
+          drawerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={closeDrawer}
+        aria-hidden="true"
+      />
+
+      {/* Slide-over Drawer */}
+      <div 
+        className={`fixed inset-y-0 right-0 max-w-[90vw] sm:max-w-[600px] w-full bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col ${
+          drawerOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
+        {selectedPolicy && (
+          <>
+            {/* Drawer Header */}
+            <div className="px-6 py-4 border-b border-aws-border flex items-start justify-between bg-white flex-shrink-0">
+              <div>
+                <h2 className="text-xl font-bold text-aws-text">{selectedPolicy.title}</h2>
+                <div className="flex items-center gap-2 mt-1 text-xs text-aws-text-secondary">
+                  <span className="bg-gray-100 px-2 py-0.5 rounded border border-gray-200 font-mono">
+                    {selectedPolicy.doc_id}
+                  </span>
+                  <span>•</span>
+                  <span>Updated {selectedPolicy.last_updated}</span>
+                </div>
               </div>
-              <button
-                onClick={() => setSelectedPolicy(null)}
-                className="text-gray-400 hover:text-aws-text p-1 hover:bg-gray-200 rounded transition-colors"
+              <button 
+                onClick={closeDrawer}
+                className="text-gray-400 hover:text-aws-text p-1 hover:bg-gray-100 rounded transition-colors"
               >
-                <X size={20} />
+                <X size={24} />
               </button>
             </div>
-            <div className="p-6 overflow-y-auto flex-1">
-              <div className="mb-4 flex items-center gap-2 text-sm text-aws-text-secondary">
-                <span>Last updated:</span>
-                <span className="font-medium">{selectedPolicy.last_updated}</span>
+
+            {/* Drawer Content */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-8">
+              {/* Introduction Section */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-bold text-aws-text uppercase tracking-wide flex items-center gap-2">
+                  <Shield size={16} className="text-aws-orange" />
+                  Overview
+                </h3>
+                <div className="bg-blue-50 border-l-4 border-aws-blue p-4 text-sm text-aws-text leading-relaxed">
+                  {selectedPolicy.intro}
+                </div>
               </div>
-              
-              <div className="bg-blue-50 border border-blue-100 rounded-sm p-4 mb-6">
-                <p className="text-sm text-aws-text">{selectedPolicy.intro}</p>
-              </div>
-              
-              <div className="space-y-6">
-                {selectedPolicy.sidebar_items.length > 0 && (
-                  <div className="border border-aws-border rounded-sm">
-                    <div className="px-4 py-3 bg-gray-50 border-b border-aws-border">
-                      <h3 className="text-sm font-semibold text-aws-text">Left Sidebar Navigation</h3>
-                    </div>
-                    <div className="p-4">
-                      <div className="space-y-2">
-                        {selectedPolicy.sidebar_items.map((item, idx) => (
-                          <div key={idx} className="flex items-center gap-3 text-sm py-1.5 px-3 bg-gray-50 rounded">
-                            <ChevronRight className="h-4 w-4 text-gray-400" />
-                            <span className="text-aws-text">{item.title}</span>
-                            <span className="text-xs text-gray-400">({item.id})</span>
+
+              {/* Sections Map */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold text-aws-text uppercase tracking-wide flex items-center gap-2 border-b border-gray-200 pb-2">
+                  <FileText size={16} className="text-aws-text-secondary" />
+                  Policy Sections ({selectedPolicy.sections.length})
+                </h3>
+                
+                <div className="space-y-4">
+                  {selectedPolicy.sections.map((section, idx) => (
+                    <div key={idx} className="bg-white border border-aws-border rounded-sm shadow-sm overflow-hidden group">
+                      <div className="px-4 py-3 bg-gray-50 border-b border-aws-border flex items-center justify-between">
+                        <span className="font-medium text-aws-text text-sm">{section.title}</span>
+                        <span className="text-xs text-gray-400 font-mono">{section.id}</span>
+                      </div>
+                      <div className="p-4 text-sm text-aws-text-secondary leading-relaxed">
+                        {section.content}
+                        
+                        {/* Subsections */}
+                        {section.subsections && section.subsections.length > 0 && (
+                          <div className="mt-4 space-y-3 pl-4 border-l-2 border-gray-200">
+                            {section.subsections.map((sub, subIdx) => (
+                              <div key={subIdx}>
+                                <h5 className="font-medium text-aws-text text-sm mb-1">{sub.title}</h5>
+                                <p className="text-aws-text-secondary text-sm">{sub.content}</p>
+                              </div>
+                            ))}
                           </div>
-                        ))}
+                        )}
                       </div>
                     </div>
-                  </div>
-                )}
+                  ))}
+                </div>
+              </div>
 
-                {selectedPolicy.sections.length > 0 && (
-                  <div className="border border-aws-border rounded-sm">
-                    <div className="px-4 py-3 bg-gray-50 border-b border-aws-border">
-                      <h3 className="text-sm font-semibold text-aws-text">Main Content Sections</h3>
+              {/* Navigation Items Preview */}
+              <div className="space-y-3">
+                 <h3 className="text-sm font-bold text-aws-text uppercase tracking-wide flex items-center gap-2 border-b border-gray-200 pb-2">
+                  <Filter size={16} className="text-aws-text-secondary" />
+                  Navigation Structure
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {selectedPolicy.sidebar_items.map((item, idx) => (
+                    <div key={idx} className="flex items-center gap-2 p-2 border border-dashed border-gray-300 rounded bg-gray-50 text-sm text-aws-text-secondary">
+                      <div className="w-1.5 h-1.5 bg-aws-orange rounded-full"></div>
+                      <span className="font-medium">{item.title}</span>
                     </div>
-                    <div className="divide-y divide-aws-border">
-                      {selectedPolicy.sections.map((section, idx) => (
-                        <div key={idx} className="p-4">
-                          <h4 className="font-medium text-aws-text mb-2">{section.title}</h4>
-                          <p className="text-sm text-aws-text-secondary">{section.content}</p>
-                          {section.subsections && section.subsections.length > 0 && (
-                            <div className="mt-3 ml-4 space-y-2 border-l-2 border-gray-200 pl-4">
-                              {section.subsections.map((sub, subIdx) => (
-                                <div key={subIdx}>
-                                  <div className="font-medium text-sm text-aws-text">{sub.title}</div>
-                                  <div className="text-sm text-aws-text-secondary">{sub.content}</div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                  ))}
+                  {selectedPolicy.sidebar_items.length === 0 && (
+                     <span className="text-sm text-gray-400 italic">No navigation items defined</span>
+                  )}
+                </div>
               </div>
             </div>
-            <div className="px-6 py-4 border-t border-aws-border bg-gray-50 flex justify-end gap-2">
-              {isOwner && (
-                <button
-                  onClick={() => {
-                    handleEdit(selectedPolicy);
-                    setSelectedPolicy(null);
-                  }}
-                  className="px-4 py-1.5 bg-aws-orange hover:bg-orange-600 text-white text-sm font-medium rounded-sm transition-colors flex items-center gap-2"
-                >
-                  <Edit2 size={14} />
-                  Edit Policy
-                </button>
-              )}
-              <button
-                onClick={() => setSelectedPolicy(null)}
-                className="px-4 py-1.5 bg-white border border-gray-300 text-aws-text text-sm font-medium rounded-sm hover:bg-gray-50 transition-colors"
-              >
-                Close
-              </button>
+
+            {/* Drawer Footer Actions */}
+            <div className="p-4 border-t border-aws-border bg-gray-50 flex items-center justify-end gap-3 flex-shrink-0">
+               {isOwner && (
+                  <button
+                    onClick={() => {
+                       handleEdit(selectedPolicy);
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-white border border-aws-border text-aws-text text-sm font-medium rounded hover:bg-gray-100 transition-colors shadow-sm"
+                  >
+                    <Edit2 size={16} />
+                    Edit
+                  </button>
+               )}
+               <button
+                  onClick={closeDrawer}
+                  className="px-4 py-2 bg-aws-blue hover:bg-blue-700 text-white text-sm font-medium rounded shadow-sm transition-colors"
+               >
+                  Done
+               </button>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </div>
     </div>
   );
 };
