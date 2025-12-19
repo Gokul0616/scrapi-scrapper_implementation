@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Plus, Edit2, Trash2, Save, X, AlertCircle, Search, Filter, ChevronRight, Shield } from 'lucide-react';
+import { 
+  FileText, Plus, Edit2, Trash2, Save, X, AlertCircle, Search, Filter, 
+  ChevronRight, Shield, ChevronDown, ChevronUp, Info, GripVertical 
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useAlert } from '../context/AlertContext';
 
@@ -90,6 +93,9 @@ export const PoliciesPage: React.FC = () => {
   const [editedPolicy, setEditedPolicy] = useState<Policy | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
+  
+  // State for collapsible sections in edit mode
+  const [expandedSections, setExpandedSections] = useState<Record<number, boolean>>({});
 
   const isOwner = user?.role === 'owner';
 
@@ -131,11 +137,13 @@ export const PoliciesPage: React.FC = () => {
   const handleEdit = (policy: Policy) => {
     setEditedPolicy({ ...policy });
     setIsEditing(true);
-    // If we are editing, we might want to close the view drawer or keep it open?
-    // AWS usually opens a full page or a different modal for editing.
-    // For now, let's keep the existing behavior: Edit mode replaces the list view or opens a form.
-    // In the previous code, it replaced the list view. Let's stick to that but maybe close the drawer if open.
-    setSelectedPolicy(null); 
+    setSelectedPolicy(null);
+    // Expand all sections by default when editing starts
+    const initialExpanded: Record<number, boolean> = {};
+    policy.sections.forEach((_, idx) => { initialExpanded[idx] = false; });
+    // Maybe expand the first one
+    if (policy.sections.length > 0) initialExpanded[0] = true;
+    setExpandedSections(initialExpanded);
   };
 
   const handleCreate = () => {
@@ -150,6 +158,7 @@ export const PoliciesPage: React.FC = () => {
     setIsCreating(true);
     setIsEditing(true);
     setSelectedPolicy(null);
+    setExpandedSections({});
   };
 
   const handleSave = async () => {
@@ -210,10 +219,12 @@ export const PoliciesPage: React.FC = () => {
 
   const addSection = () => {
     if (!editedPolicy) return;
+    const newIdx = editedPolicy.sections.length;
     setEditedPolicy({
       ...editedPolicy,
       sections: [...editedPolicy.sections, { id: '', title: '', content: '', subsections: [], table: [] }]
     });
+    setExpandedSections(prev => ({ ...prev, [newIdx]: true }));
   };
 
   const addSidebarItem = () => {
@@ -250,6 +261,10 @@ export const PoliciesPage: React.FC = () => {
     setEditedPolicy({ ...editedPolicy, sidebar_items: newItems });
   };
 
+  const toggleSection = (index: number) => {
+    setExpandedSections(prev => ({ ...prev, [index]: !prev[index] }));
+  };
+
   const filteredPolicies = policies.filter(policy =>
     policy.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     policy.doc_id.toLowerCase().includes(searchTerm.toLowerCase())
@@ -269,26 +284,28 @@ export const PoliciesPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6" data-testid="policies-page">
+    <div className="space-y-6 relative" data-testid="policies-page">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-aws-text">Policy Management</h1>
-          <p className="text-sm text-aws-text-secondary mt-1">Manage legal documents and policies for your platform</p>
+      {!isEditing && (
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-aws-text">Policy Management</h1>
+            <p className="text-sm text-aws-text-secondary mt-1">Manage legal documents and policies for your platform</p>
+          </div>
+          {isOwner && (
+            <button
+              onClick={handleCreate}
+              className="bg-aws-orange hover:bg-orange-600 text-white px-4 py-2 rounded-sm text-sm font-medium shadow-sm transition-colors flex items-center gap-2"
+              data-testid="create-policy-btn"
+            >
+              <Plus size={16} />
+              Create Policy
+            </button>
+          )}
         </div>
-        {isOwner && !isEditing && (
-          <button
-            onClick={handleCreate}
-            className="bg-aws-orange hover:bg-orange-600 text-white px-4 py-2 rounded-sm text-sm font-medium shadow-sm transition-colors flex items-center gap-2"
-            data-testid="create-policy-btn"
-          >
-            <Plus size={16} />
-            Create Policy
-          </button>
-        )}
-      </div>
+      )}
 
-      {!isOwner && (
+      {!isOwner && !isEditing && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-sm p-4 flex items-start gap-3">
           <AlertCircle className="text-yellow-600 mt-0.5 flex-shrink-0" size={18} />
           <div className="text-sm text-yellow-800">
@@ -298,195 +315,345 @@ export const PoliciesPage: React.FC = () => {
       )}
 
       {isEditing && editedPolicy ? (
-        /* Edit/Create Form - AWS Style */
-        <div className="bg-white shadow-sm rounded border border-aws-border">
-          <div className="px-6 py-4 border-b border-aws-border bg-gray-50 flex justify-between items-center">
-            <h2 className="text-lg font-semibold text-aws-text">
-              {isCreating ? 'Create New Policy' : 'Edit Policy'}
-            </h2>
+        /* Edit/Create Layout - AWS "Resource Style" */
+        <div className="max-w-5xl mx-auto pb-20">
+          {/* Editor Header */}
+          <div className="flex justify-between items-center mb-6">
+             <div>
+               <h2 className="text-2xl font-bold text-aws-text">
+                 {isCreating ? 'Create Policy' : `Edit: ${editedPolicy.title}`}
+               </h2>
+               <p className="text-sm text-aws-text-secondary mt-1">
+                 Configure policy metadata, navigation structure, and content sections.
+               </p>
+             </div>
+             <div className="flex gap-3">
+               <button
+                  onClick={() => {
+                    setIsEditing(false);
+                    setIsCreating(false);
+                    setEditedPolicy(null);
+                  }}
+                  className="bg-white border border-gray-300 text-aws-text px-4 py-2 rounded-sm text-sm font-medium hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="bg-aws-orange hover:bg-orange-600 text-white px-4 py-2 rounded-sm text-sm font-medium shadow-sm transition-colors flex items-center gap-2"
+                  data-testid="save-policy-btn"
+                >
+                  <Save size={16} />
+                  {isCreating ? 'Create Policy' : 'Save Changes'}
+                </button>
+             </div>
+          </div>
+
+          <div className="space-y-6">
+            
+            {/* 1. General Configuration Card */}
+            <div className="bg-white rounded border border-aws-border shadow-sm">
+              <div className="px-6 py-4 border-b border-aws-border bg-gray-50/50">
+                <h3 className="text-lg font-bold text-aws-text flex items-center gap-2">
+                  <Shield className="text-aws-blue" size={20} />
+                  General Configuration
+                </h3>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <div>
+                    <label className="block text-sm font-medium text-aws-text mb-1.5">
+                      Policy Title <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={editedPolicy.title}
+                      onChange={(e) => setEditedPolicy({ ...editedPolicy, title: e.target.value })}
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-sm text-sm bg-white focus:outline-none focus:border-aws-blue focus:ring-1 focus:ring-aws-blue shadow-sm"
+                      placeholder="e.g. Terms of Service"
+                      data-testid="policy-title-input"
+                    />
+                  </div>
+                   <div>
+                    <label className="block text-sm font-medium text-aws-text mb-1.5">
+                      Document ID (Slug) <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={editedPolicy.doc_id}
+                        onChange={(e) => setEditedPolicy({ ...editedPolicy, doc_id: e.target.value })}
+                        disabled={!isCreating}
+                        className={`block w-full px-3 py-2 border border-gray-300 rounded-sm text-sm focus:outline-none focus:border-aws-blue focus:ring-1 focus:ring-aws-blue shadow-sm ${!isCreating ? 'bg-gray-100 text-gray-500' : 'bg-white'}`}
+                        placeholder="e.g. terms-of-service"
+                        data-testid="policy-doc-id-input"
+                      />
+                      {!isCreating && (
+                         <span className="absolute right-3 top-2 text-xs text-gray-400 flex items-center gap-1">
+                           <Info size={12} /> Immutable
+                         </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mb-6">
+                   <label className="block text-sm font-medium text-aws-text mb-1.5">
+                      Last Updated String
+                    </label>
+                    <input
+                      type="text"
+                      value={editedPolicy.last_updated}
+                      onChange={(e) => setEditedPolicy({ ...editedPolicy, last_updated: e.target.value })}
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-sm text-sm bg-white focus:outline-none focus:border-aws-blue focus:ring-1 focus:ring-aws-blue shadow-sm max-w-md"
+                      placeholder="e.g. August 2025"
+                    />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-aws-text mb-1.5">
+                    Introduction / Abstract <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    value={editedPolicy.intro}
+                    onChange={(e) => setEditedPolicy({ ...editedPolicy, intro: e.target.value })}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-sm text-sm bg-white focus:outline-none focus:border-aws-blue focus:ring-1 focus:ring-aws-blue shadow-sm min-h-[100px]"
+                    placeholder="Brief description of this policy..."
+                    data-testid="policy-intro-textarea"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">This text appears at the top of the policy page.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Navigation Structure Card */}
+            <div className="bg-white rounded border border-aws-border shadow-sm">
+              <div className="px-6 py-4 border-b border-aws-border bg-gray-50/50 flex justify-between items-center">
+                <h3 className="text-lg font-bold text-aws-text flex items-center gap-2">
+                  <Filter className="text-aws-blue" size={20} />
+                  Navigation Structure
+                </h3>
+                <button
+                  onClick={addSidebarItem}
+                  className="text-sm font-bold text-aws-blue hover:text-blue-700 hover:underline flex items-center gap-1"
+                >
+                  <Plus size={14} /> Add Sidebar Item
+                </button>
+              </div>
+              <div className="p-6">
+                <div className="bg-blue-50/50 border border-blue-100 rounded p-3 mb-4 text-sm text-aws-text-secondary flex gap-2 items-start">
+                  <Info size={16} className="text-aws-blue mt-0.5 flex-shrink-0" />
+                  These items generate the table of contents sidebar. They link to sections by ID.
+                </div>
+
+                {editedPolicy.sidebar_items.length === 0 ? (
+                  <div className="text-center py-8 bg-gray-50 border border-dashed border-gray-300 rounded">
+                    <p className="text-sm text-gray-500">No navigation items yet.</p>
+                    <button onClick={addSidebarItem} className="mt-2 text-sm text-aws-blue font-medium">Add first item</button>
+                  </div>
+                ) : (
+                  <div className="overflow-hidden border border-aws-border rounded-sm">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Title</th>
+                          <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Target Section ID</th>
+                          <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Icon (Optional)</th>
+                          <th className="relative px-4 py-3"><span className="sr-only">Actions</span></th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {editedPolicy.sidebar_items.map((item, index) => (
+                          <tr key={index}>
+                            <td className="px-4 py-2">
+                              <input
+                                type="text"
+                                value={item.title}
+                                onChange={(e) => updateSidebarItem(index, 'title', e.target.value)}
+                                className="block w-full px-2 py-1 border border-gray-300 rounded-sm text-sm focus:outline-none focus:border-aws-blue focus:ring-1 focus:ring-aws-blue"
+                                placeholder="Link Label"
+                              />
+                            </td>
+                            <td className="px-4 py-2">
+                              <input
+                                type="text"
+                                value={item.id}
+                                onChange={(e) => updateSidebarItem(index, 'id', e.target.value)}
+                                className="block w-full px-2 py-1 border border-gray-300 rounded-sm text-sm focus:outline-none focus:border-aws-blue focus:ring-1 focus:ring-aws-blue"
+                                placeholder="#section-id"
+                              />
+                            </td>
+                            <td className="px-4 py-2">
+                              <input
+                                type="text"
+                                value={item.icon || ''}
+                                onChange={(e) => updateSidebarItem(index, 'icon', e.target.value)}
+                                className="block w-full px-2 py-1 border border-gray-300 rounded-sm text-sm focus:outline-none focus:border-aws-blue focus:ring-1 focus:ring-aws-blue"
+                                placeholder="icon-name"
+                              />
+                            </td>
+                            <td className="px-4 py-2 text-right">
+                              <button
+                                onClick={() => removeSidebarItem(index)}
+                                className="text-gray-400 hover:text-red-500 transition-colors"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 3. Content Sections Card */}
+            <div className="bg-white rounded border border-aws-border shadow-sm">
+              <div className="px-6 py-4 border-b border-aws-border bg-gray-50/50 flex justify-between items-center">
+                <h3 className="text-lg font-bold text-aws-text flex items-center gap-2">
+                  <FileText className="text-aws-blue" size={20} />
+                  Policy Sections
+                </h3>
+                <button
+                  onClick={addSection}
+                  className="bg-white border border-gray-300 hover:bg-gray-50 text-aws-text px-3 py-1.5 rounded-sm text-sm font-medium shadow-sm transition-colors flex items-center gap-2"
+                >
+                  <Plus size={14} /> Add Content Section
+                </button>
+              </div>
+              <div className="p-6 bg-gray-50/30">
+                {editedPolicy.sections.length === 0 ? (
+                   <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg bg-white">
+                      <FileText className="mx-auto h-12 w-12 text-gray-300" />
+                      <h3 className="mt-2 text-sm font-medium text-gray-900">No content sections</h3>
+                      <p className="mt-1 text-sm text-gray-500">Start adding sections to build your policy.</p>
+                      <button
+                        onClick={addSection}
+                        className="mt-6 inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-aws-blue hover:bg-blue-700"
+                      >
+                        <Plus className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
+                        Add Section
+                      </button>
+                    </div>
+                ) : (
+                  <div className="space-y-4">
+                    {editedPolicy.sections.map((section, index) => {
+                      const isExpanded = expandedSections[index];
+                      return (
+                        <div key={index} className="bg-white border border-aws-border rounded shadow-sm transition-all duration-200">
+                          {/* Section Header */}
+                          <div 
+                            className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-aws-border cursor-pointer hover:bg-gray-100"
+                            onClick={() => toggleSection(index)}
+                          >
+                            <div className="flex items-center gap-3 overflow-hidden">
+                              <GripVertical size={16} className="text-gray-400 cursor-move" />
+                              <div 
+                                className={`transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                              >
+                                <ChevronDown size={16} className="text-gray-500" />
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-sm font-bold text-aws-text truncate">
+                                  {section.title || <span className="text-gray-400 italic">Untitled Section</span>}
+                                </span>
+                                <span className="text-xs text-gray-500 font-mono">
+                                  {section.id || 'no-id'}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                                <button
+                                  onClick={() => removeSection(index)}
+                                  className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                                  title="Delete Section"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                            </div>
+                          </div>
+                          
+                          {/* Section Body */}
+                          {isExpanded && (
+                            <div className="p-4 space-y-4 border-t border-gray-100 animate-in slide-in-from-top-2 duration-200">
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="md:col-span-2">
+                                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                                    Section Title
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={section.title}
+                                    onChange={(e) => updateSection(index, 'title', e.target.value)}
+                                    className="block w-full px-3 py-2 border border-gray-300 rounded-sm text-sm focus:outline-none focus:border-aws-blue focus:ring-1 focus:ring-aws-blue"
+                                    placeholder="e.g. User Responsibilities"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                                    Section ID (Anchor)
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={section.id}
+                                    onChange={(e) => updateSection(index, 'id', e.target.value)}
+                                    className="block w-full px-3 py-2 border border-gray-300 rounded-sm text-sm font-mono bg-gray-50 focus:bg-white focus:outline-none focus:border-aws-blue focus:ring-1 focus:ring-aws-blue"
+                                    placeholder="e.g. user-responsibilities"
+                                  />
+                                </div>
+                              </div>
+                              
+                              <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                                  Content
+                                </label>
+                                <textarea
+                                  value={section.content}
+                                  onChange={(e) => updateSection(index, 'content', e.target.value)}
+                                  className="block w-full px-3 py-2 border border-gray-300 rounded-sm text-sm focus:outline-none focus:border-aws-blue focus:ring-1 focus:ring-aws-blue min-h-[150px] font-sans"
+                                  placeholder="Enter the main content for this section..."
+                                />
+                              </div>
+
+                              <div className="bg-blue-50/30 border border-blue-100 rounded p-3">
+                                <p className="text-xs text-aws-text-secondary">
+                                  <span className="font-bold">Pro Tip:</span> To add subsections or tables, please edit the JSON structure directly (Feature coming soon).
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+          </div>
+          
+          {/* Floating Save Bar (Mobile/Tablet friendly) */}
+          <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg flex justify-between items-center z-50 lg:hidden">
+            <span className="text-sm font-medium text-gray-600">{isCreating ? 'Unsaved Policy' : 'Editing Policy'}</span>
             <div className="flex gap-2">
-              <button
-                onClick={handleSave}
-                className="bg-aws-orange hover:bg-orange-600 text-white px-4 py-1.5 rounded-sm text-sm font-medium shadow-sm transition-colors flex items-center gap-2"
-                data-testid="save-policy-btn"
-              >
-                <Save size={14} />
-                Save
-              </button>
               <button
                 onClick={() => {
                   setIsEditing(false);
                   setIsCreating(false);
                   setEditedPolicy(null);
                 }}
-                className="bg-white border border-gray-300 text-aws-text px-4 py-1.5 rounded-sm text-sm font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
+                className="px-3 py-2 border border-gray-300 rounded text-sm font-medium"
               >
-                <X size={14} />
                 Cancel
               </button>
-            </div>
-          </div>
-
-          <div className="p-6 space-y-6">
-            {/* Basic Info */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-aws-text mb-1.5">
-                  Document ID <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={editedPolicy.doc_id}
-                  onChange={(e) => setEditedPolicy({ ...editedPolicy, doc_id: e.target.value })}
-                  disabled={!isCreating}
-                  className="block w-full px-3 py-1.5 border border-gray-300 rounded-sm text-sm bg-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-aws-blue focus:border-aws-blue disabled:bg-gray-100 disabled:text-gray-500"
-                  placeholder="e.g., cookie-policy"
-                  data-testid="policy-doc-id-input"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-aws-text mb-1.5">
-                  Title <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={editedPolicy.title}
-                  onChange={(e) => setEditedPolicy({ ...editedPolicy, title: e.target.value })}
-                  className="block w-full px-3 py-1.5 border border-gray-300 rounded-sm text-sm bg-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-aws-blue focus:border-aws-blue"
-                  placeholder="e.g., Cookie Policy"
-                  data-testid="policy-title-input"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-aws-text mb-1.5">
-                Last Updated
-              </label>
-              <input
-                type="text"
-                value={editedPolicy.last_updated}
-                onChange={(e) => setEditedPolicy({ ...editedPolicy, last_updated: e.target.value })}
-                className="block w-full px-3 py-1.5 border border-gray-300 rounded-sm text-sm bg-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-aws-blue focus:border-aws-blue"
-                placeholder="e.g., August 15, 2025"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-aws-text mb-1.5">
-                Introduction <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                value={editedPolicy.intro}
-                onChange={(e) => setEditedPolicy({ ...editedPolicy, intro: e.target.value })}
-                className="block w-full px-3 py-1.5 border border-gray-300 rounded-sm text-sm bg-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-aws-blue focus:border-aws-blue h-24 resize-none"
-                placeholder="Introduction text..."
-                data-testid="policy-intro-textarea"
-              />
-            </div>
-
-            {/* Sidebar Items */}
-            <div className="border border-aws-border rounded-sm">
-              <div className="px-4 py-3 bg-gray-50 border-b border-aws-border flex justify-between items-center">
-                <h3 className="text-sm font-medium text-aws-text">Left Sidebar Items</h3>
-                <button
-                  onClick={addSidebarItem}
-                  className="text-sm text-aws-blue hover:text-blue-700 font-medium"
-                >
-                  + Add Item
-                </button>
-              </div>
-              <div className="p-4 space-y-3">
-                {editedPolicy.sidebar_items.length === 0 ? (
-                  <p className="text-sm text-gray-500 italic">No sidebar items added yet.</p>
-                ) : (
-                  editedPolicy.sidebar_items.map((item, index) => (
-                    <div key={index} className="flex gap-2 items-center p-3 bg-gray-50 rounded border border-gray-200">
-                      <input
-                        type="text"
-                        value={item.id}
-                        onChange={(e) => updateSidebarItem(index, 'id', e.target.value)}
-                        className="flex-1 px-2 py-1 border border-gray-300 rounded-sm text-sm"
-                        placeholder="ID"
-                      />
-                      <input
-                        type="text"
-                        value={item.title}
-                        onChange={(e) => updateSidebarItem(index, 'title', e.target.value)}
-                        className="flex-1 px-2 py-1 border border-gray-300 rounded-sm text-sm"
-                        placeholder="Title"
-                      />
-                      <input
-                        type="text"
-                        value={item.icon || ''}
-                        onChange={(e) => updateSidebarItem(index, 'icon', e.target.value)}
-                        className="w-20 px-2 py-1 border border-gray-300 rounded-sm text-sm"
-                        placeholder="Icon"
-                      />
-                      <button
-                        onClick={() => removeSidebarItem(index)}
-                        className="text-red-500 hover:text-red-700 p-1"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            {/* Sections */}
-            <div className="border border-aws-border rounded-sm">
-              <div className="px-4 py-3 bg-gray-50 border-b border-aws-border flex justify-between items-center">
-                <h3 className="text-sm font-medium text-aws-text">Main Content Sections</h3>
-                <button
-                  onClick={addSection}
-                  className="text-sm text-aws-blue hover:text-blue-700 font-medium"
-                >
-                  + Add Section
-                </button>
-              </div>
-              <div className="p-4 space-y-4">
-                {editedPolicy.sections.length === 0 ? (
-                  <p className="text-sm text-gray-500 italic">No sections added yet.</p>
-                ) : (
-                  editedPolicy.sections.map((section, index) => (
-                    <div key={index} className="p-4 bg-gray-50 rounded border border-gray-200">
-                      <div className="flex justify-between items-center mb-3">
-                        <span className="text-xs font-medium text-aws-text-secondary uppercase">Section {index + 1}</span>
-                        <button
-                          onClick={() => removeSection(index)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                      <div className="space-y-3">
-                        <input
-                          type="text"
-                          value={section.id}
-                          onChange={(e) => updateSection(index, 'id', e.target.value)}
-                          className="w-full px-2 py-1.5 border border-gray-300 rounded-sm text-sm"
-                          placeholder="Section ID"
-                        />
-                        <input
-                          type="text"
-                          value={section.title}
-                          onChange={(e) => updateSection(index, 'title', e.target.value)}
-                          className="w-full px-2 py-1.5 border border-gray-300 rounded-sm text-sm"
-                          placeholder="Section Title"
-                        />
-                        <textarea
-                          value={section.content}
-                          onChange={(e) => updateSection(index, 'content', e.target.value)}
-                          className="w-full px-2 py-1.5 border border-gray-300 rounded-sm text-sm h-20 resize-none"
-                          placeholder="Section Content"
-                        />
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
+              <button
+                onClick={handleSave}
+                className="px-3 py-2 bg-aws-orange text-white rounded text-sm font-medium shadow-sm"
+              >
+                Save
+              </button>
             </div>
           </div>
         </div>
