@@ -100,8 +100,8 @@ export const PoliciesPage: React.FC = () => {
     try {
       const token = localStorage.getItem('token');
       const url = isCreating 
-        ? `${API_URL}/api/policies`
-        : `${API_URL}/api/policies/${editedPolicy.doc_id}`;
+        ? `${BACKEND_URL}/api/policies`
+        : `${BACKEND_URL}/api/policies/${editedPolicy.doc_id}`;
       
       const method = isCreating ? 'POST' : 'PUT';
 
