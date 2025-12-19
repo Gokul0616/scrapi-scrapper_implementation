@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ChevronDown, Star, Users, ArrowRight, ExternalLink, Play } from 'lucide-react';
 import { actors, companyLogos, integrations, testimonials, codeTemplates } from './data/mockData';
 import Navbar from './components/Navbar';
@@ -16,7 +16,7 @@ import CTASection from './components/CTASection';
 import Footer from './components/Footer';
 import CookieBanner from './components/CookieBanner';
 import CookieSettingsModal from './components/CookieSettingsModal';
-import CookiePolicy from './components/CookiePolicy';
+import LegalDocument from './components/LegalDocument';
 
 // Main Landing Page Component
 function LandingPage({ onOpenCookieSettings }) {
@@ -85,7 +85,10 @@ function App() {
             <LandingPage onOpenCookieSettings={handleOpenCookieSettings} />
           } 
         />
-        <Route path="/cookie-policy" element={<CookiePolicy onOpenCookieSettings={handleOpenCookieSettings} />} />
+        {/* Redirect old path to new structure */}
+        <Route path="/cookie-policy" element={<Navigate to="/legal/cookie-policy" replace />} />
+        {/* Dynamic Legal Routes */}
+        <Route path="/legal/:docId" element={<LegalDocument onOpenCookieSettings={handleOpenCookieSettings} />} />
       </Routes>
       
       {/* Cookie Banner - shows on all pages */}
