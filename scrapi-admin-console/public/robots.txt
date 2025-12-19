@@ -5,4 +5,4 @@ User-agent: *
 Disallow: /
 
 # Sitemap (for reference, even though indexing is disabled)
-Sitemap: https://cookie-consent-modal.preview.emergentagent.com/sitemap.xml
+Sitemap: https://elastic-wu.preview.emergentagent.com/sitemap.xml
