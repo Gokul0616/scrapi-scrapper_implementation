@@ -132,7 +132,7 @@ export const PoliciesPage: React.FC = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/policies/${docId}`, {
+      const response = await fetch(`${BACKEND_URL}/api/policies/${docId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
