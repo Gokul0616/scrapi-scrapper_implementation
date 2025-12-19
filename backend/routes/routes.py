@@ -2585,36 +2585,44 @@ async def get_legal_document(doc_id: str):
     """Get content for a specific legal document."""
     
     # Common intro text
-    base_intro = "Scrapi Technologies, with its registered seat in San Francisco, CA, welcomes you. This document outlines our policies and your rights."
+    base_intro = "Scrapi Technologies Private Limited, with its registered office in Bengaluru, India, welcomes you. This document outlines our policies and your rights under Indian Law."
     
     # Database of legal documents (Mock Data)
     documents = {
         "cookie-policy": {
             "title": "Cookie Policy",
             "last_updated": "August 15, 2025",
-            "intro": "This Cookie Policy describes the way we use cookies on our Website and on our platform.",
+            "intro": "This Cookie Policy describes how Scrapi Technologies Pvt. Ltd. ('we', 'us', or 'our') uses cookies on our Website and Platform, in compliance with the Information Technology Act, 2000 and the Digital Personal Data Protection Act, 2023.",
             "sections": [
                 {
                     "id": "cookies",
-                    "title": "Cookies",
-                    "content": "When you access our Website, Platform or use our Services, we may collect information regarding your IP address for the purposes of administering the Website or Platform and tracking Website or Platform usage."
+                    "title": "What are Cookies?",
+                    "content": "Cookies are small text files stored on your device when you access our Website or Platform. They help us function effectively and improve your experience. We use them in accordance with Indian data privacy regulations."
                 },
                 {
                     "id": "types",
-                    "title": "What types of cookies do we use?",
+                    "title": "Types of Cookies We Use",
                     "subsections": [
-                        {"title": "Strictly Necessary Cookies", "id": "strictly-necessary", "content": "These cookies are necessary for the website to function."},
-                        {"title": "Performance Cookies", "id": "performance", "content": "These cookies allow us to count visits and traffic sources."},
+                        {"title": "Strictly Necessary Cookies", "id": "strictly-necessary", "content": "Essential for the website's operation (e.g., login, security). These cannot be disabled."},
+                        {"title": "Performance & Analytics Cookies", "id": "performance", "content": "Help us understand how you use our site to improve performance. We use aggregated data where possible."},
+                        {"title": "Functional Cookies", "id": "functional", "content": "Enable enhanced functionality and personalization (e.g., language preference)."},
+                         {"title": "Targeting/Advertising Cookies", "id": "targeting", "content": "Used to deliver relevant advertisements. We request explicit consent for these as per DPDP Act, 2023."}
                     ]
                 },
                 {
+                    "id": "consent",
+                    "title": "Consent and Control",
+                    "content": "By using our website, you consent to the use of necessary cookies. For other types, you have the right to withdraw consent at any time via the Cookie Settings."
+                },
+                {
                     "id": "duration",
-                    "title": "How long do cookies last?",
-                    "content": "None of our cookies last forever. You can always choose to delete cookies from your computer at any time.",
+                    "title": "Cookie Duration",
+                    "content": "Cookies have different lifespans. Session cookies expire when you close your browser, while persistent cookies remain for a specified period.",
                     "table": [
-                        {"name": "AWSALB", "description": "AWS ELB application load balancer", "type": "Strictly necessary", "expiration": "6 days"},
-                        {"name": "OptanonConsent", "description": "Stores information about the categories of cookies the site uses.", "type": "Strictly necessary", "expiration": "364 days"},
-                        {"name": "ScrapiProdUserId", "description": "Identifies if the user is signed in.", "type": "Strictly necessary", "expiration": "Session"},
+                        {"name": "AWSALB", "description": "AWS Load Balancer for routing", "type": "Strictly necessary", "expiration": "6 days"},
+                        {"name": "ScrapiAuth", "description": "User authentication token", "type": "Strictly necessary", "expiration": "Session"},
+                        {"name": "CONSENT", "description": "Cookie consent status", "type": "Necessary", "expiration": "1 year"},
+                        {"name": "_ga", "description": "Google Analytics user distinction", "type": "Performance", "expiration": "2 years"}
                     ]
                 }
             ]
@@ -2622,130 +2630,150 @@ async def get_legal_document(doc_id: str):
         "terms-of-service": {
             "title": "Terms of Service",
             "last_updated": "September 1, 2025",
-            "intro": "These Terms of Service ('Terms') govern your access to and use of Scrapi's website, products, and services.",
+            "intro": "These Terms of Service ('Terms') govern your access to and use of Scrapi's services. By accessing our platform, you agree to be bound by these Terms, which are governed by the laws of India.",
             "sections": [
                 {
                     "id": "acceptance",
                     "title": "Acceptance of Terms",
-                    "content": "By accessing or using our Services, you agree to be bound by these Terms. If you do not agree to these Terms, you may not access or use the Services."
+                    "content": "By accessing or using our Services, you agree to be bound by these Terms and our Privacy Policy. If you do not agree, you may not use our Services."
                 },
                 {
                     "id": "account",
-                    "title": "User Accounts",
-                    "content": "To access certain features of the Services, you may be required to create an account. You are responsible for maintaining the confidentiality of your account credentials."
+                    "title": "User Accounts & KYC",
+                    "content": "You may need to register an account. You agree to provide accurate information. For certain services, we may require KYC documents as per Indian regulations."
                 },
                 {
                     "id": "usage",
                     "title": "Usage Restrictions",
-                    "content": "You agree not to misuse the Services or help anyone else to do so. You may not use the Services for any illegal or unauthorized purpose."
+                    "content": "You agree not to misuse the Services. Prohibited acts include violating the Information Technology Act, 2000, scraping prohibited data, or infringing intellectual property rights."
+                },
+                {
+                     "id": "jurisdiction",
+                     "title": "Governing Law and Jurisdiction",
+                     "content": "These Terms shall be governed by the laws of India. Any disputes arising out of these Terms shall be subject to the exclusive jurisdiction of the courts in Bengaluru, Karnataka."
                 }
             ]
         },
         "privacy-policy": {
             "title": "Privacy Policy",
             "last_updated": "August 20, 2025",
-            "intro": "We are committed to protecting your privacy. This Privacy Policy explains how we collect, use, and share your personal information.",
+            "intro": "We are committed to protecting your privacy in accordance with the Digital Personal Data Protection Act, 2023 (DPDP Act) and the Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011.",
             "sections": [
                 {
                     "id": "collection",
                     "title": "Information We Collect",
-                    "content": "We collect information you provide directly to us, such as when you create an account, subscribe to our newsletter, or contact us for support."
+                    "content": "We collect personal data you provide (Name, Email, Phone) and usage data. We process this data only for the purposes you have consented to or for legitimate uses defined by law."
                 },
                 {
-                    "id": "usage",
-                    "title": "How We Use Your Information",
-                    "content": "We use the information we collect to provide, maintain, and improve our Services, to communicate with you, and to protect our users."
+                    "id": "rights",
+                    "title": "Your Rights under DPDP Act",
+                    "subsections": [
+                        {"title": "Right to Access", "id": "access", "content": "You can request a summary of your personal data being processed."},
+                        {"title": "Right to Correction", "id": "correction", "content": "You can request correction or completion of inaccurate data."},
+                        {"title": "Right to Erasure", "id": "erasure", "content": "You can request deletion of your data unless retention is required by law."},
+                        {"title": "Right to Grievance Redressal", "id": "grievance", "content": "You can contact our Grievance Officer for any privacy concerns."}
+                    ]
                 },
                 {
                     "id": "sharing",
-                    "title": "Sharing of Information",
-                    "content": "We do not share your personal information with third parties except as described in this policy."
+                    "title": "Data Sharing & Localization",
+                    "content": "We do not sell your data. We may share data with service providers under strict contracts. Your data is primarily stored on servers in India or in countries with adequate data protection standards as approved by the Indian Government."
+                },
+                {
+                     "id": "contact",
+                     "title": "Grievance Officer",
+                     "content": "For any privacy-related concerns, please contact our Grievance Officer: Mr. Rahul Sharma, Email: grievance@scrapi.com, Address: Scrapi Tech, HSR Layout, Bengaluru - 560102."
                 }
             ]
         },
         "acceptable-use-policy": {
             "title": "Acceptable Use Policy",
             "last_updated": "July 10, 2025",
-            "intro": "This Acceptable Use Policy sets out the rules for using Scrapi's Services. It is designed to ensure that everyone can use our Services safely and responsibly.",
+            "intro": "This policy sets out the rules for using Scrapi's Services to ensure safety and compliance with Indian laws.",
             "sections": [
                 {
                     "id": "prohibited",
                     "title": "Prohibited Activities",
-                    "content": "You may not use the Services to engage in any illegal, harmful, or offensive activities, including but not limited to: Sending spam or unsolicited messages, Distributing malware or viruses, scraping data in violation of third-party terms."
+                    "content": "You may not use the Services for: (a) Hosting/sharing content prohibited under Section 67 of the IT Act (obscenity, child sexual abuse material); (b) Promoting hate speech, violence, or discrimination; (c) Violating copyright or trademark laws; (d) Sending spam."
                 },
                 {
                     "id": "enforcement",
                     "title": "Enforcement",
-                    "content": "We reserve the right to investigate and take appropriate action against anyone who violates this policy, including suspending or terminating their account."
+                    "content": "We reserve the right to suspend or terminate accounts violating this policy and report illegal activities to Indian law enforcement agencies (CERT-In, Cyber Crime Cell)."
                 }
             ]
         },
         "gdpr": {
             "title": "GDPR Compliance",
             "last_updated": "May 25, 2025",
-            "intro": "Scrapi is committed to compliance with the General Data Protection Regulation (GDPR). This page outlines our approach to data protection and your rights under the GDPR.",
+            "intro": "While we are an Indian company, we respect the privacy of our global users and comply with the GDPR for our EU users.",
             "sections": [
                 {
                     "id": "rights",
                     "title": "Your Rights",
-                    "content": "Under the GDPR, you have the right to access, correct, delete, and restrict the processing of your personal data. You also have the right to data portability and the right to object to processing."
+                    "content": "EU users have rights to access, rectification, erasure, restriction of processing, and data portability."
                 },
                 {
                     "id": "transfer",
                     "title": "Data Transfers",
-                    "content": "We may transfer your personal data to countries outside the European Economic Area (EEA). When we do so, we ensure that appropriate safeguards are in place to protect your data."
+                    "content": "Transfers of data from the EEA to India are protected by Standard Contractual Clauses (SCCs)."
                 }
             ]
         },
         "ccpa": {
             "title": "CCPA Notice",
             "last_updated": "January 1, 2025",
-            "intro": "This notice for California residents supplements the information contained in our Privacy Policy and applies solely to visitors, users, and others who reside in the State of California.",
+            "intro": "Notice for California residents regarding their privacy rights.",
             "sections": [
                 {
                     "id": "rights",
                     "title": "Your California Privacy Rights",
-                    "content": "California residents have the right to request that we disclose what personal information we collect, use, disclose, and sell. You also have the right to request the deletion of your personal information."
+                    "content": "Right to know, delete, and opt-out of sale of personal information."
                 },
                 {
                     "id": "sales",
                     "title": "No Sale of Personal Information",
-                    "content": "Scrapi does not sell your personal information to third parties."
+                    "content": "Scrapi does not sell personal information."
                 }
             ]
         },
         "security": {
             "title": "Security Measures",
             "last_updated": "August 1, 2025",
-            "intro": "Security is a top priority at Scrapi. We employ industry-standard security measures to protect your data and ensure the reliability of our Services.",
+            "intro": "We implement reasonable security practices and procedures as required by the IT Act, 2000 and ISO 27001 standards.",
             "sections": [
                 {
                     "id": "infrastructure",
                     "title": "Infrastructure Security",
-                    "content": "Our infrastructure is hosted on Amazon Web Services (AWS), which provides a secure and scalable environment. We use firewalls, encryption, and access controls to protect our systems."
+                    "content": "Hosted on secure cloud infrastructure with firewalls, IDS/IPS, and regular audits."
                 },
                 {
                     "id": "data",
                     "title": "Data Encryption",
-                    "content": "All data transmitted between your device and our servers is encrypted using TLS/SSL. Sensitive data at rest is also encrypted."
+                    "content": "Data is encrypted in transit (TLS 1.2+) and at rest (AES-256)."
+                },
+                {
+                     "id": "incident",
+                     "title": "Incident Reporting",
+                     "content": "We have a mechanism to report cybersecurity incidents to CERT-In within the mandated timelines."
                 }
             ]
         },
         "subprocessors": {
             "title": "List of Subprocessors",
             "last_updated": "June 15, 2025",
-            "intro": "Scrapi uses third-party subprocessors to assist in providing our Services. This page lists the subprocessors we currently use.",
+            "intro": "We use the following third-party service providers:",
             "sections": [
                 {
                     "id": "list",
                     "title": "Current Subprocessors",
-                    "content": "The following is a list of third-party subprocessors that may process customer data:",
+                    "content": "Entities processing data on our behalf:",
                     "table": [
-                        {"name": "Amazon Web Services", "description": "Cloud Infrastructure", "type": "Infrastructure", "location": "USA"},
-                        {"name": "MongoDB Atlas", "description": "Database Hosting", "type": "Database", "location": "USA"},
-                        {"name": "Stripe", "description": "Payment Processing", "type": "Payments", "location": "USA"},
-                        {"name": "Intercom", "description": "Customer Support", "type": "Support", "location": "USA"},
-                        {"name": "SendGrid", "description": "Email Delivery", "type": "Communication", "location": "USA"}
+                        {"name": "Amazon Web Services", "description": "Cloud Hosting", "type": "Infrastructure", "location": "Mumbai, India (Primary)"},
+                        {"name": "MongoDB Atlas", "description": "Database", "type": "Database", "location": "Mumbai, India"},
+                        {"name": "Razorpay/Stripe", "description": "Payment Gateway", "type": "Payments", "location": "India/USA"},
+                        {"name": "SendGrid", "description": "Email Service", "type": "Communication", "location": "USA"},
+                         {"name": "Google Analytics", "description": "Analytics", "type": "Analytics", "location": "Global"}
                     ]
                 }
             ]
@@ -2757,3 +2785,4 @@ async def get_legal_document(doc_id: str):
         raise HTTPException(status_code=404, detail="Document not found")
         
     return doc
+
