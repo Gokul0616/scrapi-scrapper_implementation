@@ -97,6 +97,8 @@ export const PoliciesPage: React.FC = () => {
   const [editedPolicy, setEditedPolicy] = useState<Policy | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [categories, setCategories] = useState<string[]>(['Legal Documents', 'Compliance']);
+  const [categoryManagerOpen, setCategoryManagerOpen] = useState(false);
   
   // State for collapsible sections in edit mode
   const [expandedSections, setExpandedSections] = useState<Record<number, boolean>>({});
