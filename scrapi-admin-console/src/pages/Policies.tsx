@@ -851,7 +851,7 @@ export const PoliciesPage: React.FC = () => {
                           
                           {/* Section Body */}
                           {isExpanded && (
-                            <div className="p-4 space-y-4 border-t border-gray-100 animate-in slide-in-from-top-2 duration-200">
+                            <div className="p-4 space-y-4 border-t border-gray-100 transition-all duration-300 ease-in-out animate-in slide-in-from-top-2">
                               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div className="md:col-span-2">
                                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
