@@ -297,45 +297,49 @@ const LegalDocument = ({ onOpenCookieSettings }) => {
       <main className="min-h-screen">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex gap-12">
-              {/* Left Sidebar - Navigation (Always Visible) */}
-              <aside className={`hidden lg:block w-64 flex-shrink-0 transition-all duration-300`}>
-                <div className="sticky top-28 space-y-8">
-                  {sidebarLinks.map((group, idx) => (
-                    <div key={idx}>
-                      <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">
-                        {group.title}
-                      </h4>
-                      <ul className="space-y-1 border-l border-gray-100 ml-1">
-                        {group.items.map((item, itemIdx) => (
-                          <li key={itemIdx}>
-                            <Link
-                              to={`/legal/${item.id}`}
-                              className={`block pl-4 py-1.5 text-sm border-l -ml-px transition-colors ${
-                                currentDoc === item.id
-                                  ? 'border-blue-600 text-blue-600 font-medium'
-                                  : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
-                              }`}
-                            >
-                              {item.label}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
+              {/* Left Sidebar - Navigation */}
+              {sidebarLoading ? (
+                <LeftSidebarSkeleton />
+              ) : (
+                <aside className={`hidden lg:block w-64 flex-shrink-0 transition-all duration-300`}>
+                  <div className="sticky top-28 space-y-8">
+                    {sidebarLinks.map((group, idx) => (
+                      <div key={idx}>
+                        <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">
+                          {group.title}
+                        </h4>
+                        <ul className="space-y-1 border-l border-gray-100 ml-1">
+                          {group.items.map((item, itemIdx) => (
+                            <li key={itemIdx}>
+                              <Link
+                                to={`/legal/${item.id}`}
+                                className={`block pl-4 py-1.5 text-sm border-l -ml-px transition-colors ${
+                                  currentDoc === item.id
+                                    ? 'border-blue-600 text-blue-600 font-medium'
+                                    : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                                }`}
+                              >
+                                {item.label}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                    
+                    <div className="pt-6 border-t border-gray-100">
+                      <button
+                        onClick={onOpenCookieSettings}
+                        className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                        data-testid="sidebar-cookie-settings"
+                      >
+                        <Settings className="w-4 h-4" />
+                        Cookie Settings
+                      </button>
                     </div>
-                  ))}
-                  
-                  <div className="pt-6 border-t border-gray-100">
-                    <button
-                      onClick={onOpenCookieSettings}
-                      className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
-                      data-testid="sidebar-cookie-settings"
-                    >
-                      <Settings className="w-4 h-4" />
-                      Cookie Settings
-                    </button>
                   </div>
-                </div>
-              </aside>
+                </aside>
+              )}
 
               {/* Main Content Area */}
               {loading ? (
