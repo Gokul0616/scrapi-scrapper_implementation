@@ -1046,6 +1046,16 @@ export const PoliciesPage: React.FC = () => {
           </>
         )}
       </div>
+
+      {/* Category Manager Modal */}
+      <CategoryManager
+        isOpen={categoryManagerOpen}
+        onClose={() => setCategoryManagerOpen(false)}
+        onCategoryUpdated={() => {
+          fetchCategories();
+          fetchPolicies();
+        }}
+      />
     </div>
   );
 };
