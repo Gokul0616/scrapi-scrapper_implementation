@@ -153,6 +153,9 @@ export const PoliciesPage: React.FC = () => {
     setEditedPolicy({
       doc_id: '',
       title: '',
+      label: '',
+      category: 'Legal Documents',
+      is_public: true,
       last_updated: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
       intro: '',
       sidebar_items: [],
