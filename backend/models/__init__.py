@@ -10,6 +10,7 @@ from .schedule import Schedule, ScheduleCreate, ScheduleUpdate, ScheduleResponse
 from .otp import OTP, SendOTPRequest, VerifyOTPRequest, OTPResponse
 from .audit import AuditLog
 from .api_key import ApiKey, ApiKeyCreate, ApiKeyDisplay
+from .category import Category, CategoryCreate, CategoryUpdate
 
 __all__ = [
     # User models
@@ -33,5 +34,7 @@ __all__ = [
     # Audit models
     'AuditLog',
     # ApiKey models
-    'ApiKey', 'ApiKeyCreate', 'ApiKeyDisplay'
+    'ApiKey', 'ApiKeyCreate', 'ApiKeyDisplay',
+    # Category models
+    'Category', 'CategoryCreate', 'CategoryUpdate'
 ]
