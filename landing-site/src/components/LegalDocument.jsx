@@ -62,6 +62,29 @@ const ContentSkeleton = () => (
   </div>
 );
 
+// Left Sidebar Skeleton
+const LeftSidebarSkeleton = () => (
+  <aside className="hidden lg:block w-64 flex-shrink-0">
+    <div className="sticky top-28 space-y-8 animate-pulse">
+      {[1, 2].map((groupIdx) => (
+        <div key={groupIdx}>
+          <div className="h-4 bg-gray-200 rounded w-2/3 mb-4"></div>
+          <div className="space-y-1 border-l border-gray-100 ml-1">
+            {[1, 2, 3, 4].map((itemIdx) => (
+              <div key={itemIdx} className="pl-4 py-1.5">
+                <div className="h-3 bg-gray-100 rounded w-full"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+      <div className="pt-6 border-t border-gray-100">
+        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+      </div>
+    </div>
+  </aside>
+);
+
 // Right Sidebar Skeleton
 const RightSidebarSkeleton = () => (
   <div className="hidden lg:block w-56 flex-shrink-0 space-y-4 mt-28 animate-pulse">
