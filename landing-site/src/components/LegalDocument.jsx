@@ -175,19 +175,24 @@ const LegalDocument = ({ onOpenCookieSettings }) => {
           if (result.sections && result.sections.length > 0) {
             setActiveSection(result.sections[0].id);
           }
+        } else if (response.status === 404) {
+          // Redirect to 404 page if document not found
+          navigate('/404');
         } else {
-            // Handle error or redirect
-            console.error("Failed to fetch document");
+          // Handle other errors
+          console.error("Failed to fetch document");
+          navigate('/404');
         }
       } catch (error) {
         console.error('Failed to fetch legal document:', error);
+        navigate('/404');
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [currentDoc]);
+  }, [currentDoc, navigate]);
 
   const scrollToSection = (sectionId) => {
     setActiveSection(sectionId);
