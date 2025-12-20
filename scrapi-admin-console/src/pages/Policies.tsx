@@ -792,10 +792,140 @@ export const PoliciesPage: React.FC = () => {
                                 />
                               </div>
 
-                              <div className="bg-blue-50/30 border border-blue-100 rounded p-3">
-                                <p className="text-xs text-aws-text-secondary">
-                                  <span className="font-bold">Pro Tip:</span> To add subsections or tables, please edit the JSON structure directly (Feature coming soon).
-                                </p>
+                              {/* Table Management Section */}
+                              <div className="border-t border-gray-200 pt-4 mt-6">
+                                <div className="flex justify-between items-center mb-3">
+                                  <label className="block text-xs font-bold text-gray-500 uppercase">
+                                    <TableIcon className="inline w-4 h-4 mr-1" />
+                                    Data Table (Optional)
+                                  </label>
+                                  {(!section.table || section.table.length === 0) ? (
+                                    <button
+                                      onClick={() => addTableToSection(index)}
+                                      className="text-xs font-medium text-aws-blue hover:text-blue-700 flex items-center gap-1"
+                                    >
+                                      <Plus size={14} /> Add Table
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => {
+                                        if (confirm('Remove entire table from this section?')) {
+                                          removeTable(index);
+                                        }
+                                      }}
+                                      className="text-xs font-medium text-red-600 hover:text-red-700 flex items-center gap-1"
+                                    >
+                                      <Trash2 size={14} /> Remove Table
+                                    </button>
+                                  )}
+                                </div>
+
+                                {section.table && section.table.length > 0 && (
+                                  <div className="space-y-3">
+                                    {/* Add Column Button */}
+                                    <div className="flex gap-2 items-center">
+                                      <input
+                                        type="text"
+                                        id={`new-column-${index}`}
+                                        placeholder="Column name (e.g., 'name', 'description')"
+                                        className="flex-1 px-2 py-1 border border-gray-300 rounded text-xs"
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') {
+                                            const input = e.target as HTMLInputElement;
+                                            if (input.value.trim()) {
+                                              addTableColumn(index, input.value.trim());
+                                              input.value = '';
+                                            }
+                                          }
+                                        }}
+                                      />
+                                      <button
+                                        onClick={() => {
+                                          const input = document.getElementById(`new-column-${index}`) as HTMLInputElement;
+                                          if (input && input.value.trim()) {
+                                            addTableColumn(index, input.value.trim());
+                                            input.value = '';
+                                          }
+                                        }}
+                                        className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-xs rounded flex items-center gap-1"
+                                      >
+                                        <Plus size={12} /> Add Column
+                                      </button>
+                                    </div>
+
+                                    {/* Table Editor */}
+                                    <div className="overflow-x-auto border border-gray-300 rounded">
+                                      <table className="min-w-full divide-y divide-gray-200 text-xs">
+                                        <thead className="bg-gray-100">
+                                          <tr>
+                                            {Object.keys(section.table[0] || {}).map((columnKey) => (
+                                              <th key={columnKey} className="px-3 py-2 text-left font-bold text-gray-700 uppercase tracking-wider relative group">
+                                                <div className="flex items-center justify-between">
+                                                  <span>{columnKey}</span>
+                                                  <button
+                                                    onClick={() => {
+                                                      if (confirm(`Remove column "${columnKey}"?`)) {
+                                                        removeTableColumn(index, columnKey);
+                                                      }
+                                                    }}
+                                                    className="opacity-0 group-hover:opacity-100 ml-2 text-red-500 hover:text-red-700"
+                                                    title="Remove column"
+                                                  >
+                                                    <X size={12} />
+                                                  </button>
+                                                </div>
+                                              </th>
+                                            ))}
+                                            <th className="px-3 py-2 w-16">
+                                              <span className="sr-only">Actions</span>
+                                            </th>
+                                          </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                          {section.table.map((row: any, rowIdx: number) => (
+                                            <tr key={rowIdx} className="hover:bg-gray-50">
+                                              {Object.keys(row).map((columnKey) => (
+                                                <td key={columnKey} className="px-3 py-2">
+                                                  <input
+                                                    type="text"
+                                                    value={row[columnKey] || ''}
+                                                    onChange={(e) => updateTableCell(index, rowIdx, columnKey, e.target.value)}
+                                                    className="w-full px-2 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:border-aws-blue"
+                                                    placeholder={`Enter ${columnKey}`}
+                                                  />
+                                                </td>
+                                              ))}
+                                              <td className="px-3 py-2">
+                                                <button
+                                                  onClick={() => removeTableRow(index, rowIdx)}
+                                                  className="text-red-500 hover:text-red-700"
+                                                  title="Delete row"
+                                                >
+                                                  <Trash2 size={14} />
+                                                </button>
+                                              </td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </div>
+
+                                    {/* Add Row Button */}
+                                    <button
+                                      onClick={() => addTableRow(index)}
+                                      className="w-full py-2 border-2 border-dashed border-gray-300 rounded text-xs font-medium text-gray-600 hover:border-aws-blue hover:text-aws-blue transition-colors flex items-center justify-center gap-1"
+                                    >
+                                      <Plus size={14} /> Add Row
+                                    </button>
+                                  </div>
+                                )}
+
+                                {(!section.table || section.table.length === 0) && (
+                                  <div className="text-center py-6 bg-gray-50 border border-dashed border-gray-300 rounded">
+                                    <TableIcon className="mx-auto h-8 w-8 text-gray-300" />
+                                    <p className="text-xs text-gray-500 mt-2">No table added yet</p>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           )}
