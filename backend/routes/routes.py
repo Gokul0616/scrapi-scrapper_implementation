@@ -2688,6 +2688,24 @@ async def delete_policy(doc_id: str, current_user: dict = Depends(check_owner_ro
     return {"message": "Policy deleted successfully", "doc_id": doc_id}
 
 
+@router.get("/legal")
+async def get_all_legal_documents():
+    """Get list of all legal documents (public endpoint for landing site sidebar)."""
+    # Fetch all policies from database
+    policies = await db.policies.find().to_list(length=100)
+    
+    # Transform to format expected by frontend
+    documents = []
+    for policy in policies:
+        documents.append({
+            "label": policy.get("label", policy.get("title", "Untitled")),
+            "id": policy.get("doc_id"),
+            "category": policy.get("category", "Legal Documents")
+        })
+    
+    return {"documents": documents}
+
+
 @router.get("/legal/{doc_id}")
 async def get_legal_document(doc_id: str):
     """Get content for a specific legal document (public endpoint)."""
