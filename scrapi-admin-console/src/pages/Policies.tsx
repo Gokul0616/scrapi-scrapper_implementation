@@ -296,6 +296,87 @@ export const PoliciesPage: React.FC = () => {
     setExpandedSections(prev => ({ ...prev, [index]: !prev[index] }));
   };
 
+  // Table management functions
+  const addTableToSection = (sectionIndex: number) => {
+    if (!editedPolicy) return;
+    const newSections = [...editedPolicy.sections];
+    // Initialize with empty table or default structure
+    newSections[sectionIndex].table = [];
+    setEditedPolicy({ ...editedPolicy, sections: newSections });
+  };
+
+  const addTableRow = (sectionIndex: number) => {
+    if (!editedPolicy) return;
+    const newSections = [...editedPolicy.sections];
+    const table = newSections[sectionIndex].table || [];
+    
+    // If table is empty, add first row with default columns
+    if (table.length === 0) {
+      newSections[sectionIndex].table = [{ name: '', description: '', type: '', expiration: '' }];
+    } else {
+      // Copy structure from first row
+      const newRow: any = {};
+      const firstRow = table[0];
+      Object.keys(firstRow).forEach(key => {
+        newRow[key] = '';
+      });
+      newSections[sectionIndex].table = [...table, newRow];
+    }
+    
+    setEditedPolicy({ ...editedPolicy, sections: newSections });
+  };
+
+  const removeTableRow = (sectionIndex: number, rowIndex: number) => {
+    if (!editedPolicy) return;
+    const newSections = [...editedPolicy.sections];
+    const table = newSections[sectionIndex].table || [];
+    newSections[sectionIndex].table = table.filter((_, idx) => idx !== rowIndex);
+    setEditedPolicy({ ...editedPolicy, sections: newSections });
+  };
+
+  const updateTableCell = (sectionIndex: number, rowIndex: number, columnKey: string, value: string) => {
+    if (!editedPolicy) return;
+    const newSections = [...editedPolicy.sections];
+    const table = [...(newSections[sectionIndex].table || [])];
+    table[rowIndex] = { ...table[rowIndex], [columnKey]: value };
+    newSections[sectionIndex].table = table;
+    setEditedPolicy({ ...editedPolicy, sections: newSections });
+  };
+
+  const addTableColumn = (sectionIndex: number, columnName: string) => {
+    if (!editedPolicy || !columnName.trim()) return;
+    const newSections = [...editedPolicy.sections];
+    const table = newSections[sectionIndex].table || [];
+    
+    // Add new column to all rows
+    const updatedTable = table.map(row => ({ ...row, [columnName]: '' }));
+    newSections[sectionIndex].table = updatedTable;
+    setEditedPolicy({ ...editedPolicy, sections: newSections });
+  };
+
+  const removeTableColumn = (sectionIndex: number, columnKey: string) => {
+    if (!editedPolicy) return;
+    const newSections = [...editedPolicy.sections];
+    const table = newSections[sectionIndex].table || [];
+    
+    // Remove column from all rows
+    const updatedTable = table.map(row => {
+      const newRow = { ...row };
+      delete newRow[columnKey];
+      return newRow;
+    });
+    
+    newSections[sectionIndex].table = updatedTable;
+    setEditedPolicy({ ...editedPolicy, sections: newSections });
+  };
+
+  const removeTable = (sectionIndex: number) => {
+    if (!editedPolicy) return;
+    const newSections = [...editedPolicy.sections];
+    newSections[sectionIndex].table = [];
+    setEditedPolicy({ ...editedPolicy, sections: newSections });
+  };
+
   const filteredPolicies = policies.filter(policy =>
     policy.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     policy.doc_id.toLowerCase().includes(searchTerm.toLowerCase())
