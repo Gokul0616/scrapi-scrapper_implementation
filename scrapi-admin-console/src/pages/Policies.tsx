@@ -141,6 +141,27 @@ export const PoliciesPage: React.FC = () => {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const token = localStorage.getItem('scrapi_admin_token');
+      const response = await fetch(`${BACKEND_URL}/api/categories`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch categories');
+
+      const data = await response.json();
+      const categoryNames = data.map((cat: any) => cat.name);
+      setCategories(categoryNames);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      // Keep default categories if fetch fails
+      setCategories(['Legal Documents', 'Compliance']);
+    }
+  };
+
   const handleEdit = (policy: Policy) => {
     setEditedPolicy({ ...policy });
     setIsEditing(true);
