@@ -90,6 +90,8 @@ function App() {
         <Route path="/cookie-policy" element={<Navigate to="/legal/cookie-policy" replace />} />
         {/* Dynamic Legal Routes */}
         <Route path="/legal/:docId" element={<LegalDocument onOpenCookieSettings={handleOpenCookieSettings} />} />
+        {/* 404 Not Found - Catch all routes */}
+        <Route path="*" element={<NotFound onOpenCookieSettings={handleOpenCookieSettings} />} />
       </Routes>
       
       {/* Cookie Banner - shows on all pages */}
