@@ -1208,6 +1208,40 @@ export const PoliciesPage: React.FC = () => {
                             ))}
                           </div>
                         )}
+
+                        {/* Tables */}
+                        {section.table && section.table.length > 0 && (
+                          <div className="mt-4 overflow-x-auto">
+                            <div className="flex items-center gap-2 mb-2">
+                              <TableIcon size={14} className="text-aws-blue" />
+                              <span className="text-xs font-bold text-gray-600 uppercase">Data Table</span>
+                            </div>
+                            <div className="border border-gray-200 rounded overflow-hidden">
+                              <table className="min-w-full divide-y divide-gray-200 text-xs">
+                                <thead className="bg-gray-50">
+                                  <tr>
+                                    {Object.keys(section.table[0] || {}).map((key) => (
+                                      <th key={key} className="px-3 py-2 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                        {key}
+                                      </th>
+                                    ))}
+                                  </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                  {section.table.map((row: any, rowIdx: number) => (
+                                    <tr key={rowIdx} className="hover:bg-gray-50">
+                                      {Object.values(row).map((val: any, colIdx: number) => (
+                                        <td key={colIdx} className="px-3 py-2 whitespace-nowrap text-xs text-gray-600">
+                                          {val}
+                                        </td>
+                                      ))}
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
