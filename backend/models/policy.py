@@ -40,6 +40,9 @@ class Policy(BaseModel):
     """Legal/Policy document model with dynamic structure."""
     doc_id: str = Field(..., description="Unique identifier (e.g., 'cookie-policy')")
     title: str
+    label: Optional[str] = Field(None, description="Display label for sidebar (defaults to title if not provided)")
+    category: str = Field(default="Legal Documents", description="Category: 'Legal Documents' or 'Compliance'")
+    is_public: bool = Field(default=True, description="Whether this policy is visible on public landing site")
     last_updated: str
     intro: str
     sidebar_items: List[SidebarItem] = Field(default_factory=list, description="Left sidebar navigation")
