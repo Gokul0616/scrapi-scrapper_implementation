@@ -821,7 +821,7 @@ export const PoliciesPage: React.FC = () => {
                                 <GripVertical size={16} className="text-gray-400" />
                               </div>
                               <div 
-                                className={`transform transition-transform duration-200 cursor-pointer ${isExpanded ? 'rotate-180' : ''}`}
+                                className={`transform transition-transform duration-300 ease-in-out cursor-pointer ${isExpanded ? 'rotate-180' : ''}`}
                                 onClick={() => toggleSection(index)}
                               >
                                 <ChevronDown size={16} className="text-gray-500" />
