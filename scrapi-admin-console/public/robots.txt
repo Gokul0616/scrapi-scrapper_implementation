@@ -5,4 +5,4 @@ User-agent: *
 Disallow: /
 
 # Sitemap (for reference, even though indexing is disabled)
-Sitemap: https://policy-manager-27.preview.emergentagent.com/sitemap.xml
+Sitemap: https://console-launcher-1.preview.emergentagent.com/sitemap.xml
