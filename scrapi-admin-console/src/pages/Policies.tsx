@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   FileText, Plus, Edit2, Trash2, Save, X, AlertCircle, Search, Filter, 
-  ChevronRight, Shield, ChevronDown, Info, GripVertical, FolderPlus 
+  ChevronRight, Shield, ChevronDown, Info, GripVertical, FolderPlus, Table as TableIcon 
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useAlert } from '../context/AlertContext';
