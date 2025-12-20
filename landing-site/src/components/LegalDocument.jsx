@@ -104,6 +104,7 @@ const LegalDocument = ({ onOpenCookieSettings }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sidebarLinks, setSidebarLinks] = useState([]);
+  const [sidebarLoading, setSidebarLoading] = useState(true);
 
   // Default to terms if no docId provided
   const currentDoc = docId || 'terms-of-service';
