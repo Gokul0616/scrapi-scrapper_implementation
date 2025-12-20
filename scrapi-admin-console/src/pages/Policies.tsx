@@ -866,18 +866,37 @@ export const PoliciesPage: React.FC = () => {
       {/* AWS Style Side Drawer */}
       {/* Overlay Backdrop - Mild shadow effect */}
       <div 
-        className={`fixed inset-0 bg-[rgba(0,0,0,0.5)] z-40 transition-opacity duration-300 ease-in-out ${
+        className={`fixed transition-opacity duration-300 ease-in-out ${
           drawerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
+        style={{ 
+          position: 'fixed', 
+          top: 0, 
+          left: 0, 
+          right: 0, 
+          bottom: 0, 
+          width: '100vw', 
+          height: '100vh',
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          zIndex: 9998
+        }}
         onClick={closeDrawer}
         aria-hidden="true"
       />
 
       {/* Slide-over Drawer */}
       <div 
-        className={`fixed inset-y-0 right-0 max-w-[90vw] sm:max-w-[600px] w-full bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col ${
+        className={`fixed max-w-[90vw] sm:max-w-[600px] w-full bg-white shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col ${
           drawerOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
+        style={{ 
+          position: 'fixed', 
+          top: 0, 
+          bottom: 0, 
+          right: 0, 
+          height: '100vh',
+          zIndex: 9999
+        }}
       >
         {selectedPolicy && (
           <>
