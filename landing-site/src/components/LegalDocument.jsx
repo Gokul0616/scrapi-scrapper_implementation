@@ -112,6 +112,7 @@ const LegalDocument = ({ onOpenCookieSettings }) => {
   // Fetch categories and sidebar links on mount
   useEffect(() => {
     const fetchSidebarData = async () => {
+      setSidebarLoading(true);
       try {
         // Fetch categories first
         const categoriesResponse = await fetch('/api/categories/public');
@@ -151,6 +152,8 @@ const LegalDocument = ({ onOpenCookieSettings }) => {
         console.error('Failed to fetch sidebar data:', error);
         // Keep empty structure if fetch fails
         setSidebarLinks([]);
+      } finally {
+        setSidebarLoading(false);
       }
     };
     
