@@ -78,6 +78,15 @@ async def startup_event():
     except Exception as e:
         logger.error(f"❌ Failed to initialize email validator: {str(e)}")
     
+    # Seed initial policy categories
+    logger.info("📁 Initializing policy categories...")
+    try:
+        from services.category_seeder import seed_initial_categories
+        await seed_initial_categories(db)
+        logger.info("✅ Policy categories initialized successfully")
+    except Exception as e:
+        logger.error(f"❌ Failed to initialize policy categories: {str(e)}")
+    
     # Seed initial policy documents
     logger.info("📜 Initializing policy documents...")
     try:
