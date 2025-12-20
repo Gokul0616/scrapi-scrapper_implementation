@@ -466,8 +466,9 @@ export const PoliciesPage: React.FC = () => {
                       className="block w-full px-3 py-2 border border-gray-300 rounded-sm text-sm bg-white focus:outline-none focus:border-aws-blue focus:ring-1 focus:ring-aws-blue shadow-sm"
                       data-testid="policy-category-select"
                     >
-                      <option value="Legal Documents">Legal Documents</option>
-                      <option value="Compliance">Compliance</option>
+                      {categories.map((cat) => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
                     </select>
                     <p className="text-xs text-gray-500 mt-1">Group in sidebar by category</p>
                   </div>
