@@ -790,21 +790,46 @@ export const PoliciesPage: React.FC = () => {
                   <div className="space-y-4">
                     {editedPolicy.sections.map((section, index) => {
                       const isExpanded = expandedSections[index];
+                      const isDragging = draggedSectionIndex === index;
+                      const isDragOver = dragOverIndex === index;
+                      
                       return (
-                        <div key={index} className="bg-white border border-aws-border rounded shadow-sm transition-all duration-200">
+                        <div 
+                          key={index} 
+                          className={`bg-white border rounded shadow-sm transition-all duration-200 ${
+                            isDragging ? 'opacity-50 border-aws-blue' : 'border-aws-border'
+                          } ${
+                            isDragOver ? 'border-aws-orange border-2 shadow-lg' : ''
+                          }`}
+                          draggable={true}
+                          onDragStart={(e) => handleDragStart(e, index)}
+                          onDragEnd={handleDragEnd}
+                          onDragOver={(e) => handleDragOver(e, index)}
+                          onDragLeave={handleDragLeave}
+                          onDrop={(e) => handleDrop(e, index)}
+                        >
                           {/* Section Header */}
                           <div 
-                            className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-aws-border cursor-pointer hover:bg-gray-100"
-                            onClick={() => toggleSection(index)}
+                            className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-aws-border"
                           >
-                            <div className="flex items-center gap-3 overflow-hidden">
-                              <GripVertical size={16} className="text-gray-400 cursor-move" />
+                            <div className="flex items-center gap-3 overflow-hidden flex-1">
                               <div 
-                                className={`transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                                className="cursor-move hover:bg-gray-200 p-1 rounded"
+                                title="Drag to reorder"
+                                onMouseDown={(e) => e.stopPropagation()}
+                              >
+                                <GripVertical size={16} className="text-gray-400" />
+                              </div>
+                              <div 
+                                className={`transform transition-transform duration-200 cursor-pointer ${isExpanded ? 'rotate-180' : ''}`}
+                                onClick={() => toggleSection(index)}
                               >
                                 <ChevronDown size={16} className="text-gray-500" />
                               </div>
-                              <div className="flex flex-col">
+                              <div 
+                                className="flex flex-col flex-1 cursor-pointer"
+                                onClick={() => toggleSection(index)}
+                              >
                                 <span className="text-sm font-bold text-aws-text truncate">
                                   {section.title || <span className="text-gray-400 italic">Untitled Section</span>}
                                 </span>
