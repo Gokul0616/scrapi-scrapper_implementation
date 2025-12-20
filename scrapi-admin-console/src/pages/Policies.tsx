@@ -300,6 +300,76 @@ export const PoliciesPage: React.FC = () => {
     setExpandedSections(prev => ({ ...prev, [index]: !prev[index] }));
   };
 
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    e.stopPropagation();
+    setDraggedSectionIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.currentTarget.innerHTML);
+    // Add some visual feedback
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '0.5';
+    }
+  };
+
+  const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '1';
+    }
+    setDraggedSectionIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'move';
+    
+    if (draggedSectionIndex !== null && draggedSectionIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (draggedSectionIndex === null || !editedPolicy) return;
+    
+    // Reorder sections
+    const newSections = [...editedPolicy.sections];
+    const [draggedSection] = newSections.splice(draggedSectionIndex, 1);
+    newSections.splice(dropIndex, 0, draggedSection);
+    
+    // Update expanded sections mapping
+    const newExpandedSections: Record<number, boolean> = {};
+    Object.keys(expandedSections).forEach((key) => {
+      const oldIndex = parseInt(key);
+      let newIndex = oldIndex;
+      
+      if (oldIndex === draggedSectionIndex) {
+        newIndex = dropIndex;
+      } else if (draggedSectionIndex < dropIndex && oldIndex > draggedSectionIndex && oldIndex <= dropIndex) {
+        newIndex = oldIndex - 1;
+      } else if (draggedSectionIndex > dropIndex && oldIndex >= dropIndex && oldIndex < draggedSectionIndex) {
+        newIndex = oldIndex + 1;
+      }
+      
+      newExpandedSections[newIndex] = expandedSections[oldIndex];
+    });
+    
+    setEditedPolicy({ ...editedPolicy, sections: newSections });
+    setExpandedSections(newExpandedSections);
+    setDraggedSectionIndex(null);
+    setDragOverIndex(null);
+  };
+
   // Table management functions
   const addTableToSection = (sectionIndex: number) => {
     if (!editedPolicy) return;
