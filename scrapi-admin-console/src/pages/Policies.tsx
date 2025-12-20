@@ -324,14 +324,24 @@ export const PoliciesPage: React.FC = () => {
             <p className="text-sm text-aws-text-secondary mt-1">Manage legal documents and policies for your platform</p>
           </div>
           {isOwner && (
-            <button
-              onClick={handleCreate}
-              className="bg-aws-orange hover:bg-orange-600 text-white px-4 py-2 rounded-sm text-sm font-medium shadow-sm transition-colors flex items-center gap-2"
-              data-testid="create-policy-btn"
-            >
-              <Plus size={16} />
-              Create Policy
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCategoryManagerOpen(true)}
+                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-sm text-sm font-medium shadow-sm transition-colors flex items-center gap-2"
+                data-testid="manage-categories-btn"
+              >
+                <FolderPlus size={16} />
+                Manage Categories
+              </button>
+              <button
+                onClick={handleCreate}
+                className="bg-aws-orange hover:bg-orange-600 text-white px-4 py-2 rounded-sm text-sm font-medium shadow-sm transition-colors flex items-center gap-2"
+                data-testid="create-policy-btn"
+              >
+                <Plus size={16} />
+                Create Policy
+              </button>
+            </div>
           )}
         </div>
       )}
