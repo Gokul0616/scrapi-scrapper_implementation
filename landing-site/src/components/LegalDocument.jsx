@@ -80,53 +80,57 @@ const LegalDocument = ({ onOpenCookieSettings }) => {
   const [activeSection, setActiveSection] = useState(null);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [sidebarLinks, setSidebarLinks] = useState([
-    { 
-      title: 'Legal Documents', 
-      items: [] 
-    },
-    { 
-      title: 'Compliance', 
-      items: []
-    },
-  ]);
+  const [sidebarLinks, setSidebarLinks] = useState([]);
 
   // Default to terms if no docId provided
   const currentDoc = docId || 'terms-of-service';
 
-  // Fetch sidebar links on mount
+  // Fetch categories and sidebar links on mount
   useEffect(() => {
-    const fetchSidebarLinks = async () => {
+    const fetchSidebarData = async () => {
       try {
-        const response = await fetch('/api/legal');
-        if (response.ok) {
-          const result = await response.json();
+        // Fetch categories first
+        const categoriesResponse = await fetch('/api/categories/public');
+        const policiesResponse = await fetch('/api/legal');
+        
+        if (categoriesResponse.ok && policiesResponse.ok) {
+          const categoriesData = await categoriesResponse.json();
+          const policiesData = await policiesResponse.json();
           
-          // Group documents by category
-          const legalDocs = [];
-          const complianceDocs = [];
+          // Group documents by category dynamically
+          const categoryMap = new Map();
           
-          result.documents.forEach(doc => {
-            const item = { label: doc.label, id: doc.id };
-            if (doc.category === 'Compliance') {
-              complianceDocs.push(item);
+          // Initialize all categories with empty items
+          categoriesData.categories.forEach(cat => {
+            categoryMap.set(cat.name, { title: cat.name, items: [] });
+          });
+          
+          // Add documents to their respective categories
+          policiesData.documents.forEach(doc => {
+            const categoryName = doc.category || 'Legal Documents';
+            if (categoryMap.has(categoryName)) {
+              categoryMap.get(categoryName).items.push({ label: doc.label, id: doc.id });
             } else {
-              legalDocs.push(item);
+              // If category not found, add to first category or create new one
+              if (categoryMap.size > 0) {
+                const firstCategory = Array.from(categoryMap.values())[0];
+                firstCategory.items.push({ label: doc.label, id: doc.id });
+              } else {
+                categoryMap.set(categoryName, { title: categoryName, items: [{ label: doc.label, id: doc.id }] });
+              }
             }
           });
           
-          setSidebarLinks([
-            { title: 'Legal Documents', items: legalDocs },
-            { title: 'Compliance', items: complianceDocs }
-          ]);
+          setSidebarLinks(Array.from(categoryMap.values()));
         }
       } catch (error) {
-        console.error('Failed to fetch sidebar links:', error);
-        // Keep default empty structure if fetch fails
+        console.error('Failed to fetch sidebar data:', error);
+        // Keep empty structure if fetch fails
+        setSidebarLinks([]);
       }
     };
     
-    fetchSidebarLinks();
+    fetchSidebarData();
   }, []);
 
   useEffect(() => {
