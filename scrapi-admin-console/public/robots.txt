@@ -5,4 +5,4 @@ User-agent: *
 Disallow: /
 
 # Sitemap (for reference, even though indexing is disabled)
-Sitemap: https://emergentagent-portal.preview.emergentagent.com/sitemap.xml
+Sitemap: https://legal-access-handler.preview.emergentagent.com/sitemap.xml

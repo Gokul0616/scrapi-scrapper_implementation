@@ -1,7 +1,7 @@
 <<<<<<< HEAD
-REACT_APP_BACKEND_URL=https://emergentagent-portal.preview.emergentagent.com
+REACT_APP_BACKEND_URL=https://legal-access-handler.preview.emergentagent.com
 =======
-REACT_APP_BACKEND_URL=https://emergentagent-portal.preview.emergentagent.com
+REACT_APP_BACKEND_URL=https://legal-access-handler.preview.emergentagent.com
 >>>>>>> origin/admin-console-seo-setup
 WDS_SOCKET_PORT=443
 REACT_APP_ENABLE_VISUAL_EDITS=true
