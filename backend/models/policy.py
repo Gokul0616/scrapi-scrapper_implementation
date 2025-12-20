@@ -92,6 +92,9 @@ class PolicyCreate(BaseModel):
 class PolicyUpdate(BaseModel):
     """Schema for updating an existing policy."""
     title: Optional[str] = None
+    label: Optional[str] = None
+    category: Optional[str] = None
+    is_public: Optional[bool] = None
     last_updated: Optional[str] = None
     intro: Optional[str] = None
     sidebar_items: Optional[List[SidebarItem]] = None
