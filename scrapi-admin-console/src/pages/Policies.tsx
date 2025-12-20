@@ -416,6 +416,58 @@ export const PoliciesPage: React.FC = () => {
                     />
                 </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                  <div>
+                    <label className="block text-sm font-medium text-aws-text mb-1.5">
+                      Sidebar Label
+                    </label>
+                    <input
+                      type="text"
+                      value={editedPolicy.label || ''}
+                      onChange={(e) => setEditedPolicy({ ...editedPolicy, label: e.target.value })}
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-sm text-sm bg-white focus:outline-none focus:border-aws-blue focus:ring-1 focus:ring-aws-blue shadow-sm"
+                      placeholder="Leave empty to use title"
+                      data-testid="policy-label-input"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Optional: Custom label for sidebar navigation</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-aws-text mb-1.5">
+                      Category <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={editedPolicy.category}
+                      onChange={(e) => setEditedPolicy({ ...editedPolicy, category: e.target.value })}
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-sm text-sm bg-white focus:outline-none focus:border-aws-blue focus:ring-1 focus:ring-aws-blue shadow-sm"
+                      data-testid="policy-category-select"
+                    >
+                      <option value="Legal Documents">Legal Documents</option>
+                      <option value="Compliance">Compliance</option>
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">Group in sidebar by category</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-aws-text mb-1.5">
+                      Visibility
+                    </label>
+                    <div className="flex items-center gap-3 mt-2">
+                      <label className="flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={editedPolicy.is_public}
+                          onChange={(e) => setEditedPolicy({ ...editedPolicy, is_public: e.target.checked })}
+                          className="w-4 h-4 text-aws-blue border-gray-300 rounded focus:ring-aws-blue"
+                          data-testid="policy-public-checkbox"
+                        />
+                        <span className="ml-2 text-sm text-aws-text">Show on landing site</span>
+                      </label>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {editedPolicy.is_public ? 'Publicly visible' : 'Hidden from public'}
+                    </p>
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-aws-text mb-1.5">
                     Introduction / Abstract <span className="text-red-500">*</span>
