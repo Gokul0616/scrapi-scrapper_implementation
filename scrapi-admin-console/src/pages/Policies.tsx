@@ -107,6 +107,7 @@ export const PoliciesPage: React.FC = () => {
 
   useEffect(() => {
     fetchPolicies();
+    fetchCategories();
   }, []);
 
   // Sync drawer state with selected policy
