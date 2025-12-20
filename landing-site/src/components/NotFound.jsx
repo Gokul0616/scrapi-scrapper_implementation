@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import Navbar from './Navbar';
 import Footer from './Footer';
 
 const NotFound = ({ onOpenCookieSettings }) => {
@@ -7,19 +8,23 @@ const NotFound = ({ onOpenCookieSettings }) => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+      {/* Home Page Navbar */}
+      <Navbar onOpenCookieSettings={onOpenCookieSettings} />
+      
       {/* Main Content - Centered */}
       <div className="flex-1 flex items-center justify-center px-6 py-20">
         <div className="text-center max-w-2xl">
           {/* Main Heading with GT-Walsheim-like font */}
           <h1 
-            className="text-6xl md:text-7xl font-normal text-gray-900 mb-6 tracking-tight"
+            className="text-4xl md:text-5xl font-normal text-gray-900 mb-6 tracking-tight"
             style={{ fontFamily: "'GT-Walsheim-Regular', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}
+            data-testid="404-heading"
           >
             Houston, we have a problem!
           </h1>
           
           {/* Subtext */}
-          <p className="text-xl text-gray-600 mb-10 leading-relaxed">
+          <p className="text-lg md:text-xl text-gray-600 mb-10 leading-relaxed">
             The page you're looking for was not found. Please try somewhere else.
           </p>
 
