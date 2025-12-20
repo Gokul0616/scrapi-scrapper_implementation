@@ -2598,6 +2598,141 @@ async def check_admin_or_owner_role(credentials: HTTPAuthorizationCredentials = 
     return user
 
 
+# ============= Category Routes =============
+@router.get("/categories", response_model=List[dict])
+async def get_all_categories(current_user: dict = Depends(check_admin_or_owner_role)):
+    """Get all categories (admin and owner can view)."""
+    categories = await db.categories.find().sort("display_order", 1).to_list(length=100)
+    
+    # Remove MongoDB _id field
+    for category in categories:
+        if "_id" in category:
+            del category["_id"]
+    
+    return categories
+
+
+@router.get("/categories/public")
+async def get_public_categories():
+    """Get all categories (public endpoint for landing site)."""
+    categories = await db.categories.find().sort("display_order", 1).to_list(length=100)
+    
+    # Remove MongoDB _id field and return simplified format
+    result = []
+    for category in categories:
+        result.append({
+            "id": category.get("id"),
+            "name": category.get("name"),
+            "display_order": category.get("display_order", 0)
+        })
+    
+    return {"categories": result}
+
+
+@router.post("/categories", response_model=dict)
+async def create_category(category_data: dict, current_user: dict = Depends(check_owner_role)):
+    """Create a new category (only owner can create)."""
+    from models.category import CategoryCreate
+    from datetime import datetime, timezone
+    import uuid
+    
+    try:
+        # Validate input
+        category_create = CategoryCreate(**category_data)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid category data: {str(e)}")
+    
+    # Check if category with same name already exists
+    existing = await db.categories.find_one({"name": category_create.name})
+    if existing:
+        raise HTTPException(status_code=400, detail="Category with this name already exists")
+    
+    # Create category document
+    category = {
+        "id": str(uuid.uuid4()),
+        "name": category_create.name,
+        "description": category_create.description,
+        "display_order": category_create.display_order,
+        "created_at": datetime.now(timezone.utc),
+        "updated_at": datetime.now(timezone.utc),
+        "created_by": current_user.get("username", "unknown"),
+        "updated_by": current_user.get("username", "unknown")
+    }
+    
+    await db.categories.insert_one(category)
+    
+    # Remove MongoDB _id
+    if "_id" in category:
+        del category["_id"]
+    
+    return category
+
+
+@router.put("/categories/{category_id}", response_model=dict)
+async def update_category(category_id: str, category_data: dict, current_user: dict = Depends(check_owner_role)):
+    """Update a category (only owner can update)."""
+    from datetime import datetime, timezone
+    
+    # Check if category exists
+    existing = await db.categories.find_one({"id": category_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Category not found")
+    
+    # Prepare update data
+    update_data = {
+        "updated_at": datetime.now(timezone.utc),
+        "updated_by": current_user.get("username", "unknown")
+    }
+    
+    # Add fields that are provided
+    if "name" in category_data:
+        # Check if name is already used by another category
+        name_check = await db.categories.find_one({"name": category_data["name"], "id": {"$ne": category_id}})
+        if name_check:
+            raise HTTPException(status_code=400, detail="Category name already exists")
+        update_data["name"] = category_data["name"]
+    
+    if "description" in category_data:
+        update_data["description"] = category_data["description"]
+    
+    if "display_order" in category_data:
+        update_data["display_order"] = category_data["display_order"]
+    
+    # Update category
+    await db.categories.update_one(
+        {"id": category_id},
+        {"$set": update_data}
+    )
+    
+    # Fetch updated category
+    updated_category = await db.categories.find_one({"id": category_id})
+    if "_id" in updated_category:
+        del updated_category["_id"]
+    
+    return updated_category
+
+
+@router.delete("/categories/{category_id}")
+async def delete_category(category_id: str, current_user: dict = Depends(check_owner_role)):
+    """Delete a category (only owner can delete)."""
+    
+    # Check if category is used by any policies
+    policies_using_category = await db.policies.find_one({"category": category_id})
+    if policies_using_category:
+        raise HTTPException(
+            status_code=400, 
+            detail="Cannot delete category that is used by policies. Please reassign or delete the policies first."
+        )
+    
+    result = await db.categories.delete_one({"id": category_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Category not found")
+    
+    return {"message": "Category deleted successfully", "id": category_id}
+
+
+# ============= Policy Routes =============
 @router.get("/policies", response_model=List[dict])
 async def get_all_policies(current_user: dict = Depends(check_admin_or_owner_role)):
     """Get all policies (admin and owner can view)."""
