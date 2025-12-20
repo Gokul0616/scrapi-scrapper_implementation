@@ -7,42 +7,39 @@ const NotFound = ({ onOpenCookieSettings }) => {
   const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col" style={{ minHeight: '100vh' }}>
-      {/* Home Page Navbar */}
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+      {/* Navbar */}
       <Navbar onOpenCookieSettings={onOpenCookieSettings} />
-      
-      {/* Main Content - Full viewport height minus navbar and footer */}
-      <div 
-        className="flex-1 flex items-center justify-center px-6 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50"
-        style={{ minHeight: 'calc(100vh - 64px - 200px)' }}
-      >
+
+      {/* Main Content */}
+      <main className="flex-1 flex items-center justify-center px-6" style={{minHeight:'100vh'}}>
         <div className="text-center max-w-2xl py-12">
-          {/* Main Heading with GT-Walsheim-like font */}
-          <h1 
-            className="text-4xl md:text-5xl font-normal text-gray-900 mb-6 tracking-tight"
-            style={{ fontFamily: "'GT-Walsheim-Regular', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}
+          <h1
+            className="text-3xl md:text-4xl font-normal text-gray-900 mb-6 tracking-tight"
+            style={{
+              fontFamily:
+                "'GT-Walsheim-Regular', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+            }}
             data-testid="404-heading"
           >
-            Houston, we have a problem!
+            Captain! , we’ve encountered an issue...
           </h1>
-          
-          {/* Subtext */}
-          <p className="text-lg md:text-xl text-gray-600 mb-10 leading-relaxed">
+
+          <p className="text-sm text-gray-600 mb-10 leading-relaxed">
             The page you're looking for was not found. Please try somewhere else.
           </p>
 
-          {/* Go to Homepage Button */}
           <button
             onClick={() => navigate('/')}
-            className="inline-flex items-center justify-center px-8 py-4 bg-gray-900 text-white text-base font-medium rounded-md hover:bg-gray-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            className="inline-flex items-center justify-center px-8 py-2 bg-gray-900 text-white text-base font-medium rounded-md hover:bg-gray-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             data-testid="go-to-homepage-btn"
           >
             Go to homepage
           </button>
         </div>
-      </div>
+      </main>
 
-      {/* Footer at bottom */}
+      {/* Footer */}
       <Footer onOpenCookieSettings={onOpenCookieSettings} />
     </div>
   );
