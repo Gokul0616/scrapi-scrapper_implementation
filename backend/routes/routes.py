@@ -2691,8 +2691,13 @@ async def delete_policy(doc_id: str, current_user: dict = Depends(check_owner_ro
 @router.get("/legal")
 async def get_all_legal_documents():
     """Get list of all legal documents (public endpoint for landing site sidebar)."""
-    # Fetch only public policies from database
-    policies = await db.policies.find({"is_public": True}).to_list(length=100)
+    # Fetch policies from database (if is_public field exists, it must be True; otherwise include all)
+    policies = await db.policies.find({
+        "$or": [
+            {"is_public": True},
+            {"is_public": {"$exists": False}}
+        ]
+    }).to_list(length=100)
     
     # Transform to format expected by frontend
     documents = []
