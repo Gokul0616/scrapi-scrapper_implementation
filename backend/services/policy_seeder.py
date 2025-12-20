@@ -133,6 +133,7 @@ async def seed_initial_policies(db) -> None:
                     "table": []
                 }
             ],
+            "is_public": True,
             "created_at": datetime.now(timezone.utc),
             "updated_at": datetime.now(timezone.utc),
             "created_by": "system",
