@@ -7,13 +7,16 @@ const NotFound = ({ onOpenCookieSettings }) => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+    <div className="flex flex-col" style={{ minHeight: '100vh' }}>
       {/* Home Page Navbar */}
       <Navbar onOpenCookieSettings={onOpenCookieSettings} />
       
-      {/* Main Content - Centered */}
-      <div className="flex-1 flex items-center justify-center px-6 py-20">
-        <div className="text-center max-w-2xl">
+      {/* Main Content - Full viewport height minus navbar and footer */}
+      <div 
+        className="flex-1 flex items-center justify-center px-6 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50"
+        style={{ minHeight: 'calc(100vh - 64px - 200px)' }}
+      >
+        <div className="text-center max-w-2xl py-12">
           {/* Main Heading with GT-Walsheim-like font */}
           <h1 
             className="text-4xl md:text-5xl font-normal text-gray-900 mb-6 tracking-tight"
