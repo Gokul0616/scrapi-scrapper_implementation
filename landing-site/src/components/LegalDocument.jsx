@@ -240,7 +240,7 @@ const LegalDocument = ({ onOpenCookieSettings }) => {
             )}
 
             {section.table && section.table.length > 0 && (
-              <div className="mt-6 overflow-hidden border border-gray-200 rounded-lg shadow-sm">
+              <div className="mt-6 overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
@@ -255,7 +255,7 @@ const LegalDocument = ({ onOpenCookieSettings }) => {
                     {section.table.map((row, idx) => (
                       <tr key={idx} className="hover:bg-gray-50 transition-colors">
                         {Object.values(row).map((val, vIdx) => (
-                          <td key={vIdx} className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          <td key={vIdx} className="px-6 py-4 text-sm text-gray-600">
                             {val}
                           </td>
                         ))}
