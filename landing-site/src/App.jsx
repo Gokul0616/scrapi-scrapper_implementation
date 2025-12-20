@@ -17,6 +17,7 @@ import Footer from './components/Footer';
 import CookieBanner from './components/CookieBanner';
 import CookieSettingsModal from './components/CookieSettingsModal';
 import LegalDocument from './components/LegalDocument';
+import NotFound from './components/NotFound';
 
 // Main Landing Page Component
 function LandingPage({ onOpenCookieSettings }) {
