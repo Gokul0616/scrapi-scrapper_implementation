@@ -29,6 +29,9 @@ interface PolicySection {
 interface Policy {
   doc_id: string;
   title: string;
+  label?: string;
+  category: string;
+  is_public: boolean;
   last_updated: string;
   intro: string;
   sidebar_items: SidebarItem[];
