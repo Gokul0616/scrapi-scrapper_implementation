@@ -80,6 +80,9 @@ class PolicyCreate(BaseModel):
     """Schema for creating a new policy."""
     doc_id: str
     title: str
+    label: Optional[str] = None
+    category: str = "Legal Documents"
+    is_public: bool = True
     last_updated: str
     intro: str
     sidebar_items: List[SidebarItem] = Field(default_factory=list)
