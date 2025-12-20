@@ -17,7 +17,7 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'http://localhost:8001',
+        target: 'https://admin-dashboard-558.preview.emergentagent.com',
         changeOrigin: true,
         secure: false,
       },
