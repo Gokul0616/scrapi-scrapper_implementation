@@ -102,6 +102,10 @@ export const PoliciesPage: React.FC = () => {
   
   // State for collapsible sections in edit mode
   const [expandedSections, setExpandedSections] = useState<Record<number, boolean>>({});
+  
+  // State for drag and drop
+  const [draggedSectionIndex, setDraggedSectionIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const isOwner = user?.role === 'owner';
 
