@@ -192,10 +192,8 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ isOpen, onClos
 
         {/* Content - Scrollable Area */}
         <div className="flex-1 overflow-y-auto px-4 py-4">
-          {/* Add Category Button - Removed from here, now in header */}
-
-          {/* Create/Edit Form */}
-          {(isCreating || editingId) && (
+          {/* Edit Form */}
+          {editingId && (
             <div className="mb-6 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl shadow-sm">
               <div className="flex items-center gap-2 mb-3">
                 <div className="p-1.5 bg-blue-600 rounded-md">
