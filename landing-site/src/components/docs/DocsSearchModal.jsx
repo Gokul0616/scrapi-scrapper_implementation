@@ -52,9 +52,8 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
             if (query.trim().length >= 2) {
                 setLoading(true);
                 try {
-                    // In development, this URL should be to your backend port (e.g., 8000)
-                    // Adjust if you have a proxy set up in Vite
-                    const response = await fetch(`http://localhost:8000/api/search?q=${encodeURIComponent(query)}`);
+                    // Use relative URL for API calls - works in both dev and production
+                    const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
                     if (response.ok) {
                         const data = await response.json();
                         setResults(data.results || []);
