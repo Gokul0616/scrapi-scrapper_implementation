@@ -350,14 +350,26 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ isOpen, onClos
           )}
         </div>
 
-        {/* Footer - Fixed at bottom */}
-        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50 flex-shrink-0">
-          <p className="text-xs text-gray-500">
-            {categories.length} {categories.length === 1 ? 'category' : 'categories'} total
-          </p>
+        {/* Footer - Fixed at bottom with Add Category button */}
+        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50 rounded-b-2xl flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <p className="text-xs text-gray-500">
+              {categories.length} {categories.length === 1 ? 'category' : 'categories'} total
+            </p>
+            {isOwner && !editingId && (
+              <button
+                onClick={handleCreate}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 shadow-sm transition-all"
+                data-testid="add-category-btn"
+              >
+                <Plus className="w-4 h-4" />
+                Add Category
+              </button>
+            )}
+          </div>
           <button
             onClick={onClose}
-            className="px-4 py-1.5 bg-gray-700 text-white text-sm font-semibold rounded hover:bg-gray-800 transition-colors"
+            className="px-4 py-1.5 bg-gray-700 text-white text-sm font-semibold rounded-lg hover:bg-gray-800 transition-colors"
             data-testid="close-modal-btn"
           >
             Close
@@ -365,5 +377,6 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ isOpen, onClos
         </div>
       </div>
     </div>
+    </>
   );
 };
