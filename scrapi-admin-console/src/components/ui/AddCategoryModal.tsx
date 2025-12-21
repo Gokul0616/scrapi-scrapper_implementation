@@ -189,7 +189,7 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
                 placeholder="0"
                 min="0"
                 disabled={loading}
-                data-testid="add-category-order-input"
+                data-testid="category-order-input"
               />
               <p className="text-xs text-gray-500 mt-2 flex items-center gap-1.5">
                 <span className="inline-block w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
