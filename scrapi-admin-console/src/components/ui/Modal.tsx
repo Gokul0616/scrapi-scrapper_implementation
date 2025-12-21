@@ -72,9 +72,9 @@ export const Modal: React.FC<ModalProps> = ({
       />
 
       {/* Modal Content */}
-      <div className="relative w-full max-w-lg bg-white shadow-xl rounded-sm transform transition-all flex flex-col max-h-[90vh]">
+      <div className="relative w-full max-w-lg bg-white shadow-xl rounded-2xl transform transition-all flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#eaeded] bg-[#fdfdfd]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#eaeded] bg-[#fdfdfd] rounded-t-2xl">
           <h3 className="text-lg font-bold text-[#16191f] flex items-center" id="modal-title">
             {style.icon}
             {title}
