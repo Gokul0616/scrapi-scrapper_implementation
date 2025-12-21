@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Settings, Search, Info } from 'lucide-react';
-import Footer from './Footer';
-
+import DocsFooter from './docs/DocsFooter';
 import DocsNavbar from './docs/DocsNavbar';
 
 // Content Skeleton Loader (Only for main content)
