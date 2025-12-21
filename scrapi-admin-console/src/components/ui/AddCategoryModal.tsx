@@ -158,7 +158,7 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
                 placeholder="e.g., Legal Documents"
                 disabled={loading}
                 autoFocus
-                data-testid="add-category-name-input"
+                data-testid="category-name-input"
               />
             </div>
             
