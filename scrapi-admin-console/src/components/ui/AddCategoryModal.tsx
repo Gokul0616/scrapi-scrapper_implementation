@@ -1,21 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Plus } from 'lucide-react';
+import { X, Save, Plus, Edit2 } from 'lucide-react';
 import { useAlert } from '../../context/AlertContext';
 
-interface AddCategoryModalProps {
+interface Category {
+  id: string;
+  name: string;
+  description?: string;
+  display_order: number;
+}
+
+interface CategoryFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
   categoriesCount: number;
+  editingCategory?: Category | null;
+  mode: 'add' | 'edit';
 }
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
 
-export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ 
+export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({ 
   isOpen, 
   onClose, 
   onSuccess,
-  categoriesCount 
+  categoriesCount,
+  editingCategory,
+  mode 
 }) => {
   const { showAlert } = useAlert();
   const [formData, setFormData] = useState({
@@ -25,16 +36,24 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
   });
   const [loading, setLoading] = useState(false);
 
-  // Reset form when modal opens
+  // Reset form when modal opens or mode/category changes
   useEffect(() => {
     if (isOpen) {
-      setFormData({
-        name: '',
-        description: '',
-        display_order: categoriesCount
-      });
+      if (mode === 'edit' && editingCategory) {
+        setFormData({
+          name: editingCategory.name,
+          description: editingCategory.description || '',
+          display_order: editingCategory.display_order
+        });
+      } else {
+        setFormData({
+          name: '',
+          description: '',
+          display_order: categoriesCount
+        });
+      }
     }
-  }, [isOpen, categoriesCount]);
+  }, [isOpen, categoriesCount, mode, editingCategory]);
 
   const handleSave = async () => {
     if (!formData.name.trim()) {
@@ -45,8 +64,15 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
     try {
       setLoading(true);
       const token = localStorage.getItem('scrapi_admin_token');
-      const response = await fetch(`${BACKEND_URL}/api/categories`, {
-        method: 'POST',
+      
+      const url = mode === 'add' 
+        ? `${BACKEND_URL}/api/categories`
+        : `${BACKEND_URL}/api/categories/${editingCategory?.id}`;
+      
+      const method = mode === 'add' ? 'POST' : 'PUT';
+      
+      const response = await fetch(url, {
+        method,
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -56,15 +82,15 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.detail || 'Failed to create category');
+        throw new Error(error.detail || `Failed to ${mode} category`);
       }
 
-      showAlert('Category created successfully', 'success');
+      showAlert(`Category ${mode === 'add' ? 'created' : 'updated'} successfully`, 'success');
       onSuccess(); // This will refresh the category list
       onClose(); // Close the modal after successful save
     } catch (error: any) {
-      showAlert(error.message || 'Failed to create category', 'error');
-      console.error('Error creating category:', error);
+      showAlert(error.message || `Failed to ${mode} category`, 'error');
+      console.error(`Error ${mode}ing category:`, error);
     } finally {
       setLoading(false);
     }
