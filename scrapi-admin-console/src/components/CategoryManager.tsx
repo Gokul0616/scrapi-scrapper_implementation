@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, X, FolderPlus, Save } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useAlert } from '../context/AlertContext';
+import { AddCategoryModal } from './ui/AddCategoryModal';
 
 interface Category {
   id: string;
