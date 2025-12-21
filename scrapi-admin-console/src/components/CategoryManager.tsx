@@ -317,18 +317,18 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ isOpen, onClos
               {categories.map((category) => (
                 <div
                   key={category.id}
-                  className="group flex items-start gap-4 p-4 bg-white border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all"
+                  className="group flex items-start gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all"
                   data-testid={`category-item-${category.id}`}
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h4 className="text-sm font-bold text-gray-900 truncate">{category.name}</h4>
-                      <span className="inline-flex items-center px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                      <span className="inline-flex items-center px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
                         #{category.display_order}
                       </span>
                     </div>
                     {category.description && (
-                      <p className="text-sm text-gray-600 line-clamp-2 mb-2">{category.description}</p>
+                      <p className="text-xs text-gray-600 line-clamp-2 mb-1">{category.description}</p>
                     )}
                     <p className="text-xs text-gray-400">
                       Display Order: {category.display_order}
@@ -338,7 +338,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ isOpen, onClos
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <button
                         onClick={() => handleEdit(category)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
                         title="Edit category"
                         data-testid={`edit-category-${category.id}`}
                       >
@@ -346,7 +346,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ isOpen, onClos
                       </button>
                       <button
                         onClick={() => handleDelete(category.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
                         title="Delete category"
                         data-testid={`delete-category-${category.id}`}
                       >
