@@ -286,10 +286,11 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ isOpen, onClos
               </div>
               <h3 className="text-sm font-semibold text-gray-900 mb-1">No categories yet</h3>
               <p className="text-sm text-gray-500 mb-4">Get started by creating your first category</p>
-              {isOwner && !isCreating && (
+              {isOwner && (
                 <button
                   onClick={handleCreate}
                   className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                  data-testid="add-first-category-btn"
                 >
                   <Plus className="w-4 h-4" />
                   Add Category
