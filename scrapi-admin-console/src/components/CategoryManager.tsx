@@ -197,10 +197,10 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ isOpen, onClos
             <div className="mb-6 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl shadow-sm">
               <div className="flex items-center gap-2 mb-3">
                 <div className="p-1.5 bg-blue-600 rounded-md">
-                  {isCreating ? <Plus className="w-4 h-4 text-white" /> : <Edit2 className="w-4 h-4 text-white" />}
+                  <Edit2 className="w-4 h-4 text-white" />
                 </div>
                 <h3 className="text-sm font-bold text-gray-900">
-                  {isCreating ? 'Create New Category' : 'Edit Category'}
+                  Edit Category
                 </h3>
               </div>
               
