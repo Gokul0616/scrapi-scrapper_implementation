@@ -205,7 +205,7 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
             onClick={onClose}
             disabled={loading}
             className="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50"
-            data-testid="cancel-add-category-btn"
+            data-testid="cancel-category-btn"
           >
             Cancel
           </button>
@@ -213,17 +213,17 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
             onClick={handleSave}
             disabled={loading}
             className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            data-testid="save-add-category-btn"
+            data-testid="save-category-btn"
           >
             {loading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Creating...
+                {isAddMode ? 'Creating...' : 'Saving...'}
               </>
             ) : (
               <>
                 <Save className="w-4 h-4" />
-                Create Category
+                {buttonText}
               </>
             )}
           </button>
