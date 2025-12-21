@@ -2732,6 +2732,97 @@ async def delete_category(category_id: str, current_user: dict = Depends(check_o
     return {"message": "Category deleted successfully", "id": category_id}
 
 
+@router.get("/categories/max-display-order")
+async def get_max_display_order(current_user: dict = Depends(check_owner_role)):
+    """Get the maximum display order value among all categories."""
+    categories = await db.categories.find().sort("display_order", -1).limit(1).to_list(length=1)
+    
+    if categories:
+        return {"max_display_order": categories[0].get("display_order", 0)}
+    else:
+        return {"max_display_order": -1}
+
+
+@router.get("/categories/check-display-order/{display_order}")
+async def check_display_order(display_order: int, category_id: Optional[str] = None, current_user: dict = Depends(check_owner_role)):
+    """Check if a display order is already in use by another category."""
+    query = {"display_order": display_order}
+    
+    # If checking for update, exclude the current category
+    if category_id:
+        query["id"] = {"$ne": category_id}
+    
+    existing = await db.categories.find_one(query)
+    
+    if existing:
+        # Remove MongoDB _id
+        if "_id" in existing:
+            del existing["_id"]
+        
+        return {
+            "available": False,
+            "existing_category": {
+                "id": existing.get("id"),
+                "name": existing.get("name"),
+                "display_order": existing.get("display_order")
+            }
+        }
+    else:
+        return {"available": True, "existing_category": None}
+
+
+@router.post("/categories/swap-display-order")
+async def swap_display_order(swap_data: dict, current_user: dict = Depends(check_owner_role)):
+    """Swap display orders between two categories."""
+    from datetime import datetime, timezone
+    
+    category_id_1 = swap_data.get("category_id_1")
+    category_id_2 = swap_data.get("category_id_2")
+    
+    if not category_id_1 or not category_id_2:
+        raise HTTPException(status_code=400, detail="Both category IDs are required")
+    
+    # Fetch both categories
+    category_1 = await db.categories.find_one({"id": category_id_1})
+    category_2 = await db.categories.find_one({"id": category_id_2})
+    
+    if not category_1:
+        raise HTTPException(status_code=404, detail=f"Category {category_id_1} not found")
+    if not category_2:
+        raise HTTPException(status_code=404, detail=f"Category {category_id_2} not found")
+    
+    # Get current display orders
+    order_1 = category_1.get("display_order", 0)
+    order_2 = category_2.get("display_order", 0)
+    
+    # Swap display orders
+    await db.categories.update_one(
+        {"id": category_id_1},
+        {"$set": {
+            "display_order": order_2,
+            "updated_at": datetime.now(timezone.utc),
+            "updated_by": current_user.get("username", "unknown")
+        }}
+    )
+    
+    await db.categories.update_one(
+        {"id": category_id_2},
+        {"$set": {
+            "display_order": order_1,
+            "updated_at": datetime.now(timezone.utc),
+            "updated_by": current_user.get("username", "unknown")
+        }}
+    )
+    
+    return {
+        "message": "Display orders swapped successfully",
+        "swapped": {
+            "category_1": {"id": category_id_1, "new_display_order": order_2},
+            "category_2": {"id": category_id_2, "new_display_order": order_1}
+        }
+    }
+
+
 # ============= Policy Routes =============
 @router.get("/policies", response_model=List[dict])
 async def get_all_policies(current_user: dict = Depends(check_admin_or_owner_role)):
