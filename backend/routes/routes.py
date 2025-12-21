@@ -2723,7 +2723,35 @@ async def update_category(category_id: str, category_data: dict, current_user: d
         update_data["description"] = category_data["description"]
     
     if "display_order" in category_data:
-        update_data["display_order"] = category_data["display_order"]
+        display_order = category_data["display_order"]
+        
+        # Auto-adjust display order if it's too high
+        max_category = await db.categories.find({"id": {"$ne": category_id}}).sort("display_order", -1).limit(1).to_list(length=1)
+        if max_category:
+            max_order = max_category[0].get("display_order", -1)
+            if display_order > max_order + 1:
+                display_order = max_order + 1
+        
+        # Check if display order is already used by another category
+        order_check = await db.categories.find_one({"display_order": display_order, "id": {"$ne": category_id}})
+        if order_check:
+            # Remove MongoDB _id
+            if "_id" in order_check:
+                del order_check["_id"]
+            
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "message": "Display order already exists",
+                    "existing_category": {
+                        "id": order_check.get("id"),
+                        "name": order_check.get("name"),
+                        "display_order": order_check.get("display_order")
+                    }
+                }
+            )
+        
+        update_data["display_order"] = display_order
     
     # Update category
     await db.categories.update_one(
