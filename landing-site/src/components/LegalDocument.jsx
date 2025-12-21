@@ -353,7 +353,7 @@ const LegalDocument = ({ onOpenCookieSettings }) => {
         </div>
       </main>
 
-      <Footer onOpenCookieSettings={onOpenCookieSettings} />
+      <DocsFooter />
     </div>
   );
 };
