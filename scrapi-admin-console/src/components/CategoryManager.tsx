@@ -171,7 +171,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ isOpen, onClos
           onClick={(e) => e.stopPropagation()}
         >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-white flex-shrink-0">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-white rounded-t-2xl flex-shrink-0">
           <div className="flex items-center gap-2">
             <div className="p-1.5 bg-blue-100 rounded">
               <FolderPlus className="w-4 h-4 text-blue-600" />
@@ -181,25 +181,13 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ isOpen, onClos
               <p className="text-xs text-gray-500">Organize your policy documents</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            {!isCreating && !editingId && isOwner && (
-              <button
-                onClick={handleCreate}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 shadow-sm transition-all"
-                data-testid="add-category-btn"
-              >
-                <Plus className="w-4 h-4" />
-                Add Category
-              </button>
-            )}
-            <button
-              onClick={onClose}
-              className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
-              title="Close"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+            title="Close"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Content - Scrollable Area */}
