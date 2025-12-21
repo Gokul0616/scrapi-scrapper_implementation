@@ -136,6 +136,12 @@ const LegalDocument = ({ onOpenCookieSettings }) => {
         if (response.ok) {
           const result = await response.json();
           setData(result);
+          
+          // Update document title dynamically
+          if (result.title) {
+            document.title = `Scrapi - ${result.title}`;
+          }
+          
           // Set first section as active by default
           if (result.sections && result.sections.length > 0) {
             setActiveSection(result.sections[0].id);
