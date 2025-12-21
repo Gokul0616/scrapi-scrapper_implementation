@@ -163,8 +163,8 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ isOpen, onClos
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-lg shadow-2xl w-full max-w-3xl flex flex-col"
-        style={{ maxHeight: '85vh' }}
+        className="bg-white rounded-lg shadow-2xl w-full max-w-2xl flex flex-col"
+        style={{ maxHeight: '80vh' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
