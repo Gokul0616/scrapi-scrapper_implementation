@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, FileText, Scale, Loader2, Command, Hash, Book } from 'lucide-react';
+import { Search, FileText, Scale, Loader2, Command, Hash, Book, Clock, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useRecentSearches } from '../../hooks/useAppConfig';
 
 const DocsSearchModal = ({ isOpen, onClose }) => {
     const [query, setQuery] = useState('');
