@@ -54,10 +54,12 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
 
             if (event.key === 'ArrowDown') {
                 event.preventDefault();
-                setSelectedIndex((prev) => (prev + 1) % flatResults.length);
+                // Don't loop - stop at the last item
+                setSelectedIndex((prev) => Math.min(prev + 1, flatResults.length - 1));
             } else if (event.key === 'ArrowUp') {
                 event.preventDefault();
-                setSelectedIndex((prev) => (prev - 1 + flatResults.length) % flatResults.length);
+                // Don't loop - stop at the first item
+                setSelectedIndex((prev) => Math.max(prev - 1, 0));
             } else if (event.key === 'Enter') {
                 event.preventDefault();
                 if (flatResults[selectedIndex]) {
@@ -83,12 +85,13 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
         };
     }, [isOpen, onClose, flatResults, selectedIndex]);
 
-    // Scroll selected item into view
+    // Scroll selected item into view with better positioning
     useEffect(() => {
         if (resultRefs.current[selectedIndex]) {
             resultRefs.current[selectedIndex].scrollIntoView({
                 behavior: 'smooth',
-                block: 'nearest',
+                block: 'center',
+                inline: 'nearest',
             });
         }
     }, [selectedIndex]);
@@ -136,7 +139,7 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
         const parts = text.split(new RegExp(`(${query})`, 'gi'));
         return parts.map((part, index) =>
             part.toLowerCase() === query.toLowerCase() ? (
-                <span key={index} className="text-blue-600 font-medium">{part}</span>
+                <span key={index} className="text-blue-600 font-semibold bg-blue-100">{part}</span>
             ) : (
                 part
             )
@@ -201,60 +204,68 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
                             </div>
                         ) : results.length > 0 ? (
                             <div>
-                                {Object.entries(groupedResults).map(([category, categoryResults]) => {
-                                    const categoryStartIndex = flatResults.findIndex(r => r.category === category);
-                                    return (
-                                        <div key={category}>
-                                            {/* Category Header */}
-                                            <div className="sticky top-0 bg-blue-500 text-white px-4 py-2 text-xs font-semibold uppercase tracking-wide z-10">
-                                                {category}
-                                            </div>
-                                            {/* Category Results */}
-                                            <div>
-                                                {categoryResults.map((result, idx) => {
-                                                    const globalIndex = flatResults.indexOf(result);
-                                                    const isSelected = globalIndex === selectedIndex;
-                                                    return (
-                                                        <button
-                                                            key={globalIndex}
-                                                            ref={(el) => (resultRefs.current[globalIndex] = el)}
-                                                            onClick={() => handleSelect(result.url)}
-                                                            onMouseEnter={() => setSelectedIndex(globalIndex)}
-                                                            className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors border-b border-gray-100 ${
-                                                                isSelected ? 'bg-blue-50' : 'hover:bg-gray-50'
-                                                            }`}
-                                                        >
-                                                            <div className={`mt-0.5 p-1.5 rounded ${
-                                                                isSelected ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'
-                                                            }`}>
-                                                                {getResultIcon(result.type)}
-                                                            </div>
-                                                            <div className="flex-1 min-w-0">
-                                                                <div className="font-medium text-sm text-gray-900 mb-1">
-                                                                    {highlightText(result.title, query)}
-                                                                </div>
-                                                                {result.breadcrumb && (
-                                                                    <div className="text-xs text-gray-500 flex items-center gap-1 flex-wrap">
-                                                                        {result.breadcrumb.map((crumb, i) => (
-                                                                            <React.Fragment key={i}>
-                                                                                <span className={i === result.breadcrumb.length - 1 ? 'text-blue-600' : ''}>
-                                                                                    {crumb}
-                                                                                </span>
-                                                                                {i < result.breadcrumb.length - 1 && (
-                                                                                    <span className="text-gray-400">›</span>
-                                                                                )}
-                                                                            </React.Fragment>
-                                                                        ))}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
+                                {Object.entries(groupedResults).map(([category, categoryResults]) => (
+                                    <div key={category}>
+                                        {/* Category Header */}
+                                        <div className="sticky top-0 bg-blue-500 text-white px-4 py-2 text-xs font-semibold uppercase tracking-wide z-10">
+                                            {category}
                                         </div>
-                                    );
-                                })}
+                                        {/* Category Results */}
+                                        <div>
+                                            {categoryResults.map((result) => {
+                                                const globalIndex = flatResults.indexOf(result);
+                                                const isSelected = globalIndex === selectedIndex;
+                                                return (
+                                                    <button
+                                                        key={globalIndex}
+                                                        ref={(el) => (resultRefs.current[globalIndex] = el)}
+                                                        onClick={() => handleSelect(result.url)}
+                                                        onMouseEnter={() => setSelectedIndex(globalIndex)}
+                                                        className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-all border-b border-gray-100 ${
+                                                            isSelected 
+                                                                ? 'bg-blue-50 border-l-4 border-l-blue-600' 
+                                                                : 'hover:bg-gray-50 border-l-4 border-l-transparent'
+                                                        }`}
+                                                    >
+                                                        <div className={`mt-0.5 p-1.5 rounded transition-colors ${
+                                                            isSelected ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+                                                        }`}>
+                                                            {getResultIcon(result.type)}
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className={`text-sm mb-1 ${
+                                                                isSelected ? 'font-semibold text-gray-900' : 'font-medium text-gray-800'
+                                                            }`}>
+                                                                {highlightText(result.title, query)}
+                                                            </div>
+                                                            {result.breadcrumb && (
+                                                                <div className="text-xs text-gray-500 flex items-center gap-1 flex-wrap">
+                                                                    {result.breadcrumb.map((crumb, i) => (
+                                                                        <React.Fragment key={i}>
+                                                                            <span className={i === result.breadcrumb.length - 1 ? 'text-blue-600 font-medium' : ''}>
+                                                                                {crumb}
+                                                                            </span>
+                                                                            {i < result.breadcrumb.length - 1 && (
+                                                                                <span className="text-gray-400">›</span>
+                                                                            )}
+                                                                        </React.Fragment>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        {isSelected && (
+                                                            <div className="mt-1 text-blue-600">
+                                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                                </svg>
+                                                            </div>
+                                                        )}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center py-16 text-gray-500">
@@ -306,16 +317,16 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
                 {/* Footer */}
                 <div className="bg-gray-50 px-4 py-2.5 text-xs text-gray-500 border-t border-gray-200 flex items-center justify-center gap-6">
                     <span className="flex items-center gap-1.5">
-                        <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-xs font-mono">↵</kbd>
+                        <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-xs font-mono shadow-sm">↵</kbd>
                         <span>to select</span>
                     </span>
                     <span className="flex items-center gap-1.5">
-                        <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-xs font-mono">↑</kbd>
-                        <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-xs font-mono">↓</kbd>
+                        <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-xs font-mono shadow-sm">↑</kbd>
+                        <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-xs font-mono shadow-sm">↓</kbd>
                         <span>to navigate</span>
                     </span>
                     <span className="flex items-center gap-1.5">
-                        <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-xs font-mono">esc</kbd>
+                        <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-xs font-mono shadow-sm">esc</kbd>
                         <span>to close</span>
                     </span>
                 </div>
