@@ -200,20 +200,8 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ isOpen, onClos
         </div>
 
         {/* Content - Scrollable Area */}
-        <div className="flex-1 overflow-y-auto px-6 py-5">
-          {/* Add Category Button - Always visible at top when not creating/editing */}
-          {!isCreating && !editingId && isOwner && (
-            <div className="mb-5">
-              <button
-                onClick={handleCreate}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 shadow-sm hover:shadow-md transition-all"
-                data-testid="add-category-btn"
-              >
-                <Plus className="w-4 h-4" />
-                Add New Category
-              </button>
-            </div>
-          )}
+        <div className="flex-1 overflow-y-auto px-4 py-4">
+          {/* Add Category Button - Removed from here, now in header */}
 
           {/* Create/Edit Form */}
           {(isCreating || editingId) && (
