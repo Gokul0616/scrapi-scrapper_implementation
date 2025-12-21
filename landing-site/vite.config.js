@@ -17,7 +17,7 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'https://legal-access-handler.preview.emergentagent.com',
+        target: 'https://admin-panel-101.preview.emergentagent.com',
         changeOrigin: true,
         secure: false,
       },
