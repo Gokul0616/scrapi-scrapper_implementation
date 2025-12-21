@@ -3023,6 +3023,39 @@ async def global_search(q: str = ""):
     return {"results": results}
 
 
+@router.get("/search")
+async def search_documents(q: str = ""):
+    """Search across legal documents and documentation."""
+    if not q or len(q.strip()) < 2:
+        return {"results": []}
+    
+    query = q.strip().lower()
+    results = []
+    
+    # Search in policies/legal documents
+    policies = await db.policies.find({
+        "$or": [
+            {"title": {"$regex": query, "$options": "i"}},
+            {"label": {"$regex": query, "$options": "i"}},
+            {"intro": {"$regex": query, "$options": "i"}},
+            {"doc_id": {"$regex": query, "$options": "i"}}
+        ]
+    }).to_list(length=20)
+    
+    for policy in policies:
+        results.append({
+            "title": policy.get("label") or policy.get("title", "Untitled"),
+            "subtitle": policy.get("intro", "")[:100] + "..." if policy.get("intro") else "",
+            "url": f"/legal/{policy.get('doc_id')}",
+            "type": "legal",
+            "category": policy.get("category", "Legal Documents")
+        })
+    
+    # You can add more search sources here (docs, tutorials, etc.)
+    
+    return {"results": results}
+
+
 @router.get("/legal")
 async def get_all_legal_documents():
     """Get list of all legal documents (public endpoint for landing site sidebar)."""
