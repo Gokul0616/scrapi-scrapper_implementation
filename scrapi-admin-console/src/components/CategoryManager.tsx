@@ -361,13 +361,13 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ isOpen, onClos
         </div>
 
         {/* Footer - Fixed at bottom */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50 flex-shrink-0">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50 flex-shrink-0">
           <p className="text-xs text-gray-500">
             {categories.length} {categories.length === 1 ? 'category' : 'categories'} total
           </p>
           <button
             onClick={onClose}
-            className="px-5 py-2 bg-gray-700 text-white text-sm font-semibold rounded-lg hover:bg-gray-800 transition-colors"
+            className="px-4 py-1.5 bg-gray-700 text-white text-sm font-semibold rounded hover:bg-gray-800 transition-colors"
             data-testid="close-modal-btn"
           >
             Close
