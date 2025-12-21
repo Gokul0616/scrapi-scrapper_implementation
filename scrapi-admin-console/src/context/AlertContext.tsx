@@ -29,7 +29,7 @@ export const AlertProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   return (
     <AlertContext.Provider value={{ showAlert }}>
       {children}
-      <div className="fixed top-4 right-4 z-50 space-y-2 pointer-events-none">
+      <div className="fixed top-4 right-4 z-[9999] space-y-2 pointer-events-none">
         {/* Pointer events auto for alerts so they can be clicked */}
         <div className="flex flex-col items-end space-y-2 pointer-events-auto">
           {alerts.map(alert => (
