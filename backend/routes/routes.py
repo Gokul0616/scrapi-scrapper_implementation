@@ -3043,15 +3043,47 @@ async def search_documents(q: str = ""):
     }).to_list(length=20)
     
     for policy in policies:
+        title = policy.get("label") or policy.get("title", "Untitled")
+        doc_id = policy.get("doc_id", "")
+        category = policy.get("category", "Legal")
+        
         results.append({
-            "title": policy.get("label") or policy.get("title", "Untitled"),
-            "subtitle": policy.get("intro", "")[:100] + "..." if policy.get("intro") else "",
-            "url": f"/legal/{policy.get('doc_id')}",
+            "title": title,
+            "subtitle": policy.get("intro", "")[:150] + "..." if policy.get("intro") else "",
+            "description": policy.get("intro", ""),
+            "content": policy.get("intro", ""),
+            "url": f"/legal/{doc_id}",
             "type": "legal",
-            "category": policy.get("category", "Legal Documents")
+            "category": category,
+            "breadcrumb": ["Legal", category, title]
         })
     
-    # You can add more search sources here (docs, tutorials, etc.)
+    # Search in docs collection if it exists
+    try:
+        docs_cursor = db.docs.find({
+            "$or": [
+                {"title": {"$regex": query, "$options": "i"}},
+                {"content": {"$regex": query, "$options": "i"}},
+                {"tags": {"$regex": query, "$options": "i"}}
+            ]
+        }).limit(10)
+        
+        async for doc in docs_cursor:
+            title = doc.get("title", "Untitled")
+            category = doc.get("category", "Platform")
+            
+            results.append({
+                "title": title,
+                "subtitle": doc.get("content", "")[:150] + "..." if doc.get("content") else "",
+                "description": doc.get("description", doc.get("content", "")),
+                "content": doc.get("content", ""),
+                "url": doc.get("url_path", "#"),
+                "type": doc.get("type", "doc"),
+                "category": category,
+                "breadcrumb": ["Documentation", category, title]
+            })
+    except:
+        pass  # Docs collection might not exist
     
     return {"results": results}
 
