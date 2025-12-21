@@ -163,6 +163,11 @@ const LegalDocument = ({ onOpenCookieSettings }) => {
     };
 
     fetchData();
+    
+    // Cleanup: reset title on unmount
+    return () => {
+      document.title = 'Scrapi: The Web Scraping Platform';
+    };
   }, [currentDoc, navigate]);
 
   const scrollToSection = (sectionId) => {
