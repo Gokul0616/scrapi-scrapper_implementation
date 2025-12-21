@@ -204,9 +204,41 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
                                 <span className="text-sm">Searching...</span>
                             </div>
                         ) : query.length < 2 ? (
-                            <div className="flex flex-col items-center justify-center py-16 text-gray-400">
-                                <Command className="w-12 h-12 mb-4 opacity-20" />
-                                <p className="text-sm">Type at least 2 characters to search</p>
+                            <div className="flex flex-col items-start justify-start py-8 px-4 text-gray-400">
+                                {recentSearches.length > 0 ? (
+                                    <div className="w-full">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                                <Clock className="w-4 h-4" />
+                                                Recent Searches
+                                            </h3>
+                                            <button
+                                                onClick={clearSearches}
+                                                className="text-xs text-gray-500 hover:text-gray-700 underline"
+                                            >
+                                                Clear all
+                                            </button>
+                                        </div>
+                                        <div className="space-y-1">
+                                            {recentSearches.slice(0, 5).map((search, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    onClick={() => setQuery(search)}
+                                                    className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-left group"
+                                                >
+                                                    <Clock className="w-4 h-4 text-gray-400" />
+                                                    <span className="flex-1 text-sm text-gray-700">{search}</span>
+                                                    <Search className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100" />
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="w-full text-center py-8">
+                                        <Command className="w-12 h-12 mb-4 opacity-20 mx-auto" />
+                                        <p className="text-sm">Type at least 2 characters to search</p>
+                                    </div>
+                                )}
                             </div>
                         ) : results.length > 0 ? (
                             <div>
