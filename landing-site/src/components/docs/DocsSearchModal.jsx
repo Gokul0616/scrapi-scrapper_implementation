@@ -12,6 +12,7 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
     const modalRef = useRef(null);
     const resultRefs = useRef([]);
     const navigate = useNavigate();
+    const { searches: recentSearches, addSearch, clearSearches } = useRecentSearches();
 
     // Focus input on open and reset state
     useEffect(() => {
