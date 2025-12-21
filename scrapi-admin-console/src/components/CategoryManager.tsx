@@ -24,13 +24,9 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ isOpen, onClos
   const { showAlert } = useAlert();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    display_order: 0
-  });
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [formMode, setFormMode] = useState<'add' | 'edit'>('add');
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
 
   const isOwner = user?.role === 'owner';
 
