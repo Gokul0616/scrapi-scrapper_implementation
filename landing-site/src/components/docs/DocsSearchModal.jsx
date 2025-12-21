@@ -128,6 +128,10 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
     }, [query]);
 
     const handleSelect = (url) => {
+        // Save search query to recent searches
+        if (query.trim()) {
+            addSearch(query.trim());
+        }
         onClose();
         if (url.startsWith('http')) {
             window.location.href = url;
