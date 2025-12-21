@@ -39,8 +39,8 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
         return acc;
     }, {});
 
-    // Flatten results for keyboard navigation
-    const flatResults = results;
+    // Flatten results for keyboard navigation to match visual order
+    const flatResults = Object.values(groupedResults).flat();
 
     // Handle keyboard navigation
     useEffect(() => {
@@ -245,7 +245,7 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
                                 {Object.entries(groupedResults).map(([category, categoryResults]) => (
                                     <div key={category}>
                                         {/* Category Header */}
-                                        <div className="sticky top-0 bg-blue-500 text-white px-4 py-2 text-xs font-semibold uppercase tracking-wide z-10">
+                                        <div className="sticky top-0 bg-blue-500 text-white px-4 py-1 text-xs font-semibold uppercase tracking-wide z-10">
                                             {category}
                                         </div>
                                         {/* Category Results */}
@@ -259,21 +259,18 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
                                                         ref={(el) => (resultRefs.current[globalIndex] = el)}
                                                         onClick={() => handleSelect(result.url)}
                                                         onMouseEnter={() => setSelectedIndex(globalIndex)}
-                                                        className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-all border-b border-gray-100 ${
-                                                            isSelected 
-                                                                ? 'bg-blue-50 border-l-4 border-l-blue-600' 
-                                                                : 'hover:bg-gray-50 border-l-4 border-l-transparent'
-                                                        }`}
+                                                        className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-all border-b border-gray-100 ${isSelected
+                                                            ? 'bg-blue-50 border-l-4 border-l-blue-600'
+                                                            : 'hover:bg-gray-50 border-l-4 border-l-transparent'
+                                                            }`}
                                                     >
-                                                        <div className={`mt-0.5 p-1.5 rounded transition-colors ${
-                                                            isSelected ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
-                                                        }`}>
+                                                        <div className={`mt-0.5 p-1.5 rounded transition-colors ${isSelected ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+                                                            }`}>
                                                             {getResultIcon(result.type)}
                                                         </div>
                                                         <div className="flex-1 min-w-0">
-                                                            <div className={`text-sm mb-1 ${
-                                                                isSelected ? 'font-semibold text-gray-900' : 'font-medium text-gray-800'
-                                                            }`}>
+                                                            <div className={`text-sm mb-1 ${isSelected ? 'font-semibold text-gray-900' : 'font-medium text-gray-800'
+                                                                }`}>
                                                                 {highlightText(result.title, query)}
                                                             </div>
                                                             {result.breadcrumb && (
