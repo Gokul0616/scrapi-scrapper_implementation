@@ -73,7 +73,6 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ isOpen, onClos
       display_order: category.display_order
     });
     setEditingId(category.id);
-    setIsCreating(false);
   };
 
   const handleSave = async () => {
