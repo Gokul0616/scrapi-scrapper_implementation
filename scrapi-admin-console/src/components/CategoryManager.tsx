@@ -99,11 +99,11 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ isOpen, onClos
   };
 
   const handleCancel = () => {
-    setEditingId(null);
-    setFormData({ name: '', description: '', display_order: 0 });
+    setEditingCategory(null);
+    setIsFormModalOpen(false);
   };
 
-  const handleAddSuccess = () => {
+  const handleFormSuccess = () => {
     fetchCategories();
     onCategoryUpdated();
   };
