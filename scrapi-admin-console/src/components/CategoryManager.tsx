@@ -150,16 +150,26 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ isOpen, onClos
   if (!isOpen) return null;
 
   return (
-    <div 
-      className="fixed inset-0 flex items-center justify-center z-50 p-4"
-      style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
-      onClick={onClose}
-    >
+    <>
+      {/* Add Category Modal */}
+      <AddCategoryModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={handleAddSuccess}
+        categoriesCount={categories.length}
+      />
+
+      {/* Main Category Manager Modal */}
       <div 
-        className="bg-white rounded-lg shadow-2xl w-full max-w-2xl flex flex-col"
-        style={{ maxHeight: '80vh' }}
-        onClick={(e) => e.stopPropagation()}
+        className="fixed inset-0 flex items-center justify-center z-50 p-4"
+        style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+        onClick={onClose}
       >
+        <div 
+          className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col"
+          style={{ maxHeight: '80vh' }}
+          onClick={(e) => e.stopPropagation()}
+        >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-white flex-shrink-0">
           <div className="flex items-center gap-2">
