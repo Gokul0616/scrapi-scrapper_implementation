@@ -112,12 +112,14 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ isOpen, onClos
 
   return (
     <>
-      {/* Add Category Modal */}
-      <AddCategoryModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onSuccess={handleAddSuccess}
+      {/* Category Form Modal (for both Add and Edit) */}
+      <CategoryFormModal
+        isOpen={isFormModalOpen}
+        onClose={() => setIsFormModalOpen(false)}
+        onSuccess={handleFormSuccess}
         categoriesCount={categories.length}
+        editingCategory={editingCategory}
+        mode={formMode}
       />
 
       {/* Main Category Manager Modal */}
