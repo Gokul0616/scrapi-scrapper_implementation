@@ -201,10 +201,20 @@ export const Layout: React.FC = () => {
                             </div>
                             <nav className="flex-1 py-4 overflow-y-auto">
                                 <SidebarItem icon={LayoutDashboard} label="Dashboard" to="/" active={location.pathname === '/'} collapsed={false} />
+                                <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4 mb-1">
+                                    Management
+                                </div>
                                 <SidebarItem icon={Users} label="Users" to="/users" active={location.pathname.startsWith('/users')} collapsed={false} />
                                 <SidebarItem icon={Bot} label="Actors" to="/actors" active={location.pathname.startsWith('/actors')} collapsed={false} />
                                 <SidebarItem icon={PlaySquare} label="Runs" to="/runs" active={location.pathname.startsWith('/runs')} collapsed={false} />
                                 <SidebarItem icon={FileText} label="Audit Logs" to="/audit-logs" active={location.pathname.startsWith('/audit-logs')} collapsed={false} />
+                                <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4 mb-1">
+                                    Content
+                                </div>
+                                <SidebarItem icon={ScrollText} label="Policies" to="/policies" active={location.pathname.startsWith('/policies')} collapsed={false} />
+                                <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4 mb-1">
+                                    Configuration
+                                </div>
                                 <SidebarItem icon={Settings} label="Settings" to="/settings" active={location.pathname.startsWith('/settings')} collapsed={false} />
                             </nav>
                             <div className="p-4 border-t border-gray-700">

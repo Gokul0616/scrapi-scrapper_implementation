@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Settings } from 'lucide-react';
 
-const CookieBanner = ({ onOpenSettings, onAcceptAll }) => {
+const ConsentPopup = ({ onOpenSettings, onAcceptAll }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -34,11 +34,10 @@ const CookieBanner = ({ onOpenSettings, onAcceptAll }) => {
   if (!isVisible) return null;
 
   return (
-    <div 
+    <div
       data-testid="cookie-banner"
-      className={`fixed bottom-4 left-4 z-50 w-[340px] bg-white rounded-xl shadow-2xl border border-gray-100 transition-all duration-300 ${
-        isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-      }`}
+      className={`fixed bottom-4 left-4 z-50 w-[340px] bg-white rounded-xl shadow-2xl border border-gray-100 transition-all duration-300 ${isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+        }`}
     >
       {/* Close button */}
       <button
@@ -59,7 +58,7 @@ const CookieBanner = ({ onOpenSettings, onAcceptAll }) => {
         </div>
 
         {/* Title */}
-        <h3 
+        <h3
           data-testid="cookie-banner-title"
           className="text-base font-semibold text-gray-900 mb-2"
         >
@@ -69,8 +68,8 @@ const CookieBanner = ({ onOpenSettings, onAcceptAll }) => {
         {/* Description */}
         <p className="text-sm text-gray-600 leading-relaxed mb-3">
           We use cookies to improve your experience and analyze traffic. By using our website, you agree to let us store cookies on your device. Or adjust your preferences with the "Cookie settings" button.{' '}
-          <a 
-            href="/cookie-policy" 
+          <a
+            href="/cookie-policy"
             data-testid="cookie-policy-link"
             className="text-blue-600 hover:text-blue-700 hover:underline"
           >
@@ -100,4 +99,4 @@ const CookieBanner = ({ onOpenSettings, onAcceptAll }) => {
   );
 };
 
-export default CookieBanner;
+export default ConsentPopup;

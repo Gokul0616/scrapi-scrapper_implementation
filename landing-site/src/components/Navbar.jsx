@@ -384,9 +384,9 @@ const ResourcesDropdown = () => (
           description="Latest news and insights"
         />
         <MenuItem
-          icon={Calendar}
-          title="Live Events"
-          description="Webinars and workshops"
+          icon={FileText}
+          title="Docs"
+          description="Read the documentation"
         />
         <MenuItem
           icon={Handshake}
@@ -535,7 +535,7 @@ const MobileMenu = ({ isOpen, onClose }) => {
       { icon: Info, title: 'About Scrapi', description: 'Our mission' },
       { icon: Mail, title: 'Contact Us', description: 'Get in touch' },
       { icon: FileText, title: 'Blog', description: 'News and insights' },
-      { icon: Calendar, title: 'Live Events', description: 'Webinars and workshops' },
+      { icon: FileText, title: 'Docs', description: 'Read the documentation' },
       { icon: Handshake, title: 'Partners', description: 'Become a Scrapi partner' },
       { icon: BriefcaseBusiness, title: 'Jobs', description: "We're hiring", badge: 'New' },
     ],

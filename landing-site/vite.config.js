@@ -17,7 +17,7 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'https://dupe-order-fixer.preview.emergentagent.com',
+        target: 'http://localhost:8000',
         changeOrigin: true,
         secure: false,
       },

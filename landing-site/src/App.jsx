@@ -14,7 +14,7 @@ import GetPaidSection from './components/GetPaidSection';
 import EnterpriseSection from './components/EnterpriseSection';
 import CTASection from './components/CTASection';
 import Footer from './components/Footer';
-import CookieBanner from './components/CookieBanner';
+import ConsentPopup from './components/ConsentPopup';
 import CookieSettingsModal from './components/CookieSettingsModal';
 import LegalDocument from './components/LegalDocument';
 import NotFound from './components/NotFound';
@@ -80,11 +80,11 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route 
-          path="/" 
+        <Route
+          path="/"
           element={
             <LandingPage onOpenCookieSettings={handleOpenCookieSettings} />
-          } 
+          }
         />
         {/* Redirect old path to new structure */}
         <Route path="/cookie-policy" element={<Navigate to="/legal/cookie-policy" replace />} />
@@ -93,15 +93,15 @@ function App() {
         {/* 404 Not Found - Catch all routes */}
         <Route path="*" element={<NotFound onOpenCookieSettings={handleOpenCookieSettings} />} />
       </Routes>
-      
+
       {/* Cookie Banner - shows on all pages */}
-      <CookieBanner 
+      <ConsentPopup
         onOpenSettings={handleOpenCookieSettings}
         onAcceptAll={handleAcceptAllCookies}
       />
-      
+
       {/* Cookie Settings Modal */}
-      <CookieSettingsModal 
+      <CookieSettingsModal
         isOpen={showCookieSettings}
         onClose={handleCloseCookieSettings}
         onSave={handleSaveCookieSettings}
