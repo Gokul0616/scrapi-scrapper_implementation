@@ -59,16 +59,15 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ isOpen, onClos
   };
 
   const handleCreate = () => {
-    setIsAddModalOpen(true);
+    setFormMode('add');
+    setEditingCategory(null);
+    setIsFormModalOpen(true);
   };
 
   const handleEdit = (category: Category) => {
-    setFormData({
-      name: category.name,
-      description: category.description || '',
-      display_order: category.display_order
-    });
-    setEditingId(category.id);
+    setFormMode('edit');
+    setEditingCategory(category);
+    setIsFormModalOpen(true);
   };
 
   const handleSave = async () => {
