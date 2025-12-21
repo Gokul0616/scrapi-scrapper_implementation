@@ -514,7 +514,22 @@ export const PoliciesPage: React.FC = () => {
         /* Edit/Create Layout - AWS "Resource Style" */
         <div className="max-w-5xl mx-auto pb-20">
           {/* Editor Header */}
-          <div className="flex justify-between items-center mb-6">
+          <div className="mb-6">
+            {/* Back Button */}
+            <button
+              onClick={() => {
+                setIsEditing(false);
+                setIsCreating(false);
+                setEditedPolicy(null);
+              }}
+              className="mb-4 flex items-center gap-2 text-aws-blue hover:text-blue-700 text-sm font-medium transition-colors"
+              data-testid="back-to-policies-btn"
+            >
+              <ArrowLeft size={16} />
+              Back to Policies
+            </button>
+            
+            <div className="flex justify-between items-center">
              <div>
                <h2 className="text-2xl font-bold text-aws-text">
                  {isCreating ? 'Create Policy' : `Edit: ${editedPolicy.title}`}
@@ -543,6 +558,7 @@ export const PoliciesPage: React.FC = () => {
                   {isCreating ? 'Create Policy' : 'Save Changes'}
                 </button>
              </div>
+            </div>
           </div>
 
           <div className="space-y-6">
