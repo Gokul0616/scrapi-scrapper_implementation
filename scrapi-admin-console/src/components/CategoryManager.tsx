@@ -83,14 +83,10 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ isOpen, onClos
 
     try {
       const token = localStorage.getItem('scrapi_admin_token');
-      const url = isCreating
-        ? `${BACKEND_URL}/api/categories`
-        : `${BACKEND_URL}/api/categories/${editingId}`;
+      const url = `${BACKEND_URL}/api/categories/${editingId}`;
       
-      const method = isCreating ? 'POST' : 'PUT';
-
       const response = await fetch(url, {
-        method,
+        method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -100,17 +96,16 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ isOpen, onClos
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.detail || 'Failed to save category');
+        throw new Error(error.detail || 'Failed to update category');
       }
 
-      showAlert(`Category ${isCreating ? 'created' : 'updated'} successfully`, 'success');
-      setIsCreating(false);
+      showAlert('Category updated successfully', 'success');
       setEditingId(null);
       fetchCategories();
       onCategoryUpdated();
     } catch (error: any) {
-      showAlert(error.message || 'Failed to save category', 'error');
-      console.error('Error saving category:', error);
+      showAlert(error.message || 'Failed to update category', 'error');
+      console.error('Error updating category:', error);
     }
   };
 
