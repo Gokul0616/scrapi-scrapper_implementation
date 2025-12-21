@@ -2647,12 +2647,39 @@ async def create_category(category_data: dict, current_user: dict = Depends(chec
     if existing:
         raise HTTPException(status_code=400, detail="Category with this name already exists")
     
+    # Auto-adjust display order if it's too high
+    display_order = category_create.display_order
+    max_category = await db.categories.find().sort("display_order", -1).limit(1).to_list(length=1)
+    if max_category:
+        max_order = max_category[0].get("display_order", -1)
+        if display_order > max_order + 1:
+            display_order = max_order + 1
+    
+    # Check if display order already exists
+    existing_order = await db.categories.find_one({"display_order": display_order})
+    if existing_order:
+        # Remove MongoDB _id from existing category
+        if "_id" in existing_order:
+            del existing_order["_id"]
+        
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "message": "Display order already exists",
+                "existing_category": {
+                    "id": existing_order.get("id"),
+                    "name": existing_order.get("name"),
+                    "display_order": existing_order.get("display_order")
+                }
+            }
+        )
+    
     # Create category document
     category = {
         "id": str(uuid.uuid4()),
         "name": category_create.name,
         "description": category_create.description,
-        "display_order": category_create.display_order,
+        "display_order": display_order,
         "created_at": datetime.now(timezone.utc),
         "updated_at": datetime.now(timezone.utc),
         "created_by": current_user.get("username", "unknown"),
