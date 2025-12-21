@@ -95,7 +95,7 @@ export const Modal: React.FC<ModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-[#fdfdfd] border-t border-[#eaeded] flex justify-end gap-3 rounded-b-sm">
+        <div className="px-6 py-4 bg-[#fdfdfd] border-t border-[#eaeded] flex justify-end gap-3 rounded-b-2xl">
           <button
             type="button"
             className="px-4 py-1.5 text-sm font-bold text-[#16191f] bg-white border border-[#545b64] rounded-sm hover:bg-[#f2f3f3] hover:border-[#16191f] focus:outline-none focus:ring-2 focus:ring-[#0073bb] focus:ring-offset-1 transition-all"
