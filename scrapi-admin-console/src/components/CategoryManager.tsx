@@ -70,40 +70,6 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ isOpen, onClos
     setIsFormModalOpen(true);
   };
 
-  const handleSave = async () => {
-    if (!formData.name.trim()) {
-      showAlert('Category name is required', 'error');
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('scrapi_admin_token');
-      const url = `${BACKEND_URL}/api/categories/${editingId}`;
-      
-      const response = await fetch(url, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || 'Failed to update category');
-      }
-
-      showAlert('Category updated successfully', 'success');
-      setEditingId(null);
-      fetchCategories();
-      onCategoryUpdated();
-    } catch (error: any) {
-      showAlert(error.message || 'Failed to update category', 'error');
-      console.error('Error updating category:', error);
-    }
-  };
-
   const handleDelete = async (categoryId: string) => {
     if (!confirm('Are you sure you want to delete this category? This action cannot be undone.')) {
       return;
