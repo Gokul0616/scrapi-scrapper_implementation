@@ -1,9 +1,17 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import DocsNavbar from './DocsNavbar';
 import DocsFooter from './DocsFooter';
 import { Search, GraduationCap, Layout, Code, Shield, Cloud, Terminal, ArrowRight, Bot, Users, Globe, Play } from 'lucide-react';
 
 const DocsLandingPage = () => {
+    // Set document title on mount
+    useEffect(() => {
+        document.title = 'Scrapi Documentation';
+        return () => {
+            // Reset to default title on unmount
+            document.title = 'Scrapi: The Web Scraping Platform';
+        };
+    }, []);
 
     return (
         <div className="min-h-screen bg-white font-sans text-gray-900">
