@@ -387,6 +387,7 @@ const ResourcesDropdown = () => (
           icon={FileText}
           title="Docs"
           description="Read the documentation"
+          href='/docs'
         />
         <MenuItem
           icon={Handshake}

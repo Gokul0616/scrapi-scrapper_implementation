@@ -2,43 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ExternalLink, Cookie, Shield, BarChart3, Target, Settings, Search, Menu, X, Home, Book, FileText, ChevronDown, Info } from 'lucide-react';
 import Footer from './Footer';
 
-// Docs Navbar Component
-const DocsNavbar = () => {
-  return (
-    <nav className="fixed w-full top-0 z-50 bg-white border-b border-gray-200">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-8">
-          <a href="/" className="flex items-center gap-2">
-            <img src="/logo.png" alt="Scrapi" className="w-8 h-8" />
-            <span className="text-xl font-semibold text-gray-900">Scrapi</span>
-            <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">Docs</span>
-          </a>
-          
-          <div className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
-            <a href="#" className="hover:text-gray-900 transition-colors">Platform</a>
-            <a href="#" className="hover:text-gray-900 transition-colors">API</a>
-            <a href="#" className="hover:text-gray-900 transition-colors">Python SDK</a>
-            <a href="#" className="hover:text-gray-900 transition-colors">JavaScript SDK</a>
-            <a href="#" className="hover:text-gray-900 transition-colors">Academy</a>
-          </div>
-        </div>
+import DocsNavbar from './docs/DocsNavbar';
 
-        <div className="flex items-center gap-4">
-          <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-gray-100 border border-gray-200 rounded-md w-64 text-sm text-gray-500 cursor-text hover:border-gray-300 transition-colors">
-            <Search className="w-4 h-4" />
-            <span>Search docs...</span>
-            <span className="ml-auto text-xs text-gray-400 border border-gray-300 rounded px-1.5">Ctrl K</span>
-          </div>
-          
-          <a href="#" className="text-sm font-medium text-gray-700 hover:text-gray-900">Log in</a>
-          <a href="#" className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition-colors">
-            Sign up
-          </a>
-        </div>
-      </div>
-    </nav>
-  );
-};
+// Skeleton Loader Component
 
 // Skeleton Loader Component
 const PageSkeleton = () => (
@@ -63,7 +29,7 @@ const PageSkeleton = () => (
         <div className="h-10 bg-gray-200 rounded w-3/4"></div>
         <div className="h-4 bg-gray-200 rounded w-1/4"></div>
       </div>
-      
+
       {[1, 2, 3].map((i) => (
         <div key={i} className="space-y-4">
           <div className="h-6 bg-gray-200 rounded w-1/3"></div>
@@ -136,7 +102,7 @@ const CookiePolicy = ({ onOpenCookieSettings }) => {
         <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg mb-8 text-sm text-blue-800 flex gap-3">
           <Info className="w-5 h-5 flex-shrink-0 text-blue-600" />
           <div>
-            This policy is part of our commitment to transparency. If you have any questions, 
+            This policy is part of our commitment to transparency. If you have any questions,
             please contact our Data Protection Officer at privacy@scrapi.com.
           </div>
         </div>
@@ -151,7 +117,7 @@ const CookiePolicy = ({ onOpenCookieSettings }) => {
               {section.title}
               <a href={`#${section.id}`} className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-gray-600 transition-opacity">#</a>
             </h2>
-            
+
             {section.content && (
               <p className="text-gray-700 leading-relaxed mb-6">
                 {section.content}
@@ -187,11 +153,10 @@ const CookiePolicy = ({ onOpenCookieSettings }) => {
                       <tr key={idx} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{row.name}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            row.type.toLowerCase().includes('necessary') ? 'bg-green-100 text-green-800' :
-                            row.type.toLowerCase().includes('performance') ? 'bg-blue-100 text-blue-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${row.type.toLowerCase().includes('necessary') ? 'bg-green-100 text-green-800' :
+                              row.type.toLowerCase().includes('performance') ? 'bg-blue-100 text-blue-800' :
+                                'bg-gray-100 text-gray-800'
+                            }`}>
                             {row.type}
                           </span>
                         </td>
@@ -227,7 +192,7 @@ const CookiePolicy = ({ onOpenCookieSettings }) => {
   return (
     <div className="min-h-screen bg-white font-sans text-gray-900">
       <DocsNavbar />
-      
+
       <main className="pt-24 pb-24">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           {loading ? (
@@ -247,11 +212,10 @@ const CookiePolicy = ({ onOpenCookieSettings }) => {
                           <li key={itemIdx}>
                             <a
                               href={item === 'Cookie Policy' ? '#' : '#'}
-                              className={`block pl-4 py-1.5 text-sm border-l -ml-px transition-colors ${
-                                item === 'Cookie Policy'
+                              className={`block pl-4 py-1.5 text-sm border-l -ml-px transition-colors ${item === 'Cookie Policy'
                                   ? 'border-blue-600 text-blue-600 font-medium'
                                   : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
-                              }`}
+                                }`}
                             >
                               {item}
                             </a>
@@ -260,7 +224,7 @@ const CookiePolicy = ({ onOpenCookieSettings }) => {
                       </ul>
                     </div>
                   ))}
-                  
+
                   <div className="pt-6 border-t border-gray-100">
                     <button
                       onClick={onOpenCookieSettings}
@@ -291,11 +255,10 @@ const CookiePolicy = ({ onOpenCookieSettings }) => {
                         <li key={item.id} className={item.level === 2 ? 'ml-4' : ''}>
                           <button
                             onClick={() => scrollToSection(item.id)}
-                            className={`block w-full text-left py-1 text-sm transition-colors ${
-                              activeSection === item.id
+                            className={`block w-full text-left py-1 text-sm transition-colors ${activeSection === item.id
                                 ? 'text-blue-600 font-medium'
                                 : 'text-gray-600 hover:text-gray-900'
-                            }`}
+                              }`}
                           >
                             {item.title}
                           </button>

@@ -22,17 +22,28 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
         }
     }, [isOpen]);
 
-    // Handle outside click
+    // Handle outside click and Escape key
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (modalRef.current && !modalRef.current.contains(event.target)) {
                 onClose();
             }
         };
+
+        const handleKeyDown = (event) => {
+            if (event.key === 'Escape') {
+                onClose();
+            }
+        };
+
         if (isOpen) {
             document.addEventListener('mousedown', handleClickOutside);
+            document.addEventListener('keydown', handleKeyDown);
         }
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleKeyDown);
+        };
     }, [isOpen, onClose]);
 
     // Debounced Search
