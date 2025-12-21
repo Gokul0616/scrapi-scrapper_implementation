@@ -17,8 +17,7 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        // target: 'http://localhost:8000',
-        target: 'https://documentation-hub-1.preview.emergentagent.com/',
+        target: 'http://localhost:8000',
         changeOrigin: true,
         secure: false,
       },
