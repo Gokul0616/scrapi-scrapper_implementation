@@ -138,9 +138,13 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ isOpen, onClos
   };
 
   const handleCancel = () => {
-    setIsCreating(false);
     setEditingId(null);
     setFormData({ name: '', description: '', display_order: 0 });
+  };
+
+  const handleAddSuccess = () => {
+    fetchCategories();
+    onCategoryUpdated();
   };
 
   if (!isOpen) return null;
