@@ -238,7 +238,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ isOpen, onClos
             <p className="text-xs text-gray-500">
               {categories.length} {categories.length === 1 ? 'category' : 'categories'} total
             </p>
-            {isOwner && !editingId && (
+            {isOwner && (
               <button
                 onClick={handleCreate}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 shadow-sm transition-all"
