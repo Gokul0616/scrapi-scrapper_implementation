@@ -259,7 +259,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ isOpen, onClos
                     data-testid="save-category-btn"
                   >
                     <Save className="w-4 h-4" />
-                    {isCreating ? 'Create' : 'Save'}
+                    Save
                   </button>
                   <button
                     onClick={handleCancel}
