@@ -20,16 +20,16 @@ const DocsLandingPage = () => {
             <main>
                 {/* Hero Section */}
                 <section className="pt-24 pb-16 px-4 text-center max-w-[1400px] mx-auto">
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-blue-50 border border-blue-100 rounded-full text-blue-700 text-sm font-medium mb-8 hover:bg-blue-100 transition-colors cursor-pointer">
+                    {/* <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-blue-50 border border-blue-100 rounded-full text-blue-700 text-sm font-medium mb-8 hover:bg-blue-100 transition-colors cursor-pointer">
                         <span className="bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded">Build</span>
                         <span>Win big in $1M Challenge</span>
                         <ArrowRight className="w-3.5 h-3.5" />
-                    </div>
+                    </div> */}
 
-                    <h1 className="text-5xl font-bold text-gray-900 mb-6 tracking-tight">
+                    <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 tracking-tight">
                         Scrapi Documentation
                     </h1>
-                    <p className="text-xl text-gray-500 max-w-2xl mx-auto mb-12">
+                    <p className="text-lg md:text-xl text-gray-500 max-w-2xl mx-auto mb-12">
                         Learn how to extract value from the web with the Scrapi platform.
                         Go from beginner to expert, all in one place.
                     </p>

@@ -276,6 +276,7 @@ const DevelopersDropdown = () => (
           icon={FileText}
           title="Documentation"
           description="Full reference for the Scrapi platform"
+          href="/docs"
         />
         <MenuItem
           icon={Code}
@@ -383,12 +384,7 @@ const ResourcesDropdown = () => (
           title="Blog"
           description="Latest news and insights"
         />
-        <MenuItem
-          icon={FileText}
-          title="Docs"
-          description="Read the documentation"
-          href='/docs'
-        />
+
         <MenuItem
           icon={Handshake}
           title="Partners"
@@ -455,9 +451,13 @@ const MobileMenuItem = ({ icon: Icon, title, onClick, hasSubmenu, badge }) => (
 );
 
 // Mobile Submenu Item Component
-const MobileSubmenuItem = ({ icon: Icon, title, description, onClick }) => (
-  <button
-    onClick={onClick}
+const MobileSubmenuItem = ({ icon: Icon, title, description, onClick, href }) => (
+  <a
+    href={href || '#'}
+    onClick={(e) => {
+      if (!href) e.preventDefault();
+      onClick && onClick(e);
+    }}
     className="w-full flex items-start gap-3 px-6 py-3 hover:bg-gray-50 transition-colors text-left border-b border-gray-100"
     data-testid={`mobile-submenu-item-${title.toLowerCase().replace(/\s+/g, '-')}`}
   >
@@ -472,7 +472,7 @@ const MobileSubmenuItem = ({ icon: Icon, title, description, onClick }) => (
         <p className="text-xs text-gray-500 mt-0.5">{description}</p>
       )}
     </div>
-  </button>
+  </a>
 );
 
 // Mobile Menu Component
@@ -519,7 +519,7 @@ const MobileMenu = ({ isOpen, onClose }) => {
       { icon: BarChart3, title: 'Data for AI', description: 'Feed your AI models with fresh data' },
     ],
     developers: [
-      { icon: FileText, title: 'Documentation', description: 'Full platform reference' },
+      { icon: FileText, title: 'Documentation', description: 'Full platform reference', href: '/docs' },
       { icon: Code, title: 'Code Templates', description: 'Python, JS, TypeScript' },
       { icon: BookOpen, title: 'Web Scraping Academy', description: 'Courses for all levels' },
       { icon: DollarSign, title: 'Monetize Your Code', description: 'Publish and get paid' },
@@ -536,7 +536,7 @@ const MobileMenu = ({ isOpen, onClose }) => {
       { icon: Info, title: 'About Scrapi', description: 'Our mission' },
       { icon: Mail, title: 'Contact Us', description: 'Get in touch' },
       { icon: FileText, title: 'Blog', description: 'News and insights' },
-      { icon: FileText, title: 'Docs', description: 'Read the documentation' },
+      // { icon: FileText, title: 'Docs', description: 'Read the documentation', href: '/docs' }, // Removed duplicate Docs link from Resources
       { icon: Handshake, title: 'Partners', description: 'Become a Scrapi partner' },
       { icon: BriefcaseBusiness, title: 'Jobs', description: "We're hiring", badge: 'New' },
     ],
@@ -686,6 +686,7 @@ const MobileMenu = ({ isOpen, onClose }) => {
                 icon={item.icon}
                 title={item.title}
                 description={item.description}
+                href={item.href}
                 onClick={() => { }}
               />
             ))}

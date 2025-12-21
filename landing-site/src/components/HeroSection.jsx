@@ -51,12 +51,12 @@ const HeroSection = () => {
         </div>
 
         {/* Main Heading */}
-        <h1 className="text-center text-[56px] md:text-[64px] font-semibold leading-[1.1] tracking-[-0.02em] text-gray-900 mb-6">
+        <h1 className="text-center text-[50px] md:text-[56px] font-semibold leading-[1.1] tracking-[-0.02em] text-gray-900 mb-6">
           Extract web data with precision
         </h1>
 
         {/* Subtitle */}
-        <p className="text-center text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-10 leading-relaxed">
+        <p className="text-center text-sm md:text-lg text-gray-600 max-w-3xl mx-auto mb-10 leading-relaxed">
           Scrapi provides powerful web scraping tools for businesses, developers, and researchers.
           Extract data from Google Maps, Amazon, and any website with our ready-to-use scrapers.
         </p>
