@@ -173,7 +173,7 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
                 placeholder="Brief description of this category (optional)"
                 rows={3}
                 disabled={loading}
-                data-testid="add-category-description-input"
+                data-testid="category-description-input"
               />
             </div>
             
