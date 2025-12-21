@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ExternalLink, Cookie, Shield, BarChart3, Target, Settings, Search, Menu, X, Home, Book, FileText, ChevronDown, Info } from 'lucide-react';
-import Footer from './Footer';
-
+import DocsFooter from './docs/DocsFooter';
 import DocsNavbar from './docs/DocsNavbar';
 
 // Skeleton Loader Component
