@@ -104,6 +104,12 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
 
   if (!isOpen) return null;
 
+  const isAddMode = mode === 'add';
+  const title = isAddMode ? 'Add New Category' : 'Edit Category';
+  const subtitle = isAddMode ? 'Create a new policy category' : 'Update category details';
+  const buttonText = isAddMode ? 'Create Category' : 'Save Changes';
+  const ButtonIcon = isAddMode ? Plus : Edit2;
+
   return (
     <div 
       className="fixed inset-0 flex items-center justify-center z-[60] p-4"
@@ -118,11 +124,11 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-2xl">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-600 rounded-lg">
-              <Plus className="w-5 h-5 text-white" />
+              <ButtonIcon className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-gray-900">Add New Category</h2>
-              <p className="text-xs text-gray-500">Create a new policy category</p>
+              <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+              <p className="text-xs text-gray-500">{subtitle}</p>
             </div>
           </div>
           <button
@@ -130,7 +136,7 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
             disabled={loading}
             className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-white rounded-lg transition-colors"
             title="Close"
-            data-testid="close-add-category-modal"
+            data-testid="close-category-form-modal"
           >
             <X className="w-5 h-5" />
           </button>
