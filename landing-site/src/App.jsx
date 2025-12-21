@@ -17,6 +17,7 @@ import Footer from './components/Footer';
 import ConsentPopup from './components/ConsentPopup';
 import CookieSettingsModal from './components/CookieSettingsModal';
 import LegalDocument from './components/LegalDocument';
+import DocsLandingPage from './components/docs/DocsLandingPage';
 import NotFound from './components/NotFound';
 
 // Main Landing Page Component
@@ -88,6 +89,8 @@ function App() {
         />
         {/* Redirect old path to new structure */}
         <Route path="/cookie-policy" element={<Navigate to="/legal/cookie-policy" replace />} />
+        {/* Docs Landing Page */}
+        <Route path="/docs" element={<DocsLandingPage />} />
         {/* Dynamic Legal Routes */}
         <Route path="/legal/:docId" element={<LegalDocument onOpenCookieSettings={handleOpenCookieSettings} />} />
         {/* 404 Not Found - Catch all routes */}

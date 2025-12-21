@@ -2969,6 +2969,60 @@ async def delete_policy(doc_id: str, current_user: dict = Depends(check_owner_ro
     return {"message": "Policy deleted successfully", "doc_id": doc_id}
 
 
+@router.get("/search")
+async def global_search(q: str = ""):
+    """Global search across Documentation and Legal policies."""
+    if not q or len(q) < 2:
+        return {"results": []}
+    
+    query_regex = {"$regex": q, "$options": "i"}
+    results = []
+    
+    # 1. Search General Docs
+    docs_cursor = db.docs.find({
+        "$or": [
+            {"title": query_regex},
+            {"content": query_regex},
+            {"tags": query_regex}
+        ]
+    }).limit(5)
+    
+    async for doc in docs_cursor:
+        results.append({
+            "type": "doc",
+            "title": doc.get("title"),
+            "subtitle": doc.get("content")[:100] + "...",
+            "url": doc.get("url_path"),
+            "icon": doc.get("icon", "file-text"),
+            "category": doc.get("category", "Docs")
+        })
+        
+    # 2. Search Legal Policies
+    policies_cursor = db.policies.find({
+        "$or": [
+            {"title": query_regex},
+            {"intro": query_regex},
+            {"sections.title": query_regex},
+            {"sections.content": query_regex}
+        ]
+    }).limit(5)
+    
+    async for policy in policies_cursor:
+        # Determine best snippet (simplified)
+        snippet = policy.get("intro")[:100]
+        
+        results.append({
+            "type": "legal",
+            "title": policy.get("title"),
+            "subtitle": snippet + "...",
+            "url": f"/legal/{policy.get('doc_id')}",
+            "icon": "scale",
+            "category": "Legal"
+        })
+    
+    return {"results": results}
+
+
 @router.get("/legal")
 async def get_all_legal_documents():
     """Get list of all legal documents (public endpoint for landing site sidebar)."""

@@ -96,6 +96,15 @@ async def startup_event():
     except Exception as e:
         logger.error(f"❌ Failed to initialize policy documents: {str(e)}")
     
+    # Seed initial general documentation (NEW)
+    logger.info("📚 Initializing general documentation...")
+    try:
+        from services.docs_seeder import seed_initial_docs
+        await seed_initial_docs(db)
+        logger.info("✅ General documentation initialized successfully")
+    except Exception as e:
+        logger.error(f"❌ Failed to initialize general documentation: {str(e)}")
+    
     logger.info("🚀 Starting actor initialization...")
     
     try:

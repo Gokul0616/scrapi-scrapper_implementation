@@ -3,43 +3,9 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Settings, Search, Info } from 'lucide-react';
 import Footer from './Footer';
 
-// Docs Navbar Component
-const DocsNavbar = () => {
-  return (
-    <nav className="fixed w-full top-0 z-50 bg-white border-b border-gray-200">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-8">
-          <a href="/" className="flex items-center gap-2">
-            <img src="/logo.png" alt="Scrapi" className="w-8 h-8" />
-            <span className="text-xl font-semibold text-gray-900">Scrapi</span>
-            <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">Docs</span>
-          </a>
+import DocsNavbar from './docs/DocsNavbar';
 
-          <div className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
-            <a href="#" className="hover:text-gray-900 transition-colors">Platform</a>
-            <a href="#" className="hover:text-gray-900 transition-colors">API</a>
-            <a href="#" className="hover:text-gray-900 transition-colors">Python SDK</a>
-            <a href="#" className="hover:text-gray-900 transition-colors">JavaScript SDK</a>
-            <a href="#" className="hover:text-gray-900 transition-colors">Academy</a>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-gray-100 border border-gray-200 rounded-md w-64 text-sm text-gray-500 cursor-text hover:border-gray-300 transition-colors">
-            <Search className="w-4 h-4" />
-            <span>Search docs...</span>
-            <span className="ml-auto text-xs text-gray-400 border border-gray-300 rounded px-1.5">Ctrl K</span>
-          </div>
-
-          <a href="#" className="text-sm font-medium text-gray-700 hover:text-gray-900">Log in</a>
-          <a href="#" className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition-colors">
-            Sign up
-          </a>
-        </div>
-      </div>
-    </nav>
-  );
-};
+// Content Skeleton Loader (Only for main content)
 
 // Content Skeleton Loader (Only for main content)
 const ContentSkeleton = () => (
