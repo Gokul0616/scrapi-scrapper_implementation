@@ -5,4 +5,4 @@ User-agent: *
 Disallow: /
 
 # Sitemap (for reference, even though indexing is disabled)
-Sitemap: https://ui-enhancements-8.preview.emergentagent.com/sitemap.xml
+Sitemap: https://dupe-order-fixer.preview.emergentagent.com/sitemap.xml
