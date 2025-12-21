@@ -205,39 +205,39 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ isOpen, onClos
 
           {/* Create/Edit Form */}
           {(isCreating || editingId) && (
-            <div className="mb-6 p-5 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl shadow-sm">
-              <div className="flex items-center gap-2 mb-4">
+            <div className="mb-6 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl shadow-sm">
+              <div className="flex items-center gap-2 mb-3">
                 <div className="p-1.5 bg-blue-600 rounded-md">
                   {isCreating ? <Plus className="w-4 h-4 text-white" /> : <Edit2 className="w-4 h-4 text-white" />}
                 </div>
-                <h3 className="text-base font-bold text-gray-900">
+                <h3 className="text-sm font-bold text-gray-900">
                   {isCreating ? 'Create New Category' : 'Edit Category'}
                 </h3>
               </div>
               
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">
                     Category Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                     placeholder="e.g., Legal Documents"
                     data-testid="category-name-input"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">
                     Description
                   </label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all resize-none"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all resize-none"
                     placeholder="Brief description of this category (optional)"
                     rows={2}
                     data-testid="category-description-input"
@@ -245,36 +245,36 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ isOpen, onClos
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">
                     Display Order
                   </label>
                   <input
                     type="number"
                     value={formData.display_order}
                     onChange={(e) => setFormData({ ...formData, display_order: parseInt(e.target.value) || 0 })}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                     placeholder="0"
                     min="0"
                     data-testid="category-order-input"
                   />
-                  <p className="text-xs text-gray-600 mt-1.5 flex items-center gap-1">
+                  <p className="text-xs text-gray-600 mt-1 flex items-center gap-1">
                     <span className="inline-block w-1 h-1 bg-blue-500 rounded-full"></span>
                     Categories with lower numbers appear first in the list
                   </p>
                 </div>
                 
-                <div className="flex gap-3 pt-2">
+                <div className="flex gap-2 pt-1">
                   <button
                     onClick={handleSave}
-                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 shadow-sm hover:shadow-md transition-all"
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 shadow-sm transition-all"
                     data-testid="save-category-btn"
                   >
                     <Save className="w-4 h-4" />
-                    {isCreating ? 'Create Category' : 'Save Changes'}
+                    {isCreating ? 'Create' : 'Save'}
                   </button>
                   <button
                     onClick={handleCancel}
-                    className="flex-1 sm:flex-none px-5 py-2.5 bg-white border border-gray-300 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50 transition-all"
+                    className="flex-1 sm:flex-none px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50 transition-all"
                     data-testid="cancel-category-btn"
                   >
                     Cancel
