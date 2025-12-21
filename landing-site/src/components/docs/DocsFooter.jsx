@@ -1,78 +1,139 @@
 import React from 'react';
-import { Github, Twitter, Linkedin, Youtube, ExternalLink } from 'lucide-react';
+import { Twitter, Linkedin, Github, Youtube } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-const DocsFooter = () => {
-    return (
-        <footer className="bg-white border-t border-gray-200 pt-16 pb-12">
-            <div className="max-w-[1400px] mx-auto px-4">
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 mb-12">
-                    {/* Learn */}
-                    <div>
-                        <h4 className="font-semibold text-gray-900 mb-4">Learn</h4>
-                        <ul className="space-y-3 text-sm text-gray-600">
-                            <li><a href="#" className="hover:text-blue-600">Academy</a></li>
-                            <li><a href="#" className="hover:text-blue-600">Platform</a></li>
-                            <li><a href="#" className="hover:text-blue-600">Anti-scraping protections</a></li>
-                            <li><a href="#" className="hover:text-blue-600">Web scraping for beginners</a></li>
-                        </ul>
-                    </div>
+const ScrapiLogo = () => (
+  <img 
+    src="/logo.png" 
+    alt="Scrapi Logo" 
+    width="28" 
+    height="28" 
+    className="brightness-0 invert"
+  />
+);
 
-                    {/* API */}
-                    <div>
-                        <h4 className="font-semibold text-gray-900 mb-4">API</h4>
-                        <ul className="space-y-3 text-sm text-gray-600">
-                            <li><a href="#" className="hover:text-blue-600">Reference</a></li>
-                            <li><a href="#" className="hover:text-blue-600">Client for JavaScript</a></li>
-                            <li><a href="#" className="hover:text-blue-600">Client for Python</a></li>
-                        </ul>
-                    </div>
+const DocsFooter = ({ onOpenCookieSettings }) => {
+  const footerLinks = {
+    product: {
+      title: 'Product',
+      links: [
+        { label: 'Scrapers', href: '#' },
+        { label: 'API Access', href: '#' },
+        { label: 'Scheduling', href: '#' },
+        { label: 'Datasets', href: '#' },
+        { label: 'Integrations', href: '#' },
+      ],
+    },
+    solutions: {
+      title: 'Solutions',
+      links: [
+        { label: 'Lead Generation', href: '#' },
+        { label: 'Competitive Intelligence', href: '#' },
+        { label: 'E-commerce Monitoring', href: '#' },
+        { label: 'SEO Analysis', href: '#' },
+        { label: 'Market Research', href: '#' },
+      ],
+    },
+    developers: {
+      title: 'Developers',
+      links: [
+        { label: 'Documentation', href: '#' },
+        { label: 'API Reference', href: '#' },
+        { label: 'Code Examples', href: '#' },
+        { label: 'GitHub', href: '#' },
+      ],
+    },
+    company: {
+      title: 'Company',
+      links: [
+        { label: 'About', href: '#' },
+        { label: 'Contact', href: '#' },
+        { label: 'Blog', href: '#' },
+      ],
+    },
+    legal: {
+      title: 'Legal',
+      links: [
+        { label: 'Privacy Policy', href: '#' },
+        { label: 'Terms of Service', href: '#' },
+        { label: 'Cookie Policy', href: '/cookie-policy', isLink: true },
+        { label: 'Cookie Settings', href: '#', isButton: true },
+      ],
+    },
+  };
 
-                    {/* SDK */}
-                    <div>
-                        <h4 className="font-semibold text-gray-900 mb-4">SDK</h4>
-                        <ul className="space-y-3 text-sm text-gray-600">
-                            <li><a href="#" className="hover:text-blue-600">SDK for JavaScript</a></li>
-                            <li><a href="#" className="hover:text-blue-600">SDK for Python</a></li>
-                        </ul>
-                    </div>
-
-                    {/* Other */}
-                    <div>
-                        <h4 className="font-semibold text-gray-900 mb-4">Other</h4>
-                        <ul className="space-y-3 text-sm text-gray-600">
-                            <li><a href="#" className="hover:text-blue-600">CLI</a></li>
-                            <li><a href="#" className="hover:text-blue-600">Open source</a></li>
-                        </ul>
-                    </div>
-
-                    {/* More */}
-                    <div>
-                        <h4 className="font-semibold text-gray-900 mb-4">More</h4>
-                        <ul className="space-y-3 text-sm text-gray-600">
-                            <li><a href="#" className="hover:text-blue-600 flex items-center gap-1">Crawlee <ExternalLink className="w-3 h-3" /></a></li>
-                            <li><a href="#" className="hover:text-blue-600 flex items-center gap-1">GitHub <ExternalLink className="w-3 h-3" /></a></li>
-                            <li><a href="#" className="hover:text-blue-600 flex items-center gap-1">Discord <ExternalLink className="w-3 h-3" /></a></li>
-                            <li><a href="#" className="hover:text-blue-600 flex items-center gap-1">Trust Center <ExternalLink className="w-3 h-3" /></a></li>
-                        </ul>
-                    </div>
-
-                    {/* Logo & Socials */}
-                    <div className="lg:col-span-1 flex flex-col items-start gap-4">
-                        <a href="/" className="flex items-center gap-2 mb-4">
-                            <img src="/logo.png" alt="Scrapi" className="w-8 h-8 opacity-80" />
-                            <span className="font-bold text-xl text-gray-900">scrapi</span>
-                        </a>
-                        <div className="flex items-center gap-4">
-                            <a href="#" className="text-gray-400 hover:text-gray-900"><Github className="w-5 h-5" /></a>
-                            <a href="#" className="text-gray-400 hover:text-blue-400"><Twitter className="w-5 h-5" /></a>
-                            <a href="#" className="text-gray-400 hover:text-blue-700"><Linkedin className="w-5 h-5" /></a>
-                            <a href="#" className="text-gray-400 hover:text-red-600"><Youtube className="w-5 h-5" /></a>
-                        </div>
-                    </div>
-                </div>
+  return (
+    <footer className="bg-[#1B1D1F] text-gray-400 py-16 px-6">
+      <div className="max-w-[1400px] mx-auto">
+        {/* Top Section */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 mb-12">
+          {Object.values(footerLinks).map((section, idx) => (
+            <div key={idx}>
+              <h4 className="text-white font-semibold mb-4 text-sm">{section.title}</h4>
+              <ul className="space-y-3">
+                {section.links.map((link, linkIdx) => (
+                  <li key={linkIdx}>
+                    {link.isButton ? (
+                      <button
+                        onClick={onOpenCookieSettings}
+                        data-testid="footer-cookie-settings-btn"
+                        className="text-sm hover:text-white transition-colors cursor-pointer"
+                      >
+                        {link.label}
+                      </button>
+                    ) : link.isLink ? (
+                      <Link
+                        to={link.href}
+                        className="text-sm hover:text-white transition-colors"
+                      >
+                        {link.label}
+                      </Link>
+                    ) : (
+                      <a
+                        href={link.href}
+                        className="text-sm hover:text-white transition-colors"
+                      >
+                        {link.label}
+                      </a>
+                    )}
+                  </li>
+                ))}
+              </ul>
             </div>
-        </footer>
-    );
+          ))}
+        </div>
+
+        {/* Divider */}
+        <div className="border-t border-gray-800 pt-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            {/* Logo */}
+            <div className="flex items-center gap-2">
+              <ScrapiLogo />
+              <span className="text-white font-semibold">Scrapi</span>
+            </div>
+
+            {/* Copyright */}
+            <p className="text-sm text-gray-500">
+              © 2025 Scrapi. All rights reserved.
+            </p>
+
+            {/* Social Links */}
+            <div className="flex items-center gap-4">
+              <a href="#" className="hover:text-white transition-colors">
+                <Twitter className="w-5 h-5" />
+              </a>
+              <a href="#" className="hover:text-white transition-colors">
+                <Linkedin className="w-5 h-5" />
+              </a>
+              <a href="#" className="hover:text-white transition-colors">
+                <Github className="w-5 h-5" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
 };
 
 export default DocsFooter;
