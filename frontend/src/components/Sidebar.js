@@ -182,51 +182,57 @@ const Sidebar = () => {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto px-2.5 py-2 scrollbar-hide">
-          {/* Scrapi Store Section */}
+          {/* Scrapi Store Section - Clickable with underline */}
           <div className="mb-1">
             <button
-              onClick={() => toggleSection('scrapiStore')}
-              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-                theme === 'dark'
+              onClick={() => {
+                setActiveSection('scrapiStore');
+                navigate('/home');
+              }}
+              className={`w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors relative ${
+                activeSection === 'scrapiStore'
+                  ? theme === 'dark'
+                    ? 'text-white'
+                    : 'text-gray-900'
+                  : theme === 'dark'
                   ? 'text-gray-400 hover:bg-gray-800'
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
-              <div className="flex items-center space-x-2">
-                <Store className="w-3.5 h-3.5" />
-                <span>Scrapi Store</span>
-              </div>
-              {expandedSections.scrapiStore ? (
-                <ChevronUp className="w-3.5 h-3.5" />
-              ) : (
-                <ChevronDown className="w-3.5 h-3.5" />
+              <Store className="w-3.5 h-3.5" />
+              <span>Scrapi Store</span>
+              {/* Underline when active */}
+              {activeSection === 'scrapiStore' && (
+                <div className={`absolute bottom-0 left-2.5 right-2.5 h-0.5 ${
+                  theme === 'dark' ? 'bg-blue-500' : 'bg-blue-600'
+                }`} />
               )}
             </button>
 
-            {expandedSections.scrapiStore && (
-              <div className="mt-0.5 space-y-0.5">
-                {scrapiStoreItems.map((item) => (
-                  <NavLink
-                    key={item.path}
-                    to={item.path}
-                    className={({ isActive }) =>
-                      `flex items-center space-x-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                        isActive
-                          ? theme === 'dark'
-                            ? 'bg-[#2C2D30] text-white'
-                            : 'bg-gray-100 text-gray-900'
-                          : theme === 'dark'
-                          ? 'text-gray-300 hover:bg-gray-800'
-                          : 'text-gray-700 hover:bg-gray-50'
-                      }`
-                    }
-                  >
-                    <item.icon className="w-4 h-4 flex-shrink-0" />
-                    <span>{item.label}</span>
-                  </NavLink>
-                ))}
-              </div>
-            )}
+            {/* Store items - always visible */}
+            <div className="mt-0.5 space-y-0.5">
+              {scrapiStoreItems.map((item) => (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setActiveSection('scrapiStore')}
+                  className={({ isActive }) =>
+                    `flex items-center space-x-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                      isActive
+                        ? theme === 'dark'
+                          ? 'bg-[#2C2D30] text-white'
+                          : 'bg-gray-100 text-gray-900'
+                        : theme === 'dark'
+                        ? 'text-gray-300 hover:bg-gray-800'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`
+                  }
+                >
+                  <item.icon className="w-4 h-4 flex-shrink-0" />
+                  <span>{item.label}</span>
+                </NavLink>
+              ))}
+            </div>
           </div>
 
           {/* Development Section */}
