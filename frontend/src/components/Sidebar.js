@@ -33,10 +33,10 @@ const Sidebar = () => {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [expandedSections, setExpandedSections] = useState({
-    scrapiStore: true,
     development: true
   });
   const [searchFocused, setSearchFocused] = useState(false);
+  const [activeSection, setActiveSection] = useState('scrapiStore');
 
   // Detect platform for keyboard shortcut display
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
