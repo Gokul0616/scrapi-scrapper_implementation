@@ -39,7 +39,7 @@ const Sidebar = () => {
 
   // Detect platform for keyboard shortcut display
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-  const shortcutKey = isMac ? '⌘K' : 'Ctrl+K';
+  const shortcutKey = isMac ? '⌘K' : 'Ct+K';
 
   const toggleSection = (section) => {
     setExpandedSections(prev => ({
