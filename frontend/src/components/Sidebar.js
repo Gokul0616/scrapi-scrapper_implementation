@@ -263,16 +263,25 @@ const Sidebar = () => {
                   </div>
                 </div>
                 <div className="flex items-center">
-                  <button
-                    onClick={toggleTheme}
-                    className={`p-1.5 rounded-lg transition-colors ${
-                      theme === 'dark'
-                        ? 'hover:bg-gray-800 text-gray-400'
-                        : 'hover:bg-gray-100 text-gray-600'
-                    }`}
-                  >
-                    {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                  </button>
+                  <Tooltip delayDuration={0}>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={toggleTheme}
+                        className={`p-1.5 rounded-lg transition-colors ${
+                          theme === 'dark'
+                            ? 'hover:bg-gray-800 text-gray-400'
+                            : 'hover:bg-gray-100 text-gray-600'
+                        }`}
+                      >
+                        {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className={`${
+                      theme === 'dark' ? 'bg-gray-800 text-white border-gray-700' : 'bg-gray-900 text-white'
+                    }`}>
+                      <span>{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
 
