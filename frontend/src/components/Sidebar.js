@@ -345,79 +345,107 @@ const Sidebar = () => {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto px-2.5 py-2 scrollbar-hide">
-          {/* Scrapi Store Section - Clickable with divider */}
-          <div className="mb-1">
-            <button
-              onClick={() => {
-                setActiveSection('scrapiStore');
-                navigate('/store');
-              }}
-              className={`w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-                isStorePage
-                  ? theme === 'dark'
-                    ? 'bg-[#2C2D30] text-white'
-                    : 'bg-gray-100 text-gray-900'
-                  : theme === 'dark'
-                  ? 'text-gray-400 hover:bg-gray-800'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <Store className="w-3.5 h-3.5" />
-              <span>Scrapi Store</span>
-            </button>
-
-            {/* Horizontal Divider after Scrapi Store */}
-            <div className={`my-2 mx-2.5 border-t ${
-              theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
-            }`} />
-
-            {/* Store items - always visible */}
-            <div className="mt-0.5 space-y-0.5">
-              {scrapiStoreItems.map((item) => (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => setActiveSection('scrapiStore')}
-                  className={({ isActive }) =>
-                    `flex items-center space-x-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                      isActive
-                        ? theme === 'dark'
-                          ? 'bg-[#2C2D30] text-white'
-                          : 'bg-gray-100 text-gray-900'
-                        : theme === 'dark'
-                        ? 'text-gray-300 hover:bg-gray-800'
-                        : 'text-gray-700 hover:bg-gray-50'
-                    }`
-                  }
+          {!isCollapsed ? (
+            <>
+              {/* Scrapi Store Section - Clickable with divider */}
+              <div className="mb-1">
+                <button
+                  onClick={() => {
+                    setActiveSection('scrapiStore');
+                    navigate('/store');
+                  }}
+                  className={`w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                    isStorePage
+                      ? theme === 'dark'
+                        ? 'bg-[#2C2D30] text-white'
+                        : 'bg-gray-100 text-gray-900'
+                      : theme === 'dark'
+                      ? 'text-gray-400 hover:bg-gray-800'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
                 >
-                  <item.icon className="w-4 h-4 flex-shrink-0" />
-                  <span>{item.label}</span>
-                </NavLink>
-              ))}
-            </div>
-          </div>
+                  <Store className="w-3.5 h-3.5" />
+                  <span>Scrapi Store</span>
+                </button>
 
-          {/* Development Section */}
-          <div className="mb-1">
-            <button
-              onClick={() => toggleSection('development')}
-              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-                theme === 'dark'
-                  ? 'text-gray-400 hover:bg-gray-800'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <span>Development</span>
-              {expandedSections.development ? (
-                <ChevronUp className="w-3.5 h-3.5" />
-              ) : (
-                <ChevronDown className="w-3.5 h-3.5" />
-              )}
-            </button>
+                {/* Horizontal Divider after Scrapi Store */}
+                <div className={`my-2 mx-2.5 border-t ${
+                  theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
+                }`} />
 
-            {expandedSections.development && (
-              <div className="mt-0.5 space-y-0.5">
-                {developmentItems.map((item) => (
+                {/* Store items - always visible */}
+                <div className="mt-0.5 space-y-0.5">
+                  {scrapiStoreItems.map((item) => (
+                    <NavLink
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => setActiveSection('scrapiStore')}
+                      className={({ isActive }) =>
+                        `flex items-center space-x-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                          isActive
+                            ? theme === 'dark'
+                              ? 'bg-[#2C2D30] text-white'
+                              : 'bg-gray-100 text-gray-900'
+                            : theme === 'dark'
+                            ? 'text-gray-300 hover:bg-gray-800'
+                            : 'text-gray-700 hover:bg-gray-50'
+                        }`
+                      }
+                    >
+                      <item.icon className="w-4 h-4 flex-shrink-0" />
+                      <span>{item.label}</span>
+                    </NavLink>
+                  ))}
+                </div>
+              </div>
+
+              {/* Development Section */}
+              <div className="mb-1">
+                <button
+                  onClick={() => toggleSection('development')}
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                    theme === 'dark'
+                      ? 'text-gray-400 hover:bg-gray-800'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <span>Development</span>
+                  {expandedSections.development ? (
+                    <ChevronUp className="w-3.5 h-3.5" />
+                  ) : (
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  )}
+                </button>
+
+                {expandedSections.development && (
+                  <div className="mt-0.5 space-y-0.5">
+                    {developmentItems.map((item) => (
+                      <NavLink
+                        key={item.path}
+                        to={item.path}
+                        className={({ isActive }) =>
+                          `flex items-center space-x-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                            isActive
+                              ? theme === 'dark'
+                                ? 'bg-[#2C2D30] text-white'
+                                : 'bg-gray-100 text-gray-900'
+                              : theme === 'dark'
+                              ? 'text-gray-300 hover:bg-gray-800'
+                              : 'text-gray-700 hover:bg-gray-50'
+                          }`
+                        }
+                      >
+                        <item.icon className="w-4 h-4 flex-shrink-0" />
+                        <span>{item.label}</span>
+                      </NavLink>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Bottom Items */}
+              <div className="space-y-0.5 mt-3">
+                {bottomItems.map((item) => (
                   <NavLink
                     key={item.path}
                     to={item.path}
@@ -438,32 +466,82 @@ const Sidebar = () => {
                   </NavLink>
                 ))}
               </div>
-            )}
-          </div>
+            </>
+          ) : (
+            /* Collapsed navigation - show only icons with tooltips */
+            <div className="space-y-1">
+              {/* Store button */}
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => {
+                      setActiveSection('scrapiStore');
+                      navigate('/store');
+                    }}
+                    className={`w-full flex items-center justify-center p-2 rounded-md transition-colors ${
+                      isStorePage
+                        ? theme === 'dark'
+                          ? 'bg-[#2C2D30] text-white'
+                          : 'bg-gray-100 text-gray-900'
+                        : theme === 'dark'
+                        ? 'text-gray-400 hover:bg-gray-800'
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    <Store className="w-4 h-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right" className={`${
+                  theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
+                }`}>
+                  Scrapi Store
+                </TooltipContent>
+              </Tooltip>
 
-          {/* Bottom Items */}
-          <div className="space-y-0.5 mt-3">
-            {bottomItems.map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={({ isActive }) =>
-                  `flex items-center space-x-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                    isActive
-                      ? theme === 'dark'
-                        ? 'bg-[#2C2D30] text-white'
-                        : 'bg-gray-100 text-gray-900'
-                      : theme === 'dark'
-                      ? 'text-gray-300 hover:bg-gray-800'
-                      : 'text-gray-700 hover:bg-gray-50'
-                  }`
-                }
-              >
-                <item.icon className="w-4 h-4 flex-shrink-0" />
-                <span>{item.label}</span>
-              </NavLink>
-            ))}
-          </div>
+              {/* Divider */}
+              <div className={`my-2 mx-2 border-t ${
+                theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
+              }`} />
+
+              {/* Store items */}
+              {scrapiStoreItems.map((item) => (
+                <MenuItem
+                  key={item.path}
+                  item={item}
+                  isActive={location.pathname === item.path}
+                  onClick={() => setActiveSection('scrapiStore')}
+                />
+              ))}
+
+              {/* Divider before development */}
+              <div className={`my-2 mx-2 border-t ${
+                theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
+              }`} />
+
+              {/* Development items */}
+              {developmentItems.map((item) => (
+                <MenuItem
+                  key={item.path}
+                  item={item}
+                  isActive={location.pathname === item.path}
+                />
+              ))}
+
+              {/* Divider before bottom items */}
+              <div className={`my-2 mx-2 border-t ${
+                theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
+              }`} />
+
+              {/* Bottom items */}
+              {bottomItems.map((item) => (
+                <MenuItem
+                  key={item.path}
+                  item={item}
+                  isActive={location.pathname === item.path}
+                />
+              ))}
+            </div>
+          )}
         </nav>
 
         {/* Bottom Section - RAM Usage & Upgrade */}
