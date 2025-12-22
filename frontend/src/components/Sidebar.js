@@ -450,42 +450,44 @@ const Sidebar = () => {
                 {expandedSections.development && (
                   <div className="mt-0.5 space-y-0.5">
                     {developmentItems.map((item) => (
-                      <NavLink
-                        key={item.path}
-                        to={item.path}
-                        className={({ isActive }) =>
-                          `flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                            isActive
-                              ? theme === 'dark'
-                                ? 'bg-[#2C2D30] text-white'
-                                : 'bg-gray-100 text-gray-900'
-                              : theme === 'dark'
-                              ? 'text-gray-300 hover:bg-gray-800'
-                              : 'text-gray-700 hover:bg-gray-50'
-                          }`
-                        }
-                      >
-                        <div className="flex items-center space-x-2.5">
-                          <item.icon className="w-4 h-4 flex-shrink-0" />
+                      <Tooltip key={item.path} delayDuration={0}>
+                        <TooltipTrigger asChild>
+                          <NavLink
+                            to={item.path}
+                            className={({ isActive }) =>
+                              `flex items-center space-x-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                                isActive
+                                  ? theme === 'dark'
+                                    ? 'bg-[#2C2D30] text-white'
+                                    : 'bg-gray-100 text-gray-900'
+                                  : theme === 'dark'
+                                  ? 'text-gray-300 hover:bg-gray-800'
+                                  : 'text-gray-700 hover:bg-gray-50'
+                              }`
+                            }
+                          >
+                            <item.icon className="w-4 h-4 flex-shrink-0" />
+                            <span>{item.label}</span>
+                          </NavLink>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className={`flex items-center justify-between gap-3 ${
+                          theme === 'dark' ? 'bg-gray-800 text-white border-gray-700' : 'bg-gray-900 text-white'
+                        }`}>
                           <span>{item.label}</span>
-                        </div>
-                        {item.shortcut && (
-                          <div className="flex items-center space-x-0.5">
-                            {item.shortcut.split(' ').map((key, idx) => (
-                              <kbd
-                                key={idx}
-                                className={`px-1.5 py-0.5 rounded text-[10px] font-mono leading-none ${
-                                  theme === 'dark'
-                                    ? 'bg-gray-700 text-gray-400 border border-gray-600'
-                                    : 'bg-gray-100 text-gray-500 border border-gray-300'
-                                }`}
-                              >
-                                {key}
-                              </kbd>
-                            ))}
-                          </div>
-                        )}
-                      </NavLink>
+                          {item.shortcut && (
+                            <div className="flex items-center space-x-0.5">
+                              {item.shortcut.split(' ').map((key, idx) => (
+                                <kbd
+                                  key={idx}
+                                  className="px-1.5 py-0.5 rounded text-[10px] font-mono leading-none bg-gray-700 text-gray-300 border border-gray-600"
+                                >
+                                  {key}
+                                </kbd>
+                              ))}
+                            </div>
+                          )}
+                        </TooltipContent>
+                      </Tooltip>
                     ))}
                   </div>
                 )}
