@@ -55,9 +55,12 @@ All navigation shortcuts follow the pattern: Press `G` then press the correspond
 ## 🎯 UI Features
 
 ### Expanded Sidebar
-- All shortcuts are displayed next to each menu item as small keyboard badges
-- Hover tooltips show additional information
+- Clean interface without visible shortcut badges
+- **Hover over any menu item** to see a tooltip with:
+  - The full name of the menu item
+  - The keyboard shortcut to access it
 - Visual indicators for active routes
+- Minimal distraction while keeping shortcuts discoverable
 
 ### Collapsed Sidebar
 - Hover over any icon to see a tooltip with:
@@ -67,10 +70,12 @@ All navigation shortcuts follow the pattern: Press `G` then press the correspond
 - Shortcuts displayed in an easy-to-read format
 
 ### Tooltip Improvements
-- Instant display (no delay) for better UX
+- **Instant display (no delay)** for better UX
+- **Always visible on hover** in both collapsed and expanded states
 - Consistent styling across light and dark themes
 - Keyboard shortcut badges styled as `<kbd>` elements
 - Proper spacing and alignment
+- Right-side positioning for optimal visibility
 
 ## 🎨 Icon Reference
 
