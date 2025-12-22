@@ -185,7 +185,7 @@ const Sidebar = () => {
           <div className="mb-1">
             <button
               onClick={() => toggleSection('scrapiStore')}
-              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
+              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${
                 theme === 'dark'
                   ? 'text-gray-400 hover:bg-gray-800'
                   : 'text-gray-600 hover:bg-gray-100'
