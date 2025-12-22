@@ -279,7 +279,7 @@ const Sidebar = () => {
                 key={item.path}
                 to={item.path}
                 className={({ isActive }) =>
-                  `flex items-center space-x-2.5 px-2.5 py-1.5 rounded-md text-sm transition-colors ${
+                  `flex items-center space-x-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
                     isActive
                       ? theme === 'dark'
                         ? 'bg-[#2C2D30] text-white'
