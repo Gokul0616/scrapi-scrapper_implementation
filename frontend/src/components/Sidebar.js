@@ -24,7 +24,8 @@ import {
   MessageSquare,
   TrendingUp,
   Server,
-  Wallet
+  Wallet,
+  HelpCircle
 } from 'lucide-react';
 
 const Sidebar = () => {
