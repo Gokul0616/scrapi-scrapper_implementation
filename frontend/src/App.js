@@ -6,7 +6,6 @@ import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { Toaster } from './components/ui/toaster';
 import { ErrorDisplayContainer } from './components/ErrorDisplay';
 import Sidebar from './components/Sidebar';
-import ApifySidebar from './components/ApifySidebar';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Actors from './pages/Actors';
@@ -73,7 +72,7 @@ const DashboardLayout = ({ children }) => {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <ApifySidebar />
+      <Sidebar />
       <main className={`flex-1 overflow-y-auto transition-colors ${theme === 'dark' ? 'bg-[#0F1014]' : 'bg-gray-50'}`}>{children}</main>
       <GlobalChat />
     </div>
