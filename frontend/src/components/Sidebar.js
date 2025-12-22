@@ -141,7 +141,7 @@ const Sidebar = () => {
       <NavLink
         to={item.path}
         onClick={onClick}
-        className={`flex items-center space-x-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
+        className={`flex items-center space-x-2.5 ${isCollapsed ? 'px-0 py-1.5 justify-center' : 'px-2.5 py-1.5'} rounded-md text-xs font-medium transition-colors ${
           isActive
             ? theme === 'dark'
               ? 'bg-[#2C2D30] text-white'
@@ -149,7 +149,7 @@ const Sidebar = () => {
             : theme === 'dark'
             ? 'text-gray-300 hover:bg-gray-800'
             : 'text-gray-700 hover:bg-gray-50'
-        } ${isCollapsed ? 'justify-center' : ''}`}
+        }`}
       >
         <item.icon className="w-4 h-4 flex-shrink-0" />
         {!isCollapsed && <span>{item.label}</span>}
