@@ -392,7 +392,7 @@ const Sidebar = () => {
                       to={item.path}
                       onClick={() => setActiveSection('scrapiStore')}
                       className={({ isActive }) =>
-                        `flex items-center space-x-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                        `flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
                           isActive
                             ? theme === 'dark'
                               ? 'bg-[#2C2D30] text-white'
@@ -403,8 +403,26 @@ const Sidebar = () => {
                         }`
                       }
                     >
-                      <item.icon className="w-4 h-4 flex-shrink-0" />
-                      <span>{item.label}</span>
+                      <div className="flex items-center space-x-2.5">
+                        <item.icon className="w-4 h-4 flex-shrink-0" />
+                        <span>{item.label}</span>
+                      </div>
+                      {item.shortcut && (
+                        <div className="flex items-center space-x-0.5">
+                          {item.shortcut.split(' ').map((key, idx) => (
+                            <kbd
+                              key={idx}
+                              className={`px-1.5 py-0.5 rounded text-[10px] font-mono leading-none ${
+                                theme === 'dark'
+                                  ? 'bg-gray-700 text-gray-400 border border-gray-600'
+                                  : 'bg-gray-100 text-gray-500 border border-gray-300'
+                              }`}
+                            >
+                              {key}
+                            </kbd>
+                          ))}
+                        </div>
+                      )}
                     </NavLink>
                   ))}
                 </div>
