@@ -579,7 +579,7 @@ const Sidebar = () => {
             </>
           ) : (
             /* Collapsed bottom section */
-            <div className="flex flex-col items-center space-y-2">
+            <div className="flex flex-col items-center space-y-1.5">
               <Tooltip delayDuration={0}>
                 <TooltipTrigger asChild>
                   <button
