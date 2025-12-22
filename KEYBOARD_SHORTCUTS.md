@@ -92,10 +92,11 @@ All navigation shortcuts follow the pattern: Press `G` then press the correspond
 
 ## 💡 Best Practices
 
-1. **Learn by Hovering:** When sidebar is collapsed, hover over icons to see shortcuts
+1. **Learn by Hovering:** Hover over any menu item (in both expanded and collapsed modes) to see its keyboard shortcut
 2. **Muscle Memory:** Practice common routes like `G H` (Home) and `G A` (Actors)
 3. **Quick Search:** Use `Ctrl/Cmd + K` to quickly search and navigate
 4. **Sidebar Toggle:** Use `Ctrl/Cmd + B` to maximize screen space when needed
+5. **Clean Interface:** Shortcuts are hidden by default but always available via hover tooltips
 
 ## 🔧 Technical Implementation
 
