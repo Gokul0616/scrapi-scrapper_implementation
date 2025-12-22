@@ -556,10 +556,20 @@ const Sidebar = () => {
                     <Store className="w-4 h-4" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="right" className={`${
-                  theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
+                <TooltipContent side="right" className={`flex items-center justify-between gap-3 ${
+                  theme === 'dark' ? 'bg-gray-800 text-white border-gray-700' : 'bg-gray-900 text-white'
                 }`}>
-                  Scrapi Store
+                  <span>Scrapi Store</span>
+                  <div className="flex items-center space-x-0.5">
+                    {['G', 'O'].map((key, idx) => (
+                      <kbd
+                        key={idx}
+                        className="px-1.5 py-0.5 rounded text-[10px] font-mono leading-none bg-gray-700 text-gray-300 border border-gray-600"
+                      >
+                        {key}
+                      </kbd>
+                    ))}
+                  </div>
                 </TooltipContent>
               </Tooltip>
 
