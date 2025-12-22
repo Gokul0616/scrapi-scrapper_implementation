@@ -550,88 +550,135 @@ const Sidebar = () => {
             theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
           }`}
         >
-          {/* RAM Usage */}
-          <div className="mb-2.5">
-            <div className="flex justify-between text-xs mb-1">
-              <span
-                className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}
-              >
-                RAM Usage
-              </span>
-              <span
-                className={`font-medium ${
-                  theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                }`}
-              >
-                0 MB / 8 GB
-              </span>
-            </div>
-            <Progress
-              value={0}
-              className={`h-1.5 ${
-                theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'
-              }`}
-            />
-            <div
-              className={`text-xs mt-1 ${
-                theme === 'dark' ? 'text-gray-500' : 'text-gray-500'
-              }`}
-            >
-              $0.00 / $5.00
-            </div>
-          </div>
+          {!isCollapsed ? (
+            <>
+              {/* RAM Usage */}
+              <div className="mb-2.5">
+                <div className="flex justify-between text-xs mb-1">
+                  <span
+                    className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}
+                  >
+                    RAM Usage
+                  </span>
+                  <span
+                    className={`font-medium ${
+                      theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                    }`}
+                  >
+                    0 MB / 8 GB
+                  </span>
+                </div>
+                <Progress
+                  value={0}
+                  className={`h-1.5 ${
+                    theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'
+                  }`}
+                />
+                <div
+                  className={`text-xs mt-1 ${
+                    theme === 'dark' ? 'text-gray-500' : 'text-gray-500'
+                  }`}
+                >
+                  $0.00 / $5.00
+                </div>
+              </div>
 
-          {/* Upgrade Button */}
-          <button
-            className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-              theme === 'dark'
-                ? 'bg-[#2C2D30] text-gray-200 hover:bg-gray-700 border border-gray-700'
-                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
-            }`}
-          >
-            <span>Upgrade to Starter</span>
-            <ChevronRight className="w-4 h-4" />
-          </button>
+              {/* Upgrade Button */}
+              <button
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  theme === 'dark'
+                    ? 'bg-[#2C2D30] text-gray-200 hover:bg-gray-700 border border-gray-700'
+                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                }`}
+              >
+                <span>Upgrade to Starter</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
 
-          {/* Scrapi Logo */}
-          <div className={`flex items-center justify-between mt-2.5 pt-2.5 border-t ${
-            theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
-          }`}>
-            <div className="flex items-center space-x-2">
-              <img src="/logo.png" alt="Scrapi" className="w-5 h-5" />
-              <span
-                className={`text-sm font-semibold ${
-                  theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
-                }`}
-              >
-                scrapi
-              </span>
+              {/* Scrapi Logo */}
+              <div className={`flex items-center justify-between mt-2.5 pt-2.5 border-t ${
+                theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
+              }`}>
+                <div className="flex items-center space-x-2">
+                  <img src="/logo.png" alt="Scrapi" className="w-5 h-5" />
+                  <span
+                    className={`text-sm font-semibold ${
+                      theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
+                    }`}
+                  >
+                    scrapi
+                  </span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  {/* Round Question Mark Icon */}
+                  <button
+                    className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
+                      theme === 'dark'
+                        ? 'hover:bg-gray-800 text-gray-400 border border-gray-700'
+                        : 'hover:bg-gray-100 text-gray-500 border border-gray-300'
+                    }`}
+                    title="Help"
+                  >
+                    <HelpCircle className="w-4 h-4" />
+                  </button>
+                  {/* Collapse Button */}
+                  <button
+                    onClick={() => setIsCollapsed(true)}
+                    className={`p-1 rounded transition-colors ${
+                      theme === 'dark'
+                        ? 'hover:bg-gray-800 text-gray-400'
+                        : 'hover:bg-gray-100 text-gray-500'
+                    }`}
+                    title="Collapse Sidebar"
+                  >
+                    <ChevronRight className="w-3.5 h-3.5 rotate-180" />
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            /* Collapsed bottom section */
+            <div className="flex flex-col items-center space-y-2">
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <button
+                    className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
+                      theme === 'dark'
+                        ? 'hover:bg-gray-800 text-gray-400 border border-gray-700'
+                        : 'hover:bg-gray-100 text-gray-500 border border-gray-300'
+                    }`}
+                  >
+                    <HelpCircle className="w-4 h-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right" className={`${
+                  theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
+                }`}>
+                  Help
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setIsCollapsed(false)}
+                    className={`p-1.5 rounded transition-colors ${
+                      theme === 'dark'
+                        ? 'hover:bg-gray-800 text-gray-400'
+                        : 'hover:bg-gray-100 text-gray-500'
+                    }`}
+                  >
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right" className={`${
+                  theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
+                }`}>
+                  Expand Sidebar
+                </TooltipContent>
+              </Tooltip>
             </div>
-            <div className="flex items-center space-x-1">
-              {/* Round Question Mark Icon */}
-              <button
-                className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
-                  theme === 'dark'
-                    ? 'hover:bg-gray-800 text-gray-400 border border-gray-700'
-                    : 'hover:bg-gray-100 text-gray-500 border border-gray-300'
-                }`}
-                title="Help"
-              >
-                <HelpCircle className="w-4 h-4" />
-              </button>
-              {/* Collapse Button */}
-              <button
-                className={`p-1 rounded transition-colors ${
-                  theme === 'dark'
-                    ? 'hover:bg-gray-800 text-gray-400'
-                    : 'hover:bg-gray-100 text-gray-500'
-                }`}
-                title="Collapse Sidebar"
-              >
-                <ChevronRight className="w-3.5 h-3.5 rotate-180" />
-              </button>
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
