@@ -147,15 +147,15 @@ const Sidebar = () => {
                 }`}
               />
               <div
-                className={`w-full pl-8 pr-16 py-1.5 rounded-md text-sm border transition-colors ${
+                className={`w-full pl-8 pr-16 py-1.5 rounded-md text-xs font-medium border transition-colors ${
                   theme === 'dark'
-                    ? 'bg-[#25262B] border-gray-700 text-gray-500'
-                    : 'bg-white border-gray-300 text-gray-400'
+                    ? 'bg-[#25262B] border-gray-700 text-gray-400'
+                    : 'bg-white border-gray-300 text-gray-500'
                 }`}
               >
                 Search...
               </div>
-              <div className="absolute right-2 top-1/2 -translate-y-1/2">
+              <div className="absolute right-2 bottom-1">
                 <kbd
                   className={`px-1.5 py-0.5 rounded text-xs font-mono ${
                     theme === 'dark'
