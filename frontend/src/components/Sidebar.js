@@ -368,21 +368,25 @@ const Sidebar = () => {
               </span>
             </div>
             <div className="flex items-center space-x-1">
+              {/* Round Question Mark Icon */}
               <button
-                className={`p-1 rounded transition-colors ${
+                className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
                   theme === 'dark'
-                    ? 'hover:bg-gray-800 text-gray-400'
-                    : 'hover:bg-gray-100 text-gray-500'
+                    ? 'hover:bg-gray-800 text-gray-400 border border-gray-700'
+                    : 'hover:bg-gray-100 text-gray-500 border border-gray-300'
                 }`}
+                title="Help"
               >
-                <span className="text-base">?</span>
+                <HelpCircle className="w-4 h-4" />
               </button>
+              {/* Collapse Button */}
               <button
                 className={`p-1 rounded transition-colors ${
                   theme === 'dark'
                     ? 'hover:bg-gray-800 text-gray-400'
                     : 'hover:bg-gray-100 text-gray-500'
                 }`}
+                title="Collapse Sidebar"
               >
                 <ChevronRight className="w-3.5 h-3.5 rotate-180" />
               </button>
