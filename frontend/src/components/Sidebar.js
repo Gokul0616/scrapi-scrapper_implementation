@@ -410,7 +410,7 @@ const Sidebar = () => {
             </>
           ) : (
             /* Collapsed navigation - show only icons with tooltips */
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {/* Store button */}
               <Tooltip delayDuration={0}>
                 <TooltipTrigger asChild>
@@ -419,7 +419,7 @@ const Sidebar = () => {
                       setActiveSection('scrapiStore');
                       navigate('/store');
                     }}
-                    className={`w-full flex items-center justify-center p-2 rounded-md transition-colors ${
+                    className={`w-full flex items-center justify-center p-1.5 rounded-md transition-colors ${
                       isStorePage
                         ? theme === 'dark'
                           ? 'bg-[#2C2D30] text-white'
@@ -440,7 +440,7 @@ const Sidebar = () => {
               </Tooltip>
 
               {/* Divider */}
-              <div className={`my-2 mx-2 border-t ${
+              <div className={`my-1.5 mx-2 border-t ${
                 theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
               }`} />
 
@@ -455,7 +455,7 @@ const Sidebar = () => {
               ))}
 
               {/* Divider before development */}
-              <div className={`my-2 mx-2 border-t ${
+              <div className={`my-1.5 mx-2 border-t ${
                 theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
               }`} />
 
@@ -469,7 +469,7 @@ const Sidebar = () => {
               ))}
 
               {/* Divider before bottom items */}
-              <div className={`my-2 mx-2 border-t ${
+              <div className={`my-1.5 mx-2 border-t ${
                 theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
               }`} />
 
