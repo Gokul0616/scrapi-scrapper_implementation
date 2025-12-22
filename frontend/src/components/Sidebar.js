@@ -232,10 +232,10 @@ const Sidebar = () => {
                 navigate('/store');
               }}
               className={`w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-                activeSection === 'scrapiStore'
+                isStorePage
                   ? theme === 'dark'
-                    ? 'text-white'
-                    : 'text-gray-900'
+                    ? 'bg-[#2C2D30] text-white'
+                    : 'bg-gray-100 text-gray-900'
                   : theme === 'dark'
                   ? 'text-gray-400 hover:bg-gray-800'
                   : 'text-gray-600 hover:bg-gray-100'
