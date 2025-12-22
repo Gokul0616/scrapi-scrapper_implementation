@@ -74,7 +74,7 @@ const Sidebar = () => {
             ? 'bg-[#1A1B1E] text-gray-100 border-r border-gray-800'
             : 'bg-white text-gray-800 border-r border-gray-200'
         }`}
-        style={{ width: '280px' }}
+        style={{ width: '240px' }}
       >
         {/* Header with Logo, User Info, and Bell Icon */}
         <div
