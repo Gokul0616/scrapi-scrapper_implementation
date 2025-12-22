@@ -1,4 +1,4 @@
-REACT_APP_BACKEND_URL=https://pixel-perfect-261.preview.emergentagent.com
+REACT_APP_BACKEND_URL=https://sidebar-slim.preview.emergentagent.com
 WDS_SOCKET_PORT=443
 REACT_APP_ENABLE_VISUAL_EDITS=true
 ENABLE_HEALTH_CHECK=false
