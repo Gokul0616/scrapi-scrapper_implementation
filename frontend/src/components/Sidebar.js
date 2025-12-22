@@ -697,17 +697,33 @@ const Sidebar = () => {
                     <HelpCircle className="w-4 h-4" />
                   </button>
                   {/* Collapse Button */}
-                  <button
-                    onClick={() => setIsCollapsed(true)}
-                    className={`p-1 rounded transition-colors ${
-                      theme === 'dark'
-                        ? 'hover:bg-gray-800 text-gray-400'
-                        : 'hover:bg-gray-100 text-gray-500'
-                    }`}
-                    title="Collapse Sidebar"
-                  >
-                    <ChevronRight className="w-3.5 h-3.5 rotate-180" />
-                  </button>
+                  <Tooltip delayDuration={0}>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => setIsCollapsed(true)}
+                        className={`p-1.5 rounded transition-colors ${
+                          theme === 'dark'
+                            ? 'hover:bg-gray-800 text-gray-400'
+                            : 'hover:bg-gray-100 text-gray-500'
+                        }`}
+                      >
+                        <PanelLeftClose className="w-4 h-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className={`flex items-center justify-between gap-3 ${
+                      theme === 'dark' ? 'bg-gray-800 text-white border-gray-700' : 'bg-gray-900 text-white'
+                    }`}>
+                      <span>Collapse Sidebar</span>
+                      <div className="flex items-center space-x-0.5">
+                        <kbd className="px-1.5 py-0.5 rounded text-[10px] font-mono leading-none bg-gray-700 text-gray-300 border border-gray-600">
+                          {isMac ? '⌘' : 'Ctrl'}
+                        </kbd>
+                        <kbd className="px-1.5 py-0.5 rounded text-[10px] font-mono leading-none bg-gray-700 text-gray-300 border border-gray-600">
+                          B
+                        </kbd>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
             </>
