@@ -43,6 +43,8 @@ const Sidebar = () => {
   });
   const [searchFocused, setSearchFocused] = useState(false);
   const [activeSection, setActiveSection] = useState('scrapiStore');
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Detect platform for keyboard shortcut display
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
