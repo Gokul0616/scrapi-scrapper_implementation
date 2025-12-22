@@ -349,7 +349,7 @@ const Sidebar = () => {
                     setActiveSection('scrapiStore');
                     navigate('/store');
                   }}
-                  className={`w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${
                     isStorePage
                       ? theme === 'dark'
                         ? 'bg-[#2C2D30] text-white'
@@ -359,8 +359,24 @@ const Sidebar = () => {
                       : 'text-gray-600 hover:bg-gray-100'
                   }`}
                 >
-                  <Store className="w-3.5 h-3.5" />
-                  <span>Scrapi Store</span>
+                  <div className="flex items-center space-x-2">
+                    <Store className="w-3.5 h-3.5" />
+                    <span>Scrapi Store</span>
+                  </div>
+                  <div className="flex items-center space-x-0.5">
+                    {['G', 'O'].map((key, idx) => (
+                      <kbd
+                        key={idx}
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-mono leading-none ${
+                          theme === 'dark'
+                            ? 'bg-gray-700 text-gray-400 border border-gray-600'
+                            : 'bg-gray-100 text-gray-500 border border-gray-300'
+                        }`}
+                      >
+                        {key}
+                      </kbd>
+                    ))}
+                  </div>
                 </button>
 
                 {/* Horizontal Divider after Scrapi Store */}
