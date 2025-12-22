@@ -340,40 +340,43 @@ const Sidebar = () => {
             <>
               {/* Scrapi Store Section - Clickable with divider */}
               <div className="mb-1">
-                <button
-                  onClick={() => {
-                    setActiveSection('scrapiStore');
-                    navigate('/store');
-                  }}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-                    isStorePage
-                      ? theme === 'dark'
-                        ? 'bg-[#2C2D30] text-white'
-                        : 'bg-gray-100 text-gray-900'
-                      : theme === 'dark'
-                      ? 'text-gray-400 hover:bg-gray-800'
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  <div className="flex items-center space-x-2">
-                    <Store className="w-3.5 h-3.5" />
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => {
+                        setActiveSection('scrapiStore');
+                        navigate('/store');
+                      }}
+                      className={`w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                        isStorePage
+                          ? theme === 'dark'
+                            ? 'bg-[#2C2D30] text-white'
+                            : 'bg-gray-100 text-gray-900'
+                          : theme === 'dark'
+                          ? 'text-gray-400 hover:bg-gray-800'
+                          : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Store className="w-3.5 h-3.5" />
+                      <span>Scrapi Store</span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" className={`flex items-center justify-between gap-3 ${
+                    theme === 'dark' ? 'bg-gray-800 text-white border-gray-700' : 'bg-gray-900 text-white'
+                  }`}>
                     <span>Scrapi Store</span>
-                  </div>
-                  <div className="flex items-center space-x-0.5">
-                    {['G', 'O'].map((key, idx) => (
-                      <kbd
-                        key={idx}
-                        className={`px-1.5 py-0.5 rounded text-[10px] font-mono leading-none ${
-                          theme === 'dark'
-                            ? 'bg-gray-700 text-gray-400 border border-gray-600'
-                            : 'bg-gray-100 text-gray-500 border border-gray-300'
-                        }`}
-                      >
-                        {key}
-                      </kbd>
-                    ))}
-                  </div>
-                </button>
+                    <div className="flex items-center space-x-0.5">
+                      {['G', 'O'].map((key, idx) => (
+                        <kbd
+                          key={idx}
+                          className="px-1.5 py-0.5 rounded text-[10px] font-mono leading-none bg-gray-700 text-gray-300 border border-gray-600"
+                        >
+                          {key}
+                        </kbd>
+                      ))}
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
 
                 {/* Horizontal Divider after Scrapi Store */}
                 <div className={`my-2 mx-2.5 border-t ${
