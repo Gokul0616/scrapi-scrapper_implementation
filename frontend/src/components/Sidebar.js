@@ -220,14 +220,14 @@ const Sidebar = () => {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto px-2.5 py-2 scrollbar-hide">
-          {/* Scrapi Store Section - Clickable with underline */}
+          {/* Scrapi Store Section - Clickable with divider */}
           <div className="mb-1">
             <button
               onClick={() => {
                 setActiveSection('scrapiStore');
-                navigate('/home');
+                navigate('/store');
               }}
-              className={`w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors relative ${
+              className={`w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${
                 activeSection === 'scrapiStore'
                   ? theme === 'dark'
                     ? 'text-white'
@@ -239,13 +239,12 @@ const Sidebar = () => {
             >
               <Store className="w-3.5 h-3.5" />
               <span>Scrapi Store</span>
-              {/* Underline when active */}
-              {activeSection === 'scrapiStore' && (
-                <div className={`absolute bottom-0 left-2.5 right-2.5 h-0.5 ${
-                  theme === 'dark' ? 'bg-blue-500' : 'bg-blue-600'
-                }`} />
-              )}
             </button>
+
+            {/* Horizontal Divider after Scrapi Store */}
+            <div className={`my-2 mx-2.5 border-t ${
+              theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
+            }`} />
 
             {/* Store items - always visible */}
             <div className="mt-0.5 space-y-0.5">
