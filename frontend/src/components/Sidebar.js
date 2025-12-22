@@ -6,12 +6,12 @@ import { Progress } from './ui/progress';
 import {
   Home,
   Store,
-  Code,
-  BookOpen,
-  Play,
-  Link2,
-  Calendar,
-  Database,
+  Code2,
+  BookmarkCheck,
+  PlayCircle,
+  Puzzle,
+  CalendarClock,
+  HardDrive,
   Shield,
   Settings,
   Moon,
@@ -21,11 +21,17 @@ import {
   ChevronRight,
   Search,
   Bell,
-  MessageSquare,
-  TrendingUp,
-  Server,
-  Wallet,
-  HelpCircle
+  MessageCircle,
+  BarChart3,
+  Network,
+  CreditCard,
+  HelpCircle,
+  FileText,
+  LogOut,
+  Palette,
+  Plus,
+  ExternalLink,
+  Mail
 } from 'lucide-react';
 
 const Sidebar = () => {
