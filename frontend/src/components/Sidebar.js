@@ -643,7 +643,7 @@ const Sidebar = () => {
           </div>
         </div>
       )}
-    </div>
+    </TooltipProvider>
   );
 };
 
