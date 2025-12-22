@@ -38,6 +38,7 @@ const Sidebar = () => {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
   const [expandedSections, setExpandedSections] = useState({
     development: true
   });
@@ -45,6 +46,9 @@ const Sidebar = () => {
   const [activeSection, setActiveSection] = useState('scrapiStore');
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Check if we're on the store page
+  const isStorePage = location.pathname === '/store';
 
   // Detect platform for keyboard shortcut display
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
