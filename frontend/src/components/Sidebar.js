@@ -63,15 +63,48 @@ const Sidebar = () => {
       // Check for Cmd+K (Mac) or Ctrl+K (Windows/Linux)
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        setSearchFocused(true);
-        // You can implement search modal opening here
-        console.log('Search activated via keyboard shortcut');
+        setIsSearchModalOpen(true);
+      }
+      
+      // Handle G+Key shortcuts
+      if (e.key === 'g' || e.key === 'G') {
+        const nextKey = new Promise((resolve) => {
+          const handler = (nextE) => {
+            resolve(nextE.key.toUpperCase());
+            window.removeEventListener('keydown', handler);
+          };
+          window.addEventListener('keydown', handler);
+          setTimeout(() => {
+            window.removeEventListener('keydown', handler);
+            resolve(null);
+          }, 1000);
+        });
+        
+        nextKey.then((key) => {
+          const shortcuts = {
+            'H': '/home',
+            'A': '/actors',
+            'R': '/runs',
+            'T': '/tasks',
+            'I': '/integrations',
+            'C': '/schedules',
+            'M': '/my-actors',
+            'N': '/insights',
+            'E': '/messaging',
+            'B': '/billing',
+            'S': '/settings',
+            'O': '/store'
+          };
+          if (key && shortcuts[key]) {
+            navigate(shortcuts[key]);
+          }
+        });
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [navigate]);
 
   // Menu structure
   const scrapiStoreItems = [
