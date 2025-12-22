@@ -75,25 +75,25 @@ const Sidebar = () => {
 
   // Menu structure
   const scrapiStoreItems = [
-    { icon: Home, label: 'Home', path: '/home' },
-    { icon: Code, label: 'Actors', path: '/actors' },
-    { icon: Play, label: 'Runs', path: '/runs' },
-    { icon: BookOpen, label: 'Saved tasks', path: '/tasks' },
-    { icon: Link2, label: 'Integrations', path: '/integrations' },
-    { icon: Calendar, label: 'Schedules', path: '/schedules' }
+    { icon: Home, label: 'Home', path: '/home', shortcut: 'G H' },
+    { icon: Code2, label: 'Actors', path: '/actors', shortcut: 'G A' },
+    { icon: PlayCircle, label: 'Runs', path: '/runs', shortcut: 'G R' },
+    { icon: BookmarkCheck, label: 'Saved tasks', path: '/tasks', shortcut: 'G T' },
+    { icon: Puzzle, label: 'Integrations', path: '/integrations', shortcut: 'G I' },
+    { icon: CalendarClock, label: 'Schedules', path: '/schedules', shortcut: 'G C' }
   ];
 
   const developmentItems = [
-    { icon: Code, label: 'My Actors', path: '/actors' },
-    { icon: TrendingUp, label: 'Insights', path: '/insights' },
-    { icon: MessageSquare, label: 'Messaging', path: '/messaging' }
+    { icon: Code2, label: 'My Actors', path: '/my-actors', shortcut: 'G M' },
+    { icon: BarChart3, label: 'Insights', path: '/insights', shortcut: 'G N' },
+    { icon: MessageCircle, label: 'Messaging', path: '/messaging', shortcut: 'G E' }
   ];
 
   const bottomItems = [
-    { icon: Server, label: 'Proxy', path: '/proxy' },
-    { icon: Database, label: 'Storage', path: '/storage' },
-    { icon: Wallet, label: 'Billing', path: '/billing' },
-    { icon: Settings, label: 'Settings', path: '/settings' }
+    { icon: Network, label: 'Proxy', path: '/proxy' },
+    { icon: HardDrive, label: 'Storage', path: '/storage' },
+    { icon: CreditCard, label: 'Billing', path: '/billing', shortcut: 'G B' },
+    { icon: Settings, label: 'Settings', path: '/settings', shortcut: 'G S' }
   ];
 
   return (
