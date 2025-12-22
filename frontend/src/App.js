@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { Toaster } from './components/ui/toaster';
 import { ErrorDisplayContainer } from './components/ErrorDisplay';
 import Sidebar from './components/Sidebar';
+import ApifySidebar from './components/ApifySidebar';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Actors from './pages/Actors';
@@ -71,7 +73,7 @@ const DashboardLayout = ({ children }) => {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+      <ApifySidebar />
       <main className="flex-1 overflow-y-auto bg-gray-50">{children}</main>
       <GlobalChat />
     </div>
@@ -184,11 +186,13 @@ function AppRoutes() {
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-        <Toaster />
-        <ErrorDisplayContainer />
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppRoutes />
+          <Toaster />
+          <ErrorDisplayContainer />
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }
