@@ -178,10 +178,7 @@ const Sidebar = () => {
           <div className="flex items-center space-x-2">
             <div 
               className={`relative flex-1 cursor-pointer`}
-              onClick={() => {
-                // Will open search modal later
-                console.log('Search clicked - modal will be implemented');
-              }}
+              onClick={() => setIsSearchModalOpen(true)}
             >
               <Search
                 className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 ${
