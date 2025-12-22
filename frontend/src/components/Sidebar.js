@@ -153,8 +153,8 @@ const Sidebar = () => {
   ];
 
   const bottomItems = [
-    { icon: Network, label: 'Proxy', path: '/proxy' },
-    { icon: HardDrive, label: 'Storage', path: '/storage' },
+    { icon: Network, label: 'Proxy', path: '/proxy', shortcut: 'G P' },
+    { icon: HardDrive, label: 'Storage', path: '/storage', shortcut: 'G D' },
     { icon: CreditCard, label: 'Billing', path: '/billing', shortcut: 'G B' },
     { icon: Settings, label: 'Settings', path: '/settings', shortcut: 'G S' }
   ];
