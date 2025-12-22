@@ -431,6 +431,172 @@ const Sidebar = () => {
           </div>
         </div>
       </div>
+
+      {/* Search Modal */}
+      {isSearchModalOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center pt-20 z-50"
+          onClick={() => setIsSearchModalOpen(false)}
+        >
+          <div 
+            className={`w-full max-w-2xl rounded-lg shadow-2xl overflow-hidden ${
+              theme === 'dark' ? 'bg-[#1A1B1E]' : 'bg-white'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Search Input */}
+            <div className={`flex items-center px-4 py-3 border-b ${
+              theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
+            }`}>
+              <Search className={`w-5 h-5 mr-3 ${
+                theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+              }`} />
+              <input
+                type="text"
+                placeholder="Search by ID or navigate"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                autoFocus
+                className={`flex-1 bg-transparent outline-none text-sm ${
+                  theme === 'dark' ? 'text-gray-200 placeholder-gray-500' : 'text-gray-800 placeholder-gray-400'
+                }`}
+              />
+              <button
+                onClick={() => setIsSearchModalOpen(false)}
+                className={`ml-3 p-1 rounded hover:bg-gray-800 transition-colors ${
+                  theme === 'dark' ? 'text-gray-400 hover:text-gray-200' : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <span className="text-lg font-semibold">×</span>
+              </button>
+            </div>
+
+            {/* Search Results */}
+            <div className={`max-h-96 overflow-y-auto ${
+              theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+            }`}>
+              {/* Navigation Section */}
+              <div className="px-4 py-2">
+                <h3 className={`text-xs font-semibold uppercase tracking-wider mb-2 ${
+                  theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+                }`}>
+                  Navigation
+                </h3>
+                <div className="space-y-1">
+                  {[
+                    { icon: Settings, label: 'Settings', path: '/settings', shortcut: 'G S' },
+                    { icon: Code2, label: 'Actors', path: '/actors', shortcut: 'G A' },
+                    { icon: CreditCard, label: 'Billing', path: '/billing', shortcut: 'G B' },
+                    { icon: Home, label: 'Home', path: '/home', shortcut: 'G H' },
+                    { icon: PlayCircle, label: 'Runs', path: '/runs', shortcut: 'G R' },
+                    { icon: BookmarkCheck, label: 'Saved tasks', path: '/tasks', shortcut: 'G T' },
+                  ].map((item) => (
+                    <button
+                      key={item.path}
+                      onClick={() => {
+                        navigate(item.path);
+                        setIsSearchModalOpen(false);
+                      }}
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${
+                        theme === 'dark'
+                          ? 'hover:bg-[#2C2D30] text-gray-300'
+                          : 'hover:bg-gray-100 text-gray-700'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <item.icon className="w-4 h-4" />
+                        <span>Go to {item.label}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        {item.shortcut.split(' ').map((key, idx) => (
+                          <kbd
+                            key={idx}
+                            className={`px-2 py-0.5 rounded text-xs font-mono ${
+                              theme === 'dark'
+                                ? 'bg-gray-700 text-gray-300 border border-gray-600'
+                                : 'bg-gray-100 text-gray-600 border border-gray-300'
+                            }`}
+                          >
+                            {key}
+                          </kbd>
+                        ))}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Help Section */}
+              <div className="px-4 py-2 border-t border-gray-800">
+                <h3 className={`text-xs font-semibold uppercase tracking-wider mb-2 ${
+                  theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+                }`}>
+                  Help
+                </h3>
+                <div className="space-y-1">
+                  {[
+                    { icon: FileText, label: 'Open docs', external: true },
+                    { icon: Mail, label: 'Contact support' },
+                    { icon: HelpCircle, label: 'Open Help center', external: true },
+                  ].map((item, idx) => (
+                    <button
+                      key={idx}
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${
+                        theme === 'dark'
+                          ? 'hover:bg-[#2C2D30] text-gray-300'
+                          : 'hover:bg-gray-100 text-gray-700'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <item.icon className="w-4 h-4" />
+                        <span>{item.label}</span>
+                      </div>
+                      {item.external && (
+                        <ExternalLink className="w-3.5 h-3.5 text-gray-500" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Quick Actions Section */}
+              <div className="px-4 py-2 border-t border-gray-800">
+                <h3 className={`text-xs font-semibold uppercase tracking-wider mb-2 ${
+                  theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+                }`}>
+                  Quick actions
+                </h3>
+                <div className="space-y-1">
+                  {[
+                    { icon: Plus, label: 'Create Actor' },
+                    { icon: Palette, label: 'Switch theme', action: toggleTheme },
+                    { icon: LogOut, label: 'Log out', action: logout },
+                    { icon: ChevronRight, label: 'Upgrade' },
+                  ].map((item, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        if (item.action) {
+                          item.action();
+                          setIsSearchModalOpen(false);
+                        }
+                      }}
+                      className={`w-full flex items-center space-x-3 px-3 py-2 rounded-md text-sm transition-colors ${
+                        theme === 'dark'
+                          ? 'hover:bg-[#2C2D30] text-gray-300'
+                          : 'hover:bg-gray-100 text-gray-700'
+                      }`}
+                    >
+                      <item.icon className="w-4 h-4" />
+                      <span>{item.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
