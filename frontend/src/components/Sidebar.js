@@ -159,7 +159,7 @@ const Sidebar = () => {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto px-2.5 py-2">
+        <nav className="flex-1 overflow-y-auto px-2.5 py-2 scrollbar-hide">
           {/* Scrapi Store Section */}
           <div className="mb-1">
             <button
