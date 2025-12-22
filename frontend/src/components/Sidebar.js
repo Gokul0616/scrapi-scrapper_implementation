@@ -35,6 +35,11 @@ const Sidebar = () => {
     scrapiStore: true,
     development: true
   });
+  const [searchFocused, setSearchFocused] = useState(false);
+
+  // Detect platform for keyboard shortcut display
+  const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+  const shortcutKey = isMac ? '⌘K' : 'Ctrl+K';
 
   const toggleSection = (section) => {
     setExpandedSections(prev => ({
@@ -42,6 +47,22 @@ const Sidebar = () => {
       [section]: !prev[section]
     }));
   };
+
+  // Handle keyboard shortcut
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Check for Cmd+K (Mac) or Ctrl+K (Windows/Linux)
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchFocused(true);
+        // You can implement search modal opening here
+        console.log('Search activated via keyboard shortcut');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Menu structure
   const scrapiStoreItems = [
