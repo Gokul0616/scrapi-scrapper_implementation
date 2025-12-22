@@ -317,15 +317,24 @@ const Sidebar = () => {
                     </kbd>
                   </div>
                 </div>
-                <button
-                  className={`p-1.5 rounded-lg transition-colors flex-shrink-0 ${
-                    theme === 'dark'
-                      ? 'hover:bg-gray-800 text-gray-400'
-                      : 'hover:bg-gray-100 text-gray-600'
-                  }`}
-                >
-                  <Bell className="w-4 h-4" />
-                </button>
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <button
+                      className={`p-1.5 rounded-lg transition-colors flex-shrink-0 ${
+                        theme === 'dark'
+                          ? 'hover:bg-gray-800 text-gray-400'
+                          : 'hover:bg-gray-100 text-gray-600'
+                      }`}
+                    >
+                      <Bell className="w-4 h-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className={`${
+                    theme === 'dark' ? 'bg-gray-800 text-white border-gray-700' : 'bg-gray-900 text-white'
+                  }`}>
+                    <span>Notifications</span>
+                  </TooltipContent>
+                </Tooltip>
               </div>
             </>
           ) : (
