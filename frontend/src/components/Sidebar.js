@@ -66,53 +66,74 @@ const Sidebar = () => {
     }));
   };
 
-  // Handle keyboard shortcut
+  // Handle keyboard shortcuts
   useEffect(() => {
+    let gKeyPressed = false;
+    let gKeyTimeout = null;
+
     const handleKeyDown = (e) => {
-      // Check for Cmd+K (Mac) or Ctrl+K (Windows/Linux)
+      // Toggle sidebar with Ctrl+B or Cmd+B
+      if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
+        e.preventDefault();
+        setIsCollapsed(prev => !prev);
+        return;
+      }
+
+      // Check for Cmd+K (Mac) or Ctrl+K (Windows/Linux) for search
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         setIsSearchModalOpen(true);
+        return;
       }
       
-      // Handle G+Key shortcuts
+      // Handle G+Key shortcuts for navigation
       if (e.key === 'g' || e.key === 'G') {
-        const nextKey = new Promise((resolve) => {
-          const handler = (nextE) => {
-            resolve(nextE.key.toUpperCase());
-            window.removeEventListener('keydown', handler);
-          };
-          window.addEventListener('keydown', handler);
-          setTimeout(() => {
-            window.removeEventListener('keydown', handler);
-            resolve(null);
+        if (!gKeyPressed) {
+          gKeyPressed = true;
+          // Clear any existing timeout
+          if (gKeyTimeout) clearTimeout(gKeyTimeout);
+          // Reset after 1 second
+          gKeyTimeout = setTimeout(() => {
+            gKeyPressed = false;
           }, 1000);
-        });
+        }
+        return;
+      }
+
+      // If G was just pressed, handle the second key
+      if (gKeyPressed) {
+        const key = e.key.toUpperCase();
+        const shortcuts = {
+          'H': '/home',
+          'A': '/actors',
+          'R': '/runs',
+          'T': '/tasks',
+          'I': '/integrations',
+          'C': '/schedules',
+          'M': '/my-actors',
+          'N': '/insights',
+          'E': '/messaging',
+          'B': '/billing',
+          'S': '/settings',
+          'O': '/store',
+          'P': '/proxy',
+          'D': '/storage'
+        };
         
-        nextKey.then((key) => {
-          const shortcuts = {
-            'H': '/home',
-            'A': '/actors',
-            'R': '/runs',
-            'T': '/tasks',
-            'I': '/integrations',
-            'C': '/schedules',
-            'M': '/my-actors',
-            'N': '/insights',
-            'E': '/messaging',
-            'B': '/billing',
-            'S': '/settings',
-            'O': '/store'
-          };
-          if (key && shortcuts[key]) {
-            navigate(shortcuts[key]);
-          }
-        });
+        if (shortcuts[key]) {
+          e.preventDefault();
+          navigate(shortcuts[key]);
+          gKeyPressed = false;
+          if (gKeyTimeout) clearTimeout(gKeyTimeout);
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      if (gKeyTimeout) clearTimeout(gKeyTimeout);
+    };
   }, [navigate]);
 
   // Menu structure
