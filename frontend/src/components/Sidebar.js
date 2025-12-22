@@ -267,7 +267,7 @@ const Sidebar = () => {
             </>
           ) : (
             /* Collapsed header - show only logo */
-            <div className="flex flex-col items-center space-y-2">
+            <div className="flex flex-col items-center">
               <Tooltip delayDuration={0}>
                 <TooltipTrigger asChild>
                   <div className="w-9 h-9 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center cursor-pointer">
@@ -278,65 +278,6 @@ const Sidebar = () => {
                   theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
                 }`}>
                   {user?.organization_name || 'Gokul'}
-                </TooltipContent>
-              </Tooltip>
-              
-              <Tooltip delayDuration={0}>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={toggleTheme}
-                    className={`p-1.5 rounded-lg transition-colors ${
-                      theme === 'dark'
-                        ? 'hover:bg-gray-800 text-gray-400'
-                        : 'hover:bg-gray-100 text-gray-600'
-                    }`}
-                  >
-                    {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right" className={`${
-                  theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
-                }`}>
-                  Toggle theme
-                </TooltipContent>
-              </Tooltip>
-              
-              <Tooltip delayDuration={0}>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => setIsSearchModalOpen(true)}
-                    className={`p-1.5 rounded-lg transition-colors ${
-                      theme === 'dark'
-                        ? 'hover:bg-gray-800 text-gray-400'
-                        : 'hover:bg-gray-100 text-gray-600'
-                    }`}
-                  >
-                    <Search className="w-4 h-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right" className={`${
-                  theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
-                }`}>
-                  Search ({shortcutKey})
-                </TooltipContent>
-              </Tooltip>
-              
-              <Tooltip delayDuration={0}>
-                <TooltipTrigger asChild>
-                  <button
-                    className={`p-1.5 rounded-lg transition-colors ${
-                      theme === 'dark'
-                        ? 'hover:bg-gray-800 text-gray-400'
-                        : 'hover:bg-gray-100 text-gray-600'
-                    }`}
-                  >
-                    <Bell className="w-4 h-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right" className={`${
-                  theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
-                }`}>
-                  Notifications
                 </TooltipContent>
               </Tooltip>
             </div>
