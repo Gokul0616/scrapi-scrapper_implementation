@@ -178,12 +178,12 @@ const Sidebar = () => {
     <TooltipProvider>
       <div className="relative h-screen">
       <div
-        className={`flex flex-col h-full transition-colors duration-200 ${
+        className={`flex flex-col h-full transition-all duration-300 ease-in-out ${
           theme === 'dark'
             ? 'bg-[#1A1B1E] text-gray-100 border-r border-gray-800'
             : 'bg-white text-gray-800 border-r border-gray-200'
         }`}
-        style={{ width: '220px' }}
+        style={{ width: isCollapsed ? '60px' : '220px' }}
       >
         {/* Header with Logo, User Info, and Bell Icon */}
         <div
