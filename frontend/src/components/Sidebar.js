@@ -135,8 +135,48 @@ const Sidebar = () => {
     { icon: Settings, label: 'Settings', path: '/settings', shortcut: 'G S' }
   ];
 
+  // Helper component for menu items with tooltip support
+  const MenuItem = ({ item, isActive, onClick }) => {
+    const content = (
+      <NavLink
+        to={item.path}
+        onClick={onClick}
+        className={`flex items-center space-x-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
+          isActive
+            ? theme === 'dark'
+              ? 'bg-[#2C2D30] text-white'
+              : 'bg-gray-100 text-gray-900'
+            : theme === 'dark'
+            ? 'text-gray-300 hover:bg-gray-800'
+            : 'text-gray-700 hover:bg-gray-50'
+        } ${isCollapsed ? 'justify-center' : ''}`}
+      >
+        <item.icon className="w-4 h-4 flex-shrink-0" />
+        {!isCollapsed && <span>{item.label}</span>}
+      </NavLink>
+    );
+
+    if (isCollapsed) {
+      return (
+        <Tooltip delayDuration={0}>
+          <TooltipTrigger asChild>
+            {content}
+          </TooltipTrigger>
+          <TooltipContent side="right" className={`${
+            theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
+          }`}>
+            {item.label}
+          </TooltipContent>
+        </Tooltip>
+      );
+    }
+
+    return content;
+  };
+
   return (
-    <div className="relative h-screen">
+    <TooltipProvider>
+      <div className="relative h-screen">
       <div
         className={`flex flex-col h-full transition-colors duration-200 ${
           theme === 'dark'
