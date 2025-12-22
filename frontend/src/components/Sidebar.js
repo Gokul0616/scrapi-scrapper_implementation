@@ -1,13 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Button } from './ui/button';
+import { useTheme } from '../contexts/ThemeContext';
 import { Progress } from './ui/progress';
-import SimpleTooltip from './SimpleTooltip';
 import {
   Home,
   Store,
-  Sparkles,
   Code,
   BookOpen,
   Play,
@@ -16,208 +14,346 @@ import {
   Database,
   Shield,
   Settings,
-  CreditCard,
-  FileText,
-  HelpCircle,
-  LogOut,
-  ChevronLeft,
+  Moon,
+  Sun,
+  ChevronDown,
+  ChevronUp,
   ChevronRight,
-  ShoppingBag,
-  FolderOpen,
-  PlusCircle,
-  Key
+  Search,
+  Bell,
+  MessageSquare,
+  TrendingUp,
+  Server,
+  Wallet
 } from 'lucide-react';
 
-const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
+const Sidebar = () => {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const [expandedSections, setExpandedSections] = useState({
+    scrapiStore: true,
+    development: true
+  });
 
-  const menuItems = [
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  // Menu structure
+  const scrapiStoreItems = [
     { icon: Home, label: 'Home', path: '/home' },
-    { icon: Store, label: 'Store', path: '/store' },
-    { icon: Sparkles, label: 'Actors', path: '/actors', active: true },
-    { icon: ShoppingBag, label: 'Marketplace', path: '/marketplace' },
-    { icon: Code, label: 'Development', path: '/development' },
-    { icon: BookOpen, label: 'Saved tasks', path: '/tasks' },
+    { icon: Code, label: 'Actors', path: '/actors' },
     { icon: Play, label: 'Runs', path: '/runs' },
+    { icon: BookOpen, label: 'Saved tasks', path: '/tasks' },
     { icon: Link2, label: 'Integrations', path: '/integrations' },
-    { icon: Calendar, label: 'Schedules', path: '/schedules' },
-    { icon: Database, label: 'Storage', path: '/storage' },
-    { icon: Shield, label: 'Proxy', path: '/proxy' },
-    { icon: Key, label: 'API Access', path: '/access-keys' },
-    { icon: Settings, label: 'Settings', path: '/settings' }
+    { icon: Calendar, label: 'Schedules', path: '/schedules' }
+  ];
+
+  const developmentItems = [
+    { icon: Code, label: 'My Actors', path: '/development' },
+    { icon: TrendingUp, label: 'Insights', path: '/insights' },
+    { icon: MessageSquare, label: 'Messaging', path: '/messaging' }
   ];
 
   const bottomItems = [
-    { icon: CreditCard, label: 'Organization billing', path: '/billing' },
-    { icon: FileText, label: 'Documentation', path: '/docs' },
-    { icon: HelpCircle, label: 'Help & resources', path: '/help' }
+    { icon: Server, label: 'Proxy', path: '/proxy' },
+    { icon: Database, label: 'Storage', path: '/storage' },
+    { icon: Wallet, label: 'Billing', path: '/billing' },
+    { icon: Settings, label: 'Settings', path: '/settings' }
   ];
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
   return (
-    <div className="relative group">
-      <style>
-        {`
-          /* Custom Scrollbar Styling */
-          .sidebar-scroll::-webkit-scrollbar {
-            width: 6px;
-          }
-          
-          .sidebar-scroll::-webkit-scrollbar-track {
-            background: transparent;
-          }
-          
-          .sidebar-scroll::-webkit-scrollbar-thumb {
-            background: transparent;
-            border-radius: 3px;
-            transition: background 0.3s ease;
-          }
-          
-          .sidebar-scroll:hover::-webkit-scrollbar-thumb {
-            background: #9CA3AF;
-          }
-          
-          .sidebar-scroll::-webkit-scrollbar-thumb:hover {
-            background: #6B7280;
-          }
-          
-          /* Firefox scrollbar */
-          .sidebar-scroll {
-            scrollbar-width: thin;
-            scrollbar-color: transparent transparent;
-          }
-          
-          .sidebar-scroll:hover {
-            scrollbar-color: #9CA3AF transparent;
-          }
-        `}
-      </style>
+    <div className="relative h-screen">
       <div
-        className={`sidebar-scroll bg-white border-r flex flex-col transition-all duration-300 overflow-y-auto ${isCollapsed ? 'w-16' : 'w-64'
-          }`}
-        style={{ height: '100vh' }}
+        className={`flex flex-col h-full transition-colors duration-200 ${
+          theme === 'dark'
+            ? 'bg-[#1A1B1E] text-gray-100 border-r border-gray-800'
+            : 'bg-white text-gray-800 border-r border-gray-200'
+        }`}
+        style={{ width: '280px' }}
       >
-        {/* Logo */}
-        <div className="h-16 border-b flex items-center justify-between px-4">
-          {!isCollapsed && (
-            <div className="flex items-center space-x-2">
-              <img src="/logo.png" alt="Scrapi Logo" className="w-8 h-8" />
-              <span className="font-bold text-xl text-gray-900">SCRAPI</span>
-            </div>
-          )}
-          {isCollapsed && <img src="/logo.png" alt="Scrapi Logo" className="w-8 h-8 mx-auto" />}
-        </div>
-
-        {/* User Info */}
-        {!isCollapsed && user && (
-          <div className="p-4 border-b">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-gray-700 to-gray-900 rounded-full flex items-center justify-center text-white font-semibold">
-                {user.email?.charAt(0).toUpperCase() || 'U'}
+        {/* Header with Logo, User Info, and Bell Icon */}
+        <div
+          className={`px-4 py-2.5 border-b ${
+            theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
+          }`}
+        >
+          {/* Top row: Logo, User Info, Theme Toggle, Bell Icon */}
+          <div className="flex items-center justify-between mb-2.5">
+            <div className="flex items-center space-x-2 flex-1 min-w-0">
+              <div className="w-9 h-9 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                <img src="/logo.png" alt="Scrapi Logo" className="w-6 h-6" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-gray-900 truncate">
-                  {user.organization_name || 'User'}
-                </div>
-                <div className="text-xs text-gray-500 truncate">{user.email}</div>
+                <div className={`font-semibold text-sm leading-tight ${
+                  theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                }`}>{user?.organization_name || 'Gokul'}</div>
+                <div className={`text-xs ${
+                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                }`}>Personal</div>
               </div>
             </div>
+            <div className="flex items-center space-x-1">
+              <button
+                onClick={toggleTheme}
+                className={`p-1.5 rounded-lg transition-colors ${
+                  theme === 'dark'
+                    ? 'hover:bg-gray-800 text-gray-400'
+                    : 'hover:bg-gray-100 text-gray-600'
+                }`}
+              >
+                {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </button>
+              <button
+                className={`p-1.5 rounded-lg transition-colors ${
+                  theme === 'dark'
+                    ? 'hover:bg-gray-800 text-gray-400'
+                    : 'hover:bg-gray-100 text-gray-600'
+                }`}
+              >
+                <Bell className="w-4 h-4" />
+              </button>
+            </div>
           </div>
-        )}
 
-        {/* Menu Items */}
-        <nav className="flex-1 overflow-x-hidden overflow-y-auto py-4">
-          <div className="space-y-1 px-2">
-            {menuItems.map((item) => (
-              <SimpleTooltip key={item.path} content={item.label} show={isCollapsed}>
-                <NavLink
-                  to={item.path}
-                  className={({ isActive }) =>
-                    `flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${isActive
-                      ? 'bg-gray-900 text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
-                    } ${isCollapsed ? 'justify-center' : ''}`
-                  }
-                >
-                  <item.icon className="w-5 h-5 flex-shrink-0" />
-                  {!isCollapsed && <span className="text-sm">{item.label}</span>}
-                </NavLink>
-              </SimpleTooltip>
-            ))}
+          {/* Search Bar */}
+          <div className="relative">
+            <Search
+              className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 ${
+                theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+              }`}
+            />
+            <input
+              type="text"
+              placeholder="Search..."
+              className={`w-full pl-8 pr-16 py-1.5 rounded-md text-sm border transition-colors ${
+                theme === 'dark'
+                  ? 'bg-[#25262B] border-gray-700 text-gray-200 placeholder-gray-500 focus:border-gray-600'
+                  : 'bg-white border-gray-300 text-gray-700 placeholder-gray-400 focus:border-gray-400'
+              } focus:outline-none`}
+            />
+            <div className="absolute right-2 top-1/2 -translate-y-1/2">
+              <kbd
+                className={`px-1.5 py-0.5 rounded text-xs font-mono ${
+                  theme === 'dark'
+                    ? 'bg-gray-700 text-gray-300'
+                    : 'bg-gray-100 text-gray-600 border border-gray-300'
+                }`}
+              >
+                ⌘K
+              </kbd>
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto px-2.5 py-2">
+          {/* Scrapi Store Section */}
+          <div className="mb-1">
+            <button
+              onClick={() => toggleSection('scrapiStore')}
+              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                theme === 'dark'
+                  ? 'text-gray-400 hover:bg-gray-800'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <div className="flex items-center space-x-2">
+                <Store className="w-3.5 h-3.5" />
+                <span>Scrapi Store</span>
+              </div>
+              {expandedSections.scrapiStore ? (
+                <ChevronUp className="w-3.5 h-3.5" />
+              ) : (
+                <ChevronDown className="w-3.5 h-3.5" />
+              )}
+            </button>
+
+            {expandedSections.scrapiStore && (
+              <div className="mt-0.5 space-y-0.5">
+                {scrapiStoreItems.map((item) => (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    className={({ isActive }) =>
+                      `flex items-center space-x-2.5 px-2.5 py-1.5 rounded-md text-sm transition-colors ${
+                        isActive
+                          ? theme === 'dark'
+                            ? 'bg-[#2C2D30] text-white'
+                            : 'bg-gray-100 text-gray-900'
+                          : theme === 'dark'
+                          ? 'text-gray-300 hover:bg-gray-800'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`
+                    }
+                  >
+                    <item.icon className="w-4 h-4 flex-shrink-0" />
+                    <span>{item.label}</span>
+                  </NavLink>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Bottom Menu */}
-          <div className="mt-8 space-y-1 px-2 pt-4 border-t">
+          {/* Development Section */}
+          <div className="mb-1">
+            <button
+              onClick={() => toggleSection('development')}
+              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                theme === 'dark'
+                  ? 'text-gray-400 hover:bg-gray-800'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <span>Development</span>
+              {expandedSections.development ? (
+                <ChevronUp className="w-3.5 h-3.5" />
+              ) : (
+                <ChevronDown className="w-3.5 h-3.5" />
+              )}
+            </button>
+
+            {expandedSections.development && (
+              <div className="mt-0.5 space-y-0.5">
+                {developmentItems.map((item) => (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    className={({ isActive }) =>
+                      `flex items-center space-x-2.5 px-2.5 py-1.5 rounded-md text-sm transition-colors ${
+                        isActive
+                          ? theme === 'dark'
+                            ? 'bg-[#2C2D30] text-white'
+                            : 'bg-gray-100 text-gray-900'
+                          : theme === 'dark'
+                          ? 'text-gray-300 hover:bg-gray-800'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`
+                    }
+                  >
+                    <item.icon className="w-4 h-4 flex-shrink-0" />
+                    <span>{item.label}</span>
+                  </NavLink>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Bottom Items */}
+          <div className="space-y-0.5 mt-3">
             {bottomItems.map((item) => (
-              <SimpleTooltip key={item.path} content={item.label} show={isCollapsed}>
-                <NavLink
-                  to={item.path}
-                  className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors ${isCollapsed ? 'justify-center' : ''
-                    }`}
-                >
-                  <item.icon className="w-5 h-5 flex-shrink-0" />
-                  {!isCollapsed && <span className="text-sm">{item.label}</span>}
-                </NavLink>
-              </SimpleTooltip>
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={({ isActive }) =>
+                  `flex items-center space-x-2.5 px-2.5 py-1.5 rounded-md text-sm transition-colors ${
+                    isActive
+                      ? theme === 'dark'
+                        ? 'bg-[#2C2D30] text-white'
+                        : 'bg-gray-100 text-gray-900'
+                      : theme === 'dark'
+                      ? 'text-gray-300 hover:bg-gray-800'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`
+                }
+              >
+                <item.icon className="w-4 h-4 flex-shrink-0" />
+                <span>{item.label}</span>
+              </NavLink>
             ))}
           </div>
         </nav>
 
-        {/* Usage Stats */}
-        {!isCollapsed && user && (
-          <div className="p-4 border-t space-y-3">
-            <div>
-              <div className="flex justify-between text-xs mb-1">
-                <span className="text-gray-600">Memory</span>
-                <span className="font-medium">
-                  {user.usage?.memory || 0} MB / {user.usage?.totalMemory || 32} GB
-                </span>
-              </div>
-              <Progress value={(user.usage?.memory || 0) / ((user.usage?.totalMemory || 32) * 10)} className="h-2" />
-            </div>
-            <div className="text-xs text-gray-500">
-              <span className="font-medium">Usage</span> resets on Oct 23
-            </div>
-            <Button className="w-full bg-gray-900 hover:bg-gray-800 text-white" size="sm">
-              Upgrade
-            </Button>
-          </div>
-        )}
-
-        {/* Logout Button */}
-        <div className="p-4 border-t">
-          <SimpleTooltip content="Logout" show={isCollapsed}>
-            <Button
-              variant="ghost"
-              className={`w-full justify-start text-gray-700 hover:bg-gray-100 ${isCollapsed ? 'justify-center px-0' : ''
+        {/* Bottom Section - RAM Usage & Upgrade */}
+        <div
+          className={`px-3.5 py-2.5 border-t ${
+            theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
+          }`}
+        >
+          {/* RAM Usage */}
+          <div className="mb-2.5">
+            <div className="flex justify-between text-xs mb-1">
+              <span
+                className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}
+              >
+                RAM Usage
+              </span>
+              <span
+                className={`font-medium ${
+                  theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
                 }`}
-              onClick={handleLogout}
+              >
+                0 MB / 8 GB
+              </span>
+            </div>
+            <Progress
+              value={0}
+              className={`h-1.5 ${
+                theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'
+              }`}
+            />
+            <div
+              className={`text-xs mt-1 ${
+                theme === 'dark' ? 'text-gray-500' : 'text-gray-500'
+              }`}
             >
-              <LogOut className="w-5 h-5" />
-              {!isCollapsed && <span className="ml-3">Logout</span>}
-            </Button>
-          </SimpleTooltip>
+              $0.00 / $5.00
+            </div>
+          </div>
+
+          {/* Upgrade Button */}
+          <button
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              theme === 'dark'
+                ? 'bg-[#2C2D30] text-gray-200 hover:bg-gray-700 border border-gray-700'
+                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+            }`}
+          >
+            <span>Upgrade to Starter</span>
+            <ChevronRight className="w-4 h-4" />
+          </button>
+
+          {/* Scrapi Logo */}
+          <div className={`flex items-center justify-between mt-2.5 pt-2.5 border-t ${
+            theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
+          }`}>
+            <div className="flex items-center space-x-2">
+              <img src="/logo.png" alt="Scrapi" className="w-5 h-5" />
+              <span
+                className={`text-sm font-semibold ${
+                  theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
+                }`}
+              >
+                scrapi
+              </span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <button
+                className={`p-1 rounded transition-colors ${
+                  theme === 'dark'
+                    ? 'hover:bg-gray-800 text-gray-400'
+                    : 'hover:bg-gray-100 text-gray-500'
+                }`}
+              >
+                <span className="text-base">?</span>
+              </button>
+              <button
+                className={`p-1 rounded transition-colors ${
+                  theme === 'dark'
+                    ? 'hover:bg-gray-800 text-gray-400'
+                    : 'hover:bg-gray-100 text-gray-500'
+                }`}
+              >
+                <ChevronRight className="w-3.5 h-3.5 rotate-180" />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Collapse Toggle - Centered on sidebar border, always visible */}
-      <button
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        className={`absolute top-1/2 -translate-y-1/2 w-7 h-7 bg-gradient-to-br from-gray-800 to-gray-900 border-2 border-gray-700 rounded-full flex items-center justify-center shadow-lg hover:from-gray-700 hover:to-gray-800 transition-all z-40 ${isCollapsed ? 'left-[50px]' : 'left-[242px]'
-          }`}
-        title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-      >
-        {isCollapsed ? (
-          <ChevronRight className="w-4 h-4 text-white" />
-        ) : (
-          <ChevronLeft className="w-4 h-4 text-white" />
-        )}
-      </button>
     </div>
   );
 };
