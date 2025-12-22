@@ -191,77 +191,156 @@ const Sidebar = () => {
             theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
           }`}
         >
-          {/* Top row: Logo, User Info, Theme Toggle */}
-          <div className="flex items-center justify-between mb-2.5">
-            <div className="flex items-center space-x-2 flex-1 min-w-0">
-              <div className="w-9 h-9 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                <img src="/logo.png" alt="Scrapi Logo" className="w-6 h-6" />
+          {!isCollapsed ? (
+            <>
+              {/* Top row: Logo, User Info, Theme Toggle */}
+              <div className="flex items-center justify-between mb-2.5">
+                <div className="flex items-center space-x-2 flex-1 min-w-0">
+                  <div className="w-9 h-9 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <img src="/logo.png" alt="Scrapi Logo" className="w-6 h-6" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className={`font-semibold text-sm leading-tight ${
+                      theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                    }`}>{user?.organization_name || 'Gokul'}</div>
+                    <div className={`text-xs ${
+                      theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                    }`}>Personal</div>
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <button
+                    onClick={toggleTheme}
+                    className={`p-1.5 rounded-lg transition-colors ${
+                      theme === 'dark'
+                        ? 'hover:bg-gray-800 text-gray-400'
+                        : 'hover:bg-gray-100 text-gray-600'
+                    }`}
+                  >
+                    {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className={`font-semibold text-sm leading-tight ${
-                  theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
-                }`}>{user?.organization_name || 'Gokul'}</div>
-                <div className={`text-xs ${
-                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                }`}>Personal</div>
-              </div>
-            </div>
-            <div className="flex items-center">
-              <button
-                onClick={toggleTheme}
-                className={`p-1.5 rounded-lg transition-colors ${
-                  theme === 'dark'
-                    ? 'hover:bg-gray-800 text-gray-400'
-                    : 'hover:bg-gray-100 text-gray-600'
-                }`}
-              >
-                {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              </button>
-            </div>
-          </div>
 
-          {/* Search Bar with Bell Icon */}
-          <div className="flex items-center space-x-2">
-            <div 
-              className={`relative flex-1 cursor-pointer`}
-              onClick={() => setIsSearchModalOpen(true)}
-            >
-              <Search
-                className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 ${
-                  theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
-                }`}
-              />
-              <div
-                className={`w-full pl-8 pr-16 py-1.5 rounded-md text-xs font-medium border transition-colors ${
-                  theme === 'dark'
-                    ? 'bg-[#25262B] border-gray-700 text-gray-400'
-                    : 'bg-white border-gray-300 text-gray-500'
-                }`}
-              >
-                Search...
-              </div>
-              <div className="absolute right-2 bottom-1">
-                <kbd
-                  className={`px-1.5 py-0.5 rounded text-xs font-mono ${
+              {/* Search Bar with Bell Icon */}
+              <div className="flex items-center space-x-2">
+                <div 
+                  className={`relative flex-1 cursor-pointer`}
+                  onClick={() => setIsSearchModalOpen(true)}
+                >
+                  <Search
+                    className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 ${
+                      theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+                    }`}
+                  />
+                  <div
+                    className={`w-full pl-8 pr-16 py-1.5 rounded-md text-xs font-medium border transition-colors ${
+                      theme === 'dark'
+                        ? 'bg-[#25262B] border-gray-700 text-gray-400'
+                        : 'bg-white border-gray-300 text-gray-500'
+                    }`}
+                  >
+                    Search...
+                  </div>
+                  <div className="absolute right-2 bottom-1">
+                    <kbd
+                      className={`px-1.5 py-0.5 rounded text-xs font-mono ${
+                        theme === 'dark'
+                          ? 'bg-gray-700 text-gray-300'
+                          : 'bg-gray-100 text-gray-600 border border-gray-300'
+                      }`}
+                    >
+                      {shortcutKey}
+                    </kbd>
+                  </div>
+                </div>
+                <button
+                  className={`p-1.5 rounded-lg transition-colors flex-shrink-0 ${
                     theme === 'dark'
-                      ? 'bg-gray-700 text-gray-300'
-                      : 'bg-gray-100 text-gray-600 border border-gray-300'
+                      ? 'hover:bg-gray-800 text-gray-400'
+                      : 'hover:bg-gray-100 text-gray-600'
                   }`}
                 >
-                  {shortcutKey}
-                </kbd>
+                  <Bell className="w-4 h-4" />
+                </button>
               </div>
+            </>
+          ) : (
+            /* Collapsed header - show only logo */
+            <div className="flex flex-col items-center space-y-2">
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <div className="w-9 h-9 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center cursor-pointer">
+                    <img src="/logo.png" alt="Scrapi Logo" className="w-6 h-6" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="right" className={`${
+                  theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
+                }`}>
+                  {user?.organization_name || 'Gokul'}
+                </TooltipContent>
+              </Tooltip>
+              
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={toggleTheme}
+                    className={`p-1.5 rounded-lg transition-colors ${
+                      theme === 'dark'
+                        ? 'hover:bg-gray-800 text-gray-400'
+                        : 'hover:bg-gray-100 text-gray-600'
+                    }`}
+                  >
+                    {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right" className={`${
+                  theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
+                }`}>
+                  Toggle theme
+                </TooltipContent>
+              </Tooltip>
+              
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setIsSearchModalOpen(true)}
+                    className={`p-1.5 rounded-lg transition-colors ${
+                      theme === 'dark'
+                        ? 'hover:bg-gray-800 text-gray-400'
+                        : 'hover:bg-gray-100 text-gray-600'
+                    }`}
+                  >
+                    <Search className="w-4 h-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right" className={`${
+                  theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
+                }`}>
+                  Search ({shortcutKey})
+                </TooltipContent>
+              </Tooltip>
+              
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <button
+                    className={`p-1.5 rounded-lg transition-colors ${
+                      theme === 'dark'
+                        ? 'hover:bg-gray-800 text-gray-400'
+                        : 'hover:bg-gray-100 text-gray-600'
+                    }`}
+                  >
+                    <Bell className="w-4 h-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right" className={`${
+                  theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
+                }`}>
+                  Notifications
+                </TooltipContent>
+              </Tooltip>
             </div>
-            <button
-              className={`p-1.5 rounded-lg transition-colors flex-shrink-0 ${
-                theme === 'dark'
-                  ? 'hover:bg-gray-800 text-gray-400'
-                  : 'hover:bg-gray-100 text-gray-600'
-              }`}
-            >
-              <Bell className="w-4 h-4" />
-            </button>
-          </div>
+          )}
         </div>
 
         {/* Navigation */}
