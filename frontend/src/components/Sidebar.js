@@ -163,7 +163,7 @@ const Sidebar = () => {
                       : 'bg-gray-100 text-gray-600 border border-gray-300'
                   }`}
                 >
-                  ⌘K
+                  {shortcutKey}
                 </kbd>
               </div>
             </div>
