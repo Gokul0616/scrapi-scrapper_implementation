@@ -69,12 +69,12 @@ const ProtectedRoute = ({ children }) => {
 };
 
 const DashboardLayout = ({ children }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { theme } = useTheme();
 
   return (
     <div className="flex h-screen overflow-hidden">
       <ApifySidebar />
-      <main className="flex-1 overflow-y-auto bg-gray-50">{children}</main>
+      <main className={`flex-1 overflow-y-auto transition-colors ${theme === 'dark' ? 'bg-[#0F1014]' : 'bg-gray-50'}`}>{children}</main>
       <GlobalChat />
     </div>
   );
