@@ -98,9 +98,11 @@ const ShortcutsModal = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        {/* Content - Fixed height, no scrollbar */}
-        <div className="px-5 py-4">
-          <div className="space-y-5">
+        {/* Content - Scrollable with two columns */}
+        <div className={`px-5 py-4 max-h-[70vh] overflow-y-auto ${
+          theme === 'dark' ? 'scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900' : 'scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100'
+        }`}>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-5">
             {shortcutSections.map((section, sectionIdx) => (
               <div key={sectionIdx}>
                 <h3
