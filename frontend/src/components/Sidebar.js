@@ -151,7 +151,7 @@ const Sidebar = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate, toggleTheme, isSearchModalOpen, isShortcutsModalOpen]);
+  }, [navigate, toggleTheme, isSearchModalOpen, openModal]);
 
   // Menu structure
   const scrapiStoreItems = [
