@@ -73,6 +73,13 @@ const Sidebar = () => {
   // Handle keyboard shortcut
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Check for Escape key to close search modal
+      if (e.key === 'Escape' && isSearchModalOpen) {
+        e.preventDefault();
+        setIsSearchModalOpen(false);
+        return;
+      }
+
       // Check for Cmd+K (Mac) or Ctrl+K (Windows/Linux)
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
@@ -137,7 +144,7 @@ const Sidebar = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate, toggleTheme]);
+  }, [navigate, toggleTheme, isSearchModalOpen]);
 
   // Menu structure
   const scrapiStoreItems = [
