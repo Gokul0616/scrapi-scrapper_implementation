@@ -43,19 +43,18 @@ const UserDropdown = () => {
           data-testid="user-dropdown-trigger"
         >
           <div className="flex items-center space-x-2 flex-1 min-w-0">
-            <div className="w-9 h-9 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-              <img
-                src="/logo.png"
-                alt="User Avatar"
-                className={`w-6 h-6 ${theme === 'dark' ? 'brightness-0 invert' : ''}`}
-              />
+            <div 
+              className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ background: profileColor }}
+            >
+              <span className="text-white text-sm font-semibold">{userInitials}</span>
             </div>
             <div className="flex-1 min-w-0 text-left">
               <div
                 className={`font-semibold text-sm leading-tight ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
                   }`}
               >
-                {user?.organization_name || ''}
+                {user?.organization_name || user?.username || ''}
               </div>
               <div
                 className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
