@@ -317,7 +317,6 @@ async def get_recent_searches(db, user_id: str, limit: int = 5) -> List[Dict[str
             "type": "recent",
             "title": search.get("query", ""),
             "subtitle": f"Recent search • {search.get('result_type', 'unknown')}",
-            "icon": "🕐",
             "category": "Recent",
             "query": search.get("query"),
             "timestamp": search.get("timestamp")
