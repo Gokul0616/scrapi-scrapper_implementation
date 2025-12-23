@@ -76,25 +76,34 @@ const UserDropdown = () => {
 
       {/* Floating Popup Menu with Backdrop */}
       {isOpen && (
-        <div
-          className={`fixed rounded-lg shadow-2xl border z-[9999] ${
-            theme === 'dark'
-              ? 'bg-[#1A1B1E] border-gray-700'
-              : 'bg-white border-gray-200'
-          }`}
-          style={{
-            minWidth: '280px',
-            maxWidth: '320px',
-            left: '16px',
-            top: dropdownRef.current 
-              ? `${dropdownRef.current.getBoundingClientRect().bottom + 8}px`
-              : '80px',
-            boxShadow: theme === 'dark' 
-              ? '0 10px 40px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3)'
-              : '0 10px 40px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08)'
-          }}
-          data-testid="user-dropdown-menu"
-        >
+        <>
+          {/* Transparent backdrop */}
+          <div
+            className="fixed inset-0 z-[9998]"
+            onClick={() => setIsOpen(false)}
+            data-testid="dropdown-backdrop"
+          />
+          
+          {/* Floating Popup */}
+          <div
+            className={`fixed rounded-lg border z-[9999] ${
+              theme === 'dark'
+                ? 'bg-[#1A1B1E] border-gray-700'
+                : 'bg-white border-gray-200'
+            }`}
+            style={{
+              minWidth: '280px',
+              maxWidth: '320px',
+              left: '16px',
+              top: dropdownRef.current 
+                ? `${dropdownRef.current.getBoundingClientRect().bottom + 8}px`
+                : '80px',
+              boxShadow: theme === 'dark' 
+                ? '0 10px 40px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3)'
+                : '0 10px 40px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08)'
+            }}
+            data-testid="user-dropdown-menu"
+          >
           {/* Personal Section */}
           <div
             className={`px-3 py-2 border-b ${
