@@ -422,9 +422,23 @@ const Sidebar = () => {
                       <Store className="w-4 h-4" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent side="right" className={`${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
-                    }`}>
-                    Scrapi Store
+                  <TooltipContent 
+                    side="right" 
+                    className={`flex items-center gap-2 ${
+                      theme === 'dark' 
+                        ? 'bg-gray-800 text-white border-gray-700' 
+                        : 'bg-gray-900 text-white border-gray-800'
+                    } border shadow-lg`}
+                  >
+                    <span className="font-medium">Scrapi Store</span>
+                    <div className="flex items-center gap-1 ml-2 pl-2 border-l border-gray-600">
+                      <kbd className={`px-1.5 py-0.5 rounded text-xs font-mono ${
+                        theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-800 text-gray-200'
+                      }`}>G</kbd>
+                      <kbd className={`px-1.5 py-0.5 rounded text-xs font-mono ${
+                        theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-800 text-gray-200'
+                      }`}>O</kbd>
+                    </div>
                   </TooltipContent>
                 </Tooltip>
 
