@@ -3,6 +3,7 @@ import './App.css';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import { ModalProvider } from './contexts/ModalContext';
 import { Toaster } from './components/ui/toaster';
 import { ErrorDisplayContainer } from './components/ErrorDisplay';
 import Sidebar from './components/Sidebar';
