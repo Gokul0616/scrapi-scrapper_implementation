@@ -95,7 +95,6 @@ async def search_actors(db, query: str, limit: int = 5) -> List[Dict[str, Any]]:
             "title": actor.get("name", "Untitled Actor"),
             "subtitle": actor.get("description", "")[:100],
             "url": f"/actors/{actor.get('id')}",
-            "icon": actor.get("icon", "🤖"),
             "category": actor.get("category", "Actor"),
             "metadata": {
                 "actor_id": actor.get("id"),
