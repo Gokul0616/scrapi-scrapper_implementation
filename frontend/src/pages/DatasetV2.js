@@ -628,6 +628,29 @@ const DatasetV2 = () => {
     setCurrentImageIndex(0);
   };
 
+  // Handle ESC key to close modals
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        if (showImageModal) {
+          closeImageModal();
+        } else if (showLinksModal) {
+          closeLinksModal();
+        }
+      }
+    };
+
+    if (showLinksModal || showImageModal) {
+      window.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      window.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [showLinksModal, showImageModal]);
+
   // Combine images and videos into a single media array
   const getAllMedia = (product) => {
     if (!product) return [];
