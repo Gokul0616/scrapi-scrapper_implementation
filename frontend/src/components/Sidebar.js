@@ -440,7 +440,7 @@ const Sidebar = () => {
                     <div className="flex items-center gap-1 ml-2 pl-2 border-l border-gray-600">
                       <kbd className={`px-1.5 py-0.5 rounded text-xs font-mono ${
                         theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-800 text-gray-200'
-                      }`}>G</kbd>
+                      }`}>S</kbd>
                       <kbd className={`px-1.5 py-0.5 rounded text-xs font-mono ${
                         theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-800 text-gray-200'
                       }`}>O</kbd>
