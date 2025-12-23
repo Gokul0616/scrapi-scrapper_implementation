@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { ChevronDown, ChevronUp, Check, Plus, LogOut } from 'lucide-react';
@@ -16,7 +16,7 @@ const UserDropdown = () => {
 
   return (
     <>
-      <div className="relative" ref={dropdownRef}>
+      <div className="relative w-full" ref={dropdownRef}>
         {/* Dropdown Trigger */}
         <button
           onClick={() => setIsOpen(!isOpen)}
