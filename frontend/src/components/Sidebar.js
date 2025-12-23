@@ -602,7 +602,7 @@ const Sidebar = () => {
             ) : (
               /* Collapsed bottom section */
               <div className="flex flex-col items-center space-y-1.5">
-                <Tooltip delayDuration={0}>
+                <Tooltip delayDuration={500}>
                   <TooltipTrigger asChild>
                     <button
                       className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${theme === 'dark'
