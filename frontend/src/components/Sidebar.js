@@ -224,7 +224,11 @@ const Sidebar = () => {
                 <div className="flex items-center justify-between mb-2.5">
                   <div className="flex items-center space-x-2 flex-1 min-w-0">
                     <div className="w-9 h-9 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                      <img src="/logo.png" alt="Scrapi Logo" className="w-6 h-6" />
+                      <img 
+                        src="/logo.png" 
+                        alt="Scrapi Logo" 
+                        className={`w-6 h-6 ${theme === 'dark' ? 'brightness-0 invert' : ''}`}
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className={`font-semibold text-sm leading-tight ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
