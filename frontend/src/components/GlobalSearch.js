@@ -408,7 +408,7 @@ const GlobalSearch = ({ isOpen, onClose }) => {
           <input
             ref={inputRef}
             type="text"
-            placeholder="Search or type > for commands, @ for actors, # for runs..."
+            placeholder="Search actors, runs, schedules... or type > @ # / for filters"
             className={`flex-1 text-lg bg-transparent border-none outline-none ${
               isDark 
                 ? 'text-white placeholder:text-gray-500' 
