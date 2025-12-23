@@ -549,7 +549,7 @@ const Sidebar = () => {
                         }`}
                       title="Collapse Sidebar"
                     >
-                      <ChevronRight className="w-3.5 h-3.5 rotate-180" />
+                      <ChevronsLeft className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
