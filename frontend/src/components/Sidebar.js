@@ -6,6 +6,7 @@ import { Progress } from './ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import ShortcutsModal from './ShortcutsModal';
 import UserDropdown from './UserDropdown';
+import { getUserInitials, getProfileColor } from '../utils/userUtils';
 import {
   Home,
   Store,
@@ -55,6 +56,9 @@ const Sidebar = () => {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
+
+  const userInitials = getUserInitials(user);
+  const profileColor = getProfileColor(user?.profile_color, theme);
 
   // Check if we're on the store page
   const isStorePage = location.pathname === '/store';
