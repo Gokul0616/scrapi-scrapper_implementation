@@ -409,7 +409,7 @@ const Sidebar = () => {
               /* Collapsed navigation - show only icons with tooltips */
               <div className="space-y-0.5">
                 {/* Store button */}
-                <Tooltip delayDuration={500}>
+                <Tooltip>
                   <TooltipTrigger asChild>
                     <button
                       onClick={() => {
