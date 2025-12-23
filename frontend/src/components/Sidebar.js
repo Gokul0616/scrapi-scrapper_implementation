@@ -97,6 +97,12 @@ const Sidebar = () => {
   // Handle keyboard shortcut
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Don't trigger shortcuts when user is typing in input fields
+      const isTypingInInput = 
+        e.target.tagName === 'INPUT' || 
+        e.target.tagName === 'TEXTAREA' || 
+        e.target.isContentEditable;
+
       // Check for Escape key to close any open modal
       if (e.key === 'Escape') {
         if (isSearchModalOpen) {
@@ -134,8 +140,8 @@ const Sidebar = () => {
         openModal('shortcuts-modal');
       }
 
-      // Handle S+Key shortcuts (changed from G+Key)
-      if (e.key === 's' || e.key === 'S') {
+      // Handle S+Key shortcuts - ONLY when NOT typing in input and search modal is closed
+      if ((e.key === 's' || e.key === 'S') && !isTypingInInput && !isSearchModalOpen) {
         const nextKey = new Promise((resolve) => {
           const handler = (nextE) => {
             resolve(nextE.key.toUpperCase());
