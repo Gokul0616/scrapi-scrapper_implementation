@@ -26,8 +26,9 @@ app = FastAPI(title="Scrapi - Web Scraping Platform")
 api_router = APIRouter(prefix="/api")
 
 # Import and setup routes
-from routes import router as api_routes, set_db
+from routes import router as api_routes, set_db, search_router, set_search_db
 set_db(db)
+set_search_db(db)
 
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
@@ -36,6 +37,7 @@ async def root():
 
 # Include the API routes
 api_router.include_router(api_routes)
+api_router.include_router(search_router)
 
 # Include the router in the main app
 app.include_router(api_router)
