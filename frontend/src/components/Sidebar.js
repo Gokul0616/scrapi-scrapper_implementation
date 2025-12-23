@@ -90,6 +90,8 @@ const Sidebar = () => {
       // Check for Cmd+K (Mac) or Ctrl+K (Windows/Linux)
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
+        // Close any modal context modal before opening search
+        closeModal();
         setIsSearchModalOpen(true);
       }
 
@@ -108,6 +110,8 @@ const Sidebar = () => {
       // Check for Shift+? to show shortcuts modal
       if (e.shiftKey && e.key === '?') {
         e.preventDefault();
+        // Close search modal if open before opening shortcuts
+        setIsSearchModalOpen(false);
         openModal('shortcuts-modal');
       }
 
