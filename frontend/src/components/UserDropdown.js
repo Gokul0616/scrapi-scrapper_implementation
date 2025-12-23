@@ -74,7 +74,7 @@ const UserDropdown = () => {
           <div
             className="fixed rounded-lg border z-[9999] bg-white border-gray-200 p-2"
             style={{
-              width: '250px',
+              width: '235px',
               left: '16px',
               top: dropdownRef.current 
                 ? `${dropdownRef.current.getBoundingClientRect().bottom + 8}px`
@@ -84,7 +84,7 @@ const UserDropdown = () => {
           >
             {/* Personal Section */}
             <div className="border-b border-gray-200">
-              <div className="text-xs font-semibold uppercase tracking-wider mb-2 text-gray-500">
+              <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                 Personal
               </div>
               <button
@@ -107,11 +107,11 @@ const UserDropdown = () => {
 
             {/* Organizations Section */}
             <div className="border-b border-gray-200">
-              <div className="text-xs font-semibold uppercase tracking-wider mb-2 text-gray-500">
+              <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                 Organizations
               </div>
               <button
-                className="w-full flex items-center space-x-2.5 rounded-md text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center space-x-2.5 rounded-md text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors m-2 p-2"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add organization</span>
@@ -122,7 +122,7 @@ const UserDropdown = () => {
             <div>
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center space-x-2.5 rounded-md text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center space-x-2.5 rounded-md text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors m-2 p-2"
                 data-testid="sign-out-button"
               >
                 <LogOut className="w-4 h-4" />
