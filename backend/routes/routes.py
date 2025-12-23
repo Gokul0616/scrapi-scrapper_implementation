@@ -25,8 +25,27 @@ import asyncio
 import secrets
 import hashlib
 import time
+import random
 
 logger = logging.getLogger(__name__)
+
+# Profile color palette - works well in both light and dark modes
+PROFILE_COLORS = [
+    "#8B5CF6",  # Purple
+    "#EC4899",  # Pink
+    "#F59E0B",  # Amber
+    "#10B981",  # Emerald
+    "#3B82F6",  # Blue
+    "#EF4444",  # Red
+    "#14B8A6",  # Teal
+    "#F97316",  # Orange
+    "#8B5CF6",  # Violet
+    "#06B6D4",  # Cyan
+]
+
+def generate_random_profile_color():
+    """Generate a random color from the profile color palette."""
+    return random.choice(PROFILE_COLORS)
 
 # This will be set by server.py
 db = None
