@@ -55,7 +55,7 @@ const SimpleTooltip = ({ children, content, show = true }) => {
       >
         {children}
       </div>
-      {isVisible && content && createPortal(
+      {showTooltip && content && createPortal(
         <div
           className="fixed z-[9999] pointer-events-none"
           style={{
