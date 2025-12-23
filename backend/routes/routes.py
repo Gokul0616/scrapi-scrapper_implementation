@@ -820,6 +820,15 @@ async def get_me(current_user: dict = Depends(get_current_user)):
     if not user_doc:
         raise HTTPException(status_code=404, detail="User not found")
     
+    # Generate profile color if not exists (for existing users)
+    profile_color = user_doc.get('profile_color')
+    if not profile_color:
+        profile_color = generate_random_profile_color()
+        await db.users.update_one(
+            {"id": user_doc['id']},
+            {"$set": {"profile_color": profile_color}}
+        )
+    
     return UserResponse(
         id=user_doc['id'],
         username=user_doc['username'],
@@ -830,7 +839,7 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         is_active=user_doc.get('is_active', True),
         created_at=user_doc.get('created_at', datetime.now(timezone.utc).isoformat()),
         last_login_at=user_doc.get('last_login_at'),
-        profile_color=user_doc.get('profile_color', generate_random_profile_color())
+        profile_color=profile_color
     )
 
 @router.patch("/auth/last-path")
