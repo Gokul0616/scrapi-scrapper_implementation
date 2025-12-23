@@ -137,7 +137,7 @@ const ShortcutsModal = ({ isOpen, onClose }) => {
                                   theme === 'dark' ? 'text-gray-600' : 'text-gray-400'
                                 }`}
                               >
-                                then
+                                +
                               </span>
                             )}
                             <kbd
@@ -158,6 +158,7 @@ const ShortcutsModal = ({ isOpen, onClose }) => {
               </div>
             ))}
           </div>
+
         </div>
 
         {/* Footer */}
