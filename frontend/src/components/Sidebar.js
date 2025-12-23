@@ -823,10 +823,7 @@ const Sidebar = () => {
       </div>
       
       {/* Shortcuts Modal */}
-      <ShortcutsModal 
-        isOpen={isShortcutsModalOpen} 
-        onClose={() => setIsShortcutsModalOpen(false)} 
-      />
+      <ShortcutsModal />
     </TooltipProvider>
   );
 };
