@@ -46,6 +46,7 @@ import {
 const Sidebar = () => {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { openModal, closeModal, isModalOpen } = useModal();
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -56,7 +57,6 @@ const Sidebar = () => {
   const [activeSection, setActiveSection] = useState('scrapiStore');
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
 
   const userInitials = getUserInitials(user);
   const profileColor = getProfileColor(user?.profile_color, theme);
