@@ -1,7 +1,6 @@
 import React from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useModal } from '../contexts/ModalContext';
-import React from 'react';
 import GlobalModal from './GlobalModal';
 
 const ShortcutsModal = () => {
