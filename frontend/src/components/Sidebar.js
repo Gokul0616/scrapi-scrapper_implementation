@@ -282,7 +282,7 @@ const Sidebar = () => {
             ) : (
               /* Collapsed header - show only logo */
               <div className="flex flex-col items-center">
-                <Tooltip delayDuration={0}>
+                <Tooltip delayDuration={500}>
                   <TooltipTrigger asChild>
                     <div className="w-9 h-9 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center cursor-pointer">
                       <img 
