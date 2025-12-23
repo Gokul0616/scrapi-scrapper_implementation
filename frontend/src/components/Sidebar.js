@@ -159,21 +159,40 @@ const Sidebar = () => {
       </NavLink>
     );
 
-    if (isCollapsed) {
-      return (
-        <Tooltip delayDuration={0}>
-          <TooltipTrigger asChild>
-            {content}
-          </TooltipTrigger>
-          <TooltipContent side="right" className={`${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
-            }`}>
-            {item.label}
-          </TooltipContent>
-        </Tooltip>
-      );
-    }
-
-    return content;
+    // Show tooltip in both collapsed and expanded states
+    return (
+      <Tooltip delayDuration={0}>
+        <TooltipTrigger asChild>
+          {content}
+        </TooltipTrigger>
+        <TooltipContent 
+          side="right" 
+          className={`flex items-center gap-2 ${
+            theme === 'dark' 
+              ? 'bg-gray-800 text-white border-gray-700' 
+              : 'bg-gray-900 text-white border-gray-800'
+          } border shadow-lg`}
+        >
+          <span className="font-medium">{item.label}</span>
+          {item.shortcut && (
+            <div className="flex items-center gap-1 ml-2 pl-2 border-l border-gray-600">
+              {item.shortcut.split(' ').map((key, idx) => (
+                <kbd
+                  key={idx}
+                  className={`px-1.5 py-0.5 rounded text-xs font-mono ${
+                    theme === 'dark'
+                      ? 'bg-gray-700 text-gray-300'
+                      : 'bg-gray-800 text-gray-200'
+                  }`}
+                >
+                  {key}
+                </kbd>
+              ))}
+            </div>
+          )}
+        </TooltipContent>
+      </Tooltip>
+    );
   };
 
   return (
