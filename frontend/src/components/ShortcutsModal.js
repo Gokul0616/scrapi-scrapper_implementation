@@ -1,11 +1,14 @@
 import React from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useModal } from '../contexts/ModalContext';
-import GlobalModal from './GlobalModal';
+import { Keyboard } from 'lucide-react';
 
 const ShortcutsModal = () => {
   const { theme } = useTheme();
+  const { isModalOpen, closeModal } = useModal();
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+
+  const isOpen = isModalOpen('shortcuts-modal');
 
   const navigationAndSystem = [
     {
@@ -42,73 +45,109 @@ const ShortcutsModal = () => {
     { keys: ['Esc'], description: 'Close Dialog' },
   ];
 
-  const bgClass = theme === 'dark' ? 'bg-[#1A1B1E]' : 'bg-white';
-  const textClass = theme === 'dark' ? 'text-gray-300' : 'text-gray-700';
-  const labelClass = theme === 'dark' ? 'text-gray-400' : 'text-gray-600';
-  const dividerClass = theme === 'dark' ? 'border-gray-800' : 'border-gray-200';
-  const kbdBgClass = theme === 'dark' ? 'bg-gray-700 border-gray-600' : 'bg-gray-100 border-gray-300';
-  const kbdTextClass = theme === 'dark' ? 'text-gray-300' : 'text-gray-600';
-
   const ShortcutRow = ({ description, keys }) => (
-    <div className="flex items-center justify-between py-1 group">
-      <span className={`text-[12px] opacity-70 group-hover:opacity-100 transition-opacity truncate pr-2 ${textClass}`}>
+    <div className={`flex items-center justify-between py-2.5 px-5 transition-colors ${
+      theme === 'dark'
+        ? 'hover:bg-gray-800/50'
+        : 'hover:bg-gray-50'
+    }`}>
+      <span className={`text-sm ${
+        theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+      }`}>
         {description}
       </span>
-      <div className="flex items-center gap-1 shrink-0">
+      <div className="flex items-center gap-1">
         {keys.map((key, i) => (
           <React.Fragment key={i}>
-            <kbd className={`px-1 py-0.5 text-[10px] font-sans rounded border shadow-sm ${kbdBgClass} ${kbdTextClass} min-w-[18px] text-center`}>
+            <kbd className={`px-2 py-0.5 text-xs font-semibold rounded-md ${
+              theme === 'dark'
+                ? 'bg-gray-800 text-gray-300 border border-gray-700'
+                : 'bg-gray-100 text-gray-600 border border-gray-200'
+            }`}>
               {key}
             </kbd>
-            {i < keys.length - 1 && <span className={`text-[9px] ${labelClass}`}>+</span>}
+            {i < keys.length - 1 && (
+              <span className={`text-xs mx-0.5 ${
+                theme === 'dark' ? 'text-gray-600' : 'text-gray-400'
+              }`}>
+                +
+              </span>
+            )}
           </React.Fragment>
         ))}
       </div>
     </div>
   );
 
+  if (!isOpen) return null;
+
   return (
-    <GlobalModal
-      modalId="shortcuts-modal"
-      showCloseButton={false}
-      closeOnBackdropClick={true}
-      contentClassName={`p-0 ${bgClass} rounded-lg shadow-xl border ${dividerClass} overflow-hidden`}
-      wrapperClassName="flex items-center justify-center"
+    <div 
+      className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] px-4 backdrop-blur-sm"
+      style={{ 
+        backgroundColor: theme === 'dark' ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.2)'
+      }}
+      onClick={closeModal}
     >
-      <div className="w-full h-[400px] flex flex-col pointer-events-auto">
-        
+      <div
+        className={`w-full max-w-3xl rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[75vh] animate-in fade-in zoom-in-95 duration-200 ${
+          theme === 'dark' 
+            ? 'bg-[#1A1B1E] border border-gray-800' 
+            : 'bg-white border border-gray-200'
+        }`}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className={`px-4 py-2.5 border-b ${dividerClass} flex items-center justify-between`}>
-          <h2 className={`text-[11px] font-bold uppercase tracking-widest ${labelClass}`}>Keyboard Shortcuts</h2>
-          <span className={`text-[10px] ${labelClass}`}>Esc</span>
+        <div className={`flex items-center gap-3 px-4 py-3 border-b ${
+          theme === 'dark' ? 'border-gray-800' : 'border-gray-100'
+        }`}>
+          <Keyboard className={`w-5 h-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-400'}`} />
+          <h2 className={`flex-1 text-lg font-semibold ${
+            theme === 'dark' ? 'text-white' : 'text-gray-900'
+          }`}>
+            Keyboard Shortcuts
+          </h2>
+          <kbd className={`hidden sm:inline-block px-2 py-0.5 text-xs font-semibold rounded-md ${
+            theme === 'dark'
+              ? 'text-gray-400 bg-gray-800 border border-gray-700'
+              : 'text-gray-400 bg-gray-50 border border-gray-200'
+          }`}>
+            ESC
+          </kbd>
         </div>
 
-        {/* Scrollable Content Area - Hide scrollbar via inline CSS */}
+        {/* Content Area - No Scrollbar */}
         <div 
           className="flex-1 overflow-y-auto"
           style={{
-            msOverflowStyle: 'none',  /* IE and Edge */
-            scrollbarWidth: 'none',   /* Firefox */
+            msOverflowStyle: 'none',
+            scrollbarWidth: 'none',
           }}
         >
-          {/* Webkit specific styles to hide scrollbar */}
           <style>
             {`
-              div::-webkit-scrollbar {
+              .hide-scrollbar::-webkit-scrollbar {
                 display: none;
               }
             `}
           </style>
 
-          <div className="grid grid-cols-[1fr_1px_1fr] min-h-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 min-h-full hide-scrollbar">
             {/* Left Side */}
-            <div className="p-4 space-y-6">
-              {navigationAndSystem.map((section) => (
+            <div className={`border-r ${theme === 'dark' ? 'border-gray-800' : 'border-gray-100'}`}>
+              {navigationAndSystem.map((section, idx) => (
                 <div key={section.title}>
-                  <h3 className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${labelClass}`}>
-                    {section.title}
-                  </h3>
-                  <div className="flex flex-col">
+                  {idx > 0 && (
+                    <div className={`h-[1px] mx-5 ${
+                      theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
+                    }`} />
+                  )}
+                  <div className="py-2">
+                    <div className={`px-5 py-2 text-xs font-semibold uppercase tracking-wider ${
+                      theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+                    }`}>
+                      {section.title}
+                    </div>
                     {section.shortcuts.map((s, i) => (
                       <ShortcutRow key={i} {...s} />
                     ))}
@@ -117,15 +156,14 @@ const ShortcutsModal = () => {
               ))}
             </div>
 
-            {/* Vertical Divider Line */}
-            <div className={`w-[1px] ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-200'}`} />
-
             {/* Right Side */}
-            <div className="p-4">
-              <h3 className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${labelClass}`}>
-                General
-              </h3>
-              <div className="flex flex-col">
+            <div>
+              <div className="py-2">
+                <div className={`px-5 py-2 text-xs font-semibold uppercase tracking-wider ${
+                  theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+                }`}>
+                  General
+                </div>
                 {generalShortcuts.map((s, i) => (
                   <ShortcutRow key={i} {...s} />
                 ))}
@@ -133,8 +171,18 @@ const ShortcutsModal = () => {
             </div>
           </div>
         </div>
+
+        {/* Footer */}
+        <div className={`px-4 py-2 text-xs border-t flex items-center justify-between ${
+          theme === 'dark'
+            ? 'bg-gray-900/50 text-gray-500 border-gray-800'
+            : 'bg-gray-50 text-gray-400 border-gray-100'
+        }`}>
+          <span>Press any key combination to use</span>
+          <span className="hidden sm:inline">Use <span className="font-semibold">Shift + ?</span> anytime</span>
+        </div>
       </div>
-    </GlobalModal>
+    </div>
   );
 };
 
