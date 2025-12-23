@@ -22,6 +22,8 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  PanelLeft,
+  PanelLeftClose,
   Search,
   Bell,
   MessageCircle,
