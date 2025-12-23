@@ -700,12 +700,12 @@ const Sidebar = () => {
                   </h3>
                   <div className="space-y-1">
                     {[
-                      { icon: Settings, label: 'Settings', path: '/settings', shortcut: 'G S' },
-                      { icon: Code2, label: 'Actors', path: '/actors', shortcut: 'G A' },
-                      { icon: CreditCard, label: 'Billing', path: '/billing', shortcut: 'G B' },
-                      { icon: Home, label: 'Home', path: '/home', shortcut: 'G H' },
-                      { icon: PlayCircle, label: 'Runs', path: '/runs', shortcut: 'G R' },
-                      { icon: BookmarkCheck, label: 'Saved tasks', path: '/tasks', shortcut: 'G T' },
+                      { icon: Settings, label: 'Settings', path: '/settings', shortcut: 'S G' },
+                      { icon: Code2, label: 'Actors', path: '/actors', shortcut: 'S A' },
+                      { icon: CreditCard, label: 'Billing', path: '/billing', shortcut: 'S B' },
+                      { icon: Home, label: 'Home', path: '/home', shortcut: 'S H' },
+                      { icon: PlayCircle, label: 'Runs', path: '/runs', shortcut: 'S R' },
+                      { icon: BookmarkCheck, label: 'Saved tasks', path: '/tasks', shortcut: 'S T' },
                     ].map((item) => (
                       <button
                         key={item.path}
