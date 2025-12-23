@@ -1,16 +1,14 @@
 import React from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useModal } from '../contexts/ModalContext';
+import React from 'react';
 import GlobalModal from './GlobalModal';
-import { Separator } from './ui/separator';
 
 const ShortcutsModal = () => {
   const { theme } = useTheme();
-  const { isModalOpen } = useModal();
-
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 
-  const shortcutSections = [
+  const navigationAndSystem = [
     {
       title: 'Navigation',
       shortcuts: [
@@ -34,109 +32,108 @@ const ShortcutsModal = () => {
         { keys: ['S', 'B'], description: 'Go to Billing' },
         { keys: ['S', 'G'], description: 'Go to Settings' },
       ]
-    },
-    {
-      title: 'General',
-      shortcuts: [
-        { keys: [isMac ? '⌘' : 'Ctrl', 'K'], description: 'Open Command Menu' },
-        { keys: [isMac ? '⌘' : 'Ctrl', 'B'], description: 'Toggle Sidebar' },
-        { keys: [isMac ? '⌘' : 'Ctrl', 'L'], description: 'Toggle Theme' },
-        { keys: ['Shift', '?'], description: 'Open Keyboard Shortcuts' },
-        { keys: ['Esc'], description: 'Close Dialog or Menu' },
-      ]
     }
   ];
+
+  const generalShortcuts = [
+    { keys: [isMac ? '⌘' : 'Ctrl', 'K'], description: 'Open Command Menu' },
+    { keys: [isMac ? '⌘' : 'Ctrl', 'B'], description: 'Toggle Sidebar' },
+    { keys: [isMac ? '⌘' : 'Ctrl', 'L'], description: 'Toggle Theme' },
+    { keys: ['Shift', '?'], description: 'Open Keyboard Shortcuts' },
+    { keys: ['Esc'], description: 'Close Dialog' },
+  ];
+
+  const bgClass = theme === 'dark' ? 'bg-[#191919]' : 'bg-white';
+  const textClass = theme === 'dark' ? 'text-[#E3E3E3]' : 'text-[#37352F]';
+  const labelClass = theme === 'dark' ? 'text-[#9B9B9B]' : 'text-[#7A7A7B]';
+  const dividerClass = theme === 'dark' ? 'border-[#2F2F2F]' : 'border-[#EDEDED]';
+  const kbdBgClass = theme === 'dark' ? 'bg-[#2F2F2F] border-[#3F3F3F]' : 'bg-[#F7F7F5] border-[#E9E9E6]';
+  const kbdTextClass = theme === 'dark' ? 'text-[#AFAFAF]' : 'text-[#91918E]';
+
+  const ShortcutRow = ({ description, keys }) => (
+    <div className="flex items-center justify-between py-1 group">
+      <span className={`text-[12px] opacity-70 group-hover:opacity-100 transition-opacity truncate pr-2 ${textClass}`}>
+        {description}
+      </span>
+      <div className="flex items-center gap-1 shrink-0">
+        {keys.map((key, i) => (
+          <React.Fragment key={i}>
+            <kbd className={`px-1 py-0.5 text-[10px] font-sans rounded border shadow-sm ${kbdBgClass} ${kbdTextClass} min-w-[18px] text-center`}>
+              {key}
+            </kbd>
+            {i < keys.length - 1 && <span className={`text-[9px] ${labelClass}`}>+</span>}
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <GlobalModal
       modalId="shortcuts-modal"
-      title="Keyboard Shortcuts"
-      size="lg"
-      showCloseButton={true}
+      showCloseButton={false}
       closeOnBackdropClick={true}
-      contentClassName={`px-5 py-4 ${
-        theme === 'dark' ? 'bg-[#1A1B1E]' : 'bg-white'
-      }`}
-      customFooter={
-        <p className={`text-xs ${
-          theme === 'dark' ? 'text-gray-500' : 'text-gray-500'
-        }`}>
-          Press <kbd className={`px-1 py-0.5 rounded text-xs font-medium ${
-            theme === 'dark'
-              ? 'bg-gray-800 text-gray-300 border border-gray-700'
-              : 'bg-gray-100 text-gray-700 border border-gray-300'
-          }`}>Esc</kbd> to close
-        </p>
-      }
+      contentClassName={`p-0 ${bgClass} rounded-lg shadow-xl border ${dividerClass} overflow-hidden`}
+      wrapperClassName="flex items-center justify-center"
     >
-      {/* Content - NO SCROLL, Display all in single view like Notion */}
-      <div className="grid grid-cols-3 gap-6">
-        {shortcutSections.map((section, sectionIdx) => (
-          <React.Fragment key={sectionIdx}>
-            <div>
-              <h3
-                className={`text-xs font-medium mb-3 uppercase tracking-wide ${
-                  theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                }`}
-              >
-                {section.title}
-              </h3>
-              <div className="space-y-1">
-                {section.shortcuts.map((shortcut, idx) => (
-                  <div
-                    key={idx}
-                    className={`flex items-center justify-between py-1.5 px-2 rounded transition-colors ${
-                      theme === 'dark'
-                        ? 'hover:bg-gray-800/50'
-                        : 'hover:bg-gray-50'
-                    }`}
-                  >
-                    <span
-                      className={`text-xs ${
-                        theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                      }`}
-                    >
-                      {shortcut.description}
-                    </span>
-                    <div className="flex items-center gap-1 ml-2">
-                      {shortcut.keys.map((key, keyIdx) => (
-                        <React.Fragment key={keyIdx}>
-                          {keyIdx > 0 && (
-                            <span
-                              className={`text-xs mx-0.5 ${
-                                theme === 'dark' ? 'text-gray-600' : 'text-gray-400'
-                              }`}
-                            >
-                              +
-                            </span>
-                          )}
-                          <kbd
-                            className={`px-1.5 py-0.5 rounded text-xs font-medium whitespace-nowrap ${
-                              theme === 'dark'
-                                ? 'bg-gray-800 text-gray-300 border border-gray-700'
-                                : 'bg-gray-100 text-gray-700 border border-gray-300'
-                            }`}
-                          >
-                            {key}
-                          </kbd>
-                        </React.Fragment>
-                      ))}
-                    </div>
+      <div className="w-full h-[400px] flex flex-col pointer-events-auto">
+        
+        {/* Header */}
+        <div className={`px-4 py-2.5 border-b ${dividerClass} flex items-center justify-between`}>
+          <h2 className={`text-[11px] font-bold uppercase tracking-widest ${labelClass}`}>Keyboard Shortcuts</h2>
+          <span className={`text-[10px] ${labelClass}`}>Esc</span>
+        </div>
+
+        {/* Scrollable Content Area - Hide scrollbar via inline CSS */}
+        <div 
+          className="flex-1 overflow-y-auto"
+          style={{
+            msOverflowStyle: 'none',  /* IE and Edge */
+            scrollbarWidth: 'none',   /* Firefox */
+          }}
+        >
+          {/* Webkit specific styles to hide scrollbar */}
+          <style>
+            {`
+              div::-webkit-scrollbar {
+                display: none;
+              }
+            `}
+          </style>
+
+          <div className="grid grid-cols-[1fr_1px_1fr] min-h-full">
+            {/* Left Side */}
+            <div className="p-4 space-y-6">
+              {navigationAndSystem.map((section) => (
+                <div key={section.title}>
+                  <h3 className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${labelClass}`}>
+                    {section.title}
+                  </h3>
+                  <div className="flex flex-col">
+                    {section.shortcuts.map((s, i) => (
+                      <ShortcutRow key={i} {...s} />
+                    ))}
                   </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Vertical Divider Line */}
+            <div className={`w-[1px] ${theme === 'dark' ? 'bg-[#2F2F2F]' : 'bg-[#EDEDED]'}`} />
+
+            {/* Right Side */}
+            <div className="p-4">
+              <h3 className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${labelClass}`}>
+                General
+              </h3>
+              <div className="flex flex-col">
+                {generalShortcuts.map((s, i) => (
+                  <ShortcutRow key={i} {...s} />
                 ))}
               </div>
             </div>
-            {/* Vertical Divider between sections (not after the last section) */}
-            {sectionIdx < shortcutSections.length - 1 && (
-              <Separator 
-                orientation="vertical" 
-                className={`h-auto ${
-                  theme === 'dark' ? 'bg-gray-800' : 'bg-gray-200'
-                }`}
-              />
-            )}
-          </React.Fragment>
-        ))}
+          </div>
+        </div>
       </div>
     </GlobalModal>
   );
