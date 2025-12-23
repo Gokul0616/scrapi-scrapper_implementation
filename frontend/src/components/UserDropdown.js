@@ -72,11 +72,7 @@ const UserDropdown = () => {
           
           {/* Floating Popup */}
           <div
-            className={`fixed rounded-lg border z-[9999] ${
-              theme === 'dark'
-                ? 'bg-[#1A1B1E] border-gray-700'
-                : 'bg-white border-gray-200'
-            }`}
+            className="fixed rounded-lg border z-[9999] bg-white border-gray-200"
             style={{
               minWidth: '280px',
               maxWidth: '320px',
@@ -87,92 +83,54 @@ const UserDropdown = () => {
             }}
             data-testid="user-dropdown-menu"
           >
-          {/* Personal Section */}
-          <div
-            className={`px-3 py-2 border-b ${
-              theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
-            }`}
-          >
-            <div
-              className={`text-xs font-semibold uppercase tracking-wide mb-2 ${
-                theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
-              }`}
-            >
-              Personal
-            </div>
-            <div
-              className={`flex items-center space-x-2 px-2 py-2 rounded-md ${
-                theme === 'dark' ? 'bg-[#25262B]' : 'bg-gray-50'
-              }`}
-            >
-              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-white text-sm font-semibold">G</span>
+            {/* Personal Section */}
+            <div className="px-3 py-3 border-b border-gray-200">
+              <div className="text-xs font-semibold uppercase tracking-wider mb-2 text-gray-500">
+                Personal
               </div>
-              <div className="flex-1 min-w-0">
-                <div
-                  className={`font-semibold text-sm ${
-                    theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
-                  }`}
-                >
-                  {user?.organization_name || 'Gokul Alpha'}
+              <button
+                className="w-full flex items-center space-x-2.5 px-2.5 py-2.5 rounded-md bg-gray-50 hover:bg-gray-100 transition-colors"
+              >
+                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-white text-sm font-semibold">G</span>
                 </div>
-                <div
-                  className={`text-xs ${
-                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                  }`}
-                >
-                  righteous_planet
+                <div className="flex-1 min-w-0 text-left">
+                  <div className="font-semibold text-sm text-gray-800">
+                    {user?.organization_name || 'Gokul Alpha'}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    righteous_planet
+                  </div>
                 </div>
+                <Check className="w-4 h-4 text-gray-600 flex-shrink-0" />
+              </button>
+            </div>
+
+            {/* Organizations Section */}
+            <div className="px-3 py-3 border-b border-gray-200">
+              <div className="text-xs font-semibold uppercase tracking-wider mb-2 text-gray-500">
+                Organizations
               </div>
-              <Check
-                className={`w-4 h-4 ${
-                  theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
-                }`}
-              />
+              <button
+                className="w-full flex items-center space-x-2.5 px-2.5 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add organization</span>
+              </button>
+            </div>
+
+            {/* Sign Out */}
+            <div className="px-3 py-2">
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center space-x-2.5 px-2.5 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                data-testid="sign-out-button"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Sign out</span>
+              </button>
             </div>
           </div>
-
-          {/* Organizations Section */}
-          <div
-            className={`px-3 py-2 border-b ${
-              theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
-            }`}
-          >
-            <div
-              className={`text-xs font-semibold uppercase tracking-wide mb-2 ${
-                theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
-              }`}
-            >
-              Organizations
-            </div>
-            <button
-              className={`w-full flex items-center space-x-2 px-2 py-2 rounded-md text-sm transition-colors ${
-                theme === 'dark'
-                  ? 'text-gray-300 hover:bg-[#25262B]'
-                  : 'text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add organization</span>
-            </button>
-          </div>
-
-          {/* Sign Out */}
-          <div className="px-3 py-2">
-            <button
-              onClick={handleLogout}
-              className={`w-full flex items-center space-x-2 px-2 py-2 rounded-md text-sm transition-colors ${
-                theme === 'dark'
-                  ? 'text-gray-300 hover:bg-[#25262B]'
-                  : 'text-gray-700 hover:bg-gray-50'
-              }`}
-              data-testid="sign-out-button"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>Sign out</span>
-            </button>
-          </div>
-        </div>
         </>
       )}
     </>
