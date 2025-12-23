@@ -191,11 +191,7 @@ const GlobalSearch = ({ isOpen, onClose }) => {
     }
   }, [query, backendUrl, navigate, onClose]);
 
-  const getIcon = (type, icon) => {
-    if (icon && typeof icon === 'string' && icon.length <= 2) {
-      return <span className="text-xl">{icon}</span>;
-    }
-
+  const getIcon = (type) => {
     const iconMap = {
       actor: Play,
       run: Play,
