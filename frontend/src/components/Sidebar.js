@@ -54,6 +54,7 @@ const Sidebar = () => {
   const [activeSection, setActiveSection] = useState('scrapiStore');
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
 
   // Check if we're on the store page
   const isStorePage = location.pathname === '/store';
