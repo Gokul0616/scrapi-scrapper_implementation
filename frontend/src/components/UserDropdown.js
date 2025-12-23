@@ -81,10 +81,7 @@ const UserDropdown = () => {
               left: '16px',
               top: dropdownRef.current 
                 ? `${dropdownRef.current.getBoundingClientRect().bottom + 8}px`
-                : '80px',
-              boxShadow: theme === 'dark' 
-                ? '0 10px 40px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3)'
-                : '0 10px 40px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08)'
+                : '80px'
             }}
             data-testid="user-dropdown-menu"
           >
