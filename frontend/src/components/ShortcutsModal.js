@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
-import { X, Command, Keyboard } from 'lucide-react';
+import { X } from 'lucide-react';
 
 const ShortcutsModal = ({ isOpen, onClose }) => {
   const { theme } = useTheme();
@@ -62,78 +62,59 @@ const ShortcutsModal = ({ isOpen, onClose }) => {
 
   return (
     <div
-      className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/30 flex items-center justify-center z-[10000] p-4"
       onClick={onClose}
     >
       <div
-        className={`w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden ${
+        className={`w-full max-w-xl rounded-lg shadow-xl ${
           theme === 'dark' ? 'bg-[#1A1B1E]' : 'bg-white'
         }`}
         onClick={(e) => e.stopPropagation()}
+        style={{ maxHeight: '80vh' }}
       >
         {/* Header */}
         <div
-          className={`flex items-center justify-between px-6 py-5 border-b ${
+          className={`flex items-center justify-between px-5 py-3 border-b ${
             theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
           }`}
         >
-          <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${
-              theme === 'dark' ? 'bg-purple-500/10' : 'bg-purple-50'
-            }`}>
-              <Keyboard className={`w-5 h-5 ${
-                theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
-              }`} />
-            </div>
-            <div>
-              <h2
-                className={`text-lg font-semibold ${
-                  theme === 'dark' ? 'text-white' : 'text-gray-900'
-                }`}
-              >
-                Keyboard Shortcuts
-              </h2>
-              <p
-                className={`text-xs mt-0.5 ${
-                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                }`}
-              >
-                Navigate faster with keyboard shortcuts
-              </p>
-            </div>
-          </div>
+          <h2
+            className={`text-sm font-semibold ${
+              theme === 'dark' ? 'text-white' : 'text-gray-900'
+            }`}
+          >
+            Keyboard Shortcuts
+          </h2>
           <button
             onClick={onClose}
-            className={`p-2 rounded-lg transition-colors ${
+            className={`p-1 rounded transition-colors ${
               theme === 'dark'
                 ? 'hover:bg-gray-800 text-gray-400 hover:text-white'
                 : 'hover:bg-gray-100 text-gray-500 hover:text-gray-900'
             }`}
             data-testid="shortcuts-modal-close"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Content */}
-        <div className={`px-6 py-5 max-h-[65vh] overflow-y-auto ${
-          theme === 'dark' ? 'scrollbar-dark' : 'scrollbar-light'
-        }`}>
-          <div className="space-y-6">
+        {/* Content - Fixed height, no scrollbar */}
+        <div className="px-5 py-4">
+          <div className="space-y-5">
             {shortcutSections.map((section, sectionIdx) => (
               <div key={sectionIdx}>
                 <h3
-                  className={`text-xs font-semibold uppercase tracking-wider mb-3 ${
-                    theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+                  className={`text-xs font-medium mb-2 ${
+                    theme === 'dark' ? 'text-gray-500' : 'text-gray-500'
                   }`}
                 >
                   {section.title}
                 </h3>
-                <div className="space-y-1">
+                <div className="space-y-0.5">
                   {section.shortcuts.map((shortcut, idx) => (
                     <div
                       key={idx}
-                      className={`flex items-center justify-between py-2.5 px-3 rounded-lg transition-colors ${
+                      className={`flex items-center justify-between py-1.5 px-2 rounded transition-colors ${
                         theme === 'dark'
                           ? 'hover:bg-gray-800/50'
                           : 'hover:bg-gray-50'
@@ -146,12 +127,12 @@ const ShortcutsModal = ({ isOpen, onClose }) => {
                       >
                         {shortcut.description}
                       </span>
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1">
                         {shortcut.keys.map((key, keyIdx) => (
                           <React.Fragment key={keyIdx}>
                             {keyIdx > 0 && (
                               <span
-                                className={`text-xs ${
+                                className={`text-xs mx-0.5 ${
                                   theme === 'dark' ? 'text-gray-600' : 'text-gray-400'
                                 }`}
                               >
@@ -159,10 +140,10 @@ const ShortcutsModal = ({ isOpen, onClose }) => {
                               </span>
                             )}
                             <kbd
-                              className={`px-2 py-1 rounded-md text-xs font-medium min-w-[28px] text-center ${
+                              className={`px-1.5 py-0.5 rounded text-xs font-medium ${
                                 theme === 'dark'
-                                  ? 'bg-gray-800 text-gray-300 border border-gray-700 shadow-sm'
-                                  : 'bg-white text-gray-700 border border-gray-300 shadow-sm'
+                                  ? 'bg-gray-800 text-gray-300 border border-gray-700'
+                                  : 'bg-gray-100 text-gray-700 border border-gray-300'
                               }`}
                             >
                               {key}
@@ -180,18 +161,17 @@ const ShortcutsModal = ({ isOpen, onClose }) => {
 
         {/* Footer */}
         <div
-          className={`px-6 py-4 border-t ${
-            theme === 'dark' ? 'border-gray-800 bg-gray-900/20' : 'border-gray-200 bg-gray-50'
+          className={`px-5 py-2 border-t ${
+            theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
           }`}
         >
-          <p className={`text-xs flex items-center gap-2 ${
-            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+          <p className={`text-xs ${
+            theme === 'dark' ? 'text-gray-500' : 'text-gray-500'
           }`}>
-            <Command className="w-3.5 h-3.5" />
-            Press <kbd className={`px-1.5 py-0.5 rounded text-xs font-medium ${
+            Press <kbd className={`px-1 py-0.5 rounded text-xs font-medium ${
               theme === 'dark'
                 ? 'bg-gray-800 text-gray-300 border border-gray-700'
-                : 'bg-white text-gray-700 border border-gray-300'
+                : 'bg-gray-100 text-gray-700 border border-gray-300'
             }`}>Esc</kbd> to close
           </p>
         </div>
