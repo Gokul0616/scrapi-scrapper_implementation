@@ -82,6 +82,12 @@ const Sidebar = () => {
         setIsCollapsed(prev => !prev);
       }
 
+      // Check for Cmd+T (Mac) or Ctrl+T (Windows/Linux) to toggle theme
+      if ((e.metaKey || e.ctrlKey) && e.key === 't') {
+        e.preventDefault();
+        toggleTheme();
+      }
+
       // Handle G+Key shortcuts
       if (e.key === 'g' || e.key === 'G') {
         const nextKey = new Promise((resolve) => {
@@ -122,7 +128,7 @@ const Sidebar = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate]);
+  }, [navigate, toggleTheme]);
 
   // Menu structure
   const scrapiStoreItems = [
