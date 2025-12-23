@@ -428,10 +428,13 @@ const GlobalSearch = ({ isOpen, onClose }) => {
               {/* Recent Searches */}
               {hasRecentSearches && (
                 <div className="mb-3">
-                  <div className={`px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
+                  <div className={`px-3 py-1 text-xs font-semibold uppercase tracking-wide flex items-center justify-between ${
                     isDark ? 'text-gray-500' : 'text-gray-400'
                   }`}>
-                    Recent Searches
+                    <span>Recent Searches</span>
+                    <span className={`text-xs font-normal ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                      {recentSearches.length} {recentSearches.length === 1 ? 'item' : 'items'}
+                    </span>
                   </div>
                   <div className="space-y-1 mt-1">
                     {recentSearches.map((item, idx) => renderResult(item, idx))}
@@ -443,10 +446,13 @@ const GlobalSearch = ({ isOpen, onClose }) => {
               {hasResults && (
                 <div className="mb-3">
                   {hasRecentSearches && (
-                    <div className={`px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
+                    <div className={`px-3 py-1 text-xs font-semibold uppercase tracking-wide flex items-center justify-between ${
                       isDark ? 'text-gray-500' : 'text-gray-400'
                     }`}>
-                      {mode === 'actions' ? 'Quick Actions' : 'Search Results'}
+                      <span>{mode === 'actions' ? 'Quick Actions' : 'Search Results'}</span>
+                      <span className={`text-xs font-normal ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                        {results.length} {results.length === 1 ? 'result' : 'results'}
+                      </span>
                     </div>
                   )}
                   <div className="space-y-1 mt-1">
@@ -458,10 +464,13 @@ const GlobalSearch = ({ isOpen, onClose }) => {
               {/* Quick Actions */}
               {hasQuickActions && (
                 <div>
-                  <div className={`px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
+                  <div className={`px-3 py-1 text-xs font-semibold uppercase tracking-wide flex items-center justify-between ${
                     isDark ? 'text-gray-500' : 'text-gray-400'
                   }`}>
-                    Quick Actions
+                    <span>Quick Actions</span>
+                    <span className={`text-xs font-normal ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                      {quickActions.length} available
+                    </span>
                   </div>
                   <div className="space-y-1 mt-1">
                     {quickActions.map((item, idx) => renderResult(item, idx + recentSearches.length + results.length))}
