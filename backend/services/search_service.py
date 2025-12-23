@@ -161,7 +161,6 @@ async def search_datasets(db, query: str, user_id: str, limit: int = 5) -> List[
             "title": f"Dataset - {dataset.get('actor_name', 'Unknown')}",
             "subtitle": f"{item_count} items • {dataset.get('created_at', 'Unknown date')}",
             "url": f"/datasets/{dataset.get('run_id')}",
-            "icon": "📊",
             "category": "Dataset",
             "metadata": {
                 "run_id": dataset.get("run_id"),
