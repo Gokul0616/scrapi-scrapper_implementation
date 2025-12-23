@@ -42,12 +42,12 @@ const ShortcutsModal = () => {
     { keys: ['Esc'], description: 'Close Dialog' },
   ];
 
-  const bgClass = theme === 'dark' ? 'bg-[#191919]' : 'bg-white';
-  const textClass = theme === 'dark' ? 'text-[#E3E3E3]' : 'text-[#37352F]';
-  const labelClass = theme === 'dark' ? 'text-[#9B9B9B]' : 'text-[#7A7A7B]';
-  const dividerClass = theme === 'dark' ? 'border-[#2F2F2F]' : 'border-[#EDEDED]';
-  const kbdBgClass = theme === 'dark' ? 'bg-[#2F2F2F] border-[#3F3F3F]' : 'bg-[#F7F7F5] border-[#E9E9E6]';
-  const kbdTextClass = theme === 'dark' ? 'text-[#AFAFAF]' : 'text-[#91918E]';
+  const bgClass = theme === 'dark' ? 'bg-[#1A1B1E]' : 'bg-white';
+  const textClass = theme === 'dark' ? 'text-gray-300' : 'text-gray-700';
+  const labelClass = theme === 'dark' ? 'text-gray-400' : 'text-gray-600';
+  const dividerClass = theme === 'dark' ? 'border-gray-800' : 'border-gray-200';
+  const kbdBgClass = theme === 'dark' ? 'bg-gray-700 border-gray-600' : 'bg-gray-100 border-gray-300';
+  const kbdTextClass = theme === 'dark' ? 'text-gray-300' : 'text-gray-600';
 
   const ShortcutRow = ({ description, keys }) => (
     <div className="flex items-center justify-between py-1 group">
