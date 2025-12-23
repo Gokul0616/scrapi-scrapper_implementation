@@ -3,8 +3,10 @@ import { createPortal } from 'react-dom';
 
 const SimpleTooltip = ({ children, content, show = true }) => {
   const [isVisible, setIsVisible] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const triggerRef = useRef(null);
+  const timeoutRef = useRef(null);
 
   useEffect(() => {
     if (isVisible && triggerRef.current) {
@@ -14,6 +16,29 @@ const SimpleTooltip = ({ children, content, show = true }) => {
         left: rect.right
       });
     }
+  }, [isVisible]);
+
+  useEffect(() => {
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    if (isVisible) {
+      // Show tooltip after 500ms delay
+      timeoutRef.current = setTimeout(() => {
+        setShowTooltip(true);
+      }, 500);
+    } else {
+      // Hide tooltip immediately
+      setShowTooltip(false);
+    }
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
   }, [isVisible]);
 
   if (!show) {
