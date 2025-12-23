@@ -184,7 +184,7 @@ const Sidebar = () => {
 
     // Show tooltip in both collapsed and expanded states
     return (
-      <Tooltip delayDuration={500}>
+      <Tooltip>
         <TooltipTrigger asChild>
           {content}
         </TooltipTrigger>
