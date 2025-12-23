@@ -190,7 +190,6 @@ async def search_docs(db, query: str, limit: int = 5) -> List[Dict[str, Any]]:
             "title": doc.get("title", "Untitled"),
             "subtitle": doc.get("content", "")[:100] + "...",
             "url": doc.get("url_path", "/docs"),
-            "icon": doc.get("icon", "📄"),
             "category": doc.get("category", "Docs")
         })
     
@@ -218,7 +217,6 @@ async def search_policies(db, query: str, limit: int = 5) -> List[Dict[str, Any]
             "title": title,
             "subtitle": policy.get("intro", "")[:100],
             "url": f"/legal/{policy.get('doc_id', '')}",
-            "icon": "⚖️",
             "category": policy.get("category", "Legal")
         })
     
