@@ -84,12 +84,12 @@ const UserDropdown = () => {
             data-testid="user-dropdown-menu"
           >
             {/* Personal Section */}
-            <div className="px-3 py-3 border-b border-gray-200">
+            <div className="border-b border-gray-200">
               <div className="text-xs font-semibold uppercase tracking-wider mb-2 text-gray-500">
                 Personal
               </div>
               <button
-                className="w-full flex items-center space-x-2.5 px-2.5 py-2.5 rounded-md bg-gray-50 hover:bg-gray-100 transition-colors"
+                className="w-full flex items-center space-x-2.5 rounded-md bg-gray-50 hover:bg-gray-100 transition-colors"
               >
                 <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
                   <span className="text-white text-sm font-semibold">G</span>
@@ -107,12 +107,12 @@ const UserDropdown = () => {
             </div>
 
             {/* Organizations Section */}
-            <div className="px-3 py-3 border-b border-gray-200">
+            <div className="border-b border-gray-200">
               <div className="text-xs font-semibold uppercase tracking-wider mb-2 text-gray-500">
                 Organizations
               </div>
               <button
-                className="w-full flex items-center space-x-2.5 px-2.5 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center space-x-2.5 rounded-md text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add organization</span>
@@ -120,10 +120,10 @@ const UserDropdown = () => {
             </div>
 
             {/* Sign Out */}
-            <div className="px-3 py-2">
+            <div>
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center space-x-2.5 px-2.5 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center space-x-2.5 rounded-md text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                 data-testid="sign-out-button"
               >
                 <LogOut className="w-4 h-4" />
