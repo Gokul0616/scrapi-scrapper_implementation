@@ -626,12 +626,26 @@ const Sidebar = () => {
                         : 'hover:bg-gray-100 text-gray-500'
                         }`}
                     >
-                      <ChevronsRight className="w-3.5 h-3.5" />
+                      <PanelLeft className="w-4 h-4" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent side="right" className={`${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
-                    }`}>
-                    Expand Sidebar
+                  <TooltipContent 
+                    side="right" 
+                    className={`flex items-center gap-2 ${
+                      theme === 'dark' 
+                        ? 'bg-gray-800 text-white border-gray-700' 
+                        : 'bg-gray-900 text-white border-gray-800'
+                    } border shadow-lg`}
+                  >
+                    <span className="font-medium">Expand Sidebar</span>
+                    <div className="flex items-center gap-1 ml-2 pl-2 border-l border-gray-600">
+                      <kbd className={`px-1.5 py-0.5 rounded text-xs font-mono ${
+                        theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-800 text-gray-200'
+                      }`}>{isMac ? '⌘' : 'Ctrl'}</kbd>
+                      <kbd className={`px-1.5 py-0.5 rounded text-xs font-mono ${
+                        theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-800 text-gray-200'
+                      }`}>B</kbd>
+                    </div>
                   </TooltipContent>
                 </Tooltip>
               </div>
