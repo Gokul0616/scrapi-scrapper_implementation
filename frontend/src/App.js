@@ -188,9 +188,11 @@ function App() {
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
-          <AppRoutes />
-          <Toaster />
-          <ErrorDisplayContainer />
+          <ModalProvider>
+            <AppRoutes />
+            <Toaster />
+            <ErrorDisplayContainer />
+          </ModalProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>
