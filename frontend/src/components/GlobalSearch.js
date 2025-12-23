@@ -309,7 +309,7 @@ const GlobalSearch = ({ isOpen, onClose }) => {
         data-testid={`search-result-${index}`}
       >
         <div className={`p-2 rounded-md ${getTypeColor(result.type, isDark)}`}>
-          {getIcon(result.type, result.icon)}
+          {getIcon(result.type)}
         </div>
         
         <div className="flex-1 min-w-0">
