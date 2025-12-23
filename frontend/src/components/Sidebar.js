@@ -295,7 +295,11 @@ const Sidebar = () => {
                 <Tooltip delayDuration={0}>
                   <TooltipTrigger asChild>
                     <div className="w-9 h-9 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center cursor-pointer">
-                      <img src="/logo.png" alt="Scrapi Logo" className="w-6 h-6" />
+                      <img 
+                        src="/logo.png" 
+                        alt="Scrapi Logo" 
+                        className={`w-6 h-6 ${theme === 'dark' ? 'brightness-0 invert' : ''}`}
+                      />
                     </div>
                   </TooltipTrigger>
                   <TooltipContent side="right" className={`${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
