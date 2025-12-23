@@ -46,7 +46,7 @@ import {
 const Sidebar = () => {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const { openModal, closeModal, isModalOpen } = useModal();
+  const { openModal, closeModal, isModalOpen, currentModal } = useModal();
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -67,6 +67,13 @@ const Sidebar = () => {
   // Detect platform for keyboard shortcut display
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
   const shortcutKey = isMac ? '⌘K' : 'Ct+K';
+
+  // Close search modal when any modal context modal opens
+  useEffect(() => {
+    if (currentModal) {
+      setIsSearchModalOpen(false);
+    }
+  }, [currentModal]);
 
   const toggleSection = (section) => {
     setExpandedSections(prev => ({
