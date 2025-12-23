@@ -20,6 +20,8 @@ import {
   ChevronDown,
   ChevronUp,
   ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
   Search,
   Bell,
   MessageCircle,
