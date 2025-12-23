@@ -583,7 +583,7 @@ const Sidebar = () => {
                         : 'hover:bg-gray-100 text-gray-500'
                         }`}
                     >
-                      <ChevronRight className="w-3.5 h-3.5" />
+                      <ChevronsRight className="w-3.5 h-3.5" />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="right" className={`${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
