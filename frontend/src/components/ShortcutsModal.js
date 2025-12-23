@@ -118,7 +118,7 @@ const ShortcutsModal = () => {
             </div>
 
             {/* Vertical Divider Line */}
-            <div className={`w-[1px] ${theme === 'dark' ? 'bg-[#2F2F2F]' : 'bg-[#EDEDED]'}`} />
+            <div className={`w-[1px] ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-200'}`} />
 
             {/* Right Side */}
             <div className="p-4">
