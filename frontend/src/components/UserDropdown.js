@@ -31,48 +31,50 @@ const UserDropdown = () => {
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
-      {/* Dropdown Trigger */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center space-x-2 flex-1 min-w-0 px-2 py-1.5 rounded-lg transition-colors ${
-          theme === 'dark'
-            ? 'hover:bg-gray-800 text-gray-200'
-            : 'hover:bg-gray-100 text-gray-700'
-        }`}
-        data-testid="user-dropdown-trigger"
-      >
-        <div className="w-9 h-9 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-          <img
-            src="/logo.png"
-            alt="User Avatar"
-            className={`w-6 h-6 ${theme === 'dark' ? 'brightness-0 invert' : ''}`}
-          />
-        </div>
-        <div className="flex-1 min-w-0 text-left">
-          <div
-            className={`font-semibold text-sm leading-tight ${
-              theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
-            }`}
-          >
-            {user?.organization_name || 'Gokul'}
+    <>
+      <div className="relative" ref={dropdownRef}>
+        {/* Dropdown Trigger */}
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className={`flex items-center space-x-2 flex-1 min-w-0 px-2 py-1.5 rounded-lg transition-colors ${
+            theme === 'dark'
+              ? 'hover:bg-gray-800 text-gray-200'
+              : 'hover:bg-gray-100 text-gray-700'
+          }`}
+          data-testid="user-dropdown-trigger"
+        >
+          <div className="w-9 h-9 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+            <img
+              src="/logo.png"
+              alt="User Avatar"
+              className={`w-6 h-6 ${theme === 'dark' ? 'brightness-0 invert' : ''}`}
+            />
           </div>
-          <div
-            className={`text-xs ${
-              theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-            }`}
-          >
-            Personal
+          <div className="flex-1 min-w-0 text-left">
+            <div
+              className={`font-semibold text-sm leading-tight ${
+                theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+              }`}
+            >
+              {user?.organization_name || 'Gokul'}
+            </div>
+            <div
+              className={`text-xs ${
+                theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+              }`}
+            >
+              Personal
+            </div>
           </div>
-        </div>
-        {isOpen ? (
-          <ChevronUp className="w-4 h-4 flex-shrink-0" />
-        ) : (
-          <ChevronDown className="w-4 h-4 flex-shrink-0" />
-        )}
-      </button>
+          {isOpen ? (
+            <ChevronUp className="w-4 h-4 flex-shrink-0" />
+          ) : (
+            <ChevronDown className="w-4 h-4 flex-shrink-0" />
+          )}
+        </button>
+      </div>
 
-      {/* Dropdown Menu - Floating Popup Style */}
+      {/* Floating Popup Menu with Backdrop */}
       {isOpen && (
         <div
           className={`fixed rounded-lg shadow-2xl border z-[9999] ${
