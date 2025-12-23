@@ -91,8 +91,14 @@ const Sidebar = () => {
         toggleTheme();
       }
 
-      // Handle G+Key shortcuts
-      if (e.key === 'g' || e.key === 'G') {
+      // Check for Shift+? to show shortcuts modal
+      if (e.shiftKey && e.key === '?') {
+        e.preventDefault();
+        setIsShortcutsModalOpen(true);
+      }
+
+      // Handle S+Key shortcuts (changed from G+Key)
+      if (e.key === 's' || e.key === 'S') {
         const nextKey = new Promise((resolve) => {
           const handler = (nextE) => {
             resolve(nextE.key.toUpperCase());
@@ -120,7 +126,7 @@ const Sidebar = () => {
             'P': '/proxy',
             'D': '/storage',
             'B': '/billing',
-            'S': '/settings'
+            'G': '/settings'
           };
           if (key && shortcuts[key]) {
             navigate(shortcuts[key]);
