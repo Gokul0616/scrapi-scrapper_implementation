@@ -307,7 +307,7 @@ const Sidebar = () => {
               <>
                 {/* Scrapi Store Section - Clickable with divider */}
                 <div className="mb-1">
-                  <Tooltip delayDuration={500}>
+                  <Tooltip>
                     <TooltipTrigger asChild>
                       <button
                         onClick={() => {
