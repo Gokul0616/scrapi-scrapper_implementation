@@ -101,8 +101,15 @@ const GlobalSearch = ({ isOpen, onClose }) => {
   // Debounced Search
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
-      if (isOpen) {
+      if (isOpen && query.trim()) {
         await performSearch(query);
+      } else if (isOpen && !query.trim()) {
+        // Clear results when query is empty
+        setResults([]);
+        setRecentSearches([]);
+        setQuickActions([]);
+        setMode('search');
+        setLoading(false);
       }
     }, 300);
 
