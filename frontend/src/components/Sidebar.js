@@ -691,57 +691,109 @@ const Sidebar = () => {
           </div>
         </div>
 
-        {/* Search Modal */}
+        {/* Search Modal - Notion-inspired Design */}
         {isSearchModalOpen && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center pt-20 z-50"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start justify-center pt-[15vh] z-50 px-4"
             onClick={() => setIsSearchModalOpen(false)}
           >
             <div
-              className={`w-full max-w-2xl rounded-lg shadow-2xl overflow-hidden ${theme === 'dark' ? 'bg-[#1A1B1E]' : 'bg-white'
-                }`}
+              className={`w-full max-w-[640px] rounded-xl shadow-2xl overflow-hidden ${
+                theme === 'dark' ? 'bg-[#191919]' : 'bg-white'
+              } border ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}
               onClick={(e) => e.stopPropagation()}
+              style={{
+                animation: 'modalFadeIn 0.15s ease-out'
+              }}
             >
+              <style>
+                {`
+                  @keyframes modalFadeIn {
+                    from {
+                      opacity: 0;
+                      transform: scale(0.96) translateY(-10px);
+                    }
+                    to {
+                      opacity: 1;
+                      transform: scale(1) translateY(0);
+                    }
+                  }
+                `}
+              </style>
+
               {/* Search Input */}
-              <div className={`flex items-center px-4 py-3 border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
-                }`}>
-                <Search className={`w-5 h-5 mr-3 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                  }`} />
+              <div className={`flex items-center px-4 py-3.5 border-b ${
+                theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
+              }`}>
+                <Search className={`w-[18px] h-[18px] mr-3 flex-shrink-0 ${
+                  theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+                }`} />
                 <input
                   type="text"
-                  placeholder="Search by ID or navigate"
+                  placeholder="Search or type a command..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   autoFocus
-                  className={`flex-1 bg-transparent outline-none text-sm ${theme === 'dark' ? 'text-gray-200 placeholder-gray-500' : 'text-gray-800 placeholder-gray-400'
-                    }`}
+                  className={`flex-1 bg-transparent outline-none text-[15px] ${
+                    theme === 'dark' 
+                      ? 'text-gray-100 placeholder-gray-500' 
+                      : 'text-gray-900 placeholder-gray-400'
+                  }`}
                 />
-                <button
-                  onClick={() => setIsSearchModalOpen(false)}
-                  className={`ml-3 p-1 rounded hover:bg-gray-800 transition-colors ${theme === 'dark' ? 'text-gray-400 hover:text-gray-200' : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                >
-                  <span className="text-lg font-semibold">×</span>
-                </button>
+                <kbd className={`ml-3 px-2 py-1 rounded text-[11px] font-medium flex-shrink-0 ${
+                  theme === 'dark'
+                    ? 'bg-gray-800 text-gray-400 border border-gray-700'
+                    : 'bg-gray-100 text-gray-500 border border-gray-200'
+                }`}>
+                  ESC
+                </kbd>
               </div>
 
-              {/* Search Results */}
-              <div className={`max-h-96 overflow-y-auto ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                }`}>
+              {/* Search Results with custom scrollbar */}
+              <div 
+                className={`max-h-[420px] overflow-y-auto ${
+                  theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                }`}
+                style={{
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: theme === 'dark' ? '#374151 transparent' : '#d1d5db transparent'
+                }}
+              >
+                <style>
+                  {`
+                    div::-webkit-scrollbar {
+                      width: 6px;
+                    }
+                    div::-webkit-scrollbar-track {
+                      background: transparent;
+                    }
+                    div::-webkit-scrollbar-thumb {
+                      background: ${theme === 'dark' ? '#374151' : '#d1d5db'};
+                      border-radius: 3px;
+                    }
+                    div::-webkit-scrollbar-thumb:hover {
+                      background: ${theme === 'dark' ? '#4b5563' : '#9ca3af'};
+                    }
+                  `}
+                </style>
+
                 {/* Navigation Section */}
-                <div className="px-4 py-2">
-                  <h3 className={`text-xs font-semibold uppercase tracking-wider mb-2 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
-                    }`}>
+                <div className="px-3 py-3">
+                  <div className={`text-[11px] font-semibold uppercase tracking-wider mb-2 px-2 ${
+                    theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+                  }`}>
                     Navigation
-                  </h3>
-                  <div className="space-y-1">
+                  </div>
+                  <div className="space-y-0.5">
                     {[
-                      { icon: Settings, label: 'Settings', path: '/settings', shortcut: 'S G' },
-                      { icon: Code2, label: 'Actors', path: '/actors', shortcut: 'S A' },
-                      { icon: CreditCard, label: 'Billing', path: '/billing', shortcut: 'S B' },
                       { icon: Home, label: 'Home', path: '/home', shortcut: 'S H' },
+                      { icon: Store, label: 'Scrapi Store', path: '/store', shortcut: 'S O' },
+                      { icon: Code2, label: 'Actors', path: '/actors', shortcut: 'S A' },
                       { icon: PlayCircle, label: 'Runs', path: '/runs', shortcut: 'S R' },
                       { icon: BookmarkCheck, label: 'Saved tasks', path: '/tasks', shortcut: 'S T' },
+                      { icon: Puzzle, label: 'Integrations', path: '/integrations', shortcut: 'S I' },
+                      { icon: CalendarClock, label: 'Schedules', path: '/schedules', shortcut: 'S C' },
+                      { icon: Settings, label: 'Settings', path: '/settings', shortcut: 'S G' },
                     ].map((item) => (
                       <button
                         key={item.path}
@@ -749,23 +801,27 @@ const Sidebar = () => {
                           navigate(item.path);
                           setIsSearchModalOpen(false);
                         }}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${theme === 'dark'
-                          ? 'hover:bg-[#2C2D30] text-gray-300'
-                          : 'hover:bg-gray-100 text-gray-700'
-                          }`}
+                        className={`w-full flex items-center justify-between px-2.5 py-2 rounded-md text-[13px] transition-all duration-150 group ${
+                          theme === 'dark'
+                            ? 'hover:bg-gray-800 text-gray-300 hover:text-gray-100'
+                            : 'hover:bg-gray-50 text-gray-700 hover:text-gray-900'
+                        }`}
                       >
-                        <div className="flex items-center space-x-3">
-                          <item.icon className="w-4 h-4" />
-                          <span>Go to {item.label}</span>
+                        <div className="flex items-center space-x-2.5">
+                          <item.icon className={`w-[16px] h-[16px] ${
+                            theme === 'dark' ? 'text-gray-500 group-hover:text-gray-400' : 'text-gray-400 group-hover:text-gray-600'
+                          }`} />
+                          <span className="font-medium">Go to {item.label}</span>
                         </div>
-                        <div className="flex items-center space-x-1">
+                        <div className="flex items-center gap-1">
                           {item.shortcut.split(' ').map((key, idx) => (
                             <kbd
                               key={idx}
-                              className={`px-2 py-0.5 rounded text-xs font-mono ${theme === 'dark'
-                                ? 'bg-gray-700 text-gray-300 border border-gray-600'
-                                : 'bg-gray-100 text-gray-600 border border-gray-300'
-                                }`}
+                              className={`px-1.5 py-0.5 rounded text-[10px] font-medium min-w-[20px] text-center ${
+                                theme === 'dark'
+                                  ? 'bg-gray-800 text-gray-400 border border-gray-700'
+                                  : 'bg-gray-100 text-gray-500 border border-gray-200'
+                              }`}
                             >
                               {key}
                             </kbd>
@@ -777,30 +833,36 @@ const Sidebar = () => {
                 </div>
 
                 {/* Help Section */}
-                <div className="px-4 py-2 border-t border-gray-800">
-                  <h3 className={`text-xs font-semibold uppercase tracking-wider mb-2 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
-                    }`}>
-                    Help
-                  </h3>
-                  <div className="space-y-1">
+                <div className={`px-3 py-3 border-t ${theme === 'dark' ? 'border-gray-800' : 'border-gray-100'}`}>
+                  <div className={`text-[11px] font-semibold uppercase tracking-wider mb-2 px-2 ${
+                    theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+                  }`}>
+                    Help & Resources
+                  </div>
+                  <div className="space-y-0.5">
                     {[
-                      { icon: FileText, label: 'Open docs', external: true },
+                      { icon: FileText, label: 'Open documentation', external: true },
                       { icon: Mail, label: 'Contact support' },
-                      { icon: HelpCircle, label: 'Open Help center', external: true },
+                      { icon: HelpCircle, label: 'Help center', external: true },
                     ].map((item, idx) => (
                       <button
                         key={idx}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${theme === 'dark'
-                          ? 'hover:bg-[#2C2D30] text-gray-300'
-                          : 'hover:bg-gray-100 text-gray-700'
-                          }`}
+                        className={`w-full flex items-center justify-between px-2.5 py-2 rounded-md text-[13px] transition-all duration-150 group ${
+                          theme === 'dark'
+                            ? 'hover:bg-gray-800 text-gray-300 hover:text-gray-100'
+                            : 'hover:bg-gray-50 text-gray-700 hover:text-gray-900'
+                        }`}
                       >
-                        <div className="flex items-center space-x-3">
-                          <item.icon className="w-4 h-4" />
-                          <span>{item.label}</span>
+                        <div className="flex items-center space-x-2.5">
+                          <item.icon className={`w-[16px] h-[16px] ${
+                            theme === 'dark' ? 'text-gray-500 group-hover:text-gray-400' : 'text-gray-400 group-hover:text-gray-600'
+                          }`} />
+                          <span className="font-medium">{item.label}</span>
                         </div>
                         {item.external && (
-                          <ExternalLink className="w-3.5 h-3.5 text-gray-500" />
+                          <ExternalLink className={`w-3 h-3 ${
+                            theme === 'dark' ? 'text-gray-600' : 'text-gray-400'
+                          }`} />
                         )}
                       </button>
                     ))}
@@ -808,17 +870,18 @@ const Sidebar = () => {
                 </div>
 
                 {/* Quick Actions Section */}
-                <div className="px-4 py-2 border-t border-gray-800">
-                  <h3 className={`text-xs font-semibold uppercase tracking-wider mb-2 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
-                    }`}>
-                    Quick actions
-                  </h3>
-                  <div className="space-y-1">
+                <div className={`px-3 py-3 border-t ${theme === 'dark' ? 'border-gray-800' : 'border-gray-100'}`}>
+                  <div className={`text-[11px] font-semibold uppercase tracking-wider mb-2 px-2 ${
+                    theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+                  }`}>
+                    Quick Actions
+                  </div>
+                  <div className="space-y-0.5">
                     {[
-                      { icon: Plus, label: 'Create Actor' },
-                      { icon: Palette, label: 'Switch theme', action: toggleTheme },
-                      { icon: LogOut, label: 'Log out', action: logout },
-                      { icon: ChevronRight, label: 'Upgrade' },
+                      { icon: Plus, label: 'Create new actor', kbd: null },
+                      { icon: Palette, label: 'Switch theme', action: toggleTheme, kbd: `${isMac ? '⌘' : 'Ctrl'} L` },
+                      { icon: ChevronsLeft, label: 'Toggle sidebar', action: () => setIsCollapsed(prev => !prev), kbd: `${isMac ? '⌘' : 'Ctrl'} B` },
+                      { icon: LogOut, label: 'Log out', action: logout, kbd: null },
                     ].map((item, idx) => (
                       <button
                         key={idx}
@@ -828,16 +891,43 @@ const Sidebar = () => {
                             setIsSearchModalOpen(false);
                           }
                         }}
-                        className={`w-full flex items-center space-x-3 px-3 py-2 rounded-md text-sm transition-colors ${theme === 'dark'
-                          ? 'hover:bg-[#2C2D30] text-gray-300'
-                          : 'hover:bg-gray-100 text-gray-700'
-                          }`}
+                        className={`w-full flex items-center justify-between px-2.5 py-2 rounded-md text-[13px] transition-all duration-150 group ${
+                          theme === 'dark'
+                            ? 'hover:bg-gray-800 text-gray-300 hover:text-gray-100'
+                            : 'hover:bg-gray-50 text-gray-700 hover:text-gray-900'
+                        }`}
                       >
-                        <item.icon className="w-4 h-4" />
-                        <span>{item.label}</span>
+                        <div className="flex items-center space-x-2.5">
+                          <item.icon className={`w-[16px] h-[16px] ${
+                            theme === 'dark' ? 'text-gray-500 group-hover:text-gray-400' : 'text-gray-400 group-hover:text-gray-600'
+                          }`} />
+                          <span className="font-medium">{item.label}</span>
+                        </div>
+                        {item.kbd && (
+                          <kbd className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                            theme === 'dark'
+                              ? 'bg-gray-800 text-gray-400 border border-gray-700'
+                              : 'bg-gray-100 text-gray-500 border border-gray-200'
+                          }`}>
+                            {item.kbd}
+                          </kbd>
+                        )}
                       </button>
                     ))}
                   </div>
+                </div>
+
+                {/* Footer Tip */}
+                <div className={`px-5 py-3 text-center border-t ${
+                  theme === 'dark' ? 'border-gray-800 bg-[#0d0d0d]' : 'border-gray-100 bg-gray-50'
+                }`}>
+                  <p className={`text-[11px] ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>
+                    Press <kbd className={`px-1 py-0.5 rounded mx-1 ${
+                      theme === 'dark' ? 'bg-gray-800 text-gray-400' : 'bg-white text-gray-500 border border-gray-200'
+                    }`}>↵</kbd> to select • <kbd className={`px-1 py-0.5 rounded mx-1 ${
+                      theme === 'dark' ? 'bg-gray-800 text-gray-400' : 'bg-white text-gray-500 border border-gray-200'
+                    }`}>↑↓</kbd> to navigate
+                  </p>
                 </div>
               </div>
             </div>
