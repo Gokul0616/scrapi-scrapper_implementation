@@ -7,6 +7,7 @@ import { Progress } from './ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import ShortcutsModal from './ShortcutsModal';
 import UserDropdown from './UserDropdown';
+import GlobalSearch from './GlobalSearch';
 import { getUserInitials, getProfileColor } from '../utils/userUtils';
 import {
   Home,
