@@ -231,7 +231,6 @@ def get_quick_actions(query: str) -> List[Dict[str, Any]]:
             "title": "Create New Run",
             "subtitle": "Start a new scraping run",
             "url": "/actors",
-            "icon": "▶️",
             "category": "Action",
             "command": "create_run"
         },
@@ -240,7 +239,6 @@ def get_quick_actions(query: str) -> List[Dict[str, Any]]:
             "title": "View All Actors",
             "subtitle": "Browse available scrapers",
             "url": "/actors",
-            "icon": "🤖",
             "category": "Action",
             "command": "view_actors"
         },
@@ -249,7 +247,6 @@ def get_quick_actions(query: str) -> List[Dict[str, Any]]:
             "title": "View All Runs",
             "subtitle": "See your scraping history",
             "url": "/runs",
-            "icon": "📋",
             "category": "Action",
             "command": "view_runs"
         },
@@ -258,7 +255,6 @@ def get_quick_actions(query: str) -> List[Dict[str, Any]]:
             "title": "Open Store",
             "subtitle": "Explore the marketplace",
             "url": "/store",
-            "icon": "🏪",
             "category": "Action",
             "command": "open_store"
         },
@@ -267,7 +263,6 @@ def get_quick_actions(query: str) -> List[Dict[str, Any]]:
             "title": "View Schedules",
             "subtitle": "Manage scheduled runs",
             "url": "/schedules",
-            "icon": "📅",
             "category": "Action",
             "command": "view_schedules"
         }
