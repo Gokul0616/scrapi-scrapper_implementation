@@ -91,10 +91,10 @@ const UserDropdown = () => {
                 className="w-full flex items-center space-x-2.5 rounded-md bg-gray-50 hover:bg-gray-100 transition-colors"
               >
                 <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-white text-sm font-semibold">G</span>
+                  <span className="text-white text-xs font-medium">G</span>
                 </div>
                 <div className="flex-1 min-w-0 text-left">
-                  <div className="font-semibold text-sm text-gray-800">
+                  <div className="font-medium text-xs text-gray-800">
                     {user?.organization_name || 'Gokul Alpha'}
                   </div>
                   <div className="text-xs text-gray-500">
@@ -111,7 +111,7 @@ const UserDropdown = () => {
                 Organizations
               </div>
               <button
-                className="w-full flex items-center space-x-2.5 rounded-md text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center space-x-2.5 rounded-md text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add organization</span>
@@ -122,7 +122,7 @@ const UserDropdown = () => {
             <div>
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center space-x-2.5 rounded-md text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center space-x-2.5 rounded-md text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                 data-testid="sign-out-button"
               >
                 <LogOut className="w-4 h-4" />
