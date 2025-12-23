@@ -72,10 +72,9 @@ const UserDropdown = () => {
           
           {/* Floating Popup */}
           <div
-            className="fixed rounded-lg border z-[9999] bg-white border-gray-200"
+            className="fixed rounded-lg border z-[9999] bg-white border-gray-200 p-2"
             style={{
-              minWidth: '280px',
-              maxWidth: '320px',
+              width: '250px',
               left: '16px',
               top: dropdownRef.current 
                 ? `${dropdownRef.current.getBoundingClientRect().bottom + 8}px`
