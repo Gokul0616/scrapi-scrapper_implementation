@@ -66,11 +66,10 @@ const ShortcutsModal = ({ isOpen, onClose }) => {
       onClick={onClose}
     >
       <div
-        className={`w-full max-w-xl rounded-lg shadow-xl ${
+        className={`w-full max-w-3xl rounded-lg shadow-xl ${
           theme === 'dark' ? 'bg-[#1A1B1E]' : 'bg-white'
         }`}
         onClick={(e) => e.stopPropagation()}
-        style={{ maxHeight: '80vh' }}
       >
         {/* Header */}
         <div
