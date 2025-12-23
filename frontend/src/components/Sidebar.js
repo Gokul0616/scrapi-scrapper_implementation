@@ -219,7 +219,7 @@ const Sidebar = () => {
   };
 
   return (
-    <TooltipProvider delayDuration={500} skipDelayDuration={500}>
+    <TooltipProvider delayDuration={500} skipDelayDuration={0}>
       <div className="relative h-screen">
         <div
           className={`flex flex-col h-full transition-all duration-300 ease-in-out ${theme === 'dark'
