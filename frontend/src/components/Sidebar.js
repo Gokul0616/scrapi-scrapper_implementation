@@ -301,23 +301,45 @@ const Sidebar = () => {
               <>
                 {/* Scrapi Store Section - Clickable with divider */}
                 <div className="mb-1">
-                  <button
-                    onClick={() => {
-                      setActiveSection('scrapiStore');
-                      navigate('/store');
-                    }}
-                    className={`w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${isStorePage
-                      ? theme === 'dark'
-                        ? 'bg-[#2C2D30] text-white'
-                        : 'bg-gray-100 text-gray-900'
-                      : theme === 'dark'
-                        ? 'text-gray-400 hover:bg-gray-800'
-                        : 'text-gray-600 hover:bg-gray-100'
-                      }`}
-                  >
-                    <Store className="w-3.5 h-3.5" />
-                    <span>Scrapi Store</span>
-                  </button>
+                  <Tooltip delayDuration={0}>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => {
+                          setActiveSection('scrapiStore');
+                          navigate('/store');
+                        }}
+                        className={`w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${isStorePage
+                          ? theme === 'dark'
+                            ? 'bg-[#2C2D30] text-white'
+                            : 'bg-gray-100 text-gray-900'
+                          : theme === 'dark'
+                            ? 'text-gray-400 hover:bg-gray-800'
+                            : 'text-gray-600 hover:bg-gray-100'
+                          }`}
+                      >
+                        <Store className="w-3.5 h-3.5" />
+                        <span>Scrapi Store</span>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent 
+                      side="right" 
+                      className={`flex items-center gap-2 ${
+                        theme === 'dark' 
+                          ? 'bg-gray-800 text-white border-gray-700' 
+                          : 'bg-gray-900 text-white border-gray-800'
+                      } border shadow-lg`}
+                    >
+                      <span className="font-medium">Scrapi Store</span>
+                      <div className="flex items-center gap-1 ml-2 pl-2 border-l border-gray-600">
+                        <kbd className={`px-1.5 py-0.5 rounded text-xs font-mono ${
+                          theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-800 text-gray-200'
+                        }`}>G</kbd>
+                        <kbd className={`px-1.5 py-0.5 rounded text-xs font-mono ${
+                          theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-800 text-gray-200'
+                        }`}>O</kbd>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
 
                   {/* Horizontal Divider after Scrapi Store */}
                   <div className={`my-2 mx-2.5 border-t ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
