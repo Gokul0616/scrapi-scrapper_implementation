@@ -75,6 +75,18 @@ const Sidebar = () => {
     }
   }, [currentModal]);
 
+  // Prevent body scroll when search modal is open
+  useEffect(() => {
+    if (isSearchModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isSearchModalOpen]);
+
   const toggleSection = (section) => {
     setExpandedSections(prev => ({
       ...prev,
