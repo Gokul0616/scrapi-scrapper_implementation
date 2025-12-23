@@ -27,6 +27,7 @@ class User(BaseModel):
     is_active: bool = True
     last_login_at: Optional[datetime] = None
     last_path: Optional[str] = None  # Store last visited path for redirect after login
+    profile_color: Optional[str] = None  # Store user's profile avatar color
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     
 class UserResponse(BaseModel):
@@ -39,3 +40,4 @@ class UserResponse(BaseModel):
     is_active: bool = True
     created_at: str
     last_login_at: Optional[str] = None
+    profile_color: Optional[str] = None
