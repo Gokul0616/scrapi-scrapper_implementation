@@ -76,6 +76,12 @@ const Sidebar = () => {
         setIsSearchModalOpen(true);
       }
 
+      // Check for Cmd+B (Mac) or Ctrl+B (Windows/Linux) to toggle sidebar
+      if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
+        e.preventDefault();
+        setIsCollapsed(prev => !prev);
+      }
+
       // Handle G+Key shortcuts
       if (e.key === 'g' || e.key === 'G') {
         const nextKey = new Promise((resolve) => {
