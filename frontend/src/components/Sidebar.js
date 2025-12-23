@@ -57,7 +57,6 @@ const Sidebar = () => {
   const [searchFocused, setSearchFocused] = useState(false);
   const [activeSection, setActiveSection] = useState('scrapiStore');
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
 
   const userInitials = getUserInitials(user);
   const profileColor = getProfileColor(user?.profile_color, theme);
