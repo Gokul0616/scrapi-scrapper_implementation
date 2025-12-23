@@ -551,7 +551,11 @@ const Sidebar = () => {
                 <div className={`flex items-center justify-between mt-2.5 pt-2.5 border-t ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
                   }`}>
                   <div className="flex items-center space-x-2">
-                    <img src="/logo.png" alt="Scrapi" className="w-5 h-5" />
+                    <img 
+                      src="/logo.png" 
+                      alt="Scrapi" 
+                      className={`w-5 h-5 ${theme === 'dark' ? 'brightness-0 invert' : ''}`}
+                    />
                     <span
                       className={`text-sm font-semibold ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
                         }`}
