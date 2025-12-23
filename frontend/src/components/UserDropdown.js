@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { ChevronDown, ChevronUp, Check, Plus, LogOut } from 'lucide-react';
@@ -13,6 +13,18 @@ const UserDropdown = () => {
     setIsOpen(false);
     logout();
   };
+
+  // Handle ESC key to close dropdown
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [isOpen]);
 
   return (
     <>

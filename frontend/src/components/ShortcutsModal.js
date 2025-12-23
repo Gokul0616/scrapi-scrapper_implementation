@@ -1,9 +1,23 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
-import { X, Zap, Navigation, Globe } from 'lucide-react';
+import { X, Command, Keyboard } from 'lucide-react';
 
 const ShortcutsModal = ({ isOpen, onClose }) => {
   const { theme } = useTheme();
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      window.addEventListener('keydown', handleEscape);
+    }
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
