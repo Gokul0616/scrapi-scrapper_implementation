@@ -206,7 +206,8 @@ async def login(credentials: UserLogin):
             role=user_doc.get('role', 'user'),
             is_active=user_doc.get('is_active', True),
             created_at=user_doc.get('created_at', datetime.now(timezone.utc).isoformat()),
-            last_login_at=user_doc.get('last_login_at')
+            last_login_at=user_doc.get('last_login_at'),
+            profile_color=user_doc.get('profile_color', generate_random_profile_color())
         )
     }
 
