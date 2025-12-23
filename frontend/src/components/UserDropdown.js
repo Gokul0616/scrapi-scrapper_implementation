@@ -72,15 +72,25 @@ const UserDropdown = () => {
         )}
       </button>
 
-      {/* Dropdown Menu */}
+      {/* Dropdown Menu - Floating Popup Style */}
       {isOpen && (
         <div
-          className={`absolute top-full left-0 right-0 mt-2 rounded-lg shadow-2xl border z-50 ${
+          className={`fixed rounded-lg shadow-2xl border z-[9999] ${
             theme === 'dark'
               ? 'bg-[#1A1B1E] border-gray-700'
               : 'bg-white border-gray-200'
           }`}
-          style={{ minWidth: '240px' }}
+          style={{
+            minWidth: '280px',
+            maxWidth: '320px',
+            left: '16px',
+            top: dropdownRef.current 
+              ? `${dropdownRef.current.getBoundingClientRect().bottom + 8}px`
+              : '80px',
+            boxShadow: theme === 'dark' 
+              ? '0 10px 40px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3)'
+              : '0 10px 40px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08)'
+          }}
           data-testid="user-dropdown-menu"
         >
           {/* Personal Section */}
