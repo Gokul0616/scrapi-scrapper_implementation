@@ -237,33 +237,48 @@ const GlobalSearch = ({ isOpen, onClose }) => {
         <div className={`px-4 py-8 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
           <div className="flex flex-col items-center mb-6">
             <Command className="w-12 h-12 mb-4 opacity-20" />
-            <p className="text-sm mb-4">Quick search tips:</p>
+            <p className="text-base font-medium mb-2">Search Scrapi</p>
+            <p className="text-sm text-center">Find actors, runs, schedules, and more</p>
           </div>
           
-          <div className="space-y-2 text-sm">
-            <div className="flex items-center gap-3">
-              <kbd className={`px-2 py-1 rounded ${
-                theme === 'dark' ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-600'
-              }`}>&gt;</kbd>
-              <span>Quick actions (e.g., &gt;create)</span>
+          <div className="space-y-3 text-sm">
+            <div>
+              <p className={`font-semibold mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                Search prefixes:
+              </p>
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                  <kbd className={`px-2 py-1 rounded font-mono ${
+                    theme === 'dark' ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-600'
+                  }`}>&gt;</kbd>
+                  <span>Quick actions (e.g., &gt;create, &gt;view)</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <kbd className={`px-2 py-1 rounded font-mono ${
+                    theme === 'dark' ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-600'
+                  }`}>@</kbd>
+                  <span>Search actors (e.g., @google, @amazon)</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <kbd className={`px-2 py-1 rounded font-mono ${
+                    theme === 'dark' ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-600'
+                  }`}>#</kbd>
+                  <span>Search runs (e.g., #succeeded, #failed)</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <kbd className={`px-2 py-1 rounded font-mono ${
+                    theme === 'dark' ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-600'
+                  }`}>/</kbd>
+                  <span>Search docs (e.g., /api, /guide)</span>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <kbd className={`px-2 py-1 rounded ${
-                theme === 'dark' ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-600'
-              }`}>@</kbd>
-              <span>Search actors (e.g., @google)</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <kbd className={`px-2 py-1 rounded ${
-                theme === 'dark' ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-600'
-              }`}>#</kbd>
-              <span>Search runs (e.g., #succeeded)</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <kbd className={`px-2 py-1 rounded ${
-                theme === 'dark' ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-600'
-              }`}>/</kbd>
-              <span>Search docs (e.g., /api)</span>
+
+            <div className="pt-3 border-t border-gray-700">
+              <p className={`font-semibold mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                Or just type to search everything
+              </p>
+              <p className="text-xs">Try searching for actor names, run statuses, or documentation topics</p>
             </div>
           </div>
         </div>
