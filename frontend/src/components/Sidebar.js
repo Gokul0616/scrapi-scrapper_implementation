@@ -563,16 +563,37 @@ const Sidebar = () => {
                       <HelpCircle className="w-4 h-4" />
                     </button>
                     {/* Collapse Button */}
-                    <button
-                      onClick={() => setIsCollapsed(true)}
-                      className={`p-1 rounded transition-colors ${theme === 'dark'
-                        ? 'hover:bg-gray-800 text-gray-400'
-                        : 'hover:bg-gray-100 text-gray-500'
-                        }`}
-                      title="Collapse Sidebar"
-                    >
-                      <ChevronsLeft className="w-3.5 h-3.5" />
-                    </button>
+                    <Tooltip delayDuration={0}>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => setIsCollapsed(true)}
+                          className={`p-1.5 rounded transition-colors ${theme === 'dark'
+                            ? 'hover:bg-gray-800 text-gray-400'
+                            : 'hover:bg-gray-100 text-gray-500'
+                            }`}
+                        >
+                          <PanelLeftClose className="w-4 h-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent 
+                        side="right" 
+                        className={`flex items-center gap-2 ${
+                          theme === 'dark' 
+                            ? 'bg-gray-800 text-white border-gray-700' 
+                            : 'bg-gray-900 text-white border-gray-800'
+                        } border shadow-lg`}
+                      >
+                        <span className="font-medium">Collapse Sidebar</span>
+                        <div className="flex items-center gap-1 ml-2 pl-2 border-l border-gray-600">
+                          <kbd className={`px-1.5 py-0.5 rounded text-xs font-mono ${
+                            theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-800 text-gray-200'
+                          }`}>{isMac ? '⌘' : 'Ctrl'}</kbd>
+                          <kbd className={`px-1.5 py-0.5 rounded text-xs font-mono ${
+                            theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-800 text-gray-200'
+                          }`}>B</kbd>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
                 </div>
               </>
