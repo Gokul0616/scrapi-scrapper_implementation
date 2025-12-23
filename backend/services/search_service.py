@@ -123,20 +123,12 @@ async def search_runs(db, query: str, user_id: str, limit: int = 5) -> List[Dict
     results = []
     async for run in cursor:
         status = run.get("status", "unknown")
-        status_icons = {
-            "succeeded": "✅",
-            "failed": "❌",
-            "running": "⏳",
-            "queued": "⏸️",
-            "aborted": "🛑"
-        }
         
         results.append({
             "type": "run",
             "title": f"{run.get('actor_name', 'Unknown Actor')} - Run",
             "subtitle": f"Status: {status} • {run.get('created_at', 'Unknown date')}",
             "url": f"/runs/{run.get('id')}",
-            "icon": status_icons.get(status, "▶️"),
             "category": f"Run ({status})",
             "metadata": {
                 "run_id": run.get("id"),
