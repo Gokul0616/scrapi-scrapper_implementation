@@ -80,10 +80,9 @@ const Sidebar = () => {
     const handleKeyDown = (e) => {
       // Check for Escape key to close any open modal
       if (e.key === 'Escape') {
-        if (isSearchModalOpen || isShortcutsModalOpen) {
+        if (isSearchModalOpen) {
           e.preventDefault();
           setIsSearchModalOpen(false);
-          setIsShortcutsModalOpen(false);
           return;
         }
       }
@@ -109,7 +108,7 @@ const Sidebar = () => {
       // Check for Shift+? to show shortcuts modal
       if (e.shiftKey && e.key === '?') {
         e.preventDefault();
-        setIsShortcutsModalOpen(true);
+        openModal('shortcuts-modal');
       }
 
       // Handle S+Key shortcuts (changed from G+Key)
