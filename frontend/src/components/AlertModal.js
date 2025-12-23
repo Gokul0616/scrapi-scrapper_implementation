@@ -64,6 +64,26 @@ const AlertModal = ({
   confirmButtonClass = '',
   size = 'md' // 'sm', 'md', 'lg'
 }) => {
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape' && show) {
+        onClose();
+      }
+    };
+
+    if (show) {
+      window.addEventListener('keydown', handleEscape);
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      window.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [show, onClose]);
+
   if (!show) return null;
 
   // Configuration for different alert types - matched with app theme
