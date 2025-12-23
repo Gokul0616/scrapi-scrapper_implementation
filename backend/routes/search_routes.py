@@ -3,7 +3,7 @@ Search Routes - Global search endpoint
 """
 from fastapi import APIRouter, Depends, Query
 from typing import Optional
-from auth.dependencies import get_current_user
+from auth.auth import get_current_user
 from services.search_service import global_search, save_recent_search
 
 router = APIRouter()
