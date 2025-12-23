@@ -133,7 +133,8 @@ async def register(user_data: UserCreate):
         email=user_data.email,
         hashed_password=hash_password(user_data.password),
         organization_name=user_data.organization_name,
-        role="user"  # Always 'user' for scraper website signups
+        role="user",  # Always 'user' for scraper website signups
+        profile_color=generate_random_profile_color()  # Generate random profile color
     )
     
     doc = user.model_dump()
@@ -158,7 +159,8 @@ async def register(user_data: UserCreate):
             role=user.role,
             is_active=user.is_active,
             created_at=user.created_at.isoformat(),
-            last_login_at=user.last_login_at.isoformat() if user.last_login_at else None
+            last_login_at=user.last_login_at.isoformat() if user.last_login_at else None,
+            profile_color=user.profile_color
         )
     }
 
