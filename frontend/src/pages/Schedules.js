@@ -886,6 +886,24 @@ const ScheduleModal = ({ isEdit, schedule, actors, onClose, onSuccess }) => {
   const [selectedActor, setSelectedActor] = useState(null);
   const { toast } = useToast();
 
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    // Prevent body scroll when modal is open
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      window.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [onClose]);
+
   // Update selected actor when actor_id changes
   useEffect(() => {
     if (formData.actor_id && actors.length > 0) {
