@@ -808,6 +808,12 @@ const Sidebar = () => {
           </div>
         )}
       </div>
+      
+      {/* Shortcuts Modal */}
+      <ShortcutsModal 
+        isOpen={isShortcutsModalOpen} 
+        onClose={() => setIsShortcutsModalOpen(false)} 
+      />
     </TooltipProvider>
   );
 };
