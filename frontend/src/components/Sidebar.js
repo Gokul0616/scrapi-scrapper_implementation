@@ -82,8 +82,8 @@ const Sidebar = () => {
         setIsCollapsed(prev => !prev);
       }
 
-      // Check for Cmd+T (Mac) or Ctrl+T (Windows/Linux) to toggle theme
-      if ((e.metaKey || e.ctrlKey) && e.key === 't') {
+      // Check for Cmd+L (Mac) or Ctrl+L (Windows/Linux) to toggle theme
+      if ((e.metaKey || e.ctrlKey) && e.key === 'l') {
         e.preventDefault();
         toggleTheme();
       }
