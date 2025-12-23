@@ -141,25 +141,25 @@ const Sidebar = () => {
 
   // Menu structure
   const scrapiStoreItems = [
-    { icon: Home, label: 'Home', path: '/home', shortcut: 'G H' },
-    { icon: Code2, label: 'Actors', path: '/actors', shortcut: 'G A' },
-    { icon: PlayCircle, label: 'Runs', path: '/runs', shortcut: 'G R' },
-    { icon: BookmarkCheck, label: 'Saved tasks', path: '/tasks', shortcut: 'G T' },
-    { icon: Puzzle, label: 'Integrations', path: '/integrations', shortcut: 'G I' },
-    { icon: CalendarClock, label: 'Schedules', path: '/schedules', shortcut: 'G C' }
+    { icon: Home, label: 'Home', path: '/home', shortcut: 'S H' },
+    { icon: Code2, label: 'Actors', path: '/actors', shortcut: 'S A' },
+    { icon: PlayCircle, label: 'Runs', path: '/runs', shortcut: 'S R' },
+    { icon: BookmarkCheck, label: 'Saved tasks', path: '/tasks', shortcut: 'S T' },
+    { icon: Puzzle, label: 'Integrations', path: '/integrations', shortcut: 'S I' },
+    { icon: CalendarClock, label: 'Schedules', path: '/schedules', shortcut: 'S C' }
   ];
 
   const developmentItems = [
-    { icon: Code2, label: 'My Actors', path: '/my-actors', shortcut: 'G M' },
-    { icon: BarChart3, label: 'Insights', path: '/insights', shortcut: 'G N' },
-    { icon: MessageCircle, label: 'Messaging', path: '/messaging', shortcut: 'G E' }
+    { icon: Code2, label: 'My Actors', path: '/my-actors', shortcut: 'S M' },
+    { icon: BarChart3, label: 'Insights', path: '/insights', shortcut: 'S N' },
+    { icon: MessageCircle, label: 'Messaging', path: '/messaging', shortcut: 'S E' }
   ];
 
   const bottomItems = [
-    { icon: Network, label: 'Proxy', path: '/proxy', shortcut: 'G P' },
-    { icon: HardDrive, label: 'Storage', path: '/storage', shortcut: 'G D' },
-    { icon: CreditCard, label: 'Billing', path: '/billing', shortcut: 'G B' },
-    { icon: Settings, label: 'Settings', path: '/settings', shortcut: 'G S' }
+    { icon: Network, label: 'Proxy', path: '/proxy', shortcut: 'S P' },
+    { icon: HardDrive, label: 'Storage', path: '/storage', shortcut: 'S D' },
+    { icon: CreditCard, label: 'Billing', path: '/billing', shortcut: 'S B' },
+    { icon: Settings, label: 'Settings', path: '/settings', shortcut: 'S G' }
   ];
 
   // Helper component for menu items with tooltip support
