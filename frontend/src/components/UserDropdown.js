@@ -2,12 +2,16 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { ChevronDown, ChevronUp, Check, Plus, LogOut } from 'lucide-react';
+import { getUserInitials, getProfileColor } from '../utils/userUtils';
 
 const UserDropdown = () => {
   const { theme } = useTheme();
   const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
+
+  const userInitials = getUserInitials(user);
+  const profileColor = getProfileColor(user?.profile_color, theme);
 
   const handleLogout = () => {
     setIsOpen(false);
