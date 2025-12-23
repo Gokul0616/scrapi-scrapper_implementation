@@ -326,24 +326,12 @@ const Sidebar = () => {
                   {/* Store items - always visible */}
                   <div className="mt-0.5 space-y-0.5">
                     {scrapiStoreItems.map((item) => (
-                      <NavLink
+                      <MenuItem
                         key={item.path}
-                        to={item.path}
+                        item={item}
+                        isActive={location.pathname === item.path}
                         onClick={() => setActiveSection('scrapiStore')}
-                        className={({ isActive }) =>
-                          `flex items-center space-x-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${isActive
-                            ? theme === 'dark'
-                              ? 'bg-[#2C2D30] text-white'
-                              : 'bg-gray-100 text-gray-900'
-                            : theme === 'dark'
-                              ? 'text-gray-300 hover:bg-gray-800'
-                              : 'text-gray-700 hover:bg-gray-50'
-                          }`
-                        }
-                      >
-                        <item.icon className="w-4 h-4 flex-shrink-0" />
-                        <span>{item.label}</span>
-                      </NavLink>
+                      />
                     ))}
                   </div>
                 </div>
