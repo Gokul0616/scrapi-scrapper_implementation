@@ -565,7 +565,7 @@ const Sidebar = () => {
                       <HelpCircle className="w-4 h-4" />
                     </button>
                     {/* Collapse Button */}
-                    <Tooltip delayDuration={0}>
+                    <Tooltip delayDuration={500}>
                       <TooltipTrigger asChild>
                         <button
                           onClick={() => setIsCollapsed(true)}
