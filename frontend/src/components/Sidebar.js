@@ -91,6 +91,7 @@ const Sidebar = () => {
         nextKey.then((key) => {
           const shortcuts = {
             'H': '/home',
+            'O': '/store',
             'A': '/actors',
             'R': '/runs',
             'T': '/tasks',
@@ -99,9 +100,10 @@ const Sidebar = () => {
             'M': '/my-actors',
             'N': '/insights',
             'E': '/messaging',
+            'P': '/proxy',
+            'D': '/storage',
             'B': '/billing',
-            'S': '/settings',
-            'O': '/store'
+            'S': '/settings'
           };
           if (key && shortcuts[key]) {
             navigate(shortcuts[key]);
