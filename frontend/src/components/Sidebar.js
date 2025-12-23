@@ -619,7 +619,7 @@ const Sidebar = () => {
                   </TooltipContent>
                 </Tooltip>
 
-                <Tooltip delayDuration={0}>
+                <Tooltip delayDuration={500}>
                   <TooltipTrigger asChild>
                     <button
                       onClick={() => setIsCollapsed(false)}
