@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Book, FileText } from 'lucide-react';
+import { Book, FileText, ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const ApiDocsPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'swagger' | 'redoc'>('swagger');
