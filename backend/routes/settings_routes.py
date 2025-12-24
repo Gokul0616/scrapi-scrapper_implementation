@@ -57,26 +57,31 @@ async def get_profile(current_user: dict = Depends(get_current_user)):
     """Get user profile settings"""
     user_id = current_user.get("id")
     
+    # Get user from users collection
+    user = await db.users.find_one({"id": user_id}, {"_id": 0, "password": 0, "hashed_password": 0})
+    if not user:
+        # Fallback to _id for ObjectId-based users
+        try:
+            user = await db.users.find_one({"_id": ObjectId(user_id)}, {"_id": 0, "password": 0, "hashed_password": 0})
+        except:
+            raise HTTPException(status_code=404, detail="User not found")
+    
     # Try to get settings from user_settings collection
     settings = await db.user_settings.find_one({"user_id": user_id}, {"_id": 0})
     
-    if not settings:
-        # Return default settings with user info
-        # Use id field instead of _id for UUID-based users
-        user = await db.users.find_one({"id": user_id}, {"_id": 0, "password": 0, "hashed_password": 0})
-        if not user:
-            # Fallback to _id for ObjectId-based users
-            try:
-                user = await db.users.find_one({"_id": ObjectId(user_id)}, {"_id": 0, "password": 0, "hashed_password": 0})
-            except:
-                pass
-        return ProfileResponse(
-            username=user.get("username") if user else None,
-            first_name=user.get("first_name") if user else None,
-            last_name=user.get("last_name") if user else None,
-        )
+    # Merge user data with settings, settings override user data
+    profile_data = {
+        "username": user.get("username"),
+        "first_name": user.get("first_name"),
+        "last_name": user.get("last_name"),
+        "theme_preference": user.get("theme_preference", "light"),
+    }
     
-    return ProfileResponse(**settings)
+    if settings:
+        # Settings override user data
+        profile_data.update({k: v for k, v in settings.items() if v is not None})
+    
+    return ProfileResponse(**profile_data)
 
 @router.put("/username")
 async def update_username(data: UsernameUpdate, current_user: dict = Depends(get_current_user)):
