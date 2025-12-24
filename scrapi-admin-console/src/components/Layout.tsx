@@ -168,8 +168,8 @@ export const Layout: React.FC = () => {
                         <SidebarItem
                             icon={BookOpen}
                             label="API Docs"
-                            to="/api-docs"
-                            active={location.pathname.startsWith('/api-docs')}
+                            to="/documentation"
+                            active={location.pathname.startsWith('/documentation')}
                             collapsed={!sidebarOpen}
                         />
                         <SidebarItem
