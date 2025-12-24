@@ -223,7 +223,7 @@ export const Layout: React.FC = () => {
                                 <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4 mb-1">
                                     Configuration
                                 </div>
-                                <SidebarItem icon={BookOpen} label="API Docs" to="/api-docs" active={location.pathname.startsWith('/api-docs')} collapsed={false} />
+                                <SidebarItem icon={BookOpen} label="API Docs" to="/documentation" active={location.pathname.startsWith('/documentation')} collapsed={false} />
                                 <SidebarItem icon={Settings} label="Settings" to="/settings" active={location.pathname.startsWith('/settings')} collapsed={false} />
                             </nav>
                             <div className="p-4 border-t border-gray-700">
