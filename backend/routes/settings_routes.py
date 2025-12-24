@@ -231,7 +231,12 @@ async def delete_account(current_user: dict = Depends(get_current_user)):
     # Delete user's tasks
     await db.saved_tasks.delete_many({"user_id": user_id})
     
-    # Finally, delete the user
-    await db.users.delete_one({"_id": ObjectId(user_id)})
+    # Finally, delete the user (handle both UUID and ObjectId)
+    result = await db.users.delete_one({"id": user_id})
+    if result.deleted_count == 0:
+        try:
+            await db.users.delete_one({"_id": ObjectId(user_id)})
+        except:
+            pass
     
     return {"message": "Account deleted successfully"}
