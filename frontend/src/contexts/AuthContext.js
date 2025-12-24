@@ -39,6 +39,14 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await axios.get(`${API}/auth/me`);
       setUser(response.data);
+      
+      // Load theme from backend if available
+      if (response.data.theme_preference) {
+        // Dispatch custom event to notify ThemeContext
+        window.dispatchEvent(new CustomEvent('backendThemeLoaded', { 
+          detail: { theme: response.data.theme_preference } 
+        }));
+      }
     } catch (error) {
       console.error('Failed to fetch user:', error);
       logout();
