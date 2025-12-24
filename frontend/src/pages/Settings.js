@@ -1,0 +1,774 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
+import { Input } from '../components/ui/input';
+import { Button } from '../components/ui/button';
+import { Switch } from '../components/ui/switch';
+import { Textarea } from '../components/ui/textarea';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../components/ui/alert-dialog';
+import { HelpCircle, Upload, Trash2, ExternalLink, Check, Sun, Moon, Monitor } from 'lucide-react';
+import { getUserInitials, getProfileColor } from '../utils/userUtils';
+import axios from 'axios';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
+
+const Settings = () => {
+  const { theme, setTheme } = useTheme();
+  const { user, updateUser } = useAuth();
+  const fileInputRef = useRef(null);
+
+  // Form states
+  const [username, setUsername] = useState('');
+  const [originalUsername, setOriginalUsername] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [bio, setBio] = useState('');
+  const [readme, setReadme] = useState('');
+  const [homepageUrl, setHomepageUrl] = useState('');
+  const [github, setGithub] = useState('');
+  const [twitter, setTwitter] = useState('');
+  const [linkedin, setLinkedin] = useState('');
+  const [discord, setDiscord] = useState('');
+  const [isPublic, setIsPublic] = useState(false);
+  const [showEmail, setShowEmail] = useState(false);
+  const [profilePicture, setProfilePicture] = useState(null);
+  const [themePreference, setThemePreference] = useState('system');
+  const [markdownPreview, setMarkdownPreview] = useState(false);
+
+  // Loading states
+  const [savingUsername, setSavingUsername] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Load user settings on mount
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${API_URL}/api/settings/profile`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = response.data;
+        
+        setUsername(data.username || user?.username || '');
+        setOriginalUsername(data.username || user?.username || '');
+        setFirstName(data.first_name || '');
+        setLastName(data.last_name || '');
+        setBio(data.bio || '');
+        setReadme(data.readme || '');
+        setHomepageUrl(data.homepage_url || '');
+        setGithub(data.github || '');
+        setTwitter(data.twitter || '');
+        setLinkedin(data.linkedin || '');
+        setDiscord(data.discord || '');
+        setIsPublic(data.is_public || false);
+        setShowEmail(data.show_email || false);
+        setProfilePicture(data.profile_picture || null);
+        setThemePreference(data.theme_preference || 'system');
+      } catch (error) {
+        console.error('Failed to load settings:', error);
+        // Use default values from user context
+        if (user) {
+          setUsername(user.username || '');
+          setOriginalUsername(user.username || '');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadSettings();
+  }, [user]);
+
+  // Apply theme based on preference
+  useEffect(() => {
+    if (themePreference === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      setTheme(mediaQuery.matches ? 'dark' : 'light');
+      
+      const handler = (e) => setTheme(e.matches ? 'dark' : 'light');
+      mediaQuery.addEventListener('change', handler);
+      return () => mediaQuery.removeEventListener('change', handler);
+    } else {
+      setTheme(themePreference);
+    }
+  }, [themePreference, setTheme]);
+
+  const handleSaveUsername = async () => {
+    if (username === originalUsername) return;
+    
+    setSavingUsername(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API_URL}/api/settings/username`, 
+        { username },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setOriginalUsername(username);
+      if (updateUser) {
+        updateUser({ ...user, username });
+      }
+    } catch (error) {
+      console.error('Failed to save username:', error);
+      alert('Failed to save username. It may already be taken.');
+    } finally {
+      setSavingUsername(false);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    setSavingProfile(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API_URL}/api/settings/profile`, {
+        first_name: firstName,
+        last_name: lastName,
+        bio,
+        readme,
+        homepage_url: homepageUrl,
+        github,
+        twitter,
+        linkedin,
+        discord,
+        is_public: isPublic,
+        show_email: showEmail,
+        theme_preference: themePreference
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (error) {
+      console.error('Failed to save profile:', error);
+      alert('Failed to save profile.');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const handleThemeChange = async (newTheme) => {
+    setThemePreference(newTheme);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API_URL}/api/settings/profile`, {
+        theme_preference: newTheme
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (error) {
+      console.error('Failed to save theme preference:', error);
+    }
+  };
+
+  const handleImageUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API_URL}/api/settings/profile-picture`, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      setProfilePicture(response.data.url);
+    } catch (error) {
+      console.error('Failed to upload image:', error);
+      alert('Failed to upload image.');
+    }
+  };
+
+  const handleDeleteImage = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API_URL}/api/settings/profile-picture`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProfilePicture(null);
+    } catch (error) {
+      console.error('Failed to delete image:', error);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API_URL}/api/settings/account`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    } catch (error) {
+      console.error('Failed to delete account:', error);
+      alert('Failed to delete account.');
+    }
+  };
+
+  const userInitials = getUserInitials(user || { username: firstName || username });
+  const profileColorValue = getProfileColor(user?.profile_color, theme);
+
+  // Helper component for optional label with tooltip
+  const OptionalLabel = ({ label, tooltip }) => (
+    <div className="flex items-center gap-1.5 mb-2">
+      <span className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
+        {label}
+      </span>
+      <span className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>(optional)</span>
+      {tooltip && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <HelpCircle className={`w-3.5 h-3.5 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} cursor-help`} />
+            </TooltipTrigger>
+            <TooltipContent side="top" className={theme === 'dark' ? 'bg-gray-800 text-white' : ''}>
+              <p className="text-xs max-w-xs">{tooltip}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+    </div>
+  );
+
+  // Theme card component
+  const ThemeCard = ({ value, label, icon: Icon, preview }) => {
+    const isSelected = themePreference === value;
+    return (
+      <button
+        onClick={() => handleThemeChange(value)}
+        data-testid={`theme-${value}`}
+        className={`relative flex flex-col rounded-lg border-2 transition-all overflow-hidden ${
+          isSelected 
+            ? 'border-blue-500' 
+            : theme === 'dark' 
+              ? 'border-gray-700 hover:border-gray-600' 
+              : 'border-gray-200 hover:border-gray-300'
+        }`}
+        style={{ width: '140px' }}
+      >
+        {/* Preview Image */}
+        <div className={`h-20 ${preview} relative`}>
+          {isSelected && (
+            <div className="absolute top-2 right-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+              <Check className="w-3 h-3 text-white" />
+            </div>
+          )}
+        </div>
+        {/* Label */}
+        <div className={`px-3 py-2 text-left ${theme === 'dark' ? 'bg-[#1A1B1E]' : 'bg-white'}`}>
+          <span className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
+            {label}
+          </span>
+        </div>
+      </button>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className={`flex-1 p-8 ${theme === 'dark' ? 'bg-[#0F1014]' : 'bg-gray-50'}`}>
+        <div className="animate-pulse">
+          <div className={`h-8 w-32 ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-200'} rounded mb-6`}></div>
+          <div className={`h-10 w-full max-w-xl ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-200'} rounded`}></div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`flex-1 min-h-screen ${theme === 'dark' ? 'bg-[#0F1014]' : 'bg-white'}`} data-testid="settings-page">
+      <div className="max-w-4xl mx-auto px-8 py-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <h1 className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`} data-testid="settings-title">
+            Settings
+          </h1>
+          <Button
+            variant="outline"
+            size="sm"
+            data-testid="api-button"
+            className={theme === 'dark' ? 'border-gray-700 text-gray-300 hover:bg-gray-800' : ''}
+          >
+            API
+          </Button>
+        </div>
+
+        {/* Tabs */}
+        <Tabs defaultValue="account" className="w-full">
+          <TabsList className={`w-full justify-start border-b rounded-none h-auto p-0 ${theme === 'dark' ? 'bg-transparent border-gray-800' : 'bg-transparent border-gray-200'}`}>
+            {[
+              { value: 'account', label: 'Account' },
+              { value: 'login-privacy', label: 'Login & Privacy' },
+              { value: 'api-integrations', label: 'API & Integrations' },
+              { value: 'organizations', label: 'Organizations' },
+              { value: 'notifications', label: 'Notifications' },
+              { value: 'referrals', label: 'Referrals' }
+            ].map((tab) => (
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                data-testid={`tab-${tab.value}`}
+                className={`rounded-none border-b-2 border-transparent px-4 py-3 text-sm font-medium transition-colors data-[state=active]:border-blue-500 ${
+                  theme === 'dark' 
+                    ? 'text-gray-400 data-[state=active]:text-white hover:text-gray-200' 
+                    : 'text-gray-500 data-[state=active]:text-gray-900 hover:text-gray-700'
+                }`}
+              >
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
+          {/* Account Tab Content */}
+          <TabsContent value="account" className="mt-0 pt-8">
+            {/* Username Section */}
+            <div className={`pb-8 border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
+              <div className="flex gap-12">
+                {/* Left Column */}
+                <div className="w-48 flex-shrink-0">
+                  <h2 className={`text-lg font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                    Username
+                  </h2>
+                  <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                    This might become visible to others, e.g. if you submit an Actor issue.
+                  </p>
+                </div>
+                {/* Right Column */}
+                <div className="flex-1 flex items-start gap-3">
+                  <Input
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    data-testid="username-input"
+                    className={`max-w-sm ${
+                      theme === 'dark' 
+                        ? 'bg-[#25262B] border-gray-700 text-white placeholder:text-gray-500' 
+                        : 'bg-white border-gray-300'
+                    }`}
+                    placeholder="Enter username"
+                  />
+                  <Button
+                    onClick={handleSaveUsername}
+                    disabled={username === originalUsername || savingUsername}
+                    data-testid="save-username-btn"
+                    variant={username === originalUsername ? "ghost" : "default"}
+                    className={username === originalUsername 
+                      ? `${theme === 'dark' ? 'text-gray-600' : 'text-gray-400'}` 
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    }
+                  >
+                    {savingUsername ? 'Saving...' : 'Save'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Profile Section */}
+            <div className={`py-8 border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
+              <div className="flex gap-12">
+                {/* Left Column */}
+                <div className="w-48 flex-shrink-0">
+                  <h2 className={`text-lg font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                    Profile
+                  </h2>
+                  <p className={`text-sm mb-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Tell the world a little bit about yourself.
+                  </p>
+                  <a 
+                    href="#" 
+                    className={`text-sm flex items-center gap-1 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`}
+                    data-testid="view-profile-link"
+                  >
+                    View your public profile <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+                
+                {/* Right Column */}
+                <div className="flex-1 space-y-6">
+                  {/* Picture */}
+                  <div>
+                    <OptionalLabel label="Picture" tooltip="Upload a profile picture. Recommended size: 256x256 pixels." />
+                    <div className="flex items-center gap-3">
+                      {profilePicture ? (
+                        <img 
+                          src={profilePicture} 
+                          alt="Profile" 
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div 
+                          className="w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold"
+                          style={{ background: profileColorValue }}
+                        >
+                          {userInitials}
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleImageUpload}
+                        accept="image/*"
+                        className="hidden"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                        data-testid="upload-image-btn"
+                        className={theme === 'dark' ? 'border-gray-700 text-gray-300 hover:bg-gray-800' : ''}
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload new image
+                      </Button>
+                      {profilePicture && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleDeleteImage}
+                          data-testid="delete-image-btn"
+                          className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* First Name & Last Name */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
+                        First name
+                      </label>
+                      <Input
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        data-testid="first-name-input"
+                        className={theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}
+                        placeholder="Gokul"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <span className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
+                          Last name
+                        </span>
+                        <span className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>(optional)</span>
+                      </div>
+                      <Input
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        data-testid="last-name-input"
+                        className={theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}
+                        placeholder="Alpha"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Bio */}
+                  <div>
+                    <OptionalLabel label="Bio" tooltip="A short bio about yourself. Max 200 characters." />
+                    <Input
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      data-testid="bio-input"
+                      className={theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}
+                      placeholder="I started building web scrapers on Altair 8800."
+                      maxLength={200}
+                    />
+                  </div>
+
+                  {/* README */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <OptionalLabel label="README" tooltip="Write a detailed description using Markdown. Max 2000 characters." />
+                      <div className="flex items-center gap-2">
+                        <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Markdown preview
+                        </span>
+                        <Switch
+                          checked={markdownPreview}
+                          onCheckedChange={setMarkdownPreview}
+                          data-testid="markdown-preview-toggle"
+                        />
+                      </div>
+                    </div>
+                    <Textarea
+                      value={readme}
+                      onChange={(e) => setReadme(e.target.value)}
+                      data-testid="readme-textarea"
+                      className={`min-h-[200px] ${theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}`}
+                      placeholder={`Markdown as an easy way to elevate the **look** and *feel* of your text.
+
+Here are some ideas to get you started:
+- ✅ Who I am: freelance scraper architect from [place]
+- 🤓 My journey: [X] years of coding; now scraping for fun&business
+- 🚀 My triumph: proud creator of [API name]
+- ⚒️ My skills: [your tools of the trade]
+- 🇬🇧 My languages: fluent in [Duolingo]
+- 🤝 Work with me: open for scraping challenges at [email]
+- 🌟 Preferred comm method: telepathically, pronouns: [they/them] →`}
+                      maxLength={2000}
+                    />
+                    <div className={`text-xs mt-1 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>
+                      {readme.length}/2000
+                    </div>
+                  </div>
+
+                  {/* Homepage URL */}
+                  <div>
+                    <OptionalLabel label="Homepage URL" tooltip="Your personal website or portfolio." />
+                    <Input
+                      value={homepageUrl}
+                      onChange={(e) => setHomepageUrl(e.target.value)}
+                      data-testid="homepage-url-input"
+                      className={theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}
+                      placeholder="https://www.example.com"
+                    />
+                  </div>
+
+                  {/* GitHub & Twitter */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <OptionalLabel label="GitHub" tooltip="Your GitHub username." />
+                      <Input
+                        value={github}
+                        onChange={(e) => setGithub(e.target.value)}
+                        data-testid="github-input"
+                        className={theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}
+                        placeholder="torvalds"
+                      />
+                    </div>
+                    <div>
+                      <OptionalLabel label="Twitter/X username" tooltip="Your Twitter/X username without the @ symbol." />
+                      <Input
+                        value={twitter}
+                        onChange={(e) => setTwitter(e.target.value)}
+                        data-testid="twitter-input"
+                        className={theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}
+                        placeholder="@BillGates"
+                      />
+                    </div>
+                  </div>
+
+                  {/* LinkedIn & Discord */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <OptionalLabel label="LinkedIn URL" tooltip="Your LinkedIn profile URL." />
+                      <Input
+                        value={linkedin}
+                        onChange={(e) => setLinkedin(e.target.value)}
+                        data-testid="linkedin-input"
+                        className={theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}
+                        placeholder="https://www.linkedin.com/com"
+                      />
+                    </div>
+                    <div>
+                      <OptionalLabel label="Discord user ID" tooltip="Your Discord user ID (18-19 digits). Right-click your username in Discord to copy." />
+                      <Input
+                        value={discord}
+                        onChange={(e) => setDiscord(e.target.value)}
+                        data-testid="discord-input"
+                        className={theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}
+                        placeholder="18-19 digits"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Privacy Toggles */}
+                  <div className="space-y-4 pt-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
+                          Make profile publicly visible
+                        </span>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className={`w-3.5 h-3.5 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} cursor-help`} />
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className={theme === 'dark' ? 'bg-gray-800 text-white' : ''}>
+                              <p className="text-xs">Allow others to see your profile.</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                      <Switch
+                        checked={isPublic}
+                        onCheckedChange={setIsPublic}
+                        data-testid="public-profile-toggle"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`text-sm ${isPublic ? (theme === 'dark' ? 'text-gray-200' : 'text-gray-700') : (theme === 'dark' ? 'text-gray-600' : 'text-gray-400')} font-medium`}>
+                          Show my contact email
+                        </span>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className={`w-3.5 h-3.5 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} cursor-help`} />
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className={theme === 'dark' ? 'bg-gray-800 text-white' : ''}>
+                              <p className="text-xs">Display your email on your public profile.</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                      <Switch
+                        checked={showEmail}
+                        onCheckedChange={setShowEmail}
+                        disabled={!isPublic}
+                        data-testid="show-email-toggle"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Save Button */}
+                  <div className="pt-4">
+                    <Button
+                      onClick={handleSaveProfile}
+                      disabled={savingProfile}
+                      data-testid="save-profile-btn"
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      {savingProfile ? 'Saving...' : 'Save'}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Theme Section */}
+            <div className={`py-8 border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
+              <div className="flex gap-12">
+                {/* Left Column */}
+                <div className="w-48 flex-shrink-0">
+                  <h2 className={`text-lg font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                    Theme
+                  </h2>
+                  <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Choose how Apify Console looks to you.
+                  </p>
+                </div>
+                
+                {/* Right Column */}
+                <div className="flex-1">
+                  <div className="flex gap-4">
+                    <ThemeCard 
+                      value="system" 
+                      label="Sync with system" 
+                      icon={Monitor}
+                      preview={`bg-gradient-to-r from-gray-200 to-gray-800`}
+                    />
+                    <ThemeCard 
+                      value="light" 
+                      label="Light theme" 
+                      icon={Sun}
+                      preview="bg-gray-100"
+                    />
+                    <ThemeCard 
+                      value="dark" 
+                      label="Dark theme" 
+                      icon={Moon}
+                      preview="bg-gray-800"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Danger Zone */}
+            <div className="py-8">
+              <div className="flex gap-12">
+                {/* Left Column */}
+                <div className="w-48 flex-shrink-0">
+                  <h2 className="text-lg font-semibold mb-2 text-red-500">
+                    Danger zone
+                  </h2>
+                </div>
+                
+                {/* Right Column */}
+                <div className="flex-1">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        data-testid="delete-account-btn"
+                        className={`border-red-500/50 text-red-500 hover:bg-red-500/10 hover:text-red-600 ${
+                          theme === 'dark' ? 'bg-transparent' : ''
+                        }`}
+                      >
+                        Delete account
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className={theme === 'dark' ? 'bg-[#1A1B1E] border-gray-800' : ''}>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className={theme === 'dark' ? 'text-white' : ''}>
+                          Are you absolutely sure?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className={theme === 'dark' ? 'text-gray-400' : ''}>
+                          This action cannot be undone. This will permanently delete your account, Actors, tasks, schedules, data, everything.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className={theme === 'dark' ? 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700' : ''}>
+                          Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleDeleteAccount}
+                          className="bg-red-600 hover:bg-red-700 text-white"
+                        >
+                          Delete account
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                  <p className={`mt-3 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Completely remove your account, Actors, tasks, schedules, data, everything. This is sad 😢
+                  </p>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Other Tabs - Empty for now */}
+          <TabsContent value="login-privacy" className="mt-8">
+            <div className={`text-center py-16 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+              <p className="text-lg">Login & Privacy settings coming soon</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="api-integrations" className="mt-8">
+            <div className={`text-center py-16 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+              <p className="text-lg">API & Integrations settings coming soon</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="organizations" className="mt-8">
+            <div className={`text-center py-16 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+              <p className="text-lg">Organizations settings coming soon</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="notifications" className="mt-8">
+            <div className={`text-center py-16 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+              <p className="text-lg">Notifications settings coming soon</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="referrals" className="mt-8">
+            <div className={`text-center py-16 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+              <p className="text-lg">Referrals settings coming soon</p>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+};
+
+export default Settings;
