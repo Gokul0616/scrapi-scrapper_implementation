@@ -15,7 +15,7 @@ import axios from 'axios';
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const Settings = () => {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, themePreference, setThemePreference } = useTheme();
   const { user, updateUser } = useAuth();
   const fileInputRef = useRef(null);
 
@@ -34,7 +34,7 @@ const Settings = () => {
   const [isPublic, setIsPublic] = useState(false);
   const [showEmail, setShowEmail] = useState(false);
   const [profilePicture, setProfilePicture] = useState(null);
-  const [themePreference, setThemePreference] = useState('system');
+  const [localThemePreference, setLocalThemePreference] = useState('light');
   const [markdownPreview, setMarkdownPreview] = useState(false);
 
   // Loading states
@@ -54,8 +54,8 @@ const Settings = () => {
         
         setUsername(data.username || user?.username || '');
         setOriginalUsername(data.username || user?.username || '');
-        setFirstName(data.first_name || '');
-        setLastName(data.last_name || '');
+        setFirstName(data.first_name || user?.first_name || '');
+        setLastName(data.last_name || user?.last_name || '');
         setBio(data.bio || '');
         setReadme(data.readme || '');
         setHomepageUrl(data.homepage_url || '');
@@ -66,13 +66,24 @@ const Settings = () => {
         setIsPublic(data.is_public || false);
         setShowEmail(data.show_email || false);
         setProfilePicture(data.profile_picture || null);
-        setThemePreference(data.theme_preference || 'system');
+        
+        // Load theme preference from backend or use current
+        const backendTheme = data.theme_preference || user?.theme_preference || themePreference || 'light';
+        setLocalThemePreference(backendTheme);
+        
+        // Sync theme if backend differs from current
+        if (backendTheme !== themePreference) {
+          setThemePreference(backendTheme);
+        }
       } catch (error) {
         console.error('Failed to load settings:', error);
         // Use default values from user context
         if (user) {
           setUsername(user.username || '');
           setOriginalUsername(user.username || '');
+          setFirstName(user.first_name || '');
+          setLastName(user.last_name || '');
+          setLocalThemePreference(user.theme_preference || themePreference || 'light');
         }
       } finally {
         setLoading(false);
@@ -82,19 +93,10 @@ const Settings = () => {
     loadSettings();
   }, [user]);
 
-  // Apply theme based on preference
+  // Keep local theme preference in sync
   useEffect(() => {
-    if (themePreference === 'system') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      setTheme(mediaQuery.matches ? 'dark' : 'light');
-      
-      const handler = (e) => setTheme(e.matches ? 'dark' : 'light');
-      mediaQuery.addEventListener('change', handler);
-      return () => mediaQuery.removeEventListener('change', handler);
-    } else {
-      setTheme(themePreference);
-    }
-  }, [themePreference, setTheme]);
+    setLocalThemePreference(themePreference);
+  }, [themePreference]);
 
   const handleSaveUsername = async () => {
     if (username === originalUsername) return;
@@ -108,7 +110,7 @@ const Settings = () => {
       );
       setOriginalUsername(username);
       if (updateUser) {
-        updateUser({ ...user, username });
+        updateUser({ username });
       }
     } catch (error) {
       console.error('Failed to save username:', error);
@@ -134,10 +136,19 @@ const Settings = () => {
         discord,
         is_public: isPublic,
         show_email: showEmail,
-        theme_preference: themePreference
+        theme_preference: localThemePreference
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      // Update user context
+      if (updateUser) {
+        updateUser({ 
+          first_name: firstName, 
+          last_name: lastName,
+          theme_preference: localThemePreference
+        });
+      }
     } catch (error) {
       console.error('Failed to save profile:', error);
       alert('Failed to save profile.');
@@ -147,7 +158,9 @@ const Settings = () => {
   };
 
   const handleThemeChange = async (newTheme) => {
+    setLocalThemePreference(newTheme);
     setThemePreference(newTheme);
+    
     try {
       const token = localStorage.getItem('token');
       await axios.put(`${API_URL}/api/settings/profile`, {
@@ -155,6 +168,11 @@ const Settings = () => {
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      // Update user context
+      if (updateUser) {
+        updateUser({ theme_preference: newTheme });
+      }
     } catch (error) {
       console.error('Failed to save theme preference:', error);
     }
@@ -235,7 +253,7 @@ const Settings = () => {
 
   // Theme card component with mini UI preview
   const ThemeCard = ({ value, label }) => {
-    const isSelected = themePreference === value;
+    const isSelected = localThemePreference === value;
     const isDarkPreview = value === 'dark';
     const isSystemPreview = value === 'system';
     
@@ -387,7 +405,7 @@ const Settings = () => {
                         ? 'bg-[#25262B] border-gray-700 text-white placeholder:text-gray-500' 
                         : 'bg-white border-gray-300'
                     }`}
-                    placeholder="Enter username"
+                    placeholder=""
                   />
                   <Button
                     onClick={handleSaveUsername}
@@ -487,7 +505,7 @@ const Settings = () => {
                         onChange={(e) => setFirstName(e.target.value)}
                         data-testid="first-name-input"
                         className={theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}
-                        placeholder="Gokul"
+                        placeholder=""
                       />
                     </div>
                     <div>
@@ -502,7 +520,7 @@ const Settings = () => {
                         onChange={(e) => setLastName(e.target.value)}
                         data-testid="last-name-input"
                         className={theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}
-                        placeholder="Alpha"
+                        placeholder=""
                       />
                     </div>
                   </div>
@@ -515,7 +533,7 @@ const Settings = () => {
                       onChange={(e) => setBio(e.target.value)}
                       data-testid="bio-input"
                       className={theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}
-                      placeholder="I started building web scrapers on Altair 8800."
+                      placeholder=""
                       maxLength={200}
                     />
                   </div>
@@ -565,7 +583,7 @@ Here are some ideas to get you started:
                       onChange={(e) => setHomepageUrl(e.target.value)}
                       data-testid="homepage-url-input"
                       className={theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}
-                      placeholder="https://www.example.com"
+                      placeholder=""
                     />
                   </div>
 
@@ -578,7 +596,7 @@ Here are some ideas to get you started:
                         onChange={(e) => setGithub(e.target.value)}
                         data-testid="github-input"
                         className={theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}
-                        placeholder="torvalds"
+                        placeholder=""
                       />
                     </div>
                     <div>
@@ -588,7 +606,7 @@ Here are some ideas to get you started:
                         onChange={(e) => setTwitter(e.target.value)}
                         data-testid="twitter-input"
                         className={theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}
-                        placeholder="@BillGates"
+                        placeholder=""
                       />
                     </div>
                   </div>
@@ -602,7 +620,7 @@ Here are some ideas to get you started:
                         onChange={(e) => setLinkedin(e.target.value)}
                         data-testid="linkedin-input"
                         className={theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}
-                        placeholder="https://www.linkedin.com/com"
+                        placeholder=""
                       />
                     </div>
                     <div>
@@ -612,7 +630,7 @@ Here are some ideas to get you started:
                         onChange={(e) => setDiscord(e.target.value)}
                         data-testid="discord-input"
                         className={theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}
-                        placeholder="18-19 digits"
+                        placeholder=""
                       />
                     </div>
                   </div>
@@ -691,7 +709,7 @@ Here are some ideas to get you started:
                     Theme
                   </h2>
                   <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                    Choose how Apify Console looks to you.
+                    Choose how Scrapi Console looks to you.
                   </p>
                 </div>
                 
