@@ -834,12 +834,15 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         username=user_doc['username'],
         email=user_doc['email'],
         organization_name=user_doc.get('organization_name'),
+        first_name=user_doc.get('first_name'),
+        last_name=user_doc.get('last_name'),
         plan=user_doc.get('plan', 'Free'),
         role=user_doc.get('role', 'user'),
         is_active=user_doc.get('is_active', True),
         created_at=user_doc.get('created_at', datetime.now(timezone.utc).isoformat()),
         last_login_at=user_doc.get('last_login_at'),
-        profile_color=profile_color
+        profile_color=profile_color,
+        theme_preference=user_doc.get('theme_preference', 'light')
     )
 
 @router.patch("/auth/last-path")
