@@ -14,7 +14,8 @@ import {
     ChevronDown,
     X,
     FileText,
-    ScrollText
+    ScrollText,
+    BookOpen
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
