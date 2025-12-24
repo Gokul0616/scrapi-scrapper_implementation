@@ -19,7 +19,8 @@ export const ApiDocsPage: React.FC = () => {
 
         try {
             const endpoint = activeTab === 'swagger' ? '/api/docs' : '/api/redoc';
-            const response = await fetch(`${backendUrl}${endpoint}`, {
+            // Use relative URL to leverage Vite's proxy configuration
+            const response = await fetch(endpoint, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'text/html',
