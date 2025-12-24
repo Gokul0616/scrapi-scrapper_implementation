@@ -29,6 +29,18 @@ export const ThemeProvider = ({ children }) => {
 
   const [backendThemeLoaded, setBackendThemeLoaded] = useState(false);
 
+  // Listen for backend theme loaded event
+  useEffect(() => {
+    const handleBackendTheme = (event) => {
+      if (event.detail && event.detail.theme && !backendThemeLoaded) {
+        loadThemeFromBackend(event.detail.theme);
+      }
+    };
+    
+    window.addEventListener('backendThemeLoaded', handleBackendTheme);
+    return () => window.removeEventListener('backendThemeLoaded', handleBackendTheme);
+  }, [backendThemeLoaded]);
+
   useEffect(() => {
     // Update document class for CSS
     if (theme === 'dark') {
