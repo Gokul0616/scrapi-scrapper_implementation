@@ -5,7 +5,6 @@ export const ApiDocsPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'swagger' | 'redoc'>('swagger');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8001';
     const token = localStorage.getItem('scrapi_admin_token');
     const iframeRef = useRef<HTMLIFrameElement>(null);
 
