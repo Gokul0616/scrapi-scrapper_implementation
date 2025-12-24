@@ -1,4 +1,6 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, Depends, Request
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -19,11 +21,11 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# Create the main app with docs under /api prefix
+# Create the main app with docs disabled (we'll add custom protected routes)
 app = FastAPI(
     title="Scrapi - Web Scraping Platform",
-    docs_url="/api/docs",
-    redoc_url="/api/redoc",
+    docs_url=None,  # Disable default docs
+    redoc_url=None,  # Disable default redoc
     openapi_url="/api/openapi.json"
 )
 
