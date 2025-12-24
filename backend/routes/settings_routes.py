@@ -62,7 +62,14 @@ async def get_profile(current_user: dict = Depends(get_current_user)):
     
     if not settings:
         # Return default settings with user info
-        user = await db.users.find_one({"_id": ObjectId(user_id)}, {"_id": 0, "password": 0})
+        # Use id field instead of _id for UUID-based users
+        user = await db.users.find_one({"id": user_id}, {"_id": 0, "password": 0, "hashed_password": 0})
+        if not user:
+            # Fallback to _id for ObjectId-based users
+            try:
+                user = await db.users.find_one({"_id": ObjectId(user_id)}, {"_id": 0, "password": 0, "hashed_password": 0})
+            except:
+                pass
         return ProfileResponse(
             username=user.get("username") if user else None,
             first_name=user.get("first_name") if user else None,
