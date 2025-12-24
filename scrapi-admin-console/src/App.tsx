@@ -76,6 +76,7 @@ function App() {
               <Route path="/actors" element={<ActorsPage />} />
               <Route path="/runs" element={<RunsPage />} />
               <Route path="/policies" element={<PoliciesPage />} />
+              <Route path="/api-docs" element={<ApiDocsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/audit-logs" element={<AuditLogs />} />
             </Route>
