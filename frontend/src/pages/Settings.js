@@ -309,7 +309,7 @@ const Settings = () => {
 
   if (loading) {
     return (
-      <div className={`flex-1 p-8 ${theme === 'dark' ? 'bg-[#0F1014]' : 'bg-gray-50'}`}>
+      <div className={`flex-1 p-8 ${theme === 'dark' ? 'bg-[#1A1B1E]' : 'bg-gray-50'}`}>
         <div className="animate-pulse">
           <div className={`h-8 w-32 ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-200'} rounded mb-6`}></div>
           <div className={`h-10 w-full max-w-xl ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-200'} rounded`}></div>
@@ -319,7 +319,7 @@ const Settings = () => {
   }
 
   return (
-    <div className={`flex-1 min-h-screen ${theme === 'dark' ? 'bg-[#0F1014]' : 'bg-white'}`} data-testid="settings-page">
+    <div className={`flex-1 min-h-screen ${theme === 'dark' ? 'bg-[#1A1B1E]' : 'bg-white'}`} data-testid="settings-page">
       <div className="max-w-4xl mx-auto px-8 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
