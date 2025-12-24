@@ -10,7 +10,7 @@ export const ApiDocsPage: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col h-full bg-white rounded-lg shadow">
+        <div className="flex flex-col bg-white rounded-lg shadow" style={{ height: 'calc(100vh - 160px)' }}>
             {/* Header */}
             <div className="border-b border-gray-200 bg-white px-6 py-4 flex-shrink-0 rounded-t-lg">
                 <div className="flex items-center justify-between">
