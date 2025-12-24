@@ -5,4 +5,4 @@ User-agent: *
 Disallow: /
 
 # Sitemap (for reference, even though indexing is disabled)
-Sitemap: https://apify-search-clone.preview.emergentagent.com/sitemap.xml
+Sitemap: https://start-normal.preview.emergentagent.com/sitemap.xml
