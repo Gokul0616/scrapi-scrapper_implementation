@@ -10,9 +10,9 @@ export const ApiDocsPage: React.FC = () => {
     };
 
     return (
-        <div className="h-full flex flex-col bg-white">
+        <div className="h-screen flex flex-col bg-white">
             {/* Header */}
-            <div className="border-b border-gray-200 bg-white px-6 py-4">
+            <div className="border-b border-gray-200 bg-white px-6 py-4 flex-shrink-0">
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">API Documentation</h1>
@@ -47,8 +47,8 @@ export const ApiDocsPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* Documentation Content */}
-            <div className="flex-1 overflow-hidden bg-gray-50">
+            {/* Documentation Content - Full height minus header */}
+            <div className="flex-1 min-h-0 bg-gray-50">
                 <iframe
                     key={activeTab}
                     src={`/api/${activeTab === 'swagger' ? 'docs' : 'redoc'}?token=${token}`}
