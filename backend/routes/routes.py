@@ -155,12 +155,15 @@ async def register(user_data: UserCreate):
             username=user.username,
             email=user.email,
             organization_name=user.organization_name,
+            first_name=user.first_name,
+            last_name=user.last_name,
             plan=user.plan,
             role=user.role,
             is_active=user.is_active,
             created_at=user.created_at.isoformat(),
             last_login_at=user.last_login_at.isoformat() if user.last_login_at else None,
-            profile_color=user.profile_color
+            profile_color=user.profile_color,
+            theme_preference=user.theme_preference
         )
     }
 
