@@ -49,6 +49,41 @@ api_router.include_router(search_router)
 # Include the router in the main app
 app.include_router(api_router)
 
+# Protected documentation endpoints - require admin authentication
+from auth import get_current_user
+
+@app.get("/api/docs", include_in_schema=False)
+async def custom_swagger_ui_html(current_user: dict = Depends(get_current_user)):
+    """Protected Swagger UI documentation - requires authentication"""
+    # Check if user is admin
+    if current_user.get("role") != "admin":
+        return JSONResponse(
+            status_code=403,
+            content={"detail": "Access denied. Admin privileges required."}
+        )
+    return get_swagger_ui_html(
+        openapi_url="/api/openapi.json",
+        title=f"{app.title} - Swagger UI",
+        oauth2_redirect_url=None,
+        swagger_js_url="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-bundle.js",
+        swagger_css_url="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui.css",
+    )
+
+@app.get("/api/redoc", include_in_schema=False)
+async def redoc_html(current_user: dict = Depends(get_current_user)):
+    """Protected ReDoc documentation - requires authentication"""
+    # Check if user is admin
+    if current_user.get("role") != "admin":
+        return JSONResponse(
+            status_code=403,
+            content={"detail": "Access denied. Admin privileges required."}
+        )
+    return get_redoc_html(
+        openapi_url="/api/openapi.json",
+        title=f"{app.title} - ReDoc",
+        redoc_js_url="https://cdn.jsdelivr.net/npm/redoc@2.0.0/bundles/redoc.standalone.js",
+    )
+
 # Add a root health endpoint for Kubernetes ingress
 @app.get("/")
 async def health_check():
