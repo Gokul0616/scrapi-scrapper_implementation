@@ -33,9 +33,10 @@ app = FastAPI(
 api_router = APIRouter(prefix="/api")
 
 # Import and setup routes
-from routes import router as api_routes, set_db, search_router, set_search_db
+from routes import router as api_routes, set_db, search_router, set_search_db, settings_router, set_settings_db
 set_db(db)
 set_search_db(db)
+set_settings_db(db)
 
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
