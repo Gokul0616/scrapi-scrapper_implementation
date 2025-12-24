@@ -22,25 +22,23 @@ export const ApiDocsPage: React.FC = () => {
                     </div>
                     <div className="flex space-x-2 border border-gray-300 rounded-lg p-1 bg-gray-50">
                         <button
-                            onClick={() => setActiveTab('swagger')}
-                            disabled={loading}
+                            onClick={() => handleTabChange('swagger')}
                             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center ${
                                 activeTab === 'swagger'
                                     ? 'bg-white text-gray-900 shadow-sm'
                                     : 'text-gray-600 hover:text-gray-900'
-                            } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            }`}
                         >
                             <Book size={16} className="mr-2" />
                             Swagger UI
                         </button>
                         <button
-                            onClick={() => setActiveTab('redoc')}
-                            disabled={loading}
+                            onClick={() => handleTabChange('redoc')}
                             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center ${
                                 activeTab === 'redoc'
                                     ? 'bg-white text-gray-900 shadow-sm'
                                     : 'text-gray-600 hover:text-gray-900'
-                            } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            }`}
                         >
                             <FileText size={16} className="mr-2" />
                             ReDoc
@@ -49,32 +47,14 @@ export const ApiDocsPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* Loading State */}
-            {loading && (
-                <div className="flex items-center justify-center py-12">
-                    <Loader2 size={32} className="text-gray-400 animate-spin" />
-                    <span className="ml-3 text-gray-600">Loading documentation...</span>
-                </div>
-            )}
-
-            {/* Error Message */}
-            {error && (
-                <div className="mx-6 mt-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start">
-                    <AlertCircle size={20} className="text-red-600 mr-3 flex-shrink-0 mt-0.5" />
-                    <div>
-                        <p className="text-sm font-medium text-red-900">Failed to load documentation</p>
-                        <p className="text-sm text-red-700 mt-1">{error}</p>
-                    </div>
-                </div>
-            )}
-
             {/* Documentation Content */}
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 overflow-hidden bg-gray-50">
                 <iframe
-                    ref={iframeRef}
+                    key={activeTab}
+                    src={`/api/${activeTab === 'swagger' ? 'docs' : 'redoc'}?token=${token}`}
                     className="w-full h-full border-0"
                     title={activeTab === 'swagger' ? 'Swagger UI' : 'ReDoc'}
-                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
                 />
             </div>
         </div>
