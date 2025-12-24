@@ -17,7 +17,8 @@ export default defineConfig({
       clientPort: 443,
     },
     proxy: {
-      '/api': {
+      // Only proxy API endpoints (not frontend routes like /api-docs)
+      '^/api/': {
         target: 'http://localhost:8001',
         changeOrigin: true,
         secure: false,
