@@ -9,7 +9,7 @@
   Permissions-Policy: geolocation=(), microphone=(), camera=()
   
   # CORS Headers (adjust as needed)
-  Access-Control-Allow-Origin: https://admin-console-api.preview.emergentagent.com
+  Access-Control-Allow-Origin: https://api-reference-admin.preview.emergentagent.com
   Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
   Access-Control-Allow-Headers: Content-Type, Authorization
   
