@@ -84,20 +84,30 @@ async def update_username(data: UsernameUpdate, current_user: dict = Depends(get
     user_id = current_user.get("id")
     new_username = data.username.strip().lower()
     
-    # Check if username is already taken
+    # Check if username is already taken (handle both UUID and ObjectId)
     existing = await db.users.find_one({
         "username": new_username,
-        "_id": {"$ne": ObjectId(user_id)}
+        "id": {"$ne": user_id}
     })
     
     if existing:
         raise HTTPException(status_code=400, detail="Username already taken")
     
-    # Update in users collection
-    await db.users.update_one(
-        {"_id": ObjectId(user_id)},
+    # Update in users collection (handle both UUID and ObjectId)
+    result = await db.users.update_one(
+        {"id": user_id},
         {"$set": {"username": new_username, "updated_at": datetime.now(timezone.utc)}}
     )
+    
+    # Fallback to _id for ObjectId-based users
+    if result.modified_count == 0:
+        try:
+            await db.users.update_one(
+                {"_id": ObjectId(user_id)},
+                {"$set": {"username": new_username, "updated_at": datetime.now(timezone.utc)}}
+            )
+        except:
+            pass
     
     # Also update in settings if exists
     await db.user_settings.update_one(
