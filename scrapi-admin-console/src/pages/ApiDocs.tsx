@@ -47,12 +47,13 @@ export const ApiDocsPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* Documentation Content - Full height minus header */}
+            {/* Documentation Content - 90% height */}
             <div className="flex-1 min-h-0 bg-gray-50">
                 <iframe
                     key={activeTab}
                     src={`/api/${activeTab === 'swagger' ? 'docs' : 'redoc'}?token=${token}`}
-                    className="w-full h-full border-0"
+                    className="w-full border-0"
+                    style={{ height: '90%' }}
                     title={activeTab === 'swagger' ? 'Swagger UI' : 'ReDoc'}
                     sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
                 />
