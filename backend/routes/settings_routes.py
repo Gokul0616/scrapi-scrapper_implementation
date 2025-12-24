@@ -143,10 +143,20 @@ async def update_profile(data: ProfileUpdate, current_user: dict = Depends(get_c
     
     if user_update:
         user_update["updated_at"] = datetime.now(timezone.utc)
-        await db.users.update_one(
-            {"_id": ObjectId(user_id)},
+        # Handle both UUID and ObjectId
+        result = await db.users.update_one(
+            {"id": user_id},
             {"$set": user_update}
         )
+        # Fallback to _id for ObjectId-based users
+        if result.modified_count == 0:
+            try:
+                await db.users.update_one(
+                    {"_id": ObjectId(user_id)},
+                    {"$set": user_update}
+                )
+            except:
+                pass
     
     return {"message": "Profile updated successfully"}
 
