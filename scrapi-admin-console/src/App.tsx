@@ -12,6 +12,7 @@ import { RunsPage } from './pages/Runs';
 import { SettingsPage } from './pages/Settings';
 import { AuditLogs } from './pages/AuditLogs';
 import { PoliciesPage } from './pages/Policies';
+import { ApiDocsPage } from './pages/ApiDocs';
 import { NotFound } from './pages/NotFound';
 
 const ProtectedRoute = () => {
