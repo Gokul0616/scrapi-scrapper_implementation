@@ -9,7 +9,7 @@
   Permissions-Policy: geolocation=(), microphone=(), camera=()
   
   # CORS Headers (adjust as needed)
-  Access-Control-Allow-Origin: https://settings-compare-1.preview.emergentagent.com
+  Access-Control-Allow-Origin: https://theme-sync-settings.preview.emergentagent.com
   Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
   Access-Control-Allow-Headers: Content-Type, Authorization
   

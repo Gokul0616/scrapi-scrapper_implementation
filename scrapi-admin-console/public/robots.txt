@@ -5,4 +5,4 @@ User-agent: *
 Disallow: /
 
 # Sitemap (for reference, even though indexing is disabled)
-Sitemap: https://settings-compare-1.preview.emergentagent.com/sitemap.xml
+Sitemap: https://theme-sync-settings.preview.emergentagent.com/sitemap.xml
