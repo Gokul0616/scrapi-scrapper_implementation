@@ -10,9 +10,9 @@ export const ApiDocsPage: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col bg-white rounded-lg shadow" style={{ height: 'calc(100vh - 160px)' }}>
+        <div className="flex flex-col bg-white -m-6" style={{ height: 'calc(100vh - 56px)' }}>
             {/* Header */}
-            <div className="border-b border-gray-200 bg-white px-6 py-4 flex-shrink-0 rounded-t-lg">
+            <div className="border-b border-gray-200 bg-white px-6 py-4 flex-shrink-0">
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">API Documentation</h1>
