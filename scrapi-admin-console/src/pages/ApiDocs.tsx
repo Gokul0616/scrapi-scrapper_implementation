@@ -48,7 +48,7 @@ export const ApiDocsPage: React.FC = () => {
             </div>
 
             {/* Documentation Content */}
-            <div className="flex-1 min-h-0 bg-gray-50">
+            <div className="flex-1 overflow-hidden bg-gray-50">
                 <iframe
                     key={activeTab}
                     src={`/api/${activeTab === 'swagger' ? 'docs' : 'redoc'}?token=${token}`}
