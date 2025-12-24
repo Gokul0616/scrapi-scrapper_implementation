@@ -14,16 +14,20 @@ export const ThemeProvider = ({ children }) => {
   const [theme, setThemeState] = useState(() => {
     // Check localStorage for saved theme
     const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'system') {
+    const savedPreference = localStorage.getItem('themePreference');
+    
+    if (savedPreference === 'system' || savedTheme === 'system') {
       // Check system preference
       return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
     return savedTheme || 'light';
   });
 
-  const [themePreference, setThemePreference] = useState(() => {
+  const [themePreference, setThemePreferenceState] = useState(() => {
     return localStorage.getItem('themePreference') || 'light';
   });
+
+  const [backendThemeLoaded, setBackendThemeLoaded] = useState(false);
 
   useEffect(() => {
     // Update document class for CSS
@@ -34,23 +38,62 @@ export const ThemeProvider = ({ children }) => {
     }
   }, [theme]);
 
+  // Handle system preference changes when preference is 'system'
+  useEffect(() => {
+    if (themePreference === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const handler = (e) => setThemeState(e.matches ? 'dark' : 'light');
+      mediaQuery.addEventListener('change', handler);
+      return () => mediaQuery.removeEventListener('change', handler);
+    }
+  }, [themePreference]);
+
   const setTheme = (newTheme) => {
     setThemeState(newTheme);
-    // Don't save 'system' as actual theme, keep actual value
-    if (newTheme !== 'system') {
-      localStorage.setItem('theme', newTheme);
+    // Save to localStorage
+    localStorage.setItem('theme', newTheme);
+  };
+
+  const setThemePreference = (newPreference) => {
+    setThemePreferenceState(newPreference);
+    localStorage.setItem('themePreference', newPreference);
+    
+    // Apply theme based on preference
+    if (newPreference === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      setThemeState(mediaQuery.matches ? 'dark' : 'light');
+    } else {
+      setThemeState(newPreference);
     }
+  };
+
+  const loadThemeFromBackend = (backendTheme) => {
+    if (!backendTheme || backendThemeLoaded) return;
+    
+    const localPreference = localStorage.getItem('themePreference');
+    
+    // If backend theme differs from local, use backend theme
+    if (backendTheme !== localPreference) {
+      setThemePreference(backendTheme);
+    }
+    
+    setBackendThemeLoaded(true);
   };
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
     setThemePreference(newTheme);
-    localStorage.setItem('themePreference', newTheme);
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, themePreference, setThemePreference }}>
+    <ThemeContext.Provider value={{ 
+      theme, 
+      setTheme, 
+      toggleTheme, 
+      themePreference, 
+      setThemePreference,
+      loadThemeFromBackend 
+    }}>
       {children}
     </ThemeContext.Provider>
   );
