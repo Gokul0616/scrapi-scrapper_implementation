@@ -1,60 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Book, FileText, AlertCircle, Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Book, FileText } from 'lucide-react';
 
 export const ApiDocsPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'swagger' | 'redoc'>('swagger');
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
     const token = localStorage.getItem('scrapi_admin_token');
-    const iframeRef = useRef<HTMLIFrameElement>(null);
 
-    useEffect(() => {
-        loadDocs();
-    }, [activeTab]);
-
-    const loadDocs = async () => {
-        setLoading(true);
-        setError(null);
-
-        try {
-            const endpoint = activeTab === 'swagger' ? '/api/docs' : '/api/redoc';
-            // Use relative URL to leverage Vite's proxy configuration
-            const response = await fetch(endpoint, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error(`Failed to load documentation: ${response.statusText}`);
-            }
-
-            const html = await response.text();
-            
-            // Modify the HTML to include base tag and fix asset URLs
-            const modifiedHtml = html
-                .replace('<head>', '<head><base href="/">')
-                .replace('url: \'/api/openapi.json\'', `url: '/api/openapi.json',
-                    requestInterceptor: (req) => {
-                        req.headers['Authorization'] = 'Bearer ${token}';
-                        return req;
-                    }`);
-            
-            // Inject the modified HTML into iframe
-            if (iframeRef.current) {
-                const iframe = iframeRef.current;
-                const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-                if (iframeDoc) {
-                    iframeDoc.open();
-                    iframeDoc.write(modifiedHtml);
-                    iframeDoc.close();
-                }
-            }
-        } catch (err: any) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
+    const handleTabChange = (tab: 'swagger' | 'redoc') => {
+        setActiveTab(tab);
     };
 
     return (
