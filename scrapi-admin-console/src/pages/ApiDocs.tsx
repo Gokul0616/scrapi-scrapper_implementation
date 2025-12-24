@@ -10,26 +10,15 @@ export const ApiDocsPage: React.FC = () => {
     };
 
     return (
-        <div className="h-screen flex flex-col bg-white">
+        <div className="flex flex-col h-full bg-white rounded-lg shadow">
             {/* Header */}
-            <div className="border-b border-gray-200 bg-white px-6 py-4 flex-shrink-0">
+            <div className="border-b border-gray-200 bg-white px-6 py-4 flex-shrink-0 rounded-t-lg">
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                        <Link 
-                            to="/dashboard" 
-                            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
-                            title="Back to Dashboard"
-                        >
-                            <ArrowLeft size={20} className="mr-2" />
-                            <span className="text-sm font-medium">Back to Console</span>
-                        </Link>
-                        <div className="h-6 w-px bg-gray-300"></div>
-                        <div>
-                            <h1 className="text-2xl font-bold text-gray-900">API Documentation</h1>
-                            <p className="text-sm text-gray-600 mt-1">
-                                Interactive API documentation for Scrapi platform
-                            </p>
-                        </div>
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900">API Documentation</h1>
+                        <p className="text-sm text-gray-600 mt-1">
+                            Interactive API documentation for Scrapi platform
+                        </p>
                     </div>
                     <div className="flex space-x-2 border border-gray-300 rounded-lg p-1 bg-gray-50">
                         <button
