@@ -139,12 +139,14 @@ async def update_profile(data: ProfileUpdate, current_user: dict = Depends(get_c
         upsert=True
     )
     
-    # Also update some fields in users collection for consistency
+    # Also update fields in users collection for consistency
     user_update = {}
     if data.first_name is not None:
         user_update["first_name"] = data.first_name
     if data.last_name is not None:
         user_update["last_name"] = data.last_name
+    if data.theme_preference is not None:
+        user_update["theme_preference"] = data.theme_preference
     
     if user_update:
         user_update["updated_at"] = datetime.now(timezone.utc)
