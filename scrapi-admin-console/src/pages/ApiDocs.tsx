@@ -22,7 +22,6 @@ export const ApiDocsPage: React.FC = () => {
             const response = await fetch(endpoint, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'text/html',
                 }
             });
 
@@ -32,13 +31,22 @@ export const ApiDocsPage: React.FC = () => {
 
             const html = await response.text();
             
-            // Inject the HTML into iframe
+            // Modify the HTML to include base tag and fix asset URLs
+            const modifiedHtml = html
+                .replace('<head>', '<head><base href="/">')
+                .replace('url: \'/api/openapi.json\'', `url: '/api/openapi.json',
+                    requestInterceptor: (req) => {
+                        req.headers['Authorization'] = 'Bearer ${token}';
+                        return req;
+                    }`);
+            
+            // Inject the modified HTML into iframe
             if (iframeRef.current) {
                 const iframe = iframeRef.current;
                 const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
                 if (iframeDoc) {
                     iframeDoc.open();
-                    iframeDoc.write(html);
+                    iframeDoc.write(modifiedHtml);
                     iframeDoc.close();
                 }
             }
