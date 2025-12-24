@@ -50,10 +50,53 @@ api_router.include_router(search_router)
 app.include_router(api_router)
 
 # Protected documentation endpoints - require admin authentication
-from auth import get_current_user
+from auth import get_current_user, decode_token
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from typing import Optional
+
+security_scheme = HTTPBearer(auto_error=False)
+
+async def get_docs_user(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_scheme),
+    token: Optional[str] = None
+) -> dict:
+    """Get user from Bearer token or query parameter for docs access"""
+    from fastapi import HTTPException, status
+    
+    # Try to get token from Bearer auth first, then from query param
+    auth_token = None
+    if credentials:
+        auth_token = credentials.credentials
+    elif token:
+        auth_token = token
+    
+    if not auth_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated"
+        )
+    
+    try:
+        payload = decode_token(auth_token)
+        user_id = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate credentials"
+            )
+        return {
+            "id": user_id,
+            "username": payload.get("username"),
+            "role": payload.get("role", "admin")
+        }
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials"
+        )
 
 @app.get("/api/docs", include_in_schema=False)
-async def custom_swagger_ui_html(current_user: dict = Depends(get_current_user)):
+async def custom_swagger_ui_html(current_user: dict = Depends(get_docs_user)):
     """Protected Swagger UI documentation - requires authentication"""
     # Check if user is admin or owner
     if current_user.get("role") not in ["admin", "owner"]:
@@ -70,7 +113,7 @@ async def custom_swagger_ui_html(current_user: dict = Depends(get_current_user))
     )
 
 @app.get("/api/redoc", include_in_schema=False)
-async def redoc_html(current_user: dict = Depends(get_current_user)):
+async def redoc_html(current_user: dict = Depends(get_docs_user)):
     """Protected ReDoc documentation - requires authentication"""
     # Check if user is admin or owner
     if current_user.get("role") not in ["admin", "owner"]:
