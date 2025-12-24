@@ -18,14 +18,23 @@ const Settings = () => {
   const { theme, setTheme, themePreference, setThemePreference } = useTheme();
   const { user, updateUser } = useAuth();
   const fileInputRef = useRef(null);
+const initialReadme =`Markdown as an easy way to elevate the **look** and *feel* of your text.
 
+Here are some ideas to get you started:
+- ✅ Who I am: freelance scraper architect from [place]
+- 🤓 My journey: [X] years of coding; now scraping for fun&business
+- 🚀 My triumph: proud creator of [API name]
+- ⚒️ My skills: [your tools of the trade]
+- 🇬🇧 My languages: fluent in [Duolingo]
+- 🤝 Work with me: open for scraping challenges at [email]
+- 🌟 Preferred comm method: telepathically, pronouns: [they/them] →`
   // Form states
   const [username, setUsername] = useState('');
   const [originalUsername, setOriginalUsername] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [bio, setBio] = useState('');
-  const [readme, setReadme] = useState('');
+  const [readme, setReadme] = useState(initialReadme);
   const [homepageUrl, setHomepageUrl] = useState('');
   const [github, setGithub] = useState('');
   const [twitter, setTwitter] = useState('');
@@ -558,16 +567,7 @@ const Settings = () => {
                       onChange={(e) => setReadme(e.target.value)}
                       data-testid="readme-textarea"
                       className={`min-h-[200px] ${theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}`}
-                      placeholder={`Markdown as an easy way to elevate the **look** and *feel* of your text.
-
-Here are some ideas to get you started:
-- ✅ Who I am: freelance scraper architect from [place]
-- 🤓 My journey: [X] years of coding; now scraping for fun&business
-- 🚀 My triumph: proud creator of [API name]
-- ⚒️ My skills: [your tools of the trade]
-- 🇬🇧 My languages: fluent in [Duolingo]
-- 🤝 Work with me: open for scraping challenges at [email]
-- 🌟 Preferred comm method: telepathically, pronouns: [they/them] →`}
+                      placeholder={'add Readme!!!'}
                       maxLength={2000}
                     />
                     <div className={`text-xs mt-1 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>
