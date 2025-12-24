@@ -233,9 +233,12 @@ const Settings = () => {
     </div>
   );
 
-  // Theme card component
-  const ThemeCard = ({ value, label, icon: Icon, preview }) => {
+  // Theme card component with mini UI preview
+  const ThemeCard = ({ value, label }) => {
     const isSelected = themePreference === value;
+    const isDarkPreview = value === 'dark';
+    const isSystemPreview = value === 'system';
+    
     return (
       <button
         onClick={() => handleThemeChange(value)}
@@ -249,11 +252,48 @@ const Settings = () => {
         }`}
         style={{ width: '140px' }}
       >
-        {/* Preview Image */}
-        <div className={`h-20 ${preview} relative`}>
+        {/* Mini UI Preview */}
+        <div className={`h-20 relative p-2 ${
+          isDarkPreview ? 'bg-[#1a1a1a]' : 
+          isSystemPreview ? 'bg-gradient-to-r from-gray-100 to-gray-800' : 
+          'bg-gray-100'
+        }`}>
+          {/* Mini sidebar */}
+          <div className={`absolute left-1 top-1 bottom-1 w-4 rounded-sm ${
+            isDarkPreview ? 'bg-[#2a2a2a]' : 
+            isSystemPreview ? 'bg-gray-200/50' : 
+            'bg-white'
+          }`}>
+            <div className={`w-2 h-2 mx-auto mt-1 rounded-full ${
+              isDarkPreview ? 'bg-gray-600' : 'bg-gray-300'
+            }`}></div>
+            <div className={`w-2 h-0.5 mx-auto mt-1 rounded ${
+              isDarkPreview ? 'bg-gray-600' : 'bg-gray-300'
+            }`}></div>
+            <div className={`w-2 h-0.5 mx-auto mt-0.5 rounded ${
+              isDarkPreview ? 'bg-gray-600' : 'bg-gray-300'
+            }`}></div>
+          </div>
+          {/* Mini content area */}
+          <div className={`absolute left-6 right-1 top-1 bottom-1 rounded-sm ${
+            isDarkPreview ? 'bg-[#0f0f10]' : 
+            isSystemPreview ? 'bg-white/50' : 
+            'bg-white'
+          }`}>
+            <div className={`w-8 h-1 mt-2 ml-2 rounded ${
+              isDarkPreview ? 'bg-gray-700' : 'bg-gray-200'
+            }`}></div>
+            <div className={`w-12 h-1.5 mt-1 ml-2 rounded ${
+              isDarkPreview ? 'bg-gray-800' : 'bg-gray-100'
+            }`}></div>
+            <div className={`w-10 h-1.5 mt-0.5 ml-2 rounded ${
+              isDarkPreview ? 'bg-gray-800' : 'bg-gray-100'
+            }`}></div>
+          </div>
+          {/* Selection checkmark */}
           {isSelected && (
-            <div className="absolute top-2 right-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-              <Check className="w-3 h-3 text-white" />
+            <div className="absolute top-1 right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+              <Check className="w-2.5 h-2.5 text-white" />
             </div>
           )}
         </div>
