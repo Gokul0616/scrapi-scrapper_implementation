@@ -181,6 +181,29 @@ async def login(credentials: UserLogin):
     if not user_doc or not verify_password(credentials.password, user_doc['hashed_password']):
         raise HTTPException(status_code=401, detail="Invalid username or password")
     
+    # Check if account is pending deletion
+    account_status = user_doc.get("account_status", "active")
+    if account_status == "pending_deletion":
+        deletion_scheduled_at = user_doc.get("deletion_scheduled_at")
+        permanent_deletion_at = user_doc.get("permanent_deletion_at")
+        
+        # Calculate days remaining
+        from datetime import datetime, timezone
+        if permanent_deletion_at:
+            if isinstance(permanent_deletion_at, str):
+                permanent_deletion_at = datetime.fromisoformat(permanent_deletion_at)
+            days_remaining = (permanent_deletion_at - datetime.now(timezone.utc)).days
+            
+            return {
+                "account_status": "pending_deletion",
+                "deletion_scheduled_at": deletion_scheduled_at.isoformat() if hasattr(deletion_scheduled_at, 'isoformat') else str(deletion_scheduled_at),
+                "permanent_deletion_at": permanent_deletion_at.isoformat() if hasattr(permanent_deletion_at, 'isoformat') else str(permanent_deletion_at),
+                "days_remaining": max(0, days_remaining),
+                "user_id": user_doc['id'],
+                "username": user_doc['username'],
+                "message": f"Your account is scheduled for deletion. You have {max(0, days_remaining)} days to reactivate."
+            }
+    
     # Generate profile color if not exists (for existing users)
     profile_color = user_doc.get('profile_color')
     if not profile_color:
