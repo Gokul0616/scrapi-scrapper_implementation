@@ -148,8 +148,18 @@ export const AuthProvider = ({ children }) => {
     delete axios.defaults.headers.common['Authorization'];
   };
 
-  const updateUser = (updatedData) => {
+  const updateUser = async (updatedData) => {
     setUser(prev => ({ ...prev, ...updatedData }));
+    
+    // If profile_picture or username was updated, re-fetch user to ensure sync
+    if (updatedData.profile_picture !== undefined || updatedData.username !== undefined) {
+      try {
+        const response = await axios.get(`${API}/auth/me`);
+        setUser(response.data);
+      } catch (error) {
+        console.error('Failed to re-fetch user after update:', error);
+      }
+    }
   };
 
   return (
