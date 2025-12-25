@@ -57,6 +57,7 @@ const Sidebar = () => {
   const [searchFocused, setSearchFocused] = useState(false);
   const [activeSection, setActiveSection] = useState('scrapiStore');
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [profilePictureKey, setProfilePictureKey] = useState(0);
 
   const userInitials = getUserInitials(user);
   const profileColor = getProfileColor(user?.profile_color, theme);
@@ -67,6 +68,19 @@ const Sidebar = () => {
   // Detect platform for keyboard shortcut display
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
   const shortcutKey = isMac ? '⌘K' : 'Ct+K';
+
+  // Listen for profile picture updates
+  useEffect(() => {
+    const handleProfilePictureUpdate = (event) => {
+      // Force re-render by updating key
+      setProfilePictureKey(prev => prev + 1);
+    };
+
+    window.addEventListener('profilePictureUpdated', handleProfilePictureUpdate);
+    return () => {
+      window.removeEventListener('profilePictureUpdated', handleProfilePictureUpdate);
+    };
+  }, []);
 
   // Close search modal when any modal context modal opens
   useEffect(() => {
