@@ -84,6 +84,12 @@ export const UsersPage: React.FC = () => {
     const [totalUsers, setTotalUsers] = useState(0);
     const limit = 20;
 
+    // Filter State
+    const [showFilters, setShowFilters] = useState(false);
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [roleFilter, setRoleFilter] = useState('all');
+    const [planFilter, setPlanFilter] = useState('all');
+
     // Modal State
     const [modalConfig, setModalConfig] = useState<{
         isOpen: boolean;
@@ -99,7 +105,7 @@ export const UsersPage: React.FC = () => {
 
     useEffect(() => {
         fetchUsers();
-    }, [page, searchTerm]); // Refetch when page or search changes
+    }, [page, searchTerm, statusFilter, roleFilter, planFilter]); // Refetch when filters change
 
     const fetchUsers = async () => {
         setLoading(true);
