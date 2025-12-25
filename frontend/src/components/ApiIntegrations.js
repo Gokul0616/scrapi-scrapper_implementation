@@ -228,7 +228,7 @@ const ApiIntegrations = () => {
           API tokens
         </h2>
         <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} mb-4`}>
-          These tokens enable API access to your Apify account or organization.{' '}
+          These tokens enable API access to your Scrapi account or organization.{' '}
           <span className="font-semibold">Do not share them with untrusted parties!</span>{' '}
           <a 
             href="#" 
@@ -241,7 +241,7 @@ const ApiIntegrations = () => {
         {/* User ID */}
         <div className="flex items-center gap-2 mb-6">
           <span className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-            Apify user ID:
+            Scrapi user ID:
           </span>
           <code className={`text-sm font-mono ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
             {userId}
