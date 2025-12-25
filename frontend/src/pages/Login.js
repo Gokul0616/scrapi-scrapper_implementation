@@ -5,7 +5,6 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Check, ArrowLeft, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import OTPInput from '../components/OTPInput';
-import AccountDeletionPending from '../components/AccountDeletionPending';
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || '';
@@ -13,7 +12,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL || '';
 const Login = () => {
   const navigate = useNavigate();
   const { login, setUser, setToken, lastPath } = useAuth();
-  const [step, setStep] = useState(1); // 1: Email, 2: Password, 3: Send OTP Screen, 4: OTP Input
+  const [step, setStep] = useState(1); // 1: Email, 2: Password, 3: Send OTP Screen, 4: OTP Input, 5: Reactivation
   const [formData, setFormData] = useState({
     email: '',
     otp: '',
@@ -30,6 +29,7 @@ const Login = () => {
   const [otpSuccessMessage, setOtpSuccessMessage] = useState('');
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [deletionInfo, setDeletionInfo] = useState(null);
+  const [isReactivating, setIsReactivating] = useState(false);
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
