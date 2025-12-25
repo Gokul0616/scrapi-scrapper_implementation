@@ -60,7 +60,7 @@ export const Layout: React.FC = () => {
                     </button>
 
                     <Link to="/" className="flex items-center space-x-2 mr-8">
-                        <img src="/logo.png" alt="Scrapi Logo" className="h-8 w-auto" style={{ color: '#fff' }} />
+                        <img src="/logo.png" alt="Scrapi Logo" className="h-8 w-auto" style={{ filter: 'brightness(0) invert(1)' }} />
                         <span className="font-bold text-lg tracking-tight">Console</span>
                     </Link>
 
