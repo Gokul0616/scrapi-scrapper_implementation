@@ -769,6 +769,19 @@ const ApiIntegrations = () => {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <AlertModal
+        show={deleteConfirmModal.show}
+        onClose={() => setDeleteConfirmModal({ show: false, keyId: null, keyName: '' })}
+        onConfirm={confirmDeleteKey}
+        title="Delete API Token"
+        message={`Are you sure you want to delete "${deleteConfirmModal.keyName}"? This action cannot be undone.`}
+        type="warning"
+        showCancel={true}
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
     </div>
   );
 };
