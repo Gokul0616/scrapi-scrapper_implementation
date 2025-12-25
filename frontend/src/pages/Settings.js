@@ -9,7 +9,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../components/ui/alert-dialog';
 import { HelpCircle, Upload, Trash2, ExternalLink, Check, Sun, Moon, Monitor, Eye, EyeOff } from 'lucide-react';
-import { getUserInitials, getProfileColor } from '../utils/userUtils';
+import { getUserInitials, getProfileColor, getUserDisplayName } from '../utils/userUtils';
 import AlertModal from '../components/AlertModal';
 import ApiIntegrations from '../components/ApiIntegrations';
 import axios from 'axios';
