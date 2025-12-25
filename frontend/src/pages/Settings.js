@@ -869,11 +869,11 @@ Here are some ideas to get you started:
             </div>
 
             {/* Danger Zone */}
-            <div className="py-8">
-              <div className="flex gap-12">
+            <div className="py-4">
+              <div className="flex gap-8">
                 {/* Left Column */}
-                <div className="w-48 flex-shrink-0">
-                  <h2 className="text-lg font-semibold mb-2 text-red-500">
+                <div className="w-40 flex-shrink-0">
+                  <h2 className="text-base font-semibold mb-1.5 text-red-500">
                     Danger zone
                   </h2>
                 </div>
