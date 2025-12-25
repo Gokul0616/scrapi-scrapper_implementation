@@ -189,6 +189,7 @@ async def register(user_data: UserCreate):
             created_at=user.created_at.isoformat(),
             last_login_at=user.last_login_at.isoformat() if user.last_login_at else None,
             profile_color=user.profile_color,
+            profile_picture=None,
             theme_preference=user.theme_preference
         )
     }
