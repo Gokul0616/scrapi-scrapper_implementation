@@ -329,12 +329,13 @@ const ApiIntegrations = () => {
             onClick={() => setNewKeyName('My new token')}
             size="sm"
             variant="outline"
+            disabled={keys.length > 0 && !newKeyName}
             data-testid="create-token-btn"
             className={`${
               theme === 'dark' 
                 ? 'border-gray-700 text-gray-300 hover:bg-gray-800' 
                 : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-            }`}
+            } ${keys.length > 0 && !newKeyName ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <Plus className="w-4 h-4 mr-1" />
             Create a new token
