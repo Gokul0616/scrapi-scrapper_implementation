@@ -149,11 +149,16 @@ Here are some ideas to get you started:
       }
     };
 
-    updateUnderlinePosition();
+    // Small delay to ensure DOM is fully rendered
+    const timer = setTimeout(updateUnderlinePosition, 50);
+    
     // Update on window resize
     window.addEventListener('resize', updateUnderlinePosition);
-    return () => window.removeEventListener('resize', updateUnderlinePosition);
-  }, [activeTab, theme]);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', updateUnderlinePosition);
+    };
+  }, [activeTab, theme, loading]);
 
   const handleSaveUsername = async () => {
     if (username === originalUsername) return;
