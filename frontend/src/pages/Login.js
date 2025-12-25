@@ -5,6 +5,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Check, ArrowLeft, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import OTPInput from '../components/OTPInput';
+import AccountDeletionPending from '../components/AccountDeletionPending';
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || '';
@@ -28,6 +29,7 @@ const Login = () => {
   const [sendOtpError, setSendOtpError] = useState('');
   const [otpSuccessMessage, setOtpSuccessMessage] = useState('');
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [deletionInfo, setDeletionInfo] = useState(null);
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
