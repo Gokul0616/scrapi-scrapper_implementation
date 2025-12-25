@@ -1085,7 +1085,7 @@ Here are some ideas to get you started:
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
-                  <p className={`mt-3 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                  <p className={`mt-2 text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                     Completely remove your account, Actors, tasks, schedules, data, everything. This is sad 😢
                   </p>
                 </div>
