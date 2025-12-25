@@ -7,9 +7,6 @@ class UserCreate(BaseModel):
     username: str
     email: str
     password: str
-    organization_name: Optional[str] = None
-    role: Optional[str] = None  # owner or admin - only allowed when no owner exists
-    account_type: Optional[str] = "personal"  # "personal" or "organization"
 
 class UserLogin(BaseModel):
     username: str
