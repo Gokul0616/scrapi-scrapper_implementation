@@ -1009,7 +1009,7 @@ async def create_api_key(
 ):
     """Create a new API key."""
     # Generate key
-    raw_key = f"sk_{secrets.token_urlsafe(32)}"
+    raw_key = f"scrapi_api_{secrets.token_urlsafe(32)}"
     key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
     
     # Store
@@ -1017,7 +1017,7 @@ async def create_api_key(
         user_id=current_user['id'],
         name=key_data.name,
         key_hash=key_hash,
-        prefix=raw_key[:8] + "..."
+        prefix=raw_key[:20] + "..."
     )
     
     doc = api_key.model_dump()
