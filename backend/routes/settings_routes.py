@@ -218,10 +218,49 @@ async def delete_profile_picture(current_user: dict = Depends(get_current_user))
     
     return {"message": "Profile picture deleted"}
 
+class AccountDeletionRequest(BaseModel):
+    confirmation_text: str = Field(..., min_length=1)
+
 @router.delete("/account")
-async def delete_account(current_user: dict = Depends(get_current_user)):
+async def delete_account(
+    data: AccountDeletionRequest,
+    current_user: dict = Depends(get_current_user)
+):
     """Delete user account and all associated data"""
     user_id = current_user.get("id")
+    username = current_user.get("username")
+    
+    # Validate confirmation text matches username
+    if data.confirmation_text.strip() != username:
+        raise HTTPException(
+            status_code=400, 
+            detail="Confirmation text does not match your username"
+        )
+    
+    # Get user email before deletion
+    user = await db.users.find_one({"id": user_id}, {"email": 1})
+    if not user:
+        try:
+            user = await db.users.find_one({"_id": ObjectId(user_id)}, {"email": 1})
+        except:
+            pass
+    
+    user_email = user.get("email") if user else None
+    
+    # Log account deletion in audit trail
+    try:
+        from datetime import datetime, timezone
+        await db.audit_logs.insert_one({
+            "user_id": user_id,
+            "username": username,
+            "action": "account_deletion",
+            "timestamp": datetime.now(timezone.utc),
+            "ip_address": None,  # Can be added from request if needed
+            "details": "User requested account deletion"
+        })
+    except Exception as e:
+        # Continue even if audit logging fails
+        pass
     
     # Delete user settings
     await db.user_settings.delete_one({"user_id": user_id})
@@ -238,6 +277,12 @@ async def delete_account(current_user: dict = Depends(get_current_user)):
     # Delete user's tasks
     await db.saved_tasks.delete_many({"user_id": user_id})
     
+    # Delete user's API keys
+    await db.api_keys.delete_many({"user_id": user_id})
+    
+    # Delete user's datasets
+    await db.datasets.delete_many({"user_id": user_id})
+    
     # Finally, delete the user (handle both UUID and ObjectId)
     result = await db.users.delete_one({"id": user_id})
     if result.deleted_count == 0:
@@ -245,5 +290,15 @@ async def delete_account(current_user: dict = Depends(get_current_user)):
             await db.users.delete_one({"_id": ObjectId(user_id)})
         except:
             pass
+    
+    # Send confirmation email (non-blocking)
+    if user_email:
+        try:
+            from services.email_service import get_email_service
+            email_service = get_email_service()
+            await email_service.send_account_deletion_email(user_email, username)
+        except Exception as e:
+            # Log error but don't fail the deletion
+            print(f"Failed to send deletion confirmation email: {str(e)}")
     
     return {"message": "Account deleted successfully"}
