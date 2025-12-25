@@ -830,14 +830,14 @@ Here are some ideas to get you started:
             </div>
 
             {/* Theme Section */}
-            <div className={`py-8 border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
-              <div className="flex gap-12">
+            <div className={`py-4 border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
+              <div className="flex gap-8">
                 {/* Left Column */}
-                <div className="w-48 flex-shrink-0">
-                  <h2 className={`text-lg font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                <div className="w-40 flex-shrink-0">
+                  <h2 className={`text-base font-semibold mb-1.5 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                     Theme
                   </h2>
-                  <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                  <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                     Choose how Scrapi Console looks to you.
                   </p>
                 </div>
