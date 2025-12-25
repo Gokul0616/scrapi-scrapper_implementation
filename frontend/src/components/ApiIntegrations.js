@@ -395,13 +395,17 @@ const ApiIntegrations = () => {
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    // Clean up full key from store
+                    // Clean up full key from store and hide visibility
                     if (activeKeyId) {
                       setFullKeyStore(prev => {
                         const newStore = { ...prev };
                         delete newStore[activeKeyId];
                         return newStore;
                       });
+                      setShowKeyIds(prev => ({
+                        ...prev,
+                        [activeKeyId]: false
+                      }));
                     }
                     setTimerData(null);
                     setActiveKeyId(null);
