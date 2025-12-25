@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { useToast } from '../hooks/use-toast';
+import AlertModal from './AlertModal';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
