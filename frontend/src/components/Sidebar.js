@@ -343,12 +343,14 @@ const Sidebar = () => {
                   <TooltipTrigger asChild>
                     {user?.profile_picture ? (
                       <img 
+                        key={`sidebar-profile-${profilePictureKey}`}
                         src={user.profile_picture} 
                         alt="Profile" 
                         className="w-9 h-9 rounded-full object-cover cursor-pointer"
                       />
                     ) : (
                       <div 
+                        key={`sidebar-profile-${profilePictureKey}`}
                         className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer"
                         style={{ background: profileColor }}
                       >
