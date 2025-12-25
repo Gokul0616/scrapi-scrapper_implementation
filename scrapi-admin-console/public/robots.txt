@@ -5,4 +5,4 @@ User-agent: *
 Disallow: /
 
 # Sitemap (for reference, even though indexing is disabled)
-Sitemap: https://user-avatar-manager.preview.emergentagent.com/sitemap.xml
+Sitemap: https://sidebar-sync-avatar.preview.emergentagent.com/sitemap.xml
