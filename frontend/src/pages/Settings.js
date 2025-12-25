@@ -519,16 +519,16 @@ Here are some ideas to get you started:
           </TabsList>
 
           {/* Account Tab Content */}
-          <TabsContent value="account" className="mt-0 pt-8">
+          <TabsContent value="account" className="mt-0 pt-4">
             {/* Username Section */}
-            <div className={`pb-8 border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
-              <div className="flex gap-12">
+            <div className={`pb-4 border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
+              <div className="flex gap-8">
                 {/* Left Column */}
-                <div className="w-48 flex-shrink-0">
-                  <h2 className={`text-lg font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                <div className="w-40 flex-shrink-0">
+                  <h2 className={`text-base font-semibold mb-1.5 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                     Username
                   </h2>
-                  <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                  <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                     This might become visible to others, e.g. if you submit an Actor issue.
                   </p>
                 </div>
