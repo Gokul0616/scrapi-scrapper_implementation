@@ -29,10 +29,11 @@ const ApiAccess = () => {
         if (keys.length > 0 && !activeKeyId) {
             const activeKey = keys.find(k => k.has_active_timer);
             if (activeKey) {
+                console.log('Found active timer, reconnecting WebSocket for key:', activeKey.id);
                 setActiveKeyId(activeKey.id);
             }
         }
-    }, [keys]);
+    }, [keys, activeKeyId]);
 
     // WebSocket connection for active timer
     useEffect(() => {
