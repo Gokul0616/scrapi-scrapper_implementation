@@ -187,6 +187,11 @@ const ApiIntegrations = () => {
             ...prev,
             [data.id]: true
           }));
+          // Set initial timer data immediately to show timer from 30 seconds
+          setTimerData({
+            key: data.key,
+            remaining: 30
+          });
         }
         toast({
           title: "Success",
