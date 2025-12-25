@@ -233,7 +233,12 @@ Here are some ideas to get you started:
       setProfilePicture(response.data.url);
     } catch (error) {
       console.error('Failed to upload image:', error);
-      alert('Failed to upload image.');
+      setAlertConfig({
+        title: 'Upload Failed',
+        message: 'Failed to upload image.',
+        type: 'error'
+      });
+      setShowAlert(true);
     }
   };
 
