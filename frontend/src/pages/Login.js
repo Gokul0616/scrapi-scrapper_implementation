@@ -657,6 +657,102 @@ const Login = () => {
             </>
           )}
 
+          {step === 5 && deletionInfo && (
+            <>
+              <div className="mb-6">
+                <div className="flex items-start gap-3 mb-4 p-4 bg-orange-50 border-2 border-orange-200 rounded-lg">
+                  <AlertCircle className="w-6 h-6 text-orange-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-[14px] text-gray-900 font-medium mb-1">
+                      Your account was requested for deletion
+                    </p>
+                    <p className="text-[13px] text-gray-600">
+                      Scheduled on{' '}
+                      <span className="font-semibold text-orange-600">
+                        {formatDate(deletionInfo.deletion_scheduled_at)}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-5 rounded-lg mb-5 bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-300">
+                  <div className="text-center">
+                    <p className="text-[32px] font-bold text-orange-600 mb-1">
+                      {deletionInfo.days_remaining} {deletionInfo.days_remaining === 1 ? 'day' : 'days'}
+                    </p>
+                    <p className="text-[12px] text-gray-600 font-medium">
+                      remaining until permanent deletion
+                    </p>
+                    <p className="text-[11px] text-gray-500 mt-1">
+                      Deletion date: {formatDate(deletionInfo.permanent_deletion_at)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-lg mb-5 bg-blue-50 border border-blue-200">
+                  <h3 className="text-[13px] font-semibold text-blue-700 mb-2">
+                    What happens if you don't reactivate?
+                  </h3>
+                  <ul className="space-y-1.5 text-[12px] text-gray-700">
+                    <li className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>All actors and tasks will be permanently deleted</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>All schedules and run history will be removed</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>All datasets and saved tasks will be deleted</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>All API keys and integrations will be revoked</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>Your account cannot be recovered</span>
+                    </li>
+                  </ul>
+                </div>
+
+                {passwordError && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                    <p className="text-[12px] text-red-600 flex items-center">
+                      <AlertCircle className="w-3.5 h-3.5 mr-1" />
+                      {passwordError}
+                    </p>
+                  </div>
+                )}
+
+                <div className="space-y-3">
+                  <Button
+                    onClick={handleReactivate}
+                    disabled={isReactivating}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white h-[42px] text-[15px] font-semibold rounded-md"
+                    data-testid="reactivate-account-btn"
+                  >
+                    {isReactivating ? 'Reactivating...' : '✓ Reactivate My Account'}
+                  </Button>
+                  
+                  <Button
+                    onClick={handleLogout}
+                    variant="outline"
+                    className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 h-[38px] text-[14px] font-medium rounded-md"
+                    data-testid="logout-btn"
+                  >
+                    Logout
+                  </Button>
+                </div>
+
+                <p className="text-center text-[11px] text-gray-500 mt-4">
+                  Changed your mind? Reactivating will restore full access to your account.
+                </p>
+              </div>
+            </>
+          )}
+
           {/* Terms and conditions */}
           {step === 1 && (
             <p className="mt-3 text-[11px] leading-[16px] text-gray-600 text-center">
