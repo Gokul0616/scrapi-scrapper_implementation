@@ -51,4 +51,5 @@ class UserResponse(BaseModel):
     created_at: str
     last_login_at: Optional[str] = None
     profile_color: Optional[str] = None
+    profile_picture: Optional[str] = None
     theme_preference: str = "light"
