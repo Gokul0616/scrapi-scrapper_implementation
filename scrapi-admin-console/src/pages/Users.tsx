@@ -1,10 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, MoreVertical, Shield, ShieldOff, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Filter, MoreVertical, Shield, ShieldOff, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import type { User } from '../types';
 import { useAlert } from '../context/AlertContext';
 import { Modal } from '../components/ui/Modal';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
+
+// Filter options
+const STATUS_OPTIONS = [
+    { value: 'all', label: 'All Status' },
+    { value: 'active', label: 'Active' },
+    { value: 'suspended', label: 'Suspended' },
+    { value: 'pending_deletion', label: 'Scheduled for Deletion' },
+    { value: 'deleted', label: 'Deleted' }
+];
+
+const ROLE_OPTIONS = [
+    { value: 'all', label: 'All Roles' },
+    { value: 'user', label: 'User' },
+    { value: 'admin', label: 'Admin' },
+    { value: 'owner', label: 'Owner' }
+];
+
+const PLAN_OPTIONS = [
+    { value: 'all', label: 'All Plans' },
+    { value: 'Free', label: 'Free' },
+    { value: 'Pro', label: 'Pro' },
+    { value: 'Premium', label: 'Premium' },
+    { value: 'Enterprise', label: 'Enterprise' }
+];
 
 // Table Skeleton
 const TableSkeleton = () => (
