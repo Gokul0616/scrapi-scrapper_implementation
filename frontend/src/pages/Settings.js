@@ -1010,7 +1010,7 @@ Here are some ideas to get you started:
                             htmlFor="delete-confirm-input"
                             className={`block text-xs font-medium mb-1.5 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}
                           >
-                            Type <span className="font-bold">{username}</span> to confirm
+                            Type <span className="font-bold select-none" style={{ userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none' }}>{username}</span> to confirm
                           </label>
                           <Input
                             id="delete-confirm-input"
