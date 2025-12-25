@@ -36,6 +36,7 @@ const ApiIntegrations = () => {
   const [copiedId, setCopiedId] = useState(null);
   const [copiedKey, setCopiedKey] = useState(null);
   const [fullKeyStore, setFullKeyStore] = useState({}); // Store full keys temporarily
+  const [deleteConfirmModal, setDeleteConfirmModal] = useState({ show: false, keyId: null, keyName: '' });
 
   useEffect(() => {
     if (user) {
