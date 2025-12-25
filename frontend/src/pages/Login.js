@@ -368,6 +368,7 @@ const Login = () => {
             {step === 2 && 'Enter your password'}
             {step === 3 && 'Verify your email'}
             {step === 4 && 'Enter verification code'}
+            {step === 5 && 'Account Deletion Pending'}
           </h2>
 
           {step === 1 && (
