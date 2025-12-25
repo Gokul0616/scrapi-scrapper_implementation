@@ -477,20 +477,22 @@ const ApiIntegrations = () => {
 
                   {/* Actions */}
                   <div className="flex items-center gap-1">
-                    {/* Show/Hide */}
-                    <button
-                      onClick={() => toggleKeyVisibility(key.id)}
-                      className={`p-2 rounded hover:bg-gray-100 ${
-                        theme === 'dark' ? 'hover:bg-gray-700 text-gray-400' : 'text-gray-500'
-                      } transition-colors`}
-                      data-testid={`toggle-visibility-${key.id}`}
-                    >
-                      {showKeyIds[key.id] ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
+                    {/* Show/Hide - only show if NOT currently in timer mode */}
+                    {!fullKeyStore[key.id] && (
+                      <button
+                        onClick={() => toggleKeyVisibility(key.id)}
+                        className={`p-2 rounded hover:bg-gray-100 ${
+                          theme === 'dark' ? 'hover:bg-gray-700 text-gray-400' : 'text-gray-500'
+                        } transition-colors`}
+                        data-testid={`toggle-visibility-${key.id}`}
+                      >
+                        {showKeyIds[key.id] ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
+                      </button>
+                    )}
 
                     {/* Copy */}
                     <button
@@ -507,29 +509,34 @@ const ApiIntegrations = () => {
                       )}
                     </button>
 
-                    {/* Done Button */}
-                    <Button
-                      onClick={() => {
-                        // Remove from full key store if exists
-                        if (fullKeyStore[key.id]) {
+                    {/* Done Button - only show when full key is available */}
+                    {fullKeyStore[key.id] && (
+                      <Button
+                        onClick={() => {
+                          // Remove from full key store and hide visibility
                           setFullKeyStore(prev => {
                             const newStore = { ...prev };
                             delete newStore[key.id];
                             return newStore;
                           });
-                        }
-                      }}
-                      variant="outline"
-                      size="sm"
-                      className={`${
-                        theme === 'dark' 
-                          ? 'border-gray-700 text-gray-300 hover:bg-gray-700' 
-                          : 'border-gray-300 text-gray-700 hover:bg-gray-100'
-                      }`}
-                      data-testid={`done-token-${key.id}`}
-                    >
-                      Done
-                    </Button>
+                          // Also hide the key
+                          setShowKeyIds(prev => ({
+                            ...prev,
+                            [key.id]: false
+                          }));
+                        }}
+                        variant="outline"
+                        size="sm"
+                        className={`${
+                          theme === 'dark' 
+                            ? 'border-gray-700 text-gray-300 hover:bg-gray-700' 
+                            : 'border-gray-300 text-gray-700 hover:bg-gray-100'
+                        }`}
+                        data-testid={`done-token-${key.id}`}
+                      >
+                        Done
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
