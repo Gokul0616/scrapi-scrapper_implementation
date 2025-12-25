@@ -54,6 +54,8 @@ Here are some ideas to get you started:
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [showDeletePassword, setShowDeletePassword] = useState(false);
+  const [showDeleteSuccessAlert, setShowDeleteSuccessAlert] = useState(false);
 
   // Loading states
   const [savingUsername, setSavingUsername] = useState(false);
