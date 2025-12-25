@@ -57,9 +57,10 @@ class DeletionScheduler:
             now = datetime.now(timezone.utc)
             
             # Find accounts that are past their permanent deletion date
+            # MongoDB stores dates as ISO strings, so we compare as strings
             pending_accounts = await self.db.users.find({
                 "account_status": "pending_deletion",
-                "permanent_deletion_at": {"$lte": now}
+                "permanent_deletion_at": {"$lte": now.isoformat()}
             }).to_list(None)
             
             deletion_service = get_deletion_service(self.db)
