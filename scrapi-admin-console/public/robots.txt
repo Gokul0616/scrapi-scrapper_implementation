@@ -5,4 +5,4 @@ User-agent: *
 Disallow: /
 
 # Sitemap (for reference, even though indexing is disabled)
-Sitemap: https://integration-keys-1.preview.emergentagent.com/sitemap.xml
+Sitemap: https://settings-header-fix.preview.emergentagent.com/sitemap.xml
