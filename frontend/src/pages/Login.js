@@ -70,6 +70,7 @@ const Login = () => {
       // Check if account is pending deletion
       if (result.pending_deletion) {
         setDeletionInfo(result.deletionInfo);
+        setStep(5); // Move to reactivation step
         setIsLoading(false);
         return;
       }
@@ -81,15 +82,45 @@ const Login = () => {
     setIsLoading(false);
   };
 
-  const handleReactivation = () => {
-    setDeletionInfo(null);
-    navigate('/home');
+  const handleReactivate = async () => {
+    setIsReactivating(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API_URL}/api/settings/account/reactivate`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Redirect to home after reactivation
+      navigate('/home');
+    } catch (error) {
+      console.error('Failed to reactivate account:', error);
+      setPasswordError('Failed to reactivate account. Please try again.');
+    } finally {
+      setIsReactivating(false);
+    }
   };
 
-  // Show deletion pending modal if account is pending deletion
-  if (deletionInfo) {
-    return <AccountDeletionPending deletionInfo={deletionInfo} onReactivate={handleReactivation} />;
-  }
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setDeletionInfo(null);
+    setStep(1);
+    setFormData({ email: '', otp: '', password: '' });
+  };
+
+  const formatDate = (dateStr) => {
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return dateStr;
+    }
+  };
 
   const handleContinueWithoutPassword = () => {
     // Just navigate to Send OTP screen, don't send OTP yet
