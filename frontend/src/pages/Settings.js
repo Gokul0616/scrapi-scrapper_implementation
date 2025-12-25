@@ -906,22 +906,18 @@ Here are some ideas to get you started:
                         <div className={`space-y-2 text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                           <p>
                             Do you <span className="font-semibold">really</span> want to{' '}
-                            <span className={`font-semibold ${theme === 'dark' ? 'text-[#e06c75]' : 'text-[#dc3545]'}`}>
+                            <span className={`font-semibold ${theme === 'dark' ? 'text-red-400' : 'text-red-600'}`}>
                               delete your account?
                             </span>
                           </p>
                           
-                          <div className={`p-3 rounded-lg ${theme === 'dark' ? 'bg-orange-900/20 border border-orange-500/30' : 'bg-orange-50 border border-orange-200'}`}>
+                          <div className={`p-3 rounded-lg border ${theme === 'dark' ? 'bg-[#25262B] border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
                             <p className="font-semibold mb-1 text-sm">Grace Period: 7 days</p>
                             <p className="text-xs">Your account will be scheduled for deletion. You'll have 7 days to reactivate by simply logging in.</p>
                           </div>
                           
                           <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
                             All Actors, Actor tasks, schedules, results, datasets, and API keys will be deleted.
-                          </p>
-                          
-                          <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                            We're sad to see you go 😢
                           </p>
                         </div>
                         
