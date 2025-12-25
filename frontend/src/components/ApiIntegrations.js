@@ -362,20 +362,20 @@ const ApiIntegrations = () => {
 
           {/* Timer Display for New Token */}
           {timerData && timerData.key && (
-            <div className={`p-4 rounded-lg border ${
+            <div className={`p-3 rounded-lg border ${
               theme === 'dark' 
                 ? 'border-green-800 bg-green-900/20' 
                 : 'border-green-200 bg-green-50'
             } animate-in fade-in duration-300`}>
-              <div className="flex justify-between items-start mb-3">
+              <div className="flex justify-between items-start mb-2">
                 <div>
-                  <h4 className={`font-semibold flex items-center gap-2 ${
+                  <h4 className={`text-sm font-semibold flex items-center gap-2 ${
                     theme === 'dark' ? 'text-green-400' : 'text-green-900'
                   }`}>
-                    <Check className="w-5 h-5" />
+                    <Check className="w-4 h-4" />
                     Token created successfully
                   </h4>
-                  <p className={`text-sm mt-1 ${
+                  <p className={`text-xs mt-0.5 ${
                     theme === 'dark' ? 'text-green-300' : 'text-green-700'
                   }`}>
                     Copy this token now. It will be hidden in {timerData.remaining}s
