@@ -475,6 +475,16 @@ async def shutdown_db_client():
     except Exception as e:
         logger.warning(f"Failed to stop scheduler: {str(e)}")
     
+    try:
+        # Stop deletion scheduler
+        from services.deletion_scheduler import get_deletion_scheduler
+        deletion_scheduler = get_deletion_scheduler()
+        if deletion_scheduler:
+            await deletion_scheduler.stop()
+            logger.info("✅ Deletion scheduler stopped")
+    except Exception as e:
+        logger.warning(f"Failed to stop deletion scheduler: {str(e)}")
+    
     # Close MongoDB client
     client.close()
     logger.info("✅ MongoDB connection closed")
