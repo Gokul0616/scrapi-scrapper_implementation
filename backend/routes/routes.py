@@ -484,10 +484,7 @@ async def get_admin_stats(current_user: dict = Depends(get_current_user)):
     # Format recent runs
     formatted_runs = []
     for run in recent_runs:
-        if isinstance(run.get('created_at'), str):
-            created_at = datetime.fromisoformat(run['created_at'])
-        else:
-            created_at = run.get('created_at')
+        created_at = parse_datetime_safe(run.get('created_at'))
             
         # Calculate time ago roughly
         now = datetime.now(timezone.utc)
