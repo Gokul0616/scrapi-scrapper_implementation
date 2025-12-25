@@ -327,7 +327,12 @@ Here are some ideas to get you started:
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Failed to export data:', error);
-      alert('Failed to export data. Please try again.');
+      setAlertConfig({
+        title: 'Export Failed',
+        message: 'Failed to export data. Please try again.',
+        type: 'error'
+      });
+      setShowAlert(true);
     } finally {
       setIsExporting(false);
     }
