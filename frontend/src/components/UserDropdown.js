@@ -9,6 +9,7 @@ const UserDropdown = () => {
   const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const [profilePictureKey, setProfilePictureKey] = useState(0);
 
   const userInitials = getUserInitials(user);
   const profileColor = getProfileColor(user?.profile_color, theme);
@@ -17,6 +18,19 @@ const UserDropdown = () => {
     setIsOpen(false);
     logout();
   };
+
+  // Listen for profile picture updates
+  useEffect(() => {
+    const handleProfilePictureUpdate = (event) => {
+      // Force re-render by updating key
+      setProfilePictureKey(prev => prev + 1);
+    };
+
+    window.addEventListener('profilePictureUpdated', handleProfilePictureUpdate);
+    return () => {
+      window.removeEventListener('profilePictureUpdated', handleProfilePictureUpdate);
+    };
+  }, []);
 
   // Handle ESC key to close dropdown
   useEffect(() => {
