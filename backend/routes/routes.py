@@ -82,7 +82,7 @@ async def get_api_user(credentials: HTTPAuthorizationCredentials = Depends(api_k
     """Authenticate user via API Key or JWT."""
     token = credentials.credentials
     
-    if token.startswith("sk_"):
+    if token.startswith("scrapi_api_"):
         # API Key Authentication
         token_hash = hashlib.sha256(token.encode()).hexdigest()
         key_doc = await db.api_keys.find_one({"key_hash": token_hash})
