@@ -228,29 +228,8 @@ async def login(credentials: UserLogin):
                 "message": f"Your account is scheduled for deletion. You have {max(0, days_remaining)} days to reactivate."
             }
     
-    # Generate profile color if not exists (for existing users)
-    profile_color = user_doc.get('profile_color')
-    if not profile_color:
-        profile_color = generate_random_profile_color()
-        await db.users.update_one(
-            {"id": user_doc['id']},
-            {"$set": {"profile_color": profile_color}}
-        )
-    
-    # Update last login
-    await db.users.update_one(
-        {"id": user_doc['id']},
-        {"$set": {"last_login_at": datetime.now(timezone.utc).isoformat()}}
-    )
-    
     # Normal users don't need role selection
     needs_role_selection = False
-    
-    token = create_access_token({
-        "sub": user_doc['id'], 
-        "username": user_doc['username'],
-        "role": user_doc.get('role', 'user')
-    })
     
     return {
         "access_token": token,
