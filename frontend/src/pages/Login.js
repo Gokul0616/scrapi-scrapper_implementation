@@ -279,8 +279,8 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left Column - Marketing Content - Only show on step 1 */}
-      {step === 1 && (
+      {/* Left Column - Marketing Content - Show on step 1 and step 5 */}
+      {(step === 1 || step === 5) && (
         <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#f0f9ff] via-[#e0f2fe] to-[#eff6ff] p-12 flex-col justify-between">
           {/* Logo */}
           <div className="flex items-center space-x-2">
