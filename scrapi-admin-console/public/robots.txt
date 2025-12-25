@@ -5,4 +5,4 @@ User-agent: *
 Disallow: /
 
 # Sitemap (for reference, even though indexing is disabled)
-Sitemap: https://depart-safely.preview.emergentagent.com/sitemap.xml
+Sitemap: https://account-deleter.preview.emergentagent.com/sitemap.xml
