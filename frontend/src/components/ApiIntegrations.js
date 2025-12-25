@@ -542,11 +542,15 @@ const ApiIntegrations = () => {
       <div 
         className={`border rounded-lg ${
           theme === 'dark' 
-            ? 'border-gray-800 bg-[#1A1B1E]' 
-            : 'border-gray-200 bg-white'
+            ? 'border-gray-800 bg-[#25262B]' 
+            : 'border-gray-200 bg-gray-50'
         }`}
       >
-        <div className="px-6 py-4">
+        <div className={`px-6 py-4 ${
+          theme === 'dark' ? 'bg-[#1A1B1E]' : 'bg-white'
+        } rounded-t-lg border-b ${
+          theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
+        }`}>
           <h3 className={`text-lg font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
             Third-party apps & services with access to your account
           </h3>
