@@ -344,7 +344,7 @@ const Sidebar = () => {
                   </TooltipTrigger>
                   <TooltipContent side="right" className={`${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
                     }`}>
-                    {user?.organization_name || user?.username || 'User'}
+                    {user?.username || 'User'}
                   </TooltipContent>
                 </Tooltip>
               </div>
