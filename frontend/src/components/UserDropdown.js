@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import { ChevronDown, ChevronUp, Check, Plus, LogOut } from 'lucide-react';
+import { ChevronDown, ChevronUp, Check, Plus, LogOut, User, Building2 } from 'lucide-react';
 import { getUserInitials, getProfileColor, getUserDisplayName } from '../utils/userUtils';
 
 const UserDropdown = () => {
@@ -13,6 +13,11 @@ const UserDropdown = () => {
 
   const userInitials = getUserInitials(user);
   const profileColor = getProfileColor(user?.profile_color, theme);
+  
+  // Get account type label and icon
+  const accountType = user?.account_type || 'personal';
+  const accountTypeLabel = accountType === 'organization' ? 'Organization' : 'Personal';
+  const AccountTypeIcon = accountType === 'organization' ? Building2 : User;
 
   const handleLogout = () => {
     setIsOpen(false);
@@ -80,11 +85,14 @@ const UserDropdown = () => {
               >
                 {getUserDisplayName(user)}
               </div>
-              <div
-                className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                  }`}
-              >
-                {user?.username || ''}
+              <div className="flex items-center space-x-1">
+                <AccountTypeIcon className={`w-3 h-3 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                <span
+                  className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                    }`}
+                >
+                  {accountTypeLabel}
+                </span>
               </div>
             </div>
           </div>
@@ -122,10 +130,13 @@ const UserDropdown = () => {
             }}
             data-testid="user-dropdown-menu"
           >
-            {/* Personal Section */}
+            {/* Account Type Section */}
             <div className={`border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
-              <div className={`text-xs tracking-wider ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
-                Personal
+              <div className="flex items-center space-x-1.5 mb-1">
+                <AccountTypeIcon className={`w-3 h-3 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`} />
+                <div className={`text-xs tracking-wider ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
+                  {accountTypeLabel}
+                </div>
               </div>
               <button
                 className={`w-full flex items-center space-x-2.5 rounded-md transition-colors m-1 p-1 ${
@@ -162,23 +173,28 @@ const UserDropdown = () => {
               </button>
             </div>
 
-            {/* Organizations Section */}
-            <div className={`border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
-              <div className={`text-xs tracking-wider m-1 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
-                Organizations
+            {/* Organizations Section - Only show for personal accounts */}
+            {accountType === 'personal' && (
+              <div className={`border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
+                <div className="flex items-center space-x-1.5 mb-1 mt-2">
+                  <Building2 className={`w-3 h-3 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`} />
+                  <div className={`text-xs tracking-wider ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
+                    Organizations
+                  </div>
+                </div>
+                <button 
+                  style={{fontSize:'13px'}}
+                  className={`w-full flex items-center space-x-2.5 rounded-md text-xs transition-colors m-1 px-1 py-1.5 ${
+                    theme === 'dark'
+                      ? 'text-gray-300 hover:bg-gray-800'
+                      : 'text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>Add organization</span>
+                </button>
               </div>
-              <button 
-                style={{fontSize:'13px'}}
-                className={`w-full flex items-center space-x-2.5 rounded-md text-xs transition-colors m-1 px-1 py-1.5 ${
-                  theme === 'dark'
-                    ? 'text-gray-300 hover:bg-gray-800'
-                    : 'text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                <Plus className="w-3 h-3" />
-                <span>Add organization</span>
-              </button>
-            </div>
+            )}
 
             {/* Sign Out */}
             <div className={`border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
