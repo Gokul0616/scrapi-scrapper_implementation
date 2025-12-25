@@ -27,6 +27,11 @@ class User(BaseModel):
     plan: str = "Free"
     role: str = "user"  # Normal user from scraper website - default is user
     is_active: bool = True
+    account_status: str = "active"  # "active", "pending_deletion", "deleted"
+    deletion_scheduled_at: Optional[datetime] = None
+    permanent_deletion_at: Optional[datetime] = None
+    deletion_password_hash: Optional[str] = None  # Store for re-auth during grace period
+    deletion_reminder_sent: bool = False
     last_login_at: Optional[datetime] = None
     last_path: Optional[str] = None  # Store last visited path for redirect after login
     profile_color: Optional[str] = None  # Store user's profile avatar color
