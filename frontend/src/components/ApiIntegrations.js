@@ -59,6 +59,14 @@ const ApiIntegrations = () => {
         if (data.remaining <= 0) {
           setTimerData(null);
           setActiveKeyId(null);
+          // Remove full key from store when timer expires
+          if (activeKeyId) {
+            setFullKeyStore(prev => {
+              const newStore = { ...prev };
+              delete newStore[activeKeyId];
+              return newStore;
+            });
+          }
           fetchKeys();
         } else {
           setTimerData(data);
