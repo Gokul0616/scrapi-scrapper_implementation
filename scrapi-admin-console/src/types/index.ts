@@ -3,8 +3,12 @@ export interface User {
     username: string;
     email: string;
     role: 'user' | 'admin' | 'owner';
-    plan: 'Free' | 'Premium' | 'Enterprise';
+    plan: string;  // 'Free', 'Pro', 'Premium', 'Enterprise', 'N/A'
     is_active: boolean;
+    account_status?: 'active' | 'pending_deletion' | 'deleted';
+    deletion_scheduled_at?: string;
+    permanent_deletion_at?: string;
+    account_deleted_at?: string;
     created_at: string;
     last_login_at?: string;
     organization_name?: string;
