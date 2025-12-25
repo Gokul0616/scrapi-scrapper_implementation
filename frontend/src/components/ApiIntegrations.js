@@ -135,6 +135,13 @@ const ApiIntegrations = () => {
         setNewKeyName('');
         fetchKeys();
         setActiveKeyId(data.id);
+        // Store full key temporarily
+        if (data.key) {
+          setFullKeyStore(prev => ({
+            ...prev,
+            [data.id]: data.key
+          }));
+        }
         toast({
           title: "Success",
           description: "API token created successfully",
