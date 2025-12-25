@@ -890,10 +890,10 @@ Here are some ideas to get you started:
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent 
-                      className={`max-w-[500px] max-h-[85vh] overflow-y-auto ${
+                      className={`max-w-[480px] ${
                         theme === 'dark' 
-                          ? 'bg-[#1e1e1e] border-2 border-[#e06c75]' 
-                          : 'bg-white border-2 border-[#dc3545]'
+                          ? 'bg-[#1e1e1e] border border-gray-700' 
+                          : 'bg-white border border-gray-300'
                       }`}
                     >
                       <AlertDialogHeader>
