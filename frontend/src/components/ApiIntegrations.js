@@ -501,7 +501,23 @@ const ApiIntegrations = () => {
               <p className="text-sm font-medium">No API tokens yet. Create one to get started.</p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
+              {/* Active Timer Alert */}
+              {timerData && timerData.remaining > 0 && activeKeyId && (
+                <div className={`p-3 rounded-lg border ${
+                  theme === 'dark' 
+                    ? 'border-green-800 bg-green-900/20' 
+                    : 'border-green-200 bg-green-50'
+                }`}>
+                  <div className="flex items-center gap-2">
+                    <Clock className={`w-4 h-4 ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`} />
+                    <span className={`text-sm font-medium ${theme === 'dark' ? 'text-green-400' : 'text-green-700'}`}>
+                      Your API key is visible for {timerData.remaining} more seconds. Copy it now!
+                    </span>
+                  </div>
+                </div>
+              )}
+              
               <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
                 Default API token created on sign up.
               </p>
