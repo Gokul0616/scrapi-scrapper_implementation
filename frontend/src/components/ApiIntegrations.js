@@ -222,10 +222,10 @@ const ApiIntegrations = () => {
 
   const getDisplayKey = (key) => {
     // Return truncated version of the prefix for display
-    if (key.prefix && key.prefix.length > 10) {
-      return `${key.prefix.substring(0, 9)}...`;
+    if (key.prefix && key.prefix.length > 20) {
+      return `${key.prefix.substring(0, 18)}...`;
     }
-    return key.prefix || 'sk_...';
+    return key.prefix || 'scrapi_api_...';
   };
 
   const getCopyKey = (key) => {
