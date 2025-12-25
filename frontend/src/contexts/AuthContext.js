@@ -80,6 +80,12 @@ export const AuthProvider = ({ children }) => {
       
       // Check if account is pending deletion
       if (response.data.account_status === 'pending_deletion') {
+        // Store the token even for pending deletion (needed for reactivation)
+        const { access_token } = response.data;
+        localStorage.setItem('token', access_token);
+        setToken(access_token);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+        
         return {
           success: true,
           pending_deletion: true,
