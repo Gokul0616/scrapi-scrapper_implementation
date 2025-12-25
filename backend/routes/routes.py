@@ -275,8 +275,6 @@ async def login(credentials: UserLogin):
             id=user_doc['id'],
             username=user_doc['username'],
             email=user_doc['email'],
-            account_type=user_doc.get('account_type', 'personal'),
-            organization_name=user_doc.get('organization_name'),
             first_name=user_doc.get('first_name'),
             last_name=user_doc.get('last_name'),
             plan=user_doc.get('plan', 'Free'),
