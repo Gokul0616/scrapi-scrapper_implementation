@@ -322,15 +322,15 @@ const ApiIntegrations = () => {
         </div>
 
         {/* Content */}
-        <div className="px-6 py-4 space-y-4">
+        <div className="px-4 py-3 space-y-3">
           {/* Create Token Form */}
           {newKeyName && (
-            <div className={`p-4 rounded-lg border ${
+            <div className={`p-3 rounded-lg border ${
               theme === 'dark' 
                 ? 'border-gray-700 bg-[#25262B]' 
                 : 'border-gray-200 bg-gray-50'
             }`}>
-              <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
+              <label className={`block text-xs font-medium mb-1.5 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
                 Token name
               </label>
               <div className="flex gap-2">
