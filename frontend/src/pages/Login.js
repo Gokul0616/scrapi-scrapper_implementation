@@ -729,99 +729,142 @@ const Login = () => {
           )}
 
           {step === 5 && deletionInfo && (
-            <>
-              <div className="mb-6">
-                <div className="flex items-start gap-3 mb-4 p-4 bg-orange-50 border-2 border-orange-200 rounded-lg">
-                  <AlertCircle className="w-6 h-6 text-orange-500 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-[14px] text-gray-900 font-medium mb-1">
-                      Your account was requested for deletion
-                    </p>
-                    <p className="text-[13px] text-gray-600">
-                      Scheduled on{' '}
-                      <span className="font-semibold text-orange-600">
-                        {formatDate(deletionInfo.deletion_scheduled_at)}
-                      </span>
-                    </p>
-                  </div>
+            <div className="space-y-6">
+              {/* Warning Banner */}
+              <div className="flex items-start gap-3 p-4 sm:p-5 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-300 rounded-xl shadow-sm">
+                <AlertCircle className="w-6 h-6 sm:w-7 sm:h-7 text-orange-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-[15px] sm:text-[16px] text-gray-900 font-semibold mb-1.5">
+                    Account Deletion in Progress
+                  </p>
+                  <p className="text-[13px] sm:text-[14px] text-gray-700 mb-1">
+                    Deletion requested on{' '}
+                    <span className="font-semibold text-orange-700">
+                      {formatDate(deletionInfo.deletion_scheduled_at)}
+                    </span>
+                  </p>
+                  <p className="text-[12px] text-gray-600">
+                    Account: <span className="font-medium">{deletionInfo.username}</span>
+                  </p>
                 </div>
-
-                <div className="p-5 rounded-lg mb-5 bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-300">
-                  <div className="text-center">
-                    <p className="text-[32px] font-bold text-orange-600 mb-1">
-                      {deletionInfo.days_remaining} {deletionInfo.days_remaining === 1 ? 'day' : 'days'}
-                    </p>
-                    <p className="text-[12px] text-gray-600 font-medium">
-                      remaining until permanent deletion
-                    </p>
-                    <p className="text-[11px] text-gray-500 mt-1">
-                      Deletion date: {formatDate(deletionInfo.permanent_deletion_at)}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-lg mb-5 bg-blue-50 border border-blue-200">
-                  <h3 className="text-[13px] font-semibold text-blue-700 mb-2">
-                    What happens if you don't reactivate?
-                  </h3>
-                  <ul className="space-y-1.5 text-[12px] text-gray-700">
-                    <li className="flex items-start">
-                      <span className="mr-2">•</span>
-                      <span>All actors and tasks will be permanently deleted</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="mr-2">•</span>
-                      <span>All schedules and run history will be removed</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="mr-2">•</span>
-                      <span>All datasets and saved tasks will be deleted</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="mr-2">•</span>
-                      <span>All API keys and integrations will be revoked</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="mr-2">•</span>
-                      <span>Your account cannot be recovered</span>
-                    </li>
-                  </ul>
-                </div>
-
-                {passwordError && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                    <p className="text-[12px] text-red-600 flex items-center">
-                      <AlertCircle className="w-3.5 h-3.5 mr-1" />
-                      {passwordError}
-                    </p>
-                  </div>
-                )}
-
-                <div className="space-y-3">
-                  <Button
-                    onClick={handleReactivate}
-                    disabled={isReactivating}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white h-[42px] text-[15px] font-semibold rounded-md"
-                    data-testid="reactivate-account-btn"
-                  >
-                    {isReactivating ? 'Reactivating...' : '✓ Reactivate My Account'}
-                  </Button>
-                  
-                  <Button
-                    onClick={handleLogout}
-                    variant="outline"
-                    className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 h-[38px] text-[14px] font-medium rounded-md"
-                    data-testid="logout-btn"
-                  >
-                    Logout
-                  </Button>
-                </div>
-
-                <p className="text-center text-[11px] text-gray-500 mt-4">
-                  Changed your mind? Reactivating will restore full access to your account.
-                </p>
               </div>
-            </>
+
+              {/* Countdown Timer */}
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-500 via-red-500 to-red-600 p-6 sm:p-8 text-white shadow-lg">
+                <div className="relative z-10 text-center">
+                  <p className="text-[14px] sm:text-[16px] font-medium mb-2 opacity-90">Time Remaining</p>
+                  <div className="flex items-baseline justify-center gap-2 mb-2">
+                    <p className="text-[48px] sm:text-[64px] font-bold leading-none">
+                      {deletionInfo.days_remaining}
+                    </p>
+                    <p className="text-[20px] sm:text-[24px] font-semibold">
+                      {deletionInfo.days_remaining === 1 ? 'Day' : 'Days'}
+                    </p>
+                  </div>
+                  <p className="text-[12px] sm:text-[13px] opacity-90">
+                    Permanent deletion: {formatDate(deletionInfo.permanent_deletion_at)}
+                  </p>
+                </div>
+                {/* Decorative background pattern */}
+                <div className="absolute inset-0 opacity-10">
+                  <div className="absolute top-0 left-0 w-32 h-32 bg-white rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+                  <div className="absolute bottom-0 right-0 w-40 h-40 bg-white rounded-full translate-x-1/2 translate-y-1/2"></div>
+                </div>
+              </div>
+
+              {/* What will be deleted - Mobile optimized */}
+              <div className="lg:hidden p-4 sm:p-5 rounded-xl bg-red-50 border-2 border-red-200">
+                <h3 className="text-[14px] sm:text-[15px] font-bold text-red-800 mb-3 flex items-center">
+                  <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                  What will be deleted:
+                </h3>
+                <ul className="space-y-2 text-[12px] sm:text-[13px] text-gray-800">
+                  <li className="flex items-start">
+                    <span className="text-red-600 mr-2 font-bold">×</span>
+                    <span>All actors, tasks & configurations</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-600 mr-2 font-bold">×</span>
+                    <span>Complete run history & logs</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-600 mr-2 font-bold">×</span>
+                    <span>All datasets & exports</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-600 mr-2 font-bold">×</span>
+                    <span>API keys & integrations</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-600 mr-2 font-bold">×</span>
+                    <span>Scheduled automations</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Reactivate info */}
+              <div className="p-4 sm:p-5 rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Check className="w-5 h-5 sm:w-6 sm:h-6 text-white stroke-[3]" />
+                  </div>
+                  <div>
+                    <h3 className="text-[15px] sm:text-[16px] font-bold text-green-800 mb-2">
+                      Reactivate to keep everything
+                    </h3>
+                    <p className="text-[13px] sm:text-[14px] text-gray-700 leading-relaxed">
+                      Click the button below to immediately cancel the deletion. All your data, scrapers, and settings will be fully restored.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Error message */}
+              {passwordError && (
+                <div className="p-4 bg-red-50 border-2 border-red-300 rounded-lg">
+                  <p className="text-[13px] text-red-700 flex items-center font-medium">
+                    <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
+                    {passwordError}
+                  </p>
+                </div>
+              )}
+
+              {/* Action buttons */}
+              <div className="space-y-3 pt-2">
+                <Button
+                  onClick={handleReactivate}
+                  disabled={isReactivating}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white h-[48px] sm:h-[52px] text-[15px] sm:text-[16px] font-bold rounded-xl shadow-lg hover:shadow-xl transition-all"
+                  data-testid="reactivate-account-btn"
+                >
+                  {isReactivating ? (
+                    <span className="flex items-center justify-center">
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Reactivating...
+                    </span>
+                  ) : (
+                    '✓ Reactivate My Account Now'
+                  )}
+                </Button>
+                
+                <Button
+                  onClick={handleLogout}
+                  variant="outline"
+                  className="w-full border-2 border-gray-300 text-gray-700 hover:bg-gray-100 h-[44px] text-[14px] sm:text-[15px] font-medium rounded-xl"
+                  data-testid="logout-btn"
+                >
+                  Logout Instead
+                </Button>
+              </div>
+
+              {/* Help text */}
+              <p className="text-center text-[11px] sm:text-[12px] text-gray-500 leading-relaxed px-2">
+                Need help? Contact our support team. Reactivation takes effect immediately and all your data will be safe.
+              </p>
+            </div>
           )}
 
           {/* Terms and conditions */}
