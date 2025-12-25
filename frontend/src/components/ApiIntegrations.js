@@ -652,8 +652,12 @@ const ApiIntegrations = () => {
               Add account
             </Button>
           </div>
-          <div className="px-4 py-8">
-            <div className={`text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+          <div className="px-4 py-3">
+            <div className={`text-center py-8 px-4 rounded-lg ${
+              theme === 'dark' 
+                ? 'bg-[#25262B] text-gray-400' 
+                : 'bg-gray-50 text-gray-500'
+            }`}>
               <p className="text-sm font-medium mb-1.5">No integrations</p>
               <a 
                 href="#" 
