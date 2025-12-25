@@ -151,11 +151,21 @@ const ApiAccess = () => {
     };
 
     const handleDeleteKey = async (id) => {
-        if (!window.confirm("Are you sure you want to revoke this key? This action cannot be undone.")) return;
+        const keyToDelete = keys.find(k => k.id === id);
+        setDeleteConfirmModal({
+            show: true,
+            keyId: id,
+            keyName: keyToDelete?.name || 'this key'
+        });
+    };
+
+    const confirmDeleteKey = async () => {
+        const { keyId } = deleteConfirmModal;
+        setDeleteConfirmModal({ show: false, keyId: null, keyName: '' });
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001'}/api/auth/api-keys/${id}`, {
+            const response = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001'}/api/auth/api-keys/${keyId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -163,8 +173,8 @@ const ApiAccess = () => {
             });
 
             if (response.ok) {
-                setKeys(keys.filter(k => k.id !== id));
-                if (activeKeyId === id) {
+                setKeys(keys.filter(k => k.id !== keyId));
+                if (activeKeyId === keyId) {
                     setActiveKeyId(null);
                     setTimerData(null);
                 }
@@ -172,9 +182,20 @@ const ApiAccess = () => {
                     title: "Revoked",
                     description: "API Key revoked successfully"
                 });
+            } else {
+                toast({
+                    title: "Error",
+                    description: "Failed to revoke API key",
+                    variant: "destructive"
+                });
             }
         } catch (error) {
             console.error("Error deleting key", error);
+            toast({
+                title: "Error",
+                description: "Failed to revoke API key",
+                variant: "destructive"
+            });
         }
     };
 
