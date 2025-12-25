@@ -215,6 +215,19 @@ const ApiIntegrations = () => {
     }));
   };
 
+  const getDisplayKey = (key) => {
+    // Return truncated version of the prefix for display
+    if (key.prefix && key.prefix.length > 10) {
+      return `${key.prefix.substring(0, 9)}...`;
+    }
+    return key.prefix || 'sk_...';
+  };
+
+  const getCopyKey = (key) => {
+    // If we have the full key stored, return it, otherwise return prefix
+    return fullKeyStore[key.id] || key.prefix;
+  };
+
   const InfoIcon = ({ tooltip }) => (
     <TooltipProvider>
       <Tooltip>
