@@ -385,6 +385,14 @@ const ApiIntegrations = () => {
                   variant="ghost"
                   size="sm"
                   onClick={() => {
+                    // Clean up full key from store
+                    if (activeKeyId) {
+                      setFullKeyStore(prev => {
+                        const newStore = { ...prev };
+                        delete newStore[activeKeyId];
+                        return newStore;
+                      });
+                    }
                     setTimerData(null);
                     setActiveKeyId(null);
                   }}
