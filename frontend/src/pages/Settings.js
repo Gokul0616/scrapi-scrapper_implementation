@@ -298,7 +298,12 @@ Here are some ideas to get you started:
       }, 3000);
     } catch (error) {
       console.error('Failed to delete account:', error);
-      alert(error.response?.data?.detail || 'Failed to delete account.');
+      setAlertConfig({
+        title: 'Deletion Failed',
+        message: error.response?.data?.detail || 'Failed to delete account.',
+        type: 'error'
+      });
+      setShowAlert(true);
       setIsDeleting(false);
     }
   };
