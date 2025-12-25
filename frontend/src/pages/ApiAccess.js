@@ -396,6 +396,7 @@ const ApiAccess = () => {
             confirmText="Revoke"
             cancelText="Cancel"
         />
+        </>
     );
 };
 
