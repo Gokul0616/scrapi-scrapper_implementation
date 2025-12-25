@@ -345,6 +345,19 @@ const ApiIntegrations = () => {
 
         {/* Content */}
         <div className="px-4 py-3 space-y-3">
+          {/* Warning when user already has a key */}
+          {keys.length > 0 && !newKeyName && (
+            <div className={`p-3 rounded-lg border ${
+              theme === 'dark' 
+                ? 'border-yellow-800 bg-yellow-900/20' 
+                : 'border-yellow-200 bg-yellow-50'
+            }`}>
+              <p className={`text-sm ${theme === 'dark' ? 'text-yellow-400' : 'text-yellow-800'}`}>
+                ⚠️ You already have an API token. Delete the existing token below to create a new one.
+              </p>
+            </div>
+          )}
+
           {/* Create Token Form */}
           {newKeyName && (
             <div className={`p-3 rounded-lg border ${
