@@ -491,27 +491,42 @@ const ApiIntegrations = () => {
               {keys.map((key) => (
                 <div
                   key={key.id}
-                  className={`flex items-center gap-2 p-2 rounded-lg border ${
+                  className={`flex items-center gap-2 p-3 rounded-lg border ${
                     theme === 'dark' 
                       ? 'border-gray-700 bg-[#25262B]' 
                       : 'border-gray-200 bg-gray-50'
                   }`}
                   data-testid={`token-item-${key.id}`}
                 >
-                  {/* Token Display */}
-                  <div 
-                    className="flex-1 font-mono text-xs select-none"
-                    style={{ userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none' }}
-                  >
-                    {showKeyIds[key.id] ? (
-                      <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>
-                        {fullKeyStore[key.id] || key.prefix}
+                  {/* Token Info */}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
+                        {key.name}
                       </span>
-                    ) : (
-                      <span className={theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}>
-                        {getDisplayKey(key)}
-                      </span>
-                    )}
+                      {/* Show timer badge if this key has active timer */}
+                      {fullKeyStore[key.id] && timerData && timerData.remaining > 0 && (
+                        <span className={`text-xs px-2 py-0.5 rounded ${
+                          theme === 'dark' ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-700'
+                        }`}>
+                          {timerData.remaining}s remaining
+                        </span>
+                      )}
+                    </div>
+                    <div 
+                      className="font-mono text-xs select-none"
+                      style={{ userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none' }}
+                    >
+                      {showKeyIds[key.id] ? (
+                        <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>
+                          {fullKeyStore[key.id] || key.prefix}
+                        </span>
+                      ) : (
+                        <span className={theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}>
+                          {getDisplayKey(key)}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Actions */}
@@ -548,34 +563,20 @@ const ApiIntegrations = () => {
                       )}
                     </button>
 
-                    {/* Done Button - only show when full key is available */}
-                    {fullKeyStore[key.id] && (
-                      <Button
-                        onClick={() => {
-                          // Remove from full key store and hide visibility
-                          setFullKeyStore(prev => {
-                            const newStore = { ...prev };
-                            delete newStore[key.id];
-                            return newStore;
-                          });
-                          // Also hide the key
-                          setShowKeyIds(prev => ({
-                            ...prev,
-                            [key.id]: false
-                          }));
-                        }}
-                        variant="outline"
-                        size="sm"
-                        className={`${
-                          theme === 'dark' 
-                            ? 'border-gray-700 text-gray-300 hover:bg-gray-700' 
-                            : 'border-gray-300 text-gray-700 hover:bg-gray-100'
-                        }`}
-                        data-testid={`done-token-${key.id}`}
-                      >
-                        Done
-                      </Button>
-                    )}
+                    {/* Delete Button */}
+                    <Button
+                      onClick={() => handleDeleteKey(key.id)}
+                      variant="ghost"
+                      size="sm"
+                      className={`${
+                        theme === 'dark' 
+                          ? 'text-red-400 hover:text-red-300 hover:bg-red-900/20' 
+                          : 'text-red-600 hover:text-red-700 hover:bg-red-50'
+                      }`}
+                      data-testid={`delete-token-${key.id}`}
+                    >
+                      Delete
+                    </Button>
                   </div>
                 </div>
               ))}
