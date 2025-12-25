@@ -974,6 +974,7 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         created_at=user_doc.get('created_at', datetime.now(timezone.utc).isoformat()),
         last_login_at=user_doc.get('last_login_at'),
         profile_color=profile_color,
+        profile_picture=profile_picture,
         theme_preference=user_doc.get('theme_preference', 'light')
     )
 
