@@ -86,6 +86,18 @@ const ApiIntegrations = () => {
           fetchKeys();
         } else {
           setTimerData(data);
+          // IMPORTANT: Store the full key when received from WebSocket (for refresh persistence)
+          if (data.key && activeKeyId) {
+            setFullKeyStore(prev => ({
+              ...prev,
+              [activeKeyId]: data.key
+            }));
+            // Automatically show the key
+            setShowKeyIds(prev => ({
+              ...prev,
+              [activeKeyId]: true
+            }));
+          }
         }
       } catch (e) {
         console.error('Error parsing WS message', e);
