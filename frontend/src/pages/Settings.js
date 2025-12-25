@@ -560,10 +560,11 @@ Here are some ideas to get you started:
             </TabsList>
             {/* Animated underline */}
             <div
-              className="absolute bottom-0 h-0.5 bg-blue-500 transition-all duration-300 ease-out"
+              className="absolute bottom-0 h-0.5 bg-blue-500 transition-all duration-300 ease-in-out"
               style={{
                 left: `${underlineStyle.left}px`,
-                width: `${underlineStyle.width}px`
+                width: `${underlineStyle.width}px`,
+                opacity: underlineStyle.width > 0 ? 1 : 0
               }}
             />
           </div>
