@@ -231,12 +231,23 @@ Here are some ideas to get you started:
           'Content-Type': 'multipart/form-data'
         }
       });
-      setProfilePicture(response.data.url);
       
-      // Update user context with new profile picture
+      const newProfilePicture = response.data.url;
+      setProfilePicture(newProfilePicture);
+      
+      // Immediately update user context with new profile picture
       if (updateUser) {
-        updateUser({ profile_picture: response.data.url });
+        await updateUser({ profile_picture: newProfilePicture });
       }
+      
+      // Force a small delay to ensure state propagates
+      setTimeout(() => {
+        // Trigger a re-render by updating a dummy state if needed
+        window.dispatchEvent(new CustomEvent('profilePictureUpdated', { 
+          detail: { profile_picture: newProfilePicture } 
+        }));
+      }, 100);
+      
     } catch (error) {
       console.error('Failed to upload image:', error);
       setAlertConfig({
