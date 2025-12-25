@@ -354,66 +354,66 @@ const Login = () => {
                 </>
               ) : (
                 <>
-                  <h1 className="text-[32px] leading-[40px] font-bold text-gray-900 mb-4">
+                  <h1 className="text-[24px] leading-[30px] font-bold text-gray-900 mb-3">
                     Your Account is Scheduled for Deletion
                   </h1>
-                  <p className="text-[16px] leading-[24px] text-gray-600 mb-8">
+                  <p className="text-[13px] leading-[19px] text-gray-600 mb-5">
                     We understand plans change. If you've had a change of heart, we'd love to have you back.
                   </p>
 
-                  <div className="space-y-6">
+                  <div className="space-y-4">
                     {/* What you'll lose section */}
-                    <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 border border-red-200">
-                      <h3 className="text-[18px] font-semibold text-red-700 mb-4 flex items-center">
-                        <AlertCircle className="w-5 h-5 mr-2" />
+                    <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4 border border-red-200">
+                      <h3 className="text-[14px] font-semibold text-red-700 mb-3 flex items-center">
+                        <AlertCircle className="w-4 h-4 mr-1.5" />
                         What will be permanently deleted:
                       </h3>
-                      <div className="space-y-3">
-                        <div className="flex items-start space-x-3">
-                          <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                      <div className="space-y-2">
+                        <div className="flex items-start space-x-2">
+                          <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-1.5 flex-shrink-0"></div>
                           <div>
-                            <p className="text-[14px] font-medium text-gray-900">All Your Actors & Tasks</p>
-                            <p className="text-[12px] text-gray-600">Every scraper configuration and saved task will be removed</p>
+                            <p className="text-[12px] font-medium text-gray-900">All Your Actors & Tasks</p>
+                            <p className="text-[11px] text-gray-600">Every scraper configuration and saved task will be removed</p>
                           </div>
                         </div>
-                        <div className="flex items-start space-x-3">
-                          <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <div className="flex items-start space-x-2">
+                          <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-1.5 flex-shrink-0"></div>
                           <div>
-                            <p className="text-[14px] font-medium text-gray-900">Complete Run History</p>
-                            <p className="text-[12px] text-gray-600">All execution logs, results, and performance data</p>
+                            <p className="text-[12px] font-medium text-gray-900">Complete Run History</p>
+                            <p className="text-[11px] text-gray-600">All execution logs, results, and performance data</p>
                           </div>
                         </div>
-                        <div className="flex items-start space-x-3">
-                          <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <div className="flex items-start space-x-2">
+                          <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-1.5 flex-shrink-0"></div>
                           <div>
-                            <p className="text-[14px] font-medium text-gray-900">Datasets & Exports</p>
-                            <p className="text-[12px] text-gray-600">All collected data, exports, and storage will be wiped</p>
+                            <p className="text-[12px] font-medium text-gray-900">Datasets & Exports</p>
+                            <p className="text-[11px] text-gray-600">All collected data, exports, and storage will be wiped</p>
                           </div>
                         </div>
-                        <div className="flex items-start space-x-3">
-                          <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <div className="flex items-start space-x-2">
+                          <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-1.5 flex-shrink-0"></div>
                           <div>
-                            <p className="text-[14px] font-medium text-gray-900">API Keys & Integrations</p>
-                            <p className="text-[12px] text-gray-600">All active API keys will be permanently revoked</p>
+                            <p className="text-[12px] font-medium text-gray-900">API Keys & Integrations</p>
+                            <p className="text-[11px] text-gray-600">All active API keys will be permanently revoked</p>
                           </div>
                         </div>
-                        <div className="flex items-start space-x-3">
-                          <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <div className="flex items-start space-x-2">
+                          <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-1.5 flex-shrink-0"></div>
                           <div>
-                            <p className="text-[14px] font-medium text-gray-900">Scheduled Automations</p>
-                            <p className="text-[12px] text-gray-600">All recurring schedules will stop permanently</p>
+                            <p className="text-[12px] font-medium text-gray-900">Scheduled Automations</p>
+                            <p className="text-[11px] text-gray-600">All recurring schedules will stop permanently</p>
                           </div>
                         </div>
                       </div>
                     </div>
 
                     {/* Restore info */}
-                    <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 border border-green-200">
-                      <h3 className="text-[18px] font-semibold text-green-700 mb-3 flex items-center">
-                        <Check className="w-5 h-5 mr-2" />
+                    <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4 border border-green-200">
+                      <h3 className="text-[14px] font-semibold text-green-700 mb-2 flex items-center">
+                        <Check className="w-4 h-4 mr-1.5" />
                         Reactivate to restore everything
                       </h3>
-                      <p className="text-[13px] text-gray-700">
+                      <p className="text-[11px] text-gray-700">
                         Click the reactivate button to immediately cancel the deletion and restore full access to all your data, scrapers, and settings. Your account will be back to normal instantly.
                       </p>
                     </div>
