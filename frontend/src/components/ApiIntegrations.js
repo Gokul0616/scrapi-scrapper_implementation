@@ -565,23 +565,23 @@ const ApiIntegrations = () => {
 
       {/* Connected third-party accounts Section */}
       <div>
-        <h2 className={`text-2xl font-bold mb-6 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+        <h2 className={`text-xl font-bold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
           Connected third-party accounts
         </h2>
 
         {/* Account-level integrations Card */}
         <div 
-          className={`border rounded-lg mb-6 ${
+          className={`border rounded-lg mb-4 ${
             theme === 'dark' 
               ? 'border-gray-800 bg-[#25262B]' 
               : 'border-gray-200 bg-gray-50'
           }`}
         >
-          <div className={`flex items-center justify-between px-6 py-4 border-b ${
+          <div className={`flex items-center justify-between px-4 py-3 border-b ${
             theme === 'dark' ? 'border-gray-800 bg-[#1A1B1E]' : 'border-gray-200 bg-white'
           } rounded-t-lg`}>
             <div className="flex items-center gap-2">
-              <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+              <h3 className={`text-base font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                 Account-level integrations
               </h3>
               <InfoIcon tooltip="Integrations that work across your entire account." />
