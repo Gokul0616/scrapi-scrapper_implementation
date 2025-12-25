@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { Button } from './ui/button';
 import { AlertCircle } from 'lucide-react';
+import AlertModal from './AlertModal';
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -11,6 +12,12 @@ const AccountDeletionPending = ({ deletionInfo, onReactivate }) => {
   const { theme } = useTheme();
   const navigate = useNavigate();
   const [isReactivating, setIsReactivating] = React.useState(false);
+  const [showAlert, setShowAlert] = React.useState(false);
+  const [alertConfig, setAlertConfig] = React.useState({
+    title: '',
+    message: '',
+    type: 'info'
+  });
 
   const handleReactivate = async () => {
     setIsReactivating(true);
