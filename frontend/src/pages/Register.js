@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Check, ArrowLeft, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Check, ArrowLeft, Eye, EyeOff, AlertCircle, User, Building2 } from 'lucide-react';
 import OTPInput from '../components/OTPInput';
 import axios from 'axios';
 
@@ -12,10 +12,11 @@ const API_URL = process.env.REACT_APP_BACKEND_URL || '';
 const Register = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
-  const [step, setStep] = useState(1); // 1: Email, 2: OTP, 3: Details, 4: Password
+  const [step, setStep] = useState(1); // 1: Email, 2: OTP, 3: Account Type, 4: Details, 5: Password
   const [formData, setFormData] = useState({
     email: '',
     otp: '',
+    accountType: '',
     fullName: '',
     organizationName: '',
     password: '',
@@ -90,7 +91,7 @@ const Register = () => {
       });
 
       if (response.status === 200 && response.data.success) {
-        setStep(3);
+        setStep(3); // Move to account type selection
       } else {
         // Display the backend error message
         const errorMessage = response.data.detail || response.data.message || 'Invalid verification code';
@@ -103,6 +104,11 @@ const Register = () => {
     }
   };
 
+  const handleAccountTypeSubmit = (type) => {
+    setFormData({ ...formData, accountType: type });
+    setStep(4); // Move to details step
+  };
+
   const handleDetailsSubmit = async (e) => {
     e.preventDefault();
     setFullNameError('');
@@ -110,7 +116,7 @@ const Register = () => {
       setFullNameError('Full name is required');
       return;
     }
-    setStep(4);
+    setStep(5); // Move to password step
   };
 
   const handlePasswordSubmit = async (e) => {
@@ -130,8 +136,14 @@ const Register = () => {
 
     setIsLoading(true);
 
-    // Use email as username for registration
-    const result = await register(formData.email, formData.email, formData.password, formData.organizationName);
+    // Use email as username for registration, include account_type
+    const result = await register(
+      formData.email, 
+      formData.email, 
+      formData.password, 
+      formData.organizationName,
+      formData.accountType
+    );
     
     if (result.success) {
       navigate('/home');
@@ -268,8 +280,9 @@ const Register = () => {
           <h2 className="text-[22px] leading-[28px] font-semibold text-gray-900 mb-6">
             {step === 1 && 'Create your account'}
             {step === 2 && 'Enter verification code'}
-            {step === 3 && 'Complete your profile'}
-            {step === 4 && 'Set your password'}
+            {step === 3 && 'Choose account type'}
+            {step === 4 && 'Complete your profile'}
+            {step === 5 && 'Set your password'}
           </h2>
 
           {step === 1 && (
@@ -413,20 +426,60 @@ const Register = () => {
 
           {step === 3 && (
             <>
+              <p className="text-[13px] text-gray-600 mb-6 text-center">
+                Select the type of account you want to create
+              </p>
+
+              <div className="space-y-3">
+                {/* Personal Account Option */}
+                <button
+                  onClick={() => handleAccountTypeSubmit('personal')}
+                  className="w-full flex items-center p-4 border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all group"
+                >
+                  <div className="w-12 h-12 rounded-full bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center mr-4">
+                    <User className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div className="text-left flex-1">
+                    <h3 className="text-[15px] font-semibold text-gray-900">Personal Account</h3>
+                    <p className="text-[12px] text-gray-600 mt-0.5">For individual use and personal projects</p>
+                  </div>
+                </button>
+
+                {/* Organization Account Option */}
+                <button
+                  onClick={() => handleAccountTypeSubmit('organization')}
+                  className="w-full flex items-center p-4 border-2 border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all group"
+                >
+                  <div className="w-12 h-12 rounded-full bg-green-100 group-hover:bg-green-200 flex items-center justify-center mr-4">
+                    <Building2 className="w-6 h-6 text-green-600" />
+                  </div>
+                  <div className="text-left flex-1">
+                    <h3 className="text-[15px] font-semibold text-gray-900">Organization Account</h3>
+                    <p className="text-[12px] text-gray-600 mt-0.5">For teams and business use</p>
+                  </div>
+                </button>
+              </div>
+            </>
+          )}
+
+          {step === 4 && (
+            <>
               <form onSubmit={handleDetailsSubmit} className="space-y-4">
-                <div>
-                  <label htmlFor="organizationName" className="block text-[13px] font-medium text-gray-700 mb-1.5">
-                    Organization Name <span className="text-gray-500">(Optional)</span>
-                  </label>
-                  <Input
-                    id="organizationName"
-                    type="text"
-                    placeholder="Enter your organization name"
-                    value={formData.organizationName}
-                    onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })}
-                    className="w-full h-[38px] text-[14px] border-gray-300 rounded-md"
-                  />
-                </div>
+                {formData.accountType === 'organization' && (
+                  <div>
+                    <label htmlFor="organizationName" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                      Organization Name
+                    </label>
+                    <Input
+                      id="organizationName"
+                      type="text"
+                      placeholder="Enter your organization name"
+                      value={formData.organizationName}
+                      onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })}
+                      className="w-full h-[38px] text-[14px] border-gray-300 rounded-md"
+                    />
+                  </div>
+                )}
 
                 <div>
                   <label htmlFor="fullName" className="block text-[13px] font-medium text-gray-700 mb-1.5">
@@ -462,7 +515,7 @@ const Register = () => {
             </>
           )}
 
-          {step === 4 && (
+          {step === 5 && (
             <>
               <form onSubmit={handlePasswordSubmit} className="space-y-4">
                 <div>
@@ -484,7 +537,7 @@ const Register = () => {
                     />
                     <div
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </div>
@@ -520,7 +573,7 @@ const Register = () => {
                     />
                     <div
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer"
                     >
                       {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </div>
