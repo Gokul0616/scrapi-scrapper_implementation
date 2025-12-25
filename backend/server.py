@@ -34,9 +34,11 @@ api_router = APIRouter(prefix="/api")
 
 # Import and setup routes
 from routes import router as api_routes, set_db, search_router, set_search_db, settings_router, set_settings_db
+from routes.organization_routes import router as organization_router, set_db as set_org_db
 set_db(db)
 set_search_db(db)
 set_settings_db(db)
+set_org_db(db)
 
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
@@ -47,6 +49,7 @@ async def root():
 api_router.include_router(api_routes)
 api_router.include_router(search_router)
 api_router.include_router(settings_router)
+api_router.include_router(organization_router)
 
 # Include the router in the main app
 app.include_router(api_router)
