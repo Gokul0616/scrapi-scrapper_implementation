@@ -743,85 +743,85 @@ const Login = () => {
           )}
 
           {step === 5 && deletionInfo && (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {/* Warning Banner */}
-              <div className="flex items-start gap-3 p-4 sm:p-5 bg-gray-50 border border-gray-300 rounded-lg">
-                <AlertCircle className="w-6 h-6 sm:w-7 sm:h-7 text-red-500 flex-shrink-0 mt-0.5" />
+              <div className="flex items-start gap-2 p-3 bg-gray-50 border border-gray-300 rounded-lg">
+                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-[15px] sm:text-[16px] text-gray-900 font-semibold mb-1.5">
+                  <p className="text-sm text-gray-900 font-semibold mb-1">
                     Account Deletion in Progress
                   </p>
-                  <p className="text-[13px] sm:text-[14px] text-gray-700 mb-1">
+                  <p className="text-xs text-gray-700 mb-0.5">
                     Deletion requested on{' '}
                     <span className="font-semibold text-gray-900">
                       {formatDate(deletionInfo.deletion_scheduled_at)}
                     </span>
                   </p>
-                  <p className="text-[12px] text-gray-600">
+                  <p className="text-xs text-gray-600">
                     Account: <span className="font-medium">{deletionInfo.username}</span>
                   </p>
                 </div>
               </div>
 
               {/* Countdown Timer */}
-              <div className="rounded-lg border border-gray-300 bg-white p-6 sm:p-8">
+              <div className="rounded-lg border border-gray-300 bg-white p-4">
                 <div className="text-center">
-                  <p className="text-[14px] sm:text-[16px] font-medium mb-2 text-gray-700">Time Remaining</p>
-                  <div className="flex items-baseline justify-center gap-2 mb-2">
-                    <p className="text-[48px] sm:text-[64px] font-bold leading-none text-gray-900">
+                  <p className="text-xs font-medium mb-1 text-gray-700">Time Remaining</p>
+                  <div className="flex items-baseline justify-center gap-1.5 mb-1">
+                    <p className="text-3xl font-bold leading-none text-gray-900">
                       {deletionInfo.days_remaining}
                     </p>
-                    <p className="text-[20px] sm:text-[24px] font-semibold text-gray-700">
+                    <p className="text-base font-semibold text-gray-700">
                       {deletionInfo.days_remaining === 1 ? 'Day' : 'Days'}
                     </p>
                   </div>
-                  <p className="text-[12px] sm:text-[13px] text-gray-600">
+                  <p className="text-xs text-gray-600">
                     Permanent deletion: {formatDate(deletionInfo.permanent_deletion_at)}
                   </p>
                 </div>
               </div>
 
               {/* What will be deleted - Mobile optimized */}
-              <div className="lg:hidden p-4 sm:p-5 rounded-lg bg-gray-50 border border-gray-300">
-                <h3 className="text-[14px] sm:text-[15px] font-semibold text-gray-900 mb-3 flex items-center">
-                  <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+              <div className="lg:hidden p-3 rounded-lg bg-gray-50 border border-gray-300">
+                <h3 className="text-xs font-semibold text-gray-900 mb-2 flex items-center">
+                  <AlertCircle className="w-3.5 h-3.5 mr-1.5" />
                   What will be deleted:
                 </h3>
-                <ul className="space-y-2 text-[12px] sm:text-[13px] text-gray-700">
+                <ul className="space-y-1 text-xs text-gray-700">
                   <li className="flex items-start">
-                    <span className="text-gray-500 mr-2">•</span>
+                    <span className="text-gray-500 mr-1.5">•</span>
                     <span>All actors, tasks & configurations</span>
                   </li>
                   <li className="flex items-start">
-                    <span className="text-gray-500 mr-2">•</span>
+                    <span className="text-gray-500 mr-1.5">•</span>
                     <span>Complete run history & logs</span>
                   </li>
                   <li className="flex items-start">
-                    <span className="text-gray-500 mr-2">•</span>
+                    <span className="text-gray-500 mr-1.5">•</span>
                     <span>All datasets & exports</span>
                   </li>
                   <li className="flex items-start">
-                    <span className="text-gray-500 mr-2">•</span>
+                    <span className="text-gray-500 mr-1.5">•</span>
                     <span>API keys & integrations</span>
                   </li>
                   <li className="flex items-start">
-                    <span className="text-gray-500 mr-2">•</span>
+                    <span className="text-gray-500 mr-1.5">•</span>
                     <span>Scheduled automations</span>
                   </li>
                 </ul>
               </div>
 
               {/* Reactivate info */}
-              <div className="p-4 sm:p-5 rounded-lg bg-blue-50 border border-blue-200">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Check className="w-5 h-5 sm:w-6 sm:h-6 text-white stroke-[3]" />
+              <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+                <div className="flex items-start gap-2">
+                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Check className="w-4 h-4 text-white stroke-[3]" />
                   </div>
                   <div>
-                    <h3 className="text-[15px] sm:text-[16px] font-semibold text-gray-900 mb-2">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-1">
                       Reactivate to keep everything
                     </h3>
-                    <p className="text-[13px] sm:text-[14px] text-gray-700 leading-relaxed">
+                    <p className="text-xs text-gray-700 leading-relaxed">
                       Click the button below to immediately cancel the deletion. All your data, scrapers, and settings will be fully restored.
                     </p>
                   </div>
@@ -830,25 +830,25 @@ const Login = () => {
 
               {/* Error message */}
               {passwordError && (
-                <div className="p-4 bg-red-50 border border-red-300 rounded-lg">
-                  <p className="text-[13px] text-red-600 flex items-center font-medium">
-                    <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
+                <div className="p-3 bg-red-50 border border-red-300 rounded-lg">
+                  <p className="text-xs text-red-600 flex items-center font-medium">
+                    <AlertCircle className="w-3.5 h-3.5 mr-1.5 flex-shrink-0" />
                     {passwordError}
                   </p>
                 </div>
               )}
 
               {/* Action buttons */}
-              <div className="space-y-3 pt-2">
+              <div className="space-y-2 pt-1">
                 <Button
                   onClick={handleReactivate}
                   disabled={isReactivating}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white h-[48px] sm:h-[52px] text-[15px] sm:text-[16px] font-semibold rounded-lg"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white h-10 text-sm font-semibold rounded-lg"
                   data-testid="reactivate-account-btn"
                 >
                   {isReactivating ? (
                     <span className="flex items-center justify-center">
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
@@ -862,7 +862,7 @@ const Login = () => {
                 <Button
                   onClick={handleLogout}
                   variant="outline"
-                  className="w-full border border-gray-300 text-gray-700 hover:bg-gray-50 h-[44px] text-[14px] sm:text-[15px] font-medium rounded-lg"
+                  className="w-full border border-gray-300 text-gray-700 hover:bg-gray-50 h-9 text-sm font-medium rounded-lg"
                   data-testid="logout-btn"
                 >
                   Logout Instead
@@ -870,7 +870,7 @@ const Login = () => {
               </div>
 
               {/* Help text */}
-              <p className="text-center text-[11px] sm:text-[12px] text-gray-500 leading-relaxed px-2">
+              <p className="text-center text-xs text-gray-500 leading-relaxed px-1">
                 Need help? Contact our support team. Reactivation takes effect immediately and all your data will be safe.
               </p>
             </div>
