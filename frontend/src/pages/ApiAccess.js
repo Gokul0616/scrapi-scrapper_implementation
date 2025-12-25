@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { useAuth } from '../contexts/AuthContext';
 import { Loader2, Plus, Trash2, Copy, Check, Key, Clock } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
+import AlertModal from '../components/AlertModal';
 
 const ApiAccess = () => {
     const [keys, setKeys] = useState([]);
@@ -17,6 +18,7 @@ const ApiAccess = () => {
     const { toast } = useToast();
     const { getAuthToken } = useAuth();
     const [copied, setCopied] = useState(false);
+    const [deleteConfirmModal, setDeleteConfirmModal] = useState({ show: false, keyId: null, keyName: '' });
 
     useEffect(() => {
         fetchKeys();
