@@ -66,6 +66,11 @@ const ApiIntegrations = () => {
               delete newStore[activeKeyId];
               return newStore;
             });
+            // Also hide the key visibility
+            setShowKeyIds(prev => ({
+              ...prev,
+              [activeKeyId]: false
+            }));
           }
           fetchKeys();
         } else {
