@@ -330,7 +330,7 @@ const ApiAccess = () => {
                             Include your API key in the <code>Authorization</code> header of your requests.
                         </p>
                         <div className="bg-black/50 p-4 rounded-lg font-mono text-sm text-green-400">
-                            Authorization: Bearer sk_...
+                            Authorization: Bearer scrapi_api_...
                         </div>
                     </div>
 
