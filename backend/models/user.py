@@ -9,6 +9,7 @@ class UserCreate(BaseModel):
     password: str
     organization_name: Optional[str] = None
     role: Optional[str] = None  # owner or admin - only allowed when no owner exists
+    account_type: Optional[str] = "personal"  # "personal" or "organization"
 
 class UserLogin(BaseModel):
     username: str
@@ -21,6 +22,7 @@ class User(BaseModel):
     username: str
     email: str
     hashed_password: str
+    account_type: str = "personal"  # "personal" or "organization"
     organization_name: Optional[str] = None
     first_name: Optional[str] = None
     last_name: Optional[str] = None
@@ -42,6 +44,7 @@ class UserResponse(BaseModel):
     id: str
     username: str
     email: str
+    account_type: str = "personal"  # "personal" or "organization"
     organization_name: Optional[str] = None
     first_name: Optional[str] = None
     last_name: Optional[str] = None
