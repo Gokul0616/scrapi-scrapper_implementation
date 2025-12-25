@@ -110,18 +110,26 @@ const UserDropdown = () => {
                     : 'bg-gray-200 hover:bg-gray-300'
                 }`}
               >
-                <div 
-                  className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ background: profileColor }}
-                >
-                  <span className="text-white text-xs font-semibold">{userInitials}</span>
-                </div>
+                {user?.profile_picture ? (
+                  <img 
+                    src={user.profile_picture} 
+                    alt="Profile" 
+                    className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                  />
+                ) : (
+                  <div 
+                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ background: profileColor }}
+                  >
+                    <span className="text-white text-xs font-semibold">{userInitials}</span>
+                  </div>
+                )}
                 <div className="flex-1 min-w-0 text-left">
                   <div className={`font-medium text-xs ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
                     {user?.organization_name || user?.username || ''}
                   </div>
                   <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                    righteous_planet
+                    {user?.username || ''}
                   </div>
                 </div>
                 <Check className={`w-4 h-4 flex-shrink-0 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} />
