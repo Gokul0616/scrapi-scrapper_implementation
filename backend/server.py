@@ -453,6 +453,15 @@ Extracts: URL, status code, title, meta description, meta keywords, canonical UR
         logger.info("✅ Scheduler service initialized successfully")
     except Exception as e:
         logger.error(f"❌ Failed to initialize scheduler: {str(e)}", exc_info=True)
+    
+    # Initialize deletion scheduler
+    try:
+        logger.info("🔧 Initializing deletion scheduler...")
+        from services.deletion_scheduler import init_deletion_scheduler
+        await init_deletion_scheduler(db)
+        logger.info("✅ Deletion scheduler initialized successfully")
+    except Exception as e:
+        logger.error(f"❌ Failed to initialize deletion scheduler: {str(e)}", exc_info=True)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
