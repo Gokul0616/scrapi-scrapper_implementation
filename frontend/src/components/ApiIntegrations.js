@@ -546,19 +546,19 @@ const ApiIntegrations = () => {
             : 'border-gray-200 bg-gray-50'
         }`}
       >
-        <div className={`px-6 py-4 ${
+        <div className={`px-4 py-3 ${
           theme === 'dark' ? 'bg-[#1A1B1E]' : 'bg-white'
         } rounded-t-lg border-b ${
           theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
         }`}>
-          <h3 className={`text-lg font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+          <h3 className={`text-base font-semibold mb-1.5 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
             Third-party apps & services with access to your account
           </h3>
-          <p className={`text-sm mb-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+          <p className={`text-xs mb-3 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
             These applications are connected to your account and can use API on your behalf.
           </p>
-          <div className={`text-center py-12 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-            <p className="text-base font-medium">No connected third-party apps</p>
+          <div className={`text-center py-8 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+            <p className="text-sm font-medium">No connected third-party apps</p>
           </div>
         </div>
       </div>
