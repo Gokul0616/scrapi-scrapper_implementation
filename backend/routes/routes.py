@@ -1146,6 +1146,36 @@ async def check_email(email: str):
     user_exists = await db.users.find_one({"email": email})
     return {"exists": bool(user_exists), "email": email}
 
+@router.get("/users/generate-username")
+async def generate_username_suggestion(count: int = 5):
+    """Generate username suggestions in Apify-style format (adjective_noun)."""
+    from utils.username_generator import generate_username_suggestions
+    
+    # Generate suggestions
+    suggestions = generate_username_suggestions(count)
+    
+    # Check which ones are available
+    available_usernames = []
+    for username in suggestions:
+        # Check if username already exists in both collections
+        user_exists = await db.users.find_one({"username": username})
+        admin_user_exists = await db.admin_users.find_one({"username": username})
+        
+        if not user_exists and not admin_user_exists:
+            available_usernames.append({
+                "username": username,
+                "available": True
+            })
+        else:
+            available_usernames.append({
+                "username": username,
+                "available": False
+            })
+    
+    return {"suggestions": available_usernames}
+
+
+
 # ============= OTP Routes =============
 @router.post("/auth/send-otp", response_model=OTPResponse)
 async def send_otp(request: SendOTPRequest):
