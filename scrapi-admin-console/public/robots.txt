@@ -5,4 +5,4 @@ User-agent: *
 Disallow: /
 
 # Sitemap (for reference, even though indexing is disabled)
-Sitemap: https://normal-runner-5.preview.emergentagent.com/sitemap.xml
+Sitemap: https://ui-transition-smooth.preview.emergentagent.com/sitemap.xml
