@@ -470,8 +470,8 @@ Here are some ideas to get you started:
         {/* Tabs */}
         <Tabs defaultValue="account" className="w-full">
           <TabsList 
-            style={{ backgroundColor: 'transparent' }}
-            className={`w-full justify-start border-b rounded-none h-auto p-0 ${theme === 'dark' ? 'bg-transparent border-gray-800' : 'bg-transparent border-gray-200'}`}
+            style={{ backgroundColor: 'transparent !important' }}
+            className={`w-full justify-start border-b rounded-none h-auto p-0 !bg-transparent ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}
           >
             {[
               { value: 'account', label: 'Account' },
