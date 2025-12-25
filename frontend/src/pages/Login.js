@@ -421,8 +421,8 @@ const Login = () => {
       )}
 
       {/* Right Column - Login Form */}
-      <div className={`w-full ${step === 1 ? 'lg:w-1/2' : ''} flex items-center justify-center p-8 bg-white`}>
-        <div className="w-full max-w-[360px]">
+      <div className={`w-full ${(step === 1 || step === 5) ? 'lg:w-1/2' : ''} flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-white`}>
+        <div className={`w-full ${step === 5 ? 'max-w-[480px]' : 'max-w-[360px]'}`}>
           {/* Back button */}
           {step > 1 && (
             <button
