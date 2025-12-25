@@ -8,8 +8,9 @@ import { Textarea } from '../components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../components/ui/alert-dialog';
-import { HelpCircle, Upload, Trash2, ExternalLink, Check, Sun, Moon, Monitor } from 'lucide-react';
+import { HelpCircle, Upload, Trash2, ExternalLink, Check, Sun, Moon, Monitor, Eye, EyeOff } from 'lucide-react';
 import { getUserInitials, getProfileColor } from '../utils/userUtils';
+import AlertModal from '../components/AlertModal';
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
