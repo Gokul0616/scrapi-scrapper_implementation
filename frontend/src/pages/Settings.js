@@ -232,6 +232,11 @@ Here are some ideas to get you started:
         }
       });
       setProfilePicture(response.data.url);
+      
+      // Update user context with new profile picture
+      if (updateUser) {
+        updateUser({ profile_picture: response.data.url });
+      }
     } catch (error) {
       console.error('Failed to upload image:', error);
       setAlertConfig({
