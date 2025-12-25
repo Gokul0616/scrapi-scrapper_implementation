@@ -847,20 +847,20 @@ Here are some ideas to get you started:
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent 
-                      className={`max-w-[600px] max-h-[90vh] overflow-y-auto ${
+                      className={`max-w-[500px] max-h-[85vh] overflow-y-auto ${
                         theme === 'dark' 
                           ? 'bg-[#1e1e1e] border-2 border-[#e06c75]' 
                           : 'bg-white border-2 border-[#dc3545]'
                       }`}
                     >
                       <AlertDialogHeader>
-                        <AlertDialogTitle className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                        <AlertDialogTitle className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                           Delete account
                         </AlertDialogTitle>
                       </AlertDialogHeader>
                       
-                      <div className="space-y-4 py-4">
-                        <div className={`space-y-3 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                      <div className="space-y-3 py-3">
+                        <div className={`space-y-2 text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                           <p>
                             Do you <span className="font-semibold">really</span> want to{' '}
                             <span className={`font-semibold ${theme === 'dark' ? 'text-[#e06c75]' : 'text-[#dc3545]'}`}>
@@ -868,32 +868,32 @@ Here are some ideas to get you started:
                             </span>
                           </p>
                           
-                          <div className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-orange-900/20 border border-orange-500/30' : 'bg-orange-50 border border-orange-200'}`}>
-                            <p className="font-semibold mb-2">Grace Period: 7 days</p>
-                            <p className="text-sm">Your account will be scheduled for deletion. You'll have 7 days to reactivate by simply logging in.</p>
+                          <div className={`p-3 rounded-lg ${theme === 'dark' ? 'bg-orange-900/20 border border-orange-500/30' : 'bg-orange-50 border border-orange-200'}`}>
+                            <p className="font-semibold mb-1 text-sm">Grace Period: 7 days</p>
+                            <p className="text-xs">Your account will be scheduled for deletion. You'll have 7 days to reactivate by simply logging in.</p>
                           </div>
                           
-                          <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
+                          <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
                             All Actors, Actor tasks, schedules, results, datasets, and API keys will be deleted.
                           </p>
                           
-                          <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
+                          <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
                             We're sad to see you go 😢
                           </p>
                         </div>
                         
                         {/* Feedback Form */}
-                        <div className={`pt-4 border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+                        <div className={`pt-3 border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
                           <button
                             onClick={() => setShowFeedbackForm(!showFeedbackForm)}
-                            className={`text-sm font-medium mb-3 ${theme === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}
+                            className={`text-xs font-medium mb-2 ${theme === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}
                           >
                             {showFeedbackForm ? '▼' : '▶'} Tell us why you're leaving (optional)
                           </button>
                           
                           {showFeedbackForm && (
-                            <div className="space-y-3">
-                              <div className="space-y-2">
+                            <div className="space-y-2">
+                              <div className="space-y-1.5">
                                 {[
                                   { value: 'too_expensive', label: 'Too expensive' },
                                   { value: 'lack_features', label: 'Lack of features I need' },
@@ -908,9 +908,9 @@ Here are some ideas to get you started:
                                       value={reason.value}
                                       checked={deleteFeedbackReason === reason.value}
                                       onChange={(e) => setDeleteFeedbackReason(e.target.value)}
-                                      className="w-4 h-4"
+                                      className="w-3.5 h-3.5"
                                     />
-                                    <span className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    <span className={`text-xs ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                                       {reason.label}
                                     </span>
                                   </label>
@@ -920,7 +920,7 @@ Here are some ideas to get you started:
                                 value={deleteFeedbackText}
                                 onChange={(e) => setDeleteFeedbackText(e.target.value)}
                                 placeholder="Additional feedback (optional)"
-                                className={`min-h-[80px] ${theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}`}
+                                className={`min-h-[60px] text-xs ${theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}`}
                                 maxLength={500}
                               />
                             </div>
@@ -928,34 +928,44 @@ Here are some ideas to get you started:
                         </div>
                         
                         {/* Password Re-authentication */}
-                        <div className={`pt-4 border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+                        <div className={`pt-3 border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
                           <label 
                             htmlFor="delete-password-input"
-                            className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}
+                            className={`block text-xs font-medium mb-1.5 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}
                           >
                             Enter your password to confirm
                           </label>
-                          <Input
-                            id="delete-password-input"
-                            type="password"
-                            value={deletePassword}
-                            onChange={(e) => setDeletePassword(e.target.value)}
-                            placeholder="Your password"
-                            autoComplete="current-password"
-                            data-testid="delete-password-input"
-                            className={`w-full ${
-                              theme === 'dark'
-                                ? 'bg-[#333333] border-gray-600 text-white focus:border-[#007bff] focus:ring-[#007bff]'
-                                : 'bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500'
-                            }`}
-                          />
+                          <div className="relative">
+                            <Input
+                              id="delete-password-input"
+                              type={showDeletePassword ? 'text' : 'password'}
+                              value={deletePassword}
+                              onChange={(e) => setDeletePassword(e.target.value)}
+                              placeholder="Your password"
+                              autoComplete="current-password"
+                              data-testid="delete-password-input"
+                              className={`w-full text-sm pr-10 ${
+                                theme === 'dark'
+                                  ? 'bg-[#333333] border-gray-600 text-white focus:border-[#007bff] focus:ring-[#007bff]'
+                                  : 'bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                              }`}
+                            />
+                            <div
+                              onClick={() => setShowDeletePassword(!showDeletePassword)}
+                              className={`absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer ${
+                                theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'
+                              }`}
+                            >
+                              {showDeletePassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </div>
+                          </div>
                         </div>
                         
                         {/* Username Confirmation */}
-                        <div className={`pt-4 border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+                        <div className={`pt-3 border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
                           <label 
                             htmlFor="delete-confirm-input"
-                            className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}
+                            className={`block text-xs font-medium mb-1.5 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}
                           >
                             Type <span className="font-bold">{username}</span> to confirm
                           </label>
@@ -967,7 +977,7 @@ Here are some ideas to get you started:
                             placeholder=""
                             autoComplete="off"
                             data-testid="delete-confirm-input"
-                            className={`w-full ${
+                            className={`w-full text-sm ${
                               theme === 'dark'
                                 ? 'bg-[#333333] border-gray-600 text-white focus:border-[#007bff] focus:ring-[#007bff]'
                                 : 'bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500'
@@ -979,7 +989,7 @@ Here are some ideas to get you started:
                       <AlertDialogFooter className="gap-2">
                         <AlertDialogCancel 
                           disabled={isDeleting}
-                          className={`${
+                          className={`text-sm py-1.5 ${
                             theme === 'dark'
                               ? 'bg-[#444444] border-gray-600 text-white hover:bg-[#4a4a4a]'
                               : 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200'
@@ -997,7 +1007,7 @@ Here are some ideas to get you started:
                           onClick={handleDeleteAccount}
                           disabled={deleteConfirmText !== username || !deletePassword || isDeleting}
                           data-testid="confirm-delete-btn"
-                          className={`${
+                          className={`text-sm py-1.5 ${
                             deleteConfirmText !== username || !deletePassword || isDeleting
                               ? 'opacity-50 cursor-not-allowed bg-gray-400'
                               : theme === 'dark'
