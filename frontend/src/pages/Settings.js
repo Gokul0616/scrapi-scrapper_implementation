@@ -254,9 +254,15 @@ Here are some ideas to get you started:
           feedback_text: deleteFeedbackText || null
         }
       });
-      alert('Your account has been scheduled for deletion. You have 7 days to reactivate.');
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+      
+      // Show success alert instead of browser alert
+      setShowDeleteSuccessAlert(true);
+      
+      // Clear token and redirect after user closes alert
+      setTimeout(() => {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }, 3000);
     } catch (error) {
       console.error('Failed to delete account:', error);
       alert(error.response?.data?.detail || 'Failed to delete account.');
