@@ -35,7 +35,12 @@ const AccountDeletionPending = ({ deletionInfo, onReactivate }) => {
       navigate('/home');
     } catch (error) {
       console.error('Failed to reactivate account:', error);
-      alert('Failed to reactivate account. Please try again.');
+      setAlertConfig({
+        title: 'Reactivation Failed',
+        message: 'Failed to reactivate account. Please try again.',
+        type: 'error'
+      });
+      setShowAlert(true);
     } finally {
       setIsReactivating(false);
     }
