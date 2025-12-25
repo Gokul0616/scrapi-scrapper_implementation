@@ -62,7 +62,7 @@ const UserDropdown = () => {
                 className={`font-semibold text-sm leading-tight ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
                   }`}
               >
-                {user?.organization_name || user?.username || ''}
+                {user?.username || ''}
               </div>
               <div
                 className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
