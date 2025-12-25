@@ -296,11 +296,11 @@ const ApiIntegrations = () => {
         data-testid="personal-api-tokens-card"
       >
         {/* Header */}
-        <div className={`flex items-center justify-between px-6 py-4 border-b ${
+        <div className={`flex items-center justify-between px-4 py-3 border-b ${
           theme === 'dark' ? 'border-gray-800 bg-[#1A1B1E]' : 'border-gray-200'
         }`}>
           <div className="flex items-center gap-2">
-            <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+            <h3 className={`text-base font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
               Personal API tokens
             </h3>
             <InfoIcon tooltip="Personal tokens are used to authenticate API requests on behalf of your user account." />
