@@ -102,7 +102,7 @@ class DeletionScheduler:
             
             pending_accounts = await self.db.users.find({
                 "account_status": "pending_deletion",
-                "permanent_deletion_at": {"$lte": reminder_threshold, "$gt": now},
+                "permanent_deletion_at": {"$lte": reminder_threshold.isoformat(), "$gt": now.isoformat()},
                 "deletion_reminder_sent": {"$ne": True}
             }).to_list(None)
             
@@ -116,7 +116,18 @@ class DeletionScheduler:
                 if not email:
                     continue
                 
-                days_remaining = (permanent_deletion_at - now).days
+                # Parse permanent_deletion_at to calculate days remaining
+                if isinstance(permanent_deletion_at, str):
+                    from datetime import datetime as dt
+                    permanent_deletion_dt = dt.fromisoformat(permanent_deletion_at.replace('Z', '+00:00'))
+                    if permanent_deletion_dt.tzinfo is None:
+                        permanent_deletion_dt = permanent_deletion_dt.replace(tzinfo=timezone.utc)
+                else:
+                    permanent_deletion_dt = permanent_deletion_at
+                    if permanent_deletion_dt.tzinfo is None:
+                        permanent_deletion_dt = permanent_deletion_dt.replace(tzinfo=timezone.utc)
+                
+                days_remaining = (permanent_deletion_dt - now).days
                 
                 try:
                     await email_service.send_deletion_reminder_email(
