@@ -382,6 +382,20 @@ const ApiAccess = () => {
                 </CardContent>
             </Card>
         </div>
+
+        {/* Delete Confirmation Modal */}
+        <AlertModal
+            show={deleteConfirmModal.show}
+            onClose={() => setDeleteConfirmModal({ show: false, keyId: null, keyName: '' })}
+            onConfirm={confirmDeleteKey}
+            title="Revoke API Key"
+            message={`Are you sure you want to revoke "${deleteConfirmModal.keyName}"? This action cannot be undone and any applications using this key will lose access.`}
+            type="warning"
+            showCancel={true}
+            confirmText="Revoke"
+            cancelText="Cancel"
+        />
+    </>
     );
 };
 
