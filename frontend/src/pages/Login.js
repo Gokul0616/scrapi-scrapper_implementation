@@ -731,15 +731,15 @@ const Login = () => {
           {step === 5 && deletionInfo && (
             <div className="space-y-6">
               {/* Warning Banner */}
-              <div className="flex items-start gap-3 p-4 sm:p-5 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-300 rounded-xl shadow-sm">
-                <AlertCircle className="w-6 h-6 sm:w-7 sm:h-7 text-orange-600 flex-shrink-0 mt-0.5" />
+              <div className="flex items-start gap-3 p-4 sm:p-5 bg-gray-50 border border-gray-300 rounded-lg">
+                <AlertCircle className="w-6 h-6 sm:w-7 sm:h-7 text-red-500 flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
                   <p className="text-[15px] sm:text-[16px] text-gray-900 font-semibold mb-1.5">
                     Account Deletion in Progress
                   </p>
                   <p className="text-[13px] sm:text-[14px] text-gray-700 mb-1">
                     Deletion requested on{' '}
-                    <span className="font-semibold text-orange-700">
+                    <span className="font-semibold text-gray-900">
                       {formatDate(deletionInfo.deletion_scheduled_at)}
                     </span>
                   </p>
@@ -750,66 +750,61 @@ const Login = () => {
               </div>
 
               {/* Countdown Timer */}
-              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-500 via-red-500 to-red-600 p-6 sm:p-8 text-white shadow-lg">
-                <div className="relative z-10 text-center">
-                  <p className="text-[14px] sm:text-[16px] font-medium mb-2 opacity-90">Time Remaining</p>
+              <div className="rounded-lg border border-gray-300 bg-white p-6 sm:p-8">
+                <div className="text-center">
+                  <p className="text-[14px] sm:text-[16px] font-medium mb-2 text-gray-700">Time Remaining</p>
                   <div className="flex items-baseline justify-center gap-2 mb-2">
-                    <p className="text-[48px] sm:text-[64px] font-bold leading-none">
+                    <p className="text-[48px] sm:text-[64px] font-bold leading-none text-gray-900">
                       {deletionInfo.days_remaining}
                     </p>
-                    <p className="text-[20px] sm:text-[24px] font-semibold">
+                    <p className="text-[20px] sm:text-[24px] font-semibold text-gray-700">
                       {deletionInfo.days_remaining === 1 ? 'Day' : 'Days'}
                     </p>
                   </div>
-                  <p className="text-[12px] sm:text-[13px] opacity-90">
+                  <p className="text-[12px] sm:text-[13px] text-gray-600">
                     Permanent deletion: {formatDate(deletionInfo.permanent_deletion_at)}
                   </p>
-                </div>
-                {/* Decorative background pattern */}
-                <div className="absolute inset-0 opacity-10">
-                  <div className="absolute top-0 left-0 w-32 h-32 bg-white rounded-full -translate-x-1/2 -translate-y-1/2"></div>
-                  <div className="absolute bottom-0 right-0 w-40 h-40 bg-white rounded-full translate-x-1/2 translate-y-1/2"></div>
                 </div>
               </div>
 
               {/* What will be deleted - Mobile optimized */}
-              <div className="lg:hidden p-4 sm:p-5 rounded-xl bg-red-50 border-2 border-red-200">
-                <h3 className="text-[14px] sm:text-[15px] font-bold text-red-800 mb-3 flex items-center">
+              <div className="lg:hidden p-4 sm:p-5 rounded-lg bg-gray-50 border border-gray-300">
+                <h3 className="text-[14px] sm:text-[15px] font-semibold text-gray-900 mb-3 flex items-center">
                   <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                   What will be deleted:
                 </h3>
-                <ul className="space-y-2 text-[12px] sm:text-[13px] text-gray-800">
+                <ul className="space-y-2 text-[12px] sm:text-[13px] text-gray-700">
                   <li className="flex items-start">
-                    <span className="text-red-600 mr-2 font-bold">×</span>
+                    <span className="text-gray-500 mr-2">•</span>
                     <span>All actors, tasks & configurations</span>
                   </li>
                   <li className="flex items-start">
-                    <span className="text-red-600 mr-2 font-bold">×</span>
+                    <span className="text-gray-500 mr-2">•</span>
                     <span>Complete run history & logs</span>
                   </li>
                   <li className="flex items-start">
-                    <span className="text-red-600 mr-2 font-bold">×</span>
+                    <span className="text-gray-500 mr-2">•</span>
                     <span>All datasets & exports</span>
                   </li>
                   <li className="flex items-start">
-                    <span className="text-red-600 mr-2 font-bold">×</span>
+                    <span className="text-gray-500 mr-2">•</span>
                     <span>API keys & integrations</span>
                   </li>
                   <li className="flex items-start">
-                    <span className="text-red-600 mr-2 font-bold">×</span>
+                    <span className="text-gray-500 mr-2">•</span>
                     <span>Scheduled automations</span>
                   </li>
                 </ul>
               </div>
 
               {/* Reactivate info */}
-              <div className="p-4 sm:p-5 rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300">
+              <div className="p-4 sm:p-5 rounded-lg bg-blue-50 border border-blue-200">
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
                     <Check className="w-5 h-5 sm:w-6 sm:h-6 text-white stroke-[3]" />
                   </div>
                   <div>
-                    <h3 className="text-[15px] sm:text-[16px] font-bold text-green-800 mb-2">
+                    <h3 className="text-[15px] sm:text-[16px] font-semibold text-gray-900 mb-2">
                       Reactivate to keep everything
                     </h3>
                     <p className="text-[13px] sm:text-[14px] text-gray-700 leading-relaxed">
@@ -821,8 +816,8 @@ const Login = () => {
 
               {/* Error message */}
               {passwordError && (
-                <div className="p-4 bg-red-50 border-2 border-red-300 rounded-lg">
-                  <p className="text-[13px] text-red-700 flex items-center font-medium">
+                <div className="p-4 bg-red-50 border border-red-300 rounded-lg">
+                  <p className="text-[13px] text-red-600 flex items-center font-medium">
                     <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
                     {passwordError}
                   </p>
@@ -834,7 +829,7 @@ const Login = () => {
                 <Button
                   onClick={handleReactivate}
                   disabled={isReactivating}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white h-[48px] sm:h-[52px] text-[15px] sm:text-[16px] font-bold rounded-xl shadow-lg hover:shadow-xl transition-all"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white h-[48px] sm:h-[52px] text-[15px] sm:text-[16px] font-semibold rounded-lg"
                   data-testid="reactivate-account-btn"
                 >
                   {isReactivating ? (
@@ -846,14 +841,14 @@ const Login = () => {
                       Reactivating...
                     </span>
                   ) : (
-                    '✓ Reactivate My Account Now'
+                    'Reactivate My Account'
                   )}
                 </Button>
                 
                 <Button
                   onClick={handleLogout}
                   variant="outline"
-                  className="w-full border-2 border-gray-300 text-gray-700 hover:bg-gray-100 h-[44px] text-[14px] sm:text-[15px] font-medium rounded-xl"
+                  className="w-full border border-gray-300 text-gray-700 hover:bg-gray-50 h-[44px] text-[14px] sm:text-[15px] font-medium rounded-lg"
                   data-testid="logout-btn"
                 >
                   Logout Instead
