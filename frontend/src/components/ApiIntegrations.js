@@ -481,8 +481,12 @@ const ApiIntegrations = () => {
               Loading tokens...
             </div>
           ) : keys.length === 0 ? (
-            <div className={`text-center py-6 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-              <p className="text-xs">No API tokens yet. Create one to get started.</p>
+            <div className={`text-center py-8 px-4 rounded-lg ${
+              theme === 'dark' 
+                ? 'bg-[#25262B] text-gray-400' 
+                : 'bg-gray-50 text-gray-500'
+            }`}>
+              <p className="text-sm font-medium">No API tokens yet. Create one to get started.</p>
             </div>
           ) : (
             <div className="space-y-2">
