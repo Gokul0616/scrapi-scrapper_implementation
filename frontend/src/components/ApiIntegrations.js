@@ -10,7 +10,8 @@ import {
   Plus,
   HelpCircle,
   ExternalLink,
-  Check
+  Check,
+  Clock
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { useToast } from '../hooks/use-toast';
