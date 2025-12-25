@@ -29,6 +29,24 @@ import random
 
 logger = logging.getLogger(__name__)
 
+# Utility function to safely parse datetime from ISO format with timezone awareness
+def parse_datetime_safe(dt):
+    """Parse datetime from various formats and ensure timezone awareness"""
+    if dt is None:
+        return None
+    if isinstance(dt, datetime):
+        # If datetime is naive, make it aware (UTC)
+        if dt.tzinfo is None:
+            return dt.replace(tzinfo=timezone.utc)
+        return dt
+    if isinstance(dt, str):
+        parsed = datetime.fromisoformat(dt.replace('Z', '+00:00'))
+        # If parsed datetime is naive, make it aware (UTC)
+        if parsed.tzinfo is None:
+            return parsed.replace(tzinfo=timezone.utc)
+        return parsed
+    return dt
+
 # Profile color palette - works well in both light and dark modes
 PROFILE_COLORS = [
     "#8B5CF6",  # Purple
