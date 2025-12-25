@@ -92,10 +92,8 @@ Here are some ideas to get you started:
         const backendTheme = data.theme_preference || user?.theme_preference || themePreference || 'light';
         setLocalThemePreference(backendTheme);
         
-        // Sync theme if backend differs from current
-        if (backendTheme !== themePreference) {
-          setThemePreference(backendTheme);
-        }
+        // Don't sync theme automatically to prevent auto-toggle when navigating to settings
+        // Theme should only change when user explicitly changes it
       } catch (error) {
         console.error('Failed to load settings:', error);
         // Use default values from user context
