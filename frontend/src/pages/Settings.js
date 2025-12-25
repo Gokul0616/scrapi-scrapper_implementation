@@ -1050,11 +1050,11 @@ Here are some ideas to get you started:
                             deleteConfirmText !== username || !deletePassword || isDeleting
                               ? 'opacity-50 cursor-not-allowed bg-gray-400'
                               : theme === 'dark'
-                              ? 'bg-[#e06c75] hover:bg-[#d65c66]'
-                              : 'bg-[#dc3545] hover:bg-[#c82333]'
+                              ? 'bg-red-600 hover:bg-red-700'
+                              : 'bg-red-600 hover:bg-red-700'
                           } text-white font-semibold`}
                         >
-                          {isDeleting ? 'Scheduling deletion...' : 'I understand, schedule deletion'}
+                          {isDeleting ? 'Scheduling deletion...' : 'Schedule deletion'}
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
