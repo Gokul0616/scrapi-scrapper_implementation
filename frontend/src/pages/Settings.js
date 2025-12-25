@@ -482,6 +482,7 @@ Here are some ideas to get you started:
                 key={tab.value}
                 value={tab.value}
                 data-testid={`tab-${tab.value}`}
+                style={{ backgroundColor: 'transparent' }}
                 className={`rounded-none border-b-2 border-transparent px-4 py-3 text-sm font-medium transition-colors data-[state=active]:border-blue-500 bg-transparent data-[state=active]:bg-transparent hover:bg-transparent ${
                   theme === 'dark' 
                     ? 'text-gray-400 data-[state=active]:text-white hover:text-gray-200' 
