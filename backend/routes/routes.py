@@ -1067,7 +1067,9 @@ async def check_email(email: str):
     
     # Check if email is associated with a deleted account
     deleted_account = await db.deleted_accounts_legal_retention.find_one({"email": email})
+    logger.info(f"Checking deleted account for email: {email}, result: {deleted_account is not None}")
     if deleted_account:
+        logger.info(f"Found deleted account: {deleted_account.get('email')}")
         raise HTTPException(
             status_code=400, 
             detail="This email is associated with a deleted account and cannot be used for registration. Please contact support if you need assistance."
