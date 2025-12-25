@@ -1094,6 +1094,15 @@ async def send_otp(request: SendOTPRequest):
         if not is_valid:
             raise HTTPException(status_code=400, detail=error_message)
         
+        # Check if email is associated with a deleted account (for registration only)
+        if request.purpose == "register":
+            deleted_account = await db.deleted_accounts_legal_retention.find_one({"email": request.email})
+            if deleted_account:
+                raise HTTPException(
+                    status_code=400, 
+                    detail="This email is associated with a deleted account and cannot be used for registration. Please contact support if you need assistance."
+                )
+        
         email_service = get_email_service()
         
         # Check if user exists for login, or doesn't exist for registration
