@@ -1,13 +1,13 @@
 /**
- * Get user initials from organization name or username
- * @param {Object} user - User object containing organization_name and username
- * @returns {string} - First letter of organization name or username
+ * Get user initials from username
+ * @param {Object} user - User object containing username
+ * @returns {string} - First letter of username
  */
 export const getUserInitials = (user) => {
   if (!user) return '?';
   
-  // Prefer organization name, fallback to username
-  const name = user.organization_name || user.username || '?';
+  // Use username for initials (generated username like "lucky_guardian")
+  const name = user.username || '?';
   
   // Return first letter, uppercase
   return name.charAt(0).toUpperCase();
