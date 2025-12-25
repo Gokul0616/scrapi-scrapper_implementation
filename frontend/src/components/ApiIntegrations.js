@@ -447,14 +447,17 @@ const ApiIntegrations = () => {
                   data-testid={`token-item-${key.id}`}
                 >
                   {/* Token Display */}
-                  <div className="flex-1 font-mono text-sm">
+                  <div 
+                    className="flex-1 font-mono text-sm select-none"
+                    style={{ userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none' }}
+                  >
                     {showKeyIds[key.id] ? (
                       <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>
-                        {key.prefix}
+                        {fullKeyStore[key.id] || key.prefix}
                       </span>
                     ) : (
                       <span className={theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}>
-                        {'●'.repeat(40)}
+                        {getDisplayKey(key)}
                       </span>
                     )}
                   </div>
@@ -478,48 +481,41 @@ const ApiIntegrations = () => {
 
                     {/* Copy */}
                     <button
-                      onClick={() => copyToClipboard(key.prefix)}
+                      onClick={() => copyToClipboard(getCopyKey(key))}
                       className={`p-2 rounded hover:bg-gray-100 ${
                         theme === 'dark' ? 'hover:bg-gray-700 text-gray-400' : 'text-gray-500'
                       } transition-colors`}
                       data-testid={`copy-token-${key.id}`}
                     >
-                      {copiedKey === key.prefix ? (
+                      {copiedKey === getCopyKey(key) ? (
                         <Check className="w-4 h-4 text-green-600" />
                       ) : (
                         <Copy className="w-4 h-4" />
                       )}
                     </button>
 
-                    {/* Refresh */}
-                    <button
-                      className={`p-2 rounded hover:bg-gray-100 ${
-                        theme === 'dark' ? 'hover:bg-gray-700 text-gray-400' : 'text-gray-500'
-                      } transition-colors`}
-                      data-testid={`refresh-token-${key.id}`}
-                    >
-                      <RefreshCw className="w-4 h-4" />
-                    </button>
-
-                    {/* Edit */}
-                    <button
-                      className={`p-2 rounded hover:bg-gray-100 ${
-                        theme === 'dark' ? 'hover:bg-gray-700 text-gray-400' : 'text-gray-500'
-                      } transition-colors`}
-                      data-testid={`edit-token-${key.id}`}
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-
-                    {/* Delete */}
+                    {/* Done Button */}
                     <Button
-                      onClick={() => handleDeleteKey(key.id)}
-                      variant="ghost"
+                      onClick={() => {
+                        // Remove from full key store if exists
+                        if (fullKeyStore[key.id]) {
+                          setFullKeyStore(prev => {
+                            const newStore = { ...prev };
+                            delete newStore[key.id];
+                            return newStore;
+                          });
+                        }
+                      }}
+                      variant="outline"
                       size="sm"
-                      className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
-                      data-testid={`delete-token-${key.id}`}
+                      className={`${
+                        theme === 'dark' 
+                          ? 'border-gray-700 text-gray-300 hover:bg-gray-700' 
+                          : 'border-gray-300 text-gray-700 hover:bg-gray-100'
+                      }`}
+                      data-testid={`done-token-${key.id}`}
                     >
-                      Delete
+                      Done
                     </Button>
                   </div>
                 </div>
