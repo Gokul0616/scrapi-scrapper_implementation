@@ -63,6 +63,14 @@ Here are some ideas to get you started:
   const [savingProfile, setSavingProfile] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // Alert states for replacing browser alerts
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({
+    title: '',
+    message: '',
+    type: 'info'
+  });
+
   // Load user settings on mount
   useEffect(() => {
     const loadSettings = async () => {
