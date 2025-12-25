@@ -1022,7 +1022,15 @@ async def create_api_key(
     key_data: ApiKeyCreate,
     current_user: dict = Depends(get_current_user)
 ):
-    """Create a new API key."""
+    """Create a new API key. User can only have ONE API key at a time."""
+    # Check if user already has an API key
+    existing_key = await db.api_keys.find_one({"user_id": current_user['id']})
+    if existing_key:
+        raise HTTPException(
+            status_code=400, 
+            detail="You already have an API key. Please delete the existing key before creating a new one."
+        )
+    
     # Generate key
     raw_key = f"scrapi_api_{secrets.token_urlsafe(32)}"
     key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
