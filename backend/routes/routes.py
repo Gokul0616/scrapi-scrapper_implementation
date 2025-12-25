@@ -128,6 +128,7 @@ router.include_router(email_validation_router)
 async def register(user_data: UserCreate):
     """Register a new user from scraper website - always creates 'user' role."""
     from services.email_validator import validate_email_comprehensive
+    from utils.username_generator import generate_unique_username
     
     # Validate email (format, disposable check)
     is_valid, error_message = await validate_email_comprehensive(user_data.email, check_mx=False, check_smtp=False)
@@ -143,19 +144,22 @@ async def register(user_data: UserCreate):
             detail="This email is associated with a deleted account and cannot be used for registration. Please contact support if you need assistance."
         )
     
-    # Check if user already exists
-    existing_user = await db.users.find_one({"username": user_data.username})
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Username already exists")
-    
+    # Check if email already exists
     existing_email = await db.users.find_one({"email": user_data.email})
     if existing_email:
         raise HTTPException(status_code=400, detail="Email already exists")
     
+    # Auto-generate a unique username
+    existing_usernames = set()
+    async for user in db.users.find({}, {"username": 1}):
+        existing_usernames.add(user.get("username"))
+    
+    generated_username = generate_unique_username(existing_usernames)
+    
     # Create user with 'user' role (normal user from scraper website)
     from models import User
     user = User(
-        username=user_data.username,
+        username=generated_username,
         email=user_data.email,
         hashed_password=hash_password(user_data.password),
         organization_name=user_data.organization_name,
