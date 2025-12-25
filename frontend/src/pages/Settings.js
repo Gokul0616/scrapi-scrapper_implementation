@@ -562,19 +562,19 @@ Here are some ideas to get you started:
             </div>
 
             {/* Profile Section */}
-            <div className={`py-8 border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
-              <div className="flex gap-12">
+            <div className={`py-4 border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
+              <div className="flex gap-8">
                 {/* Left Column */}
-                <div className="w-48 flex-shrink-0">
-                  <h2 className={`text-lg font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                <div className="w-40 flex-shrink-0">
+                  <h2 className={`text-base font-semibold mb-1.5 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                     Profile
                   </h2>
-                  <p className={`text-sm mb-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                  <p className={`text-xs mb-3 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                     Tell the world a little bit about yourself.
                   </p>
                   <a 
                     href="#" 
-                    className={`text-sm flex items-center gap-1 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`text-xs flex items-center gap-1 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`}
                     data-testid="view-profile-link"
                   >
                     View your public profile <ExternalLink className="w-3 h-3" />
@@ -582,7 +582,7 @@ Here are some ideas to get you started:
                 </div>
                 
                 {/* Right Column */}
-                <div className="flex-1 space-y-6">
+                <div className="flex-1 space-y-4">
                   {/* Picture */}
                   <div>
                     <OptionalLabel label="Picture" tooltip="Upload a profile picture. Recommended size: 256x256 pixels." />
