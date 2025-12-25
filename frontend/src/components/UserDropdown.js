@@ -59,12 +59,14 @@ const UserDropdown = () => {
           <div className="flex items-center space-x-2 flex-1 min-w-0">
             {user?.profile_picture ? (
               <img 
+                key={`dropdown-profile-main-${profilePictureKey}`}
                 src={user.profile_picture} 
                 alt="Profile" 
                 className="w-9 h-9 rounded-full object-cover flex-shrink-0"
               />
             ) : (
               <div 
+                key={`dropdown-profile-main-${profilePictureKey}`}
                 className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
                 style={{ background: profileColor }}
               >
