@@ -1144,7 +1144,7 @@ async def verify_otp(request: VerifyOTPRequest):
             raise HTTPException(status_code=400, detail="Invalid or expired verification code")
         
         # Check if OTP has expired
-        expires_at = datetime.fromisoformat(otp_doc['expires_at'])
+        expires_at = parse_datetime_safe(otp_doc['expires_at'])
         if datetime.now(timezone.utc) > expires_at:
             await db.otps.delete_one({"id": otp_doc['id']})
             raise HTTPException(status_code=400, detail="Verification code has expired")
