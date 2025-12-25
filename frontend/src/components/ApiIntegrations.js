@@ -511,7 +511,7 @@ const ApiIntegrations = () => {
           ) : (
             <div className="space-y-3">
               {/* Active Timer Alert */}
-              {timerData && timerData.remaining > 0 && activeKeyId && (
+              {activeKeyId && timerData && timerData.remaining > 0 && (
                 <div className={`p-3 rounded-lg border ${
                   theme === 'dark' 
                     ? 'border-green-800 bg-green-900/20' 
