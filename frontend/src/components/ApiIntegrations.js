@@ -266,10 +266,10 @@ const ApiIntegrations = () => {
 
         {/* User ID */}
         <div className="flex items-center gap-2 mb-4">
-          <span className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+          <span className={`text-xs font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
             Scrapi user ID:
           </span>
-          <code className={`text-sm font-mono ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+          <code className={`text-xs font-mono ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
             {userId}
           </code>
           <button
