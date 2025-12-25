@@ -3,8 +3,9 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { ChevronDown, ChevronUp, Check, Plus, LogOut, User, Building2 } from 'lucide-react';
 import { getUserInitials, getProfileColor, getUserDisplayName } from '../utils/userUtils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
-const UserDropdown = () => {
+const UserDropdown = ({ isCollapsed = false }) => {
   const { theme } = useTheme();
   const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
