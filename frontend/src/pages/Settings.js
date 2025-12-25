@@ -141,7 +141,12 @@ Here are some ideas to get you started:
       }
     } catch (error) {
       console.error('Failed to save username:', error);
-      alert('Failed to save username. It may already be taken.');
+      setAlertConfig({
+        title: 'Failed to Save Username',
+        message: 'Failed to save username. It may already be taken.',
+        type: 'error'
+      });
+      setShowAlert(true);
     } finally {
       setSavingUsername(false);
     }
