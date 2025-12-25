@@ -1075,10 +1075,8 @@ Here are some ideas to get you started:
             </div>
           </TabsContent>
 
-          <TabsContent value="api-integrations" className="mt-8">
-            <div className={`text-center py-16 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-              <p className="text-lg">API & Integrations settings coming soon</p>
-            </div>
+          <TabsContent value="api-integrations" className="mt-0 pt-8">
+            <ApiIntegrations />
           </TabsContent>
 
           <TabsContent value="organizations" className="mt-8">
