@@ -42,6 +42,16 @@ const ApiIntegrations = () => {
     fetchKeys();
   }, [user]);
 
+  // Check for active timer on mount and reconnect if needed
+  useEffect(() => {
+    if (keys.length > 0) {
+      const activeKey = keys.find(k => k.has_active_timer);
+      if (activeKey && !activeKeyId) {
+        setActiveKeyId(activeKey.id);
+      }
+    }
+  }, [keys]);
+
   // WebSocket for timer
   useEffect(() => {
     if (!activeKeyId) return;
