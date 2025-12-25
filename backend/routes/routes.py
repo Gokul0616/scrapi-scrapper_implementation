@@ -185,6 +185,7 @@ async def register(user_data: UserCreate):
             id=user.id,
             username=user.username,
             email=user.email,
+            account_type=user.account_type,
             organization_name=user.organization_name,
             first_name=user.first_name,
             last_name=user.last_name,
