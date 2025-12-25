@@ -955,6 +955,12 @@ async def get_me(current_user: dict = Depends(get_current_user)):
             {"$set": {"profile_color": profile_color}}
         )
     
+    # Get profile picture from user_settings if exists
+    profile_picture = None
+    user_settings = await db.user_settings.find_one({"user_id": current_user['id']}, {"_id": 0, "profile_picture": 1})
+    if user_settings:
+        profile_picture = user_settings.get('profile_picture')
+    
     return UserResponse(
         id=user_doc['id'],
         username=user_doc['username'],
