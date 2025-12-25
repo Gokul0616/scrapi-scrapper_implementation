@@ -236,19 +236,55 @@ Here are some ideas to get you started:
       return;
     }
     
+    if (!deletePassword) {
+      alert('Please enter your password to confirm deletion.');
+      return;
+    }
+    
     setIsDeleting(true);
     try {
       const token = localStorage.getItem('token');
       await axios.delete(`${API_URL}/api/settings/account`, {
         headers: { Authorization: `Bearer ${token}` },
-        data: { confirmation_text: deleteConfirmText }
+        data: { 
+          confirmation_text: deleteConfirmText,
+          password: deletePassword,
+          feedback_reason: deleteFeedbackReason || null,
+          feedback_text: deleteFeedbackText || null
+        }
       });
+      alert('Your account has been scheduled for deletion. You have 7 days to reactivate.');
       localStorage.removeItem('token');
       window.location.href = '/login';
     } catch (error) {
       console.error('Failed to delete account:', error);
       alert(error.response?.data?.detail || 'Failed to delete account.');
       setIsDeleting(false);
+    }
+  };
+
+  const handleExportData = async () => {
+    setIsExporting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/api/settings/account/export`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Download as JSON file
+      const dataStr = JSON.stringify(response.data, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `scrapi-data-export-${new Date().toISOString().split('T')[0]}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to export data:', error);
+      alert('Failed to export data. Please try again.');
+    } finally {
+      setIsExporting(false);
     }
   };
 
