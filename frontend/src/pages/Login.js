@@ -67,6 +67,12 @@ const Login = () => {
     const result = await login(formData.email, formData.password);
 
     if (result.success) {
+      // Check if account is pending deletion
+      if (result.pending_deletion) {
+        setDeletionInfo(result.deletionInfo);
+        setIsLoading(false);
+        return;
+      }
       navigate(result.redirectPath || '/home');
     } else {
       setPasswordError(result.error || 'Incorrect password. Please try again.');
@@ -74,6 +80,16 @@ const Login = () => {
 
     setIsLoading(false);
   };
+
+  const handleReactivation = () => {
+    setDeletionInfo(null);
+    navigate('/home');
+  };
+
+  // Show deletion pending modal if account is pending deletion
+  if (deletionInfo) {
+    return <AccountDeletionPending deletionInfo={deletionInfo} onReactivate={handleReactivation} />;
+  }
 
   const handleContinueWithoutPassword = () => {
     // Just navigate to Send OTP screen, don't send OTP yet
