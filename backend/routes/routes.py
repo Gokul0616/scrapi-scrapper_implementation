@@ -162,8 +162,6 @@ async def register(user_data: UserCreate):
         username=generated_username,
         email=user_data.email,
         hashed_password=hash_password(user_data.password),
-        account_type=user_data.account_type or "personal",  # Default to "personal" if not provided
-        organization_name=user_data.organization_name,
         role="user",  # Always 'user' for scraper website signups
         profile_color=generate_random_profile_color()  # Generate random profile color
     )
@@ -185,8 +183,6 @@ async def register(user_data: UserCreate):
             id=user.id,
             username=user.username,
             email=user.email,
-            account_type=user.account_type,
-            organization_name=user.organization_name,
             first_name=user.first_name,
             last_name=user.last_name,
             plan=user.plan,
