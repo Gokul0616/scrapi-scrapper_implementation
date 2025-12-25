@@ -251,7 +251,11 @@ const Login = () => {
   };
 
   const handleBack = () => {
-    if (step === 4 && usePasswordless) {
+    if (step === 5) {
+      // From reactivation back to password
+      setStep(2);
+      setDeletionInfo(null);
+    } else if (step === 4 && usePasswordless) {
       // From OTP input back to Send OTP screen
       setStep(3);
     } else if (step === 3 && usePasswordless) {
