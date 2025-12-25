@@ -210,7 +210,6 @@ async def login(credentials: UserLogin):
         permanent_deletion_at = user_doc.get("permanent_deletion_at")
         
         # Calculate days remaining
-        from datetime import datetime, timezone
         if permanent_deletion_at:
             if isinstance(permanent_deletion_at, str):
                 permanent_deletion_at = datetime.fromisoformat(permanent_deletion_at)
