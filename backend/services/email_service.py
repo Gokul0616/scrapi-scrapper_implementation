@@ -190,6 +190,269 @@ class EmailService:
             logger.error(f"Failed to send account deletion email to {to_email}: {str(e)}")
             # Don't raise exception - account is already deleted, email is just notification
             return False
+    
+    async def send_deletion_scheduled_email(self, to_email: str, username: str, deletion_date: str, days_remaining: int):
+        """Send email when account deletion is scheduled."""
+        try:
+            message = MIMEMultipart("alternative")
+            message["Subject"] = "Your SCRAPI Account Deletion is Scheduled"
+            message["From"] = self.smtp_email
+            message["To"] = to_email
+            
+            html = f"""
+            <html>
+                <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                        <div style="text-align: center; margin-bottom: 30px;">
+                            <h1 style="color: #1f2937;">SCRAPI</h1>
+                        </div>
+                        
+                        <div style="background-color: #f8f9fa; padding: 30px; border-radius: 10px;">
+                            <h2 style="color: #f59e0b; margin-top: 0;">Account Deletion Scheduled</h2>
+                            <p>Hello {username},</p>
+                            <p>Your SCRAPI account has been scheduled for deletion.</p>
+                            
+                            <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                                <p style="margin: 0; font-weight: bold; font-size: 18px; color: #92400e;">
+                                    Your account will be permanently deleted on {deletion_date}
+                                </p>
+                                <p style="margin: 10px 0 0 0; color: #92400e;">
+                                    You have <strong>{days_remaining} days</strong> to reactivate your account.
+                                </p>
+                            </div>
+                            
+                            <div style="background-color: #dbeafe; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                                <p style="margin: 0; font-weight: bold;">Changed your mind?</p>
+                                <p style="margin: 10px 0;">You can reactivate your account anytime before {deletion_date} by simply logging in to SCRAPI.</p>
+                                <div style="text-align: center; margin-top: 15px;">
+                                    <a href="{os.getenv('FRONTEND_URL', 'http://localhost:3000')}/login" 
+                                       style="background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+                                        Reactivate My Account
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <p style="color: #6b7280; font-size: 14px;">
+                                If you don't reactivate within {days_remaining} days, all your data including actors, runs, datasets, and API keys will be permanently deleted.
+                            </p>
+                        </div>
+                        
+                        <div style="margin-top: 30px; text-align: center; color: #9ca3af; font-size: 12px;">
+                            <p>© 2024 SCRAPI. All rights reserved.</p>
+                        </div>
+                    </div>
+                </body>
+            </html>
+            """
+            
+            text = f"""
+            SCRAPI - Account Deletion Scheduled
+            
+            Hello {username},
+            
+            Your SCRAPI account has been scheduled for deletion.
+            
+            Your account will be permanently deleted on {deletion_date}
+            You have {days_remaining} days to reactivate your account.
+            
+            Changed your mind?
+            You can reactivate your account anytime before {deletion_date} by simply logging in to SCRAPI.
+            
+            If you don't reactivate within {days_remaining} days, all your data will be permanently deleted.
+            
+            © 2024 SCRAPI. All rights reserved.
+            """
+            
+            part1 = MIMEText(text, "plain")
+            part2 = MIMEText(html, "html")
+            message.attach(part1)
+            message.attach(part2)
+            
+            with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
+                server.starttls()
+                server.login(self.smtp_email, self.smtp_password)
+                server.send_message(message)
+            
+            logger.info(f"Deletion scheduled email sent to {to_email}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to send deletion scheduled email: {str(e)}")
+            return False
+    
+    async def send_deletion_reminder_email(self, to_email: str, username: str, days_remaining: int, deletion_date):
+        """Send reminder email for pending account deletion."""
+        try:
+            message = MIMEMultipart("alternative")
+            message["Subject"] = f"Reminder: Your SCRAPI Account Will Be Deleted in {days_remaining} Days"
+            message["From"] = self.smtp_email
+            message["To"] = to_email
+            
+            deletion_date_str = deletion_date.strftime("%B %d, %Y at %I:%M %p UTC")
+            
+            html = f"""
+            <html>
+                <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                        <div style="text-align: center; margin-bottom: 30px;">
+                            <h1 style="color: #1f2937;">SCRAPI</h1>
+                        </div>
+                        
+                        <div style="background-color: #f8f9fa; padding: 30px; border-radius: 10px;">
+                            <h2 style="color: #dc3545; margin-top: 0;">⚠️ Final Reminder</h2>
+                            <p>Hello {username},</p>
+                            <p>This is a reminder that your SCRAPI account is scheduled for permanent deletion.</p>
+                            
+                            <div style="background-color: #fee2e2; border-left: 4px solid #dc3545; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                                <p style="margin: 0; font-weight: bold; font-size: 18px; color: #991b1b;">
+                                    Only {days_remaining} days remaining!
+                                </p>
+                                <p style="margin: 10px 0 0 0; color: #991b1b;">
+                                    Your account will be permanently deleted on<br><strong>{deletion_date_str}</strong>
+                                </p>
+                            </div>
+                            
+                            <div style="background-color: #d1fae5; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                                <p style="margin: 0; font-weight: bold;">Want to keep your account?</p>
+                                <p style="margin: 10px 0;">Simply log in to SCRAPI to reactivate your account and cancel the deletion.</p>
+                                <div style="text-align: center; margin-top: 15px;">
+                                    <a href="{os.getenv('FRONTEND_URL', 'http://localhost:3000')}/login" 
+                                       style="background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+                                        Reactivate My Account Now
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <p style="color: #6b7280; font-size: 14px;">
+                                If you take no action, all your data will be permanently deleted and cannot be recovered.
+                            </p>
+                        </div>
+                        
+                        <div style="margin-top: 30px; text-align: center; color: #9ca3af; font-size: 12px;">
+                            <p>© 2024 SCRAPI. All rights reserved.</p>
+                        </div>
+                    </div>
+                </body>
+            </html>
+            """
+            
+            text = f"""
+            SCRAPI - Final Deletion Reminder
+            
+            Hello {username},
+            
+            This is a reminder that your SCRAPI account is scheduled for permanent deletion.
+            
+            Only {days_remaining} days remaining!
+            Your account will be permanently deleted on {deletion_date_str}
+            
+            Want to keep your account?
+            Simply log in to SCRAPI to reactivate your account and cancel the deletion.
+            
+            If you take no action, all your data will be permanently deleted and cannot be recovered.
+            
+            © 2024 SCRAPI. All rights reserved.
+            """
+            
+            part1 = MIMEText(text, "plain")
+            part2 = MIMEText(html, "html")
+            message.attach(part1)
+            message.attach(part2)
+            
+            with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
+                server.starttls()
+                server.login(self.smtp_email, self.smtp_password)
+                server.send_message(message)
+            
+            logger.info(f"Deletion reminder sent to {to_email}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to send deletion reminder: {str(e)}")
+            return False
+    
+    async def send_account_reactivated_email(self, to_email: str, username: str):
+        """Send email when account is reactivated."""
+        try:
+            message = MIMEMultipart("alternative")
+            message["Subject"] = "Your SCRAPI Account Has Been Reactivated"
+            message["From"] = self.smtp_email
+            message["To"] = to_email
+            
+            html = f"""
+            <html>
+                <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                        <div style="text-align: center; margin-bottom: 30px;">
+                            <h1 style="color: #1f2937;">SCRAPI</h1>
+                        </div>
+                        
+                        <div style="background-color: #f8f9fa; padding: 30px; border-radius: 10px;">
+                            <h2 style="color: #10b981; margin-top: 0;">🎉 Welcome Back!</h2>
+                            <p>Hello {username},</p>
+                            <p>Your SCRAPI account has been successfully reactivated.</p>
+                            
+                            <div style="background-color: #d1fae5; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                                <p style="margin: 0; font-weight: bold;">Your account is now active</p>
+                                <p style="margin: 10px 0 0 0;">All your data has been preserved:</p>
+                                <ul style="margin: 10px 0; padding-left: 20px;">
+                                    <li>Actors and actor tasks</li>
+                                    <li>Schedules and runs</li>
+                                    <li>Datasets and saved tasks</li>
+                                    <li>API keys and integrations</li>
+                                </ul>
+                            </div>
+                            
+                            <p style="color: #6b7280;">
+                                We're glad you decided to stay! You can continue using SCRAPI as usual.
+                            </p>
+                            
+                            <div style="text-align: center; margin-top: 20px;">
+                                <a href="{os.getenv('FRONTEND_URL', 'http://localhost:3000')}/home" 
+                                   style="background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+                                    Go to Dashboard
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 30px; text-align: center; color: #9ca3af; font-size: 12px;">
+                            <p>© 2024 SCRAPI. All rights reserved.</p>
+                        </div>
+                    </div>
+                </body>
+            </html>
+            """
+            
+            text = f"""
+            SCRAPI - Account Reactivated
+            
+            Hello {username},
+            
+            Your SCRAPI account has been successfully reactivated.
+            
+            Your account is now active and all your data has been preserved.
+            
+            We're glad you decided to stay!
+            
+            © 2024 SCRAPI. All rights reserved.
+            """
+            
+            part1 = MIMEText(text, "plain")
+            part2 = MIMEText(html, "html")
+            message.attach(part1)
+            message.attach(part2)
+            
+            with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
+                server.starttls()
+                server.login(self.smtp_email, self.smtp_password)
+                server.send_message(message)
+            
+            logger.info(f"Account reactivation email sent to {to_email}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to send reactivation email: {str(e)}")
+            return False
 
 
 # Singleton instance
