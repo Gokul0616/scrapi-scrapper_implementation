@@ -520,9 +520,13 @@ async def get_admin_users(
     current_user: dict = Depends(get_current_user),
     page: int = 1,
     limit: int = 100,
-    search: Optional[str] = None
+    search: Optional[str] = None,
+    status_filter: Optional[str] = None,  # "all", "active", "suspended", "pending_deletion", "deleted"
+    role_filter: Optional[str] = None,     # "all", "user", "admin", "owner"
+    plan_filter: Optional[str] = None      # "all", "Free", "Pro", etc.
 ):
-    """Get all users - both normal users and admin users. Owner can see everyone, Admin can see everyone but can only act on normal users."""
+    """Get all users - both normal users and admin users with advanced filtering. 
+    Owner can see everyone, Admin can see everyone but can only act on normal users."""
     admin_doc = await db.admin_users.find_one({"id": current_user['id']})
     if not admin_doc or admin_doc.get('role') not in ['admin', 'owner']:
         raise HTTPException(status_code=403, detail="Admin access required")
@@ -534,44 +538,110 @@ async def get_admin_users(
             {"email": {"$regex": search, "$options": "i"}},
             {"organization_name": {"$regex": search, "$options": "i"}}
         ]
-        
-    # Fetch ALL matching users from both collections (projection only needed fields)
-    # Note: For large datasets, this approach is not efficient. 
-    # But for < 1000 users as per requirements, it allows correct sorting and pagination across two collections.
-    
-    normal_users = await db.users.find(query, {"_id": 0}).to_list(10000)
-    admin_users = await db.admin_users.find(query, {"_id": 0}).to_list(10000)
     
     # Combine and normalize
     all_users = []
     
-    # Add normal users
-    for user in normal_users:
-        all_users.append({
-            "id": user['id'],
-            "username": user['username'],
-            "email": user['email'],
-            "organization_name": user.get('organization_name'),
-            "plan": user.get('plan', 'Free'),
-            "role": user.get('role', 'user'),
-            "is_active": user.get('is_active', True),
-            "created_at": user.get('created_at', datetime.now(timezone.utc).isoformat()),
-            "last_login_at": user.get('last_login_at')
-        })
+    # Handle deleted users (from deleted_accounts_legal_retention collection)
+    if status_filter == "deleted" or status_filter == "all" or not status_filter:
+        deleted_query = {}
+        if search:
+            deleted_query["$or"] = [
+                {"username": {"$regex": search, "$options": "i"}},
+                {"email": {"$regex": search, "$options": "i"}},
+                {"organization_name": {"$regex": search, "$options": "i"}}
+            ]
+        
+        deleted_users = await db.deleted_accounts_legal_retention.find(deleted_query, {"_id": 0}).to_list(10000)
+        for user in deleted_users:
+            all_users.append({
+                "id": user['user_id'],
+                "username": user['username'],
+                "email": user['email'],
+                "organization_name": user.get('organization_name'),
+                "plan": "N/A",
+                "role": "user",
+                "is_active": False,
+                "account_status": "deleted",
+                "deletion_scheduled_at": None,
+                "permanent_deletion_at": None,
+                "account_deleted_at": user.get('account_deleted_at'),
+                "created_at": user.get('account_created_at', datetime.now(timezone.utc).isoformat()),
+                "last_login_at": user.get('last_login_at')
+            })
     
-    # Add admin users
-    for user in admin_users:
-        all_users.append({
-            "id": user['id'],
-            "username": user['username'],
-            "email": user['email'],
-            "organization_name": user.get('organization_name'),
-            "plan": user.get('plan', 'Free'),
-            "role": user.get('role', 'admin'),
-            "is_active": user.get('is_active', True),
-            "created_at": user.get('created_at', datetime.now(timezone.utc).isoformat()),
-            "last_login_at": user.get('last_login_at')
-        })
+    # Fetch regular and admin users (skip if only viewing deleted)
+    if status_filter != "deleted":
+        # Fetch ALL matching users from both collections (projection only needed fields)
+        # Note: For large datasets, this approach is not efficient. 
+        # But for < 1000 users as per requirements, it allows correct sorting and pagination across two collections.
+        
+        normal_users = await db.users.find(query, {"_id": 0}).to_list(10000)
+        admin_users = await db.admin_users.find(query, {"_id": 0}).to_list(10000)
+        
+        # Add normal users
+        for user in normal_users:
+            all_users.append({
+                "id": user['id'],
+                "username": user['username'],
+                "email": user['email'],
+                "organization_name": user.get('organization_name'),
+                "plan": user.get('plan', 'Free'),
+                "role": user.get('role', 'user'),
+                "is_active": user.get('is_active', True),
+                "account_status": user.get('account_status', 'active'),
+                "deletion_scheduled_at": user.get('deletion_scheduled_at'),
+                "permanent_deletion_at": user.get('permanent_deletion_at'),
+                "created_at": user.get('created_at', datetime.now(timezone.utc).isoformat()),
+                "last_login_at": user.get('last_login_at')
+            })
+        
+        # Add admin users
+        for user in admin_users:
+            all_users.append({
+                "id": user['id'],
+                "username": user['username'],
+                "email": user['email'],
+                "organization_name": user.get('organization_name'),
+                "plan": user.get('plan', 'Free'),
+                "role": user.get('role', 'admin'),
+                "is_active": user.get('is_active', True),
+                "account_status": user.get('account_status', 'active'),
+                "deletion_scheduled_at": None,
+                "permanent_deletion_at": None,
+                "created_at": user.get('created_at', datetime.now(timezone.utc).isoformat()),
+                "last_login_at": user.get('last_login_at')
+            })
+    
+    # Apply filters
+    filtered_users = []
+    for user in all_users:
+        # Status filter
+        if status_filter and status_filter != "all":
+            if status_filter == "active":
+                if not (user.get('is_active') and user.get('account_status') == 'active'):
+                    continue
+            elif status_filter == "suspended":
+                if user.get('is_active') or user.get('account_status') != 'active':
+                    continue
+            elif status_filter == "pending_deletion":
+                if user.get('account_status') != 'pending_deletion':
+                    continue
+            elif status_filter == "deleted":
+                if user.get('account_status') != 'deleted':
+                    continue
+        
+        # Role filter
+        if role_filter and role_filter != "all":
+            if user.get('role') != role_filter:
+                continue
+        
+        # Plan filter
+        if plan_filter and plan_filter != "all":
+            if user.get('plan') != plan_filter:
+                continue
+        
+        filtered_users.append(user)
         
     # Sort by created_at desc (newest first)
     # Handle potential None or invalid dates gracefully
@@ -581,13 +651,13 @@ async def get_admin_users(
         except:
             return datetime.min.replace(tzinfo=timezone.utc)
             
-    all_users.sort(key=get_sort_key, reverse=True)
+    filtered_users.sort(key=get_sort_key, reverse=True)
     
     # Pagination
-    total = len(all_users)
+    total = len(filtered_users)
     start = (page - 1) * limit
     end = start + limit
-    paginated_users = all_users[start:end]
+    paginated_users = filtered_users[start:end]
         
     return {
         "users": paginated_users,
