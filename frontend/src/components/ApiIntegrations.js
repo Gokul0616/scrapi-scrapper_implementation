@@ -36,6 +36,7 @@ const ApiIntegrations = () => {
   const [showKeyIds, setShowKeyIds] = useState({});
   const [copiedId, setCopiedId] = useState(null);
   const [copiedKey, setCopiedKey] = useState(null);
+  const [fullKeyStore, setFullKeyStore] = useState({}); // Store full keys temporarily
 
   useEffect(() => {
     if (user) {
