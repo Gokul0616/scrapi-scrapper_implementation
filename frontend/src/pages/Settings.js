@@ -469,7 +469,10 @@ Here are some ideas to get you started:
 
         {/* Tabs */}
         <Tabs defaultValue="account" className="w-full">
-          <TabsList className={`w-full justify-start border-b rounded-none h-auto p-0 ${theme === 'dark' ? 'bg-transparent border-gray-800' : 'bg-transparent border-gray-200'}`}>
+          <TabsList 
+            style={{ backgroundColor: 'transparent' }}
+            className={`w-full justify-start border-b rounded-none h-auto p-0 ${theme === 'dark' ? 'bg-transparent border-gray-800' : 'bg-transparent border-gray-200'}`}
+          >
             {[
               { value: 'account', label: 'Account' },
               { value: 'login-privacy', label: 'Login & Privacy' },
