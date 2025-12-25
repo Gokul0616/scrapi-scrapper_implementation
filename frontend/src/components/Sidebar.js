@@ -327,12 +327,20 @@ const Sidebar = () => {
               <div className="flex flex-col items-center">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div 
-                      className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer"
-                      style={{ background: profileColor }}
-                    >
-                      <span className="text-white text-sm font-semibold">{userInitials}</span>
-                    </div>
+                    {user?.profile_picture ? (
+                      <img 
+                        src={user.profile_picture} 
+                        alt="Profile" 
+                        className="w-9 h-9 rounded-full object-cover cursor-pointer"
+                      />
+                    ) : (
+                      <div 
+                        className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer"
+                        style={{ background: profileColor }}
+                      >
+                        <span className="text-white text-sm font-semibold">{userInitials}</span>
+                      </div>
+                    )}
                   </TooltipTrigger>
                   <TooltipContent side="right" className={`${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
                     }`}>
