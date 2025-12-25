@@ -77,6 +77,22 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     try {
       const response = await axios.post(`${API}/auth/login`, { username, password });
+      
+      // Check if account is pending deletion
+      if (response.data.account_status === 'pending_deletion') {
+        return {
+          success: true,
+          pending_deletion: true,
+          deletionInfo: {
+            deletion_scheduled_at: response.data.deletion_scheduled_at,
+            permanent_deletion_at: response.data.permanent_deletion_at,
+            days_remaining: response.data.days_remaining,
+            username: response.data.username,
+            user_id: response.data.user_id
+          }
+        };
+      }
+      
       const { access_token, user } = response.data;
       setToken(access_token);
       setUser(user);
