@@ -217,13 +217,27 @@ const Login = () => {
         console.log('Calling setToken...');
         setToken(data.access_token);
 
-        // Set user in context
-        console.log('Calling setUser...');
-        setUser(data.user);
-
         // Set axios authorization header
         console.log('Setting axios header...');
         axios.defaults.headers.common['Authorization'] = `Bearer ${data.access_token}`;
+
+        // Check if account is pending deletion
+        if (data.account_status === 'pending_deletion') {
+          setDeletionInfo({
+            deletion_scheduled_at: data.deletion_scheduled_at,
+            permanent_deletion_at: data.permanent_deletion_at,
+            days_remaining: data.days_remaining,
+            username: data.username,
+            user_id: data.user_id
+          });
+          setStep(5); // Move to reactivation step
+          setIsLoading(false);
+          return;
+        }
+
+        // Set user in context
+        console.log('Calling setUser...');
+        setUser(data.user);
 
         console.log('Navigating to home...');
         navigate(lastPath || '/home');
