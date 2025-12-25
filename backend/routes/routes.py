@@ -216,6 +216,12 @@ async def login(credentials: UserLogin):
             {"$set": {"profile_color": profile_color}}
         )
     
+    # Get profile picture from user_settings if exists
+    profile_picture = None
+    user_settings = await db.user_settings.find_one({"user_id": user_doc['id']}, {"_id": 0, "profile_picture": 1})
+    if user_settings:
+        profile_picture = user_settings.get('profile_picture')
+    
     # Update last login
     await db.users.update_one(
         {"id": user_doc['id']},
@@ -275,6 +281,7 @@ async def login(credentials: UserLogin):
             created_at=user_doc.get('created_at', datetime.now(timezone.utc).isoformat()),
             last_login_at=user_doc.get('last_login_at'),
             profile_color=profile_color,
+            profile_picture=profile_picture,
             theme_preference=user_doc.get('theme_preference', 'light')
         )
     }
