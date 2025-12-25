@@ -881,7 +881,7 @@ Here are some ideas to get you started:
                 {/* Right Column */}
                 <div className="flex-1">
                   {/* Export Data Button */}
-                  <div className="mb-4">
+                  <div className="mb-3">
                     <Button
                       onClick={handleExportData}
                       disabled={isExporting}
@@ -891,7 +891,7 @@ Here are some ideas to get you started:
                     >
                       {isExporting ? 'Exporting...' : '📥 Export My Data'}
                     </Button>
-                    <p className={`mt-2 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <p className={`mt-1.5 text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                       Download all your data before deletion (actors, runs, datasets, etc.)
                     </p>
                   </div>
