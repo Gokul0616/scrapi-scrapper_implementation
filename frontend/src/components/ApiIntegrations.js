@@ -606,10 +606,16 @@ const ApiIntegrations = () => {
           <h3 className={`text-base font-semibold mb-1.5 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
             Third-party apps & services with access to your account
           </h3>
-          <p className={`text-xs mb-3 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+          <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
             These applications are connected to your account and can use API on your behalf.
           </p>
-          <div className={`text-center py-8 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+        </div>
+        <div className="px-4 py-3">
+          <div className={`text-center py-8 px-4 rounded-lg ${
+            theme === 'dark' 
+              ? 'bg-[#25262B] text-gray-400' 
+              : 'bg-gray-50 text-gray-500'
+          }`}>
             <p className="text-sm font-medium">No connected third-party apps</p>
           </div>
         </div>
