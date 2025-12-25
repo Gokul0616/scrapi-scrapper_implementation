@@ -45,6 +45,10 @@ Here are some ideas to get you started:
   const [profilePicture, setProfilePicture] = useState(null);
   const [localThemePreference, setLocalThemePreference] = useState('light');
   const [markdownPreview, setMarkdownPreview] = useState(false);
+  
+  // Delete account states
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Loading states
   const [savingUsername, setSavingUsername] = useState(false);
@@ -222,16 +226,24 @@ Here are some ideas to get you started:
   };
 
   const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== username) {
+      alert('Please type your username correctly to confirm deletion.');
+      return;
+    }
+    
+    setIsDeleting(true);
     try {
       const token = localStorage.getItem('token');
       await axios.delete(`${API_URL}/api/settings/account`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        data: { confirmation_text: deleteConfirmText }
       });
       localStorage.removeItem('token');
       window.location.href = '/login';
     } catch (error) {
       console.error('Failed to delete account:', error);
-      alert('Failed to delete account.');
+      alert(error.response?.data?.detail || 'Failed to delete account.');
+      setIsDeleting(false);
     }
   };
 
@@ -756,6 +768,7 @@ Here are some ideas to get you started:
                       <Button
                         variant="outline"
                         data-testid="delete-account-btn"
+                        onClick={() => setDeleteConfirmText('')}
                         className={`border-red-500/50 text-red-500 hover:bg-red-500/10 hover:text-red-600 ${
                           theme === 'dark' ? 'bg-transparent' : ''
                         }`}
@@ -763,24 +776,89 @@ Here are some ideas to get you started:
                         Delete account
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent className={theme === 'dark' ? 'bg-[#1A1B1E] border-gray-800' : ''}>
+                    <AlertDialogContent 
+                      className={`max-w-[520px] ${
+                        theme === 'dark' 
+                          ? 'bg-[#1e1e1e] border-2 border-[#e06c75]' 
+                          : 'bg-white border-2 border-[#dc3545]'
+                      }`}
+                    >
                       <AlertDialogHeader>
-                        <AlertDialogTitle className={theme === 'dark' ? 'text-white' : ''}>
-                          Are you absolutely sure?
+                        <AlertDialogTitle className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                          Delete account
                         </AlertDialogTitle>
-                        <AlertDialogDescription className={theme === 'dark' ? 'text-gray-400' : ''}>
-                          This action cannot be undone. This will permanently delete your account, Actors, tasks, schedules, data, everything.
-                        </AlertDialogDescription>
                       </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel className={theme === 'dark' ? 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700' : ''}>
+                      
+                      <div className="space-y-4 py-4">
+                        <div className={`space-y-3 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                          <p>
+                            Do you <span className="font-semibold">really</span> want to{' '}
+                            <span className={`font-semibold ${theme === 'dark' ? 'text-[#e06c75]' : 'text-[#dc3545]'}`}>
+                              delete your account?
+                            </span>{' '}
+                            <span className={`font-semibold ${theme === 'dark' ? 'text-[#e06c75]' : 'text-[#dc3545]'}`}>
+                              This operation cannot be undone!
+                            </span>
+                          </p>
+                          
+                          <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
+                            All Actors, Actor tasks, schedules, results, etc. will be also deleted.
+                          </p>
+                          
+                          <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
+                            We're sad to see you go 😢
+                          </p>
+                        </div>
+                        
+                        <div className="pt-4 border-t border-gray-700">
+                          <label 
+                            htmlFor="delete-confirm-input"
+                            className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}
+                          >
+                            Type in <span className="font-bold">{username}</span> to confirm
+                          </label>
+                          <Input
+                            id="delete-confirm-input"
+                            type="text"
+                            value={deleteConfirmText}
+                            onChange={(e) => setDeleteConfirmText(e.target.value)}
+                            placeholder=""
+                            autoComplete="off"
+                            data-testid="delete-confirm-input"
+                            className={`w-full ${
+                              theme === 'dark'
+                                ? 'bg-[#333333] border-gray-600 text-white focus:border-[#007bff] focus:ring-[#007bff]'
+                                : 'bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                            }`}
+                          />
+                        </div>
+                      </div>
+                      
+                      <AlertDialogFooter className="gap-2">
+                        <AlertDialogCancel 
+                          disabled={isDeleting}
+                          className={`${
+                            theme === 'dark'
+                              ? 'bg-[#444444] border-gray-600 text-white hover:bg-[#4a4a4a]'
+                              : 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200'
+                          }`}
+                          onClick={() => setDeleteConfirmText('')}
+                        >
                           Cancel
                         </AlertDialogCancel>
                         <AlertDialogAction
                           onClick={handleDeleteAccount}
-                          className="bg-red-600 hover:bg-red-700 text-white"
+                          disabled={deleteConfirmText !== username || isDeleting}
+                          data-testid="confirm-delete-btn"
+                          className={`${
+                            deleteConfirmText !== username || isDeleting
+                              ? 'opacity-50 cursor-not-allowed bg-gray-400'
+                              : theme === 'dark'
+                              ? 'bg-[#e06c75] hover:bg-[#d65c66]'
+                              : 'bg-[#dc3545] hover:bg-[#c82333]'
+                          } text-white font-semibold`}
                         >
-                          Delete account
+                          {isDeleting ? 'Deleting...' : 'I understand, delete account'}
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
