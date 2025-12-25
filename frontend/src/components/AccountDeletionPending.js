@@ -139,6 +139,15 @@ const AccountDeletionPending = ({ deletionInfo, onReactivate }) => {
           Changed your mind? Reactivating will restore full access to your account.
         </p>
       </div>
+      
+      {/* Alert Modal */}
+      <AlertModal
+        show={showAlert}
+        onClose={() => setShowAlert(false)}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+      />
     </div>
   );
 };
