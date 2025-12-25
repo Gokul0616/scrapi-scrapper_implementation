@@ -140,11 +140,16 @@ const ApiIntegrations = () => {
         setNewKeyName('');
         fetchKeys();
         setActiveKeyId(data.id);
-        // Store full key temporarily
+        // Store full key temporarily and show it
         if (data.key) {
           setFullKeyStore(prev => ({
             ...prev,
             [data.id]: data.key
+          }));
+          // Automatically show the key in the list
+          setShowKeyIds(prev => ({
+            ...prev,
+            [data.id]: true
           }));
         }
         toast({
