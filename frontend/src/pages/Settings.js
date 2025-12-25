@@ -765,7 +765,7 @@ Here are some ideas to get you started:
                   </div>
 
                   {/* Privacy Toggles */}
-                  <div className="space-y-4 pt-2">
+                  <div className="space-y-3 pt-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
                         <span className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
