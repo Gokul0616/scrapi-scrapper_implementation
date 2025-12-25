@@ -183,7 +183,12 @@ Here are some ideas to get you started:
       }
     } catch (error) {
       console.error('Failed to save profile:', error);
-      alert('Failed to save profile.');
+      setAlertConfig({
+        title: 'Failed to Save Profile',
+        message: 'Failed to save profile.',
+        type: 'error'
+      });
+      setShowAlert(true);
     } finally {
       setSavingProfile(false);
     }
