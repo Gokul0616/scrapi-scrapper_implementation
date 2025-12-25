@@ -141,6 +141,10 @@ async def health_check():
 async def health():
     return {"status": "ok"}
 
+# Add workspace middleware
+from middleware import WorkspaceMiddleware
+app.add_middleware(WorkspaceMiddleware)
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
