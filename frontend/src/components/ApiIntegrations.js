@@ -401,7 +401,7 @@ const ApiIntegrations = () => {
                   Done
                 </Button>
               </div>
-              <div className={`flex items-center gap-2 p-3 rounded border relative overflow-hidden ${
+              <div className={`flex items-center gap-2 p-2 rounded border relative overflow-hidden ${
                 theme === 'dark' 
                   ? 'bg-[#1A1B1E] border-green-800' 
                   : 'bg-white border-green-200'
@@ -413,7 +413,7 @@ const ApiIntegrations = () => {
                   }`}
                   style={{ width: `${(timerData.remaining / 30) * 100}%` }}
                 />
-                <code className={`flex-1 font-mono text-sm break-all z-10 ${
+                <code className={`flex-1 font-mono text-xs break-all z-10 ${
                   theme === 'dark' ? 'text-green-400' : 'text-green-800'
                 }`}>
                   {timerData.key}
