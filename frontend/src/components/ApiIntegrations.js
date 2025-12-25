@@ -172,9 +172,10 @@ const ApiIntegrations = () => {
           description: "API token created successfully",
         });
       } else {
+        const errorData = await response.json();
         toast({
           title: "Error",
-          description: "Failed to create API token",
+          description: errorData.detail || "Failed to create API token",
           variant: "destructive"
         });
       }
