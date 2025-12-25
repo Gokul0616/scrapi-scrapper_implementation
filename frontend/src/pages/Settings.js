@@ -1117,6 +1117,15 @@ Here are some ideas to get you started:
         type="success"
         confirmText="OK"
       />
+      
+      {/* General Alert Modal */}
+      <AlertModal
+        show={showAlert}
+        onClose={() => setShowAlert(false)}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+      />
     </div>
   );
 };
