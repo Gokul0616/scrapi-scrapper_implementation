@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { ChevronDown, ChevronUp, Check, Plus, LogOut } from 'lucide-react';
-import { getUserInitials, getProfileColor } from '../utils/userUtils';
+import { getUserInitials, getProfileColor, getUserDisplayName } from '../utils/userUtils';
 
 const UserDropdown = () => {
   const { theme } = useTheme();
