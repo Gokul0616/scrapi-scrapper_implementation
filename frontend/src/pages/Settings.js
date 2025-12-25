@@ -1094,31 +1094,31 @@ Here are some ideas to get you started:
           </TabsContent>
 
           {/* Other Tabs - Empty for now */}
-          <TabsContent value="login-privacy" className="mt-8">
-            <div className={`text-center py-16 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-              <p className="text-lg">Login & Privacy settings coming soon</p>
+          <TabsContent value="login-privacy" className="mt-4">
+            <div className={`text-center py-12 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+              <p className="text-base">Login & Privacy settings coming soon</p>
             </div>
           </TabsContent>
 
-          <TabsContent value="api-integrations" className="mt-0 pt-8">
+          <TabsContent value="api-integrations" className="mt-0 pt-4">
             <ApiIntegrations />
           </TabsContent>
 
-          <TabsContent value="organizations" className="mt-8">
-            <div className={`text-center py-16 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-              <p className="text-lg">Organizations settings coming soon</p>
+          <TabsContent value="organizations" className="mt-4">
+            <div className={`text-center py-12 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+              <p className="text-base">Organizations settings coming soon</p>
             </div>
           </TabsContent>
 
-          <TabsContent value="notifications" className="mt-8">
-            <div className={`text-center py-16 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-              <p className="text-lg">Notifications settings coming soon</p>
+          <TabsContent value="notifications" className="mt-4">
+            <div className={`text-center py-12 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+              <p className="text-base">Notifications settings coming soon</p>
             </div>
           </TabsContent>
 
-          <TabsContent value="referrals" className="mt-8">
-            <div className={`text-center py-16 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-              <p className="text-lg">Referrals settings coming soon</p>
+          <TabsContent value="referrals" className="mt-4">
+            <div className={`text-center py-12 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+              <p className="text-base">Referrals settings coming soon</p>
             </div>
           </TabsContent>
         </Tabs>
