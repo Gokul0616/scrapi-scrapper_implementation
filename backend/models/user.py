@@ -39,8 +39,6 @@ class UserResponse(BaseModel):
     id: str
     username: str
     email: str
-    account_type: str = "personal"  # "personal" or "organization"
-    organization_name: Optional[str] = None
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     plan: str
