@@ -617,19 +617,19 @@ const ApiIntegrations = () => {
               : 'border-gray-200 bg-gray-50'
           }`}
         >
-          <div className={`px-6 py-4 border-b ${
+          <div className={`px-4 py-3 border-b ${
             theme === 'dark' ? 'border-gray-800 bg-[#1A1B1E]' : 'border-gray-200 bg-white'
           } rounded-t-lg`}>
-            <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+            <h3 className={`text-base font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
               Actor OAuth accounts
             </h3>
           </div>
-          <div className="px-6 py-12">
+          <div className="px-4 py-8">
             <div className={`text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-              <p className="text-base font-medium mb-2">No accounts connected</p>
+              <p className="text-sm font-medium mb-1.5">No accounts connected</p>
               <a 
                 href="#" 
-                className={`text-sm inline-flex items-center gap-1 ${
+                className={`text-xs inline-flex items-center gap-1 ${
                   theme === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'
                 }`}
               >
