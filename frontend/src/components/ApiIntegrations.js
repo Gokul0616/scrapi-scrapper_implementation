@@ -292,7 +292,7 @@ const ApiIntegrations = () => {
       >
         {/* Header */}
         <div className={`flex items-center justify-between px-6 py-4 border-b ${
-          theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
+          theme === 'dark' ? 'border-gray-800 bg-[#1A1B1E]' : 'border-gray-200'
         }`}>
           <div className="flex items-center gap-2">
             <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
