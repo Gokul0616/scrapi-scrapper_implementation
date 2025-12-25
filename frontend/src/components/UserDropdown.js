@@ -165,8 +165,8 @@ const UserDropdown = () => {
                   <div className={`font-medium text-xs ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
                     {getUserDisplayName(user)}
                   </div>
-                  <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                    {user?.username || ''}
+                  <div className={`text-xs truncate ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                    {user?.email || ''}
                   </div>
                 </div>
                 <Check className={`w-4 h-4 flex-shrink-0 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} />
