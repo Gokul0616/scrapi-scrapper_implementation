@@ -1178,6 +1178,27 @@ async def verify_otp(request: VerifyOTPRequest):
             
             token = create_access_token({"sub": user_doc['id'], "username": user_doc['username']})
             
+            # Check if account is pending deletion
+            if user_doc.get('account_status') == 'pending_deletion':
+                deletion_scheduled_at = user_doc.get('deletion_scheduled_at')
+                permanent_deletion_at = user_doc.get('permanent_deletion_at')
+                
+                if deletion_scheduled_at and permanent_deletion_at:
+                    # Calculate days remaining
+                    permanent_deletion_date = parse_datetime_safe(permanent_deletion_at)
+                    days_remaining = (permanent_deletion_date - datetime.now(timezone.utc)).days
+                    
+                    return {
+                        "success": True,
+                        "access_token": token,
+                        "account_status": "pending_deletion",
+                        "deletion_scheduled_at": deletion_scheduled_at,
+                        "permanent_deletion_at": permanent_deletion_at,
+                        "days_remaining": max(0, days_remaining),
+                        "username": user_doc['username'],
+                        "user_id": user_doc['id']
+                    }
+            
             return {
                 "success": True,
                 "message": "Verification successful",
