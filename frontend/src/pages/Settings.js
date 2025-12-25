@@ -132,6 +132,29 @@ Here are some ideas to get you started:
     setLocalThemePreference(themePreference);
   }, [themePreference]);
 
+  // Update underline position when active tab changes
+  useEffect(() => {
+    const updateUnderlinePosition = () => {
+      const activeTabElement = tabRefs.current[activeTab];
+      const tabsListElement = tabsListRef.current;
+      
+      if (activeTabElement && tabsListElement) {
+        const tabsListRect = tabsListElement.getBoundingClientRect();
+        const activeTabRect = activeTabElement.getBoundingClientRect();
+        
+        setUnderlineStyle({
+          left: activeTabRect.left - tabsListRect.left,
+          width: activeTabRect.width
+        });
+      }
+    };
+
+    updateUnderlinePosition();
+    // Update on window resize
+    window.addEventListener('resize', updateUnderlinePosition);
+    return () => window.removeEventListener('resize', updateUnderlinePosition);
+  }, [activeTab, theme]);
+
   const handleSaveUsername = async () => {
     if (username === originalUsername) return;
     
