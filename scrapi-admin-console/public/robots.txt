@@ -5,4 +5,4 @@ User-agent: *
 Disallow: /
 
 # Sitemap (for reference, even though indexing is disabled)
-Sitemap: https://acct-manager-10.preview.emergentagent.com/sitemap.xml
+Sitemap: https://tidy-settings-ui.preview.emergentagent.com/sitemap.xml
