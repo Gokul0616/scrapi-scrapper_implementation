@@ -1509,7 +1509,7 @@ async def execute_scraping_job(run_id: str, actor_id: str, user_id: str, input_d
             
             # Calculate duration
             run_doc = await db.runs.find_one({"id": run_id})
-            started_at = datetime.fromisoformat(run_doc['started_at'])
+            started_at = parse_datetime_safe(run_doc['started_at'])
             finished_at = datetime.now(timezone.utc)
             duration = int((finished_at - started_at).total_seconds())
             
