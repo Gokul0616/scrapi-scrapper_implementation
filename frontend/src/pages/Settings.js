@@ -11,6 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { HelpCircle, Upload, Trash2, ExternalLink, Check, Sun, Moon, Monitor, Eye, EyeOff } from 'lucide-react';
 import { getUserInitials, getProfileColor } from '../utils/userUtils';
 import AlertModal from '../components/AlertModal';
+import ApiIntegrations from '../components/ApiIntegrations';
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
