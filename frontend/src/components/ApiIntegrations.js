@@ -594,12 +594,12 @@ const ApiIntegrations = () => {
               Add account
             </Button>
           </div>
-          <div className="px-6 py-12">
+          <div className="px-4 py-8">
             <div className={`text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-              <p className="text-base font-medium mb-2">No integrations</p>
+              <p className="text-sm font-medium mb-1.5">No integrations</p>
               <a 
                 href="#" 
-                className={`text-sm inline-flex items-center gap-1 ${
+                className={`text-xs inline-flex items-center gap-1 ${
                   theme === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'
                 }`}
               >
