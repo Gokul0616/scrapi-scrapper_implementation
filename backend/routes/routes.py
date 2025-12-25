@@ -229,16 +229,18 @@ async def login(credentials: UserLogin):
         
         # Calculate days remaining
         if permanent_deletion_at:
-            if isinstance(permanent_deletion_at, str):
-                permanent_deletion_at = datetime.fromisoformat(permanent_deletion_at)
+            # Parse and ensure timezone-aware datetime
+            permanent_deletion_at = parse_datetime_safe(permanent_deletion_at)
+            deletion_scheduled_at = parse_datetime_safe(deletion_scheduled_at)
+            
             days_remaining = (permanent_deletion_at - datetime.now(timezone.utc)).days
             
             return {
                 "access_token": token,
                 "token_type": "bearer",
                 "account_status": "pending_deletion",
-                "deletion_scheduled_at": deletion_scheduled_at.isoformat() if hasattr(deletion_scheduled_at, 'isoformat') else str(deletion_scheduled_at),
-                "permanent_deletion_at": permanent_deletion_at.isoformat() if hasattr(permanent_deletion_at, 'isoformat') else str(permanent_deletion_at),
+                "deletion_scheduled_at": deletion_scheduled_at.isoformat() if deletion_scheduled_at else None,
+                "permanent_deletion_at": permanent_deletion_at.isoformat() if permanent_deletion_at else None,
                 "days_remaining": max(0, days_remaining),
                 "user_id": user_doc['id'],
                 "username": user_doc['username'],
