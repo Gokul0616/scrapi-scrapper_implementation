@@ -390,13 +390,16 @@ export const UsersPage: React.FC = () => {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <div className="flex items-center justify-end space-x-3">
-                                            <button
-                                                onClick={() => confirmToggleStatus(user)}
-                                                className={`text-gray-400 hover:${user.is_active ? 'text-red-600' : 'text-green-600'} transition-colors`}
-                                                title={user.is_active ? "Suspend User" : "Activate User"}
-                                            >
-                                                {user.is_active ? <ShieldOff size={16} /> : <Shield size={16} />}
-                                            </button>
+                                            {user.account_status !== 'deleted' && user.account_status !== 'pending_deletion' && (
+                                                <button
+                                                    onClick={() => confirmToggleStatus(user)}
+                                                    className={`text-gray-400 hover:${user.is_active ? 'text-red-600' : 'text-green-600'} transition-colors`}
+                                                    title={user.is_active ? "Suspend User" : "Activate User"}
+                                                    data-testid={`toggle-status-${user.id}`}
+                                                >
+                                                    {user.is_active ? <ShieldOff size={16} /> : <Shield size={16} />}
+                                                </button>
+                                            )}
                                             <button className="text-gray-400 hover:text-aws-text transition-colors">
                                                 <MoreVertical size={16} />
                                             </button>
