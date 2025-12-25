@@ -255,6 +255,11 @@ Here are some ideas to get you started:
         headers: { Authorization: `Bearer ${token}` }
       });
       setProfilePicture(null);
+      
+      // Update user context to remove profile picture
+      if (updateUser) {
+        updateUser({ profile_picture: null });
+      }
     } catch (error) {
       console.error('Failed to delete image:', error);
     }
