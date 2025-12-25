@@ -213,11 +213,21 @@ const ApiIntegrations = () => {
   };
 
   const handleDeleteKey = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this token? This action cannot be undone.")) return;
+    const keyToDelete = keys.find(k => k.id === id);
+    setDeleteConfirmModal({
+      show: true,
+      keyId: id,
+      keyName: keyToDelete?.name || 'this token'
+    });
+  };
+
+  const confirmDeleteKey = async () => {
+    const { keyId } = deleteConfirmModal;
+    setDeleteConfirmModal({ show: false, keyId: null, keyName: '' });
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/auth/api-keys/${id}`, {
+      const response = await fetch(`${API_URL}/api/auth/api-keys/${keyId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -225,8 +235,8 @@ const ApiIntegrations = () => {
       });
 
       if (response.ok) {
-        setKeys(keys.filter(k => k.id !== id));
-        if (activeKeyId === id) {
+        setKeys(keys.filter(k => k.id !== keyId));
+        if (activeKeyId === keyId) {
           setActiveKeyId(null);
           setTimerData(null);
         }
@@ -237,6 +247,11 @@ const ApiIntegrations = () => {
       }
     } catch (error) {
       console.error("Error deleting key", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete API token",
+        variant: "destructive"
+      });
     }
   };
 
