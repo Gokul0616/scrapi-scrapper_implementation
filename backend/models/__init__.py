@@ -11,6 +11,11 @@ from .otp import OTP, SendOTPRequest, VerifyOTPRequest, OTPResponse
 from .audit import AuditLog
 from .api_key import ApiKey, ApiKeyCreate, ApiKeyDisplay
 from .category import Category, CategoryCreate, CategoryUpdate
+from .organization import (
+    Organization, OrganizationCreate, OrganizationUpdate, OrganizationResponse,
+    OrganizationMembership, MembershipInvite, MembershipUpdate, MemberResponse,
+    WorkspaceContext, WorkspaceResponse
+)
 
 __all__ = [
     # User models
@@ -36,5 +41,9 @@ __all__ = [
     # ApiKey models
     'ApiKey', 'ApiKeyCreate', 'ApiKeyDisplay',
     # Category models
-    'Category', 'CategoryCreate', 'CategoryUpdate'
+    'Category', 'CategoryCreate', 'CategoryUpdate',
+    # Organization models
+    'Organization', 'OrganizationCreate', 'OrganizationUpdate', 'OrganizationResponse',
+    'OrganizationMembership', 'MembershipInvite', 'MembershipUpdate', 'MemberResponse',
+    'WorkspaceContext', 'WorkspaceResponse'
 ]
