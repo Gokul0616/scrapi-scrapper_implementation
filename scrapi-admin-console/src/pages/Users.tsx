@@ -383,10 +383,7 @@ export const UsersPage: React.FC = () => {
                                         {user.plan}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                            }`}>
-                                            {user.is_active ? 'Active' : 'Suspended'}
-                                        </span>
+                                        {getStatusBadge(user)}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-aws-text-secondary">
                                         {new Date(user.created_at).toLocaleDateString()}
