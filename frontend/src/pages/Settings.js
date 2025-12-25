@@ -48,7 +48,12 @@ Here are some ideas to get you started:
   
   // Delete account states
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteFeedbackReason, setDeleteFeedbackReason] = useState('');
+  const [deleteFeedbackText, setDeleteFeedbackText] = useState('');
+  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Loading states
   const [savingUsername, setSavingUsername] = useState(false);
