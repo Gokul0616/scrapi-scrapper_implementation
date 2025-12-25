@@ -122,6 +122,18 @@ export const UsersPage: React.FC = () => {
                 queryParams.append('search', searchTerm);
             }
 
+            if (statusFilter && statusFilter !== 'all') {
+                queryParams.append('status_filter', statusFilter);
+            }
+
+            if (roleFilter && roleFilter !== 'all') {
+                queryParams.append('role_filter', roleFilter);
+            }
+
+            if (planFilter && planFilter !== 'all') {
+                queryParams.append('plan_filter', planFilter);
+            }
+
             const response = await fetch(`${BACKEND_URL}/api/admin/users?${queryParams}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
