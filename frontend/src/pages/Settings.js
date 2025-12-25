@@ -1060,6 +1060,20 @@ Here are some ideas to get you started:
           </TabsContent>
         </Tabs>
       </div>
+      
+      {/* Delete Success Alert Modal */}
+      <AlertModal
+        show={showDeleteSuccessAlert}
+        onClose={() => {
+          setShowDeleteSuccessAlert(false);
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+        }}
+        title="Account Deletion Scheduled"
+        message="Your account has been scheduled for deletion. You have 7 days to reactivate by simply logging in."
+        type="success"
+        confirmText="OK"
+      />
     </div>
   );
 };
