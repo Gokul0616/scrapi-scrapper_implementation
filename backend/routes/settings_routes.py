@@ -220,13 +220,16 @@ async def delete_profile_picture(current_user: dict = Depends(get_current_user))
 
 class AccountDeletionRequest(BaseModel):
     confirmation_text: str = Field(..., min_length=1)
+    password: str = Field(..., min_length=1)  # Re-authentication
+    feedback_reason: Optional[str] = None  # 'too_expensive', 'lack_features', 'found_alternative', 'privacy_concerns', 'other'
+    feedback_text: Optional[str] = None
 
 @router.delete("/account")
 async def delete_account(
     data: AccountDeletionRequest,
     current_user: dict = Depends(get_current_user)
 ):
-    """Delete user account and all associated data"""
+    """Schedule account deletion with 7-day grace period"""
     user_id = current_user.get("id")
     username = current_user.get("username")
     
@@ -237,68 +240,98 @@ async def delete_account(
             detail="Confirmation text does not match your username"
         )
     
-    # Get user email before deletion
-    user = await db.users.find_one({"id": user_id}, {"email": 1})
+    # Get user from database
+    user = await db.users.find_one({"id": user_id})
     if not user:
         try:
-            user = await db.users.find_one({"_id": ObjectId(user_id)}, {"email": 1})
+            user = await db.users.find_one({"_id": ObjectId(user_id)})
         except:
-            pass
+            raise HTTPException(status_code=404, detail="User not found")
     
+    # Verify password (re-authentication)
+    from auth import verify_password
+    if not verify_password(data.password, user.get("hashed_password")):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid password. Please enter your correct password to confirm deletion."
+        )
+    
+    user_email = user.get("email")
+    
+    # Schedule account deletion (7-day grace period)
+    from services.account_deletion_service import get_deletion_service
+    deletion_service = get_deletion_service(db)
+    
+    result = await deletion_service.schedule_account_deletion(
+        user_id=user_id,
+        username=username,
+        password_hash=user.get("hashed_password"),
+        feedback_reason=data.feedback_reason,
+        feedback_text=data.feedback_text
+    )
+    
+    # Send deletion scheduled email
+    if user_email and result.get("success"):
+        try:
+            from services.email_service import get_email_service
+            email_service = get_email_service()
+            from datetime import datetime
+            deletion_date = datetime.fromisoformat(result['permanent_deletion_at']).strftime("%B %d, %Y at %I:%M %p UTC")
+            await email_service.send_deletion_scheduled_email(
+                user_email, 
+                username, 
+                deletion_date,
+                result['grace_period_days']
+            )
+        except Exception as e:
+            print(f"Failed to send deletion scheduled email: {str(e)}")
+    
+    return {
+        "message": "Account deletion scheduled successfully",
+        "deletion_scheduled_at": result['deletion_scheduled_at'],
+        "permanent_deletion_at": result['permanent_deletion_at'],
+        "grace_period_days": result['grace_period_days']
+    }
+
+@router.post("/account/reactivate")
+async def reactivate_account(current_user: dict = Depends(get_current_user)):
+    """Reactivate a pending deletion account"""
+    user_id = current_user.get("id")
+    username = current_user.get("username")
+    
+    from services.account_deletion_service import get_deletion_service
+    deletion_service = get_deletion_service(db)
+    
+    result = await deletion_service.reactivate_account(user_id, username)
+    
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("error", "Failed to reactivate account"))
+    
+    # Get user email
+    user = await db.users.find_one({"id": user_id}, {"email": 1})
     user_email = user.get("email") if user else None
     
-    # Log account deletion in audit trail
-    try:
-        from datetime import datetime, timezone
-        await db.audit_logs.insert_one({
-            "user_id": user_id,
-            "username": username,
-            "action": "account_deletion",
-            "timestamp": datetime.now(timezone.utc),
-            "ip_address": None,  # Can be added from request if needed
-            "details": "User requested account deletion"
-        })
-    except Exception as e:
-        # Continue even if audit logging fails
-        pass
-    
-    # Delete user settings
-    await db.user_settings.delete_one({"user_id": user_id})
-    
-    # Delete user's actors
-    await db.actors.delete_many({"user_id": user_id})
-    
-    # Delete user's runs
-    await db.runs.delete_many({"user_id": user_id})
-    
-    # Delete user's schedules
-    await db.schedules.delete_many({"user_id": user_id})
-    
-    # Delete user's tasks
-    await db.saved_tasks.delete_many({"user_id": user_id})
-    
-    # Delete user's API keys
-    await db.api_keys.delete_many({"user_id": user_id})
-    
-    # Delete user's datasets
-    await db.datasets.delete_many({"user_id": user_id})
-    
-    # Finally, delete the user (handle both UUID and ObjectId)
-    result = await db.users.delete_one({"id": user_id})
-    if result.deleted_count == 0:
-        try:
-            await db.users.delete_one({"_id": ObjectId(user_id)})
-        except:
-            pass
-    
-    # Send confirmation email (non-blocking)
+    # Send reactivation confirmation email
     if user_email:
         try:
             from services.email_service import get_email_service
             email_service = get_email_service()
-            await email_service.send_account_deletion_email(user_email, username)
+            await email_service.send_account_reactivated_email(user_email, username)
         except Exception as e:
-            # Log error but don't fail the deletion
-            print(f"Failed to send deletion confirmation email: {str(e)}")
+            print(f"Failed to send reactivation email: {str(e)}")
     
-    return {"message": "Account deleted successfully"}
+    return {"message": "Account reactivated successfully"}
+
+@router.get("/account/export")
+async def export_account_data(current_user: dict = Depends(get_current_user)):
+    """Export all user data before deletion"""
+    user_id = current_user.get("id")
+    
+    from services.account_deletion_service import get_deletion_service
+    deletion_service = get_deletion_service(db)
+    
+    try:
+        export_data = await deletion_service.export_user_data(user_id)
+        return export_data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to export data: {str(e)}")
