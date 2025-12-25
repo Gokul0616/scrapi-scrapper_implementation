@@ -135,6 +135,14 @@ async def register(user_data: UserCreate):
     if not is_valid:
         raise HTTPException(status_code=400, detail=error_message)
     
+    # Check if email is associated with a deleted account
+    deleted_account = await db.deleted_accounts_legal_retention.find_one({"email": user_data.email})
+    if deleted_account:
+        raise HTTPException(
+            status_code=400, 
+            detail="This email is associated with a deleted account and cannot be used for registration. Please contact support if you need assistance."
+        )
+    
     # Check if user already exists
     existing_user = await db.users.find_one({"username": user_data.username})
     if existing_user:
