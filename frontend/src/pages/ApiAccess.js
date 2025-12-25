@@ -210,13 +210,14 @@ const ApiAccess = () => {
     };
 
     return (
-        <div className="p-8 max-w-6xl mx-auto space-y-8">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">API Access</h1>
-                    <p className="text-gray-500 mt-2">Manage your API keys and view documentation.</p>
+        <>
+            <div className="p-8 max-w-6xl mx-auto space-y-8">
+                <div className="flex justify-between items-center">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900">API Access</h1>
+                        <p className="text-gray-500 mt-2">Manage your API keys and view documentation.</p>
+                    </div>
                 </div>
-            </div>
 
             {/* Create Key Section */}
             <Card>
