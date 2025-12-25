@@ -539,8 +539,8 @@ const ApiIntegrations = () => {
                   }`}
                   data-testid={`token-item-${key.id}`}
                 >
-                  {/* Progress bar for active timer */}
-                  {fullKeyStore[key.id] && timerData && timerData.remaining > 0 && (
+                  {/* Progress bar for active timer - Show if this key has active timer */}
+                  {activeKeyId === key.id && timerData && timerData.remaining > 0 && (
                     <div
                       className={`absolute bottom-0 left-0 h-1 transition-all duration-1000 ease-linear ${
                         theme === 'dark' ? 'bg-green-500' : 'bg-green-500'
@@ -556,7 +556,7 @@ const ApiIntegrations = () => {
                         {key.name}
                       </span>
                       {/* Show timer badge if this key has active timer */}
-                      {fullKeyStore[key.id] && timerData && timerData.remaining > 0 && (
+                      {activeKeyId === key.id && timerData && timerData.remaining > 0 && (
                         <span className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded font-semibold ${
                           theme === 'dark' ? 'bg-green-900/40 text-green-400' : 'bg-green-100 text-green-700'
                         }`}>
