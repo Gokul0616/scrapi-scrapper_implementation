@@ -508,25 +508,36 @@ const ApiIntegrations = () => {
               {keys.map((key) => (
                 <div
                   key={key.id}
-                  className={`flex items-center gap-2 p-3 rounded-lg border ${
+                  className={`relative flex items-center gap-2 p-3 rounded-lg border overflow-hidden ${
                     theme === 'dark' 
                       ? 'border-gray-700 bg-[#25262B]' 
                       : 'border-gray-200 bg-gray-50'
                   }`}
                   data-testid={`token-item-${key.id}`}
                 >
+                  {/* Progress bar for active timer */}
+                  {fullKeyStore[key.id] && timerData && timerData.remaining > 0 && (
+                    <div
+                      className={`absolute bottom-0 left-0 h-1 transition-all duration-1000 ease-linear ${
+                        theme === 'dark' ? 'bg-green-500' : 'bg-green-500'
+                      }`}
+                      style={{ width: `${(timerData.remaining / 30) * 100}%` }}
+                    />
+                  )}
+                  
                   {/* Token Info */}
-                  <div className="flex-1">
+                  <div className="flex-1 z-10">
                     <div className="flex items-center gap-2 mb-1">
                       <span className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
                         {key.name}
                       </span>
                       {/* Show timer badge if this key has active timer */}
                       {fullKeyStore[key.id] && timerData && timerData.remaining > 0 && (
-                        <span className={`text-xs px-2 py-0.5 rounded ${
-                          theme === 'dark' ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-700'
+                        <span className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded font-semibold ${
+                          theme === 'dark' ? 'bg-green-900/40 text-green-400' : 'bg-green-100 text-green-700'
                         }`}>
-                          {timerData.remaining}s remaining
+                          <Clock className="w-3 h-3" />
+                          {timerData.remaining}s
                         </span>
                       )}
                     </div>
@@ -534,8 +545,10 @@ const ApiIntegrations = () => {
                       className="font-mono text-xs select-none"
                       style={{ userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none' }}
                     >
-                      {showKeyIds[key.id] ? (
-                        <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>
+                      {showKeyIds[key.id] || fullKeyStore[key.id] ? (
+                        <span className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'} ${
+                          fullKeyStore[key.id] ? 'font-semibold' : ''
+                        }`}>
                           {fullKeyStore[key.id] || key.prefix}
                         </span>
                       ) : (
@@ -547,7 +560,7 @@ const ApiIntegrations = () => {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 z-10">
                     {/* Show/Hide - only show if NOT currently in timer mode */}
                     {!fullKeyStore[key.id] && (
                       <button
