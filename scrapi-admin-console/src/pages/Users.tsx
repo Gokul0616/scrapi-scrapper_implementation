@@ -209,6 +209,28 @@ export const UsersPage: React.FC = () => {
         setPage(1); // Reset to page 1 on search
     };
 
+    const clearFilters = () => {
+        setStatusFilter('all');
+        setRoleFilter('all');
+        setPlanFilter('all');
+        setPage(1);
+    };
+
+    const hasActiveFilters = statusFilter !== 'all' || roleFilter !== 'all' || planFilter !== 'all';
+
+    const getStatusBadge = (user: User) => {
+        if (user.account_status === 'deleted') {
+            return <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Deleted</span>;
+        }
+        if (user.account_status === 'pending_deletion') {
+            return <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending Deletion</span>;
+        }
+        if (!user.is_active) {
+            return <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Suspended</span>;
+        }
+        return <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>;
+    };
+
     if (loading && users.length === 0) return <TableSkeleton />;
     if (error && users.length === 0) return <div className="p-6 text-red-600">{error}</div>;
 
