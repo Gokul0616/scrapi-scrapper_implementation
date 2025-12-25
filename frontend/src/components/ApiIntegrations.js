@@ -437,22 +437,22 @@ const ApiIntegrations = () => {
 
           {/* Token List */}
           {loading ? (
-            <div className={`text-center py-8 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+            <div className={`text-center py-6 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
               Loading tokens...
             </div>
           ) : keys.length === 0 ? (
-            <div className={`text-center py-8 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-              <p className="text-sm">No API tokens yet. Create one to get started.</p>
+            <div className={`text-center py-6 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+              <p className="text-xs">No API tokens yet. Create one to get started.</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+            <div className="space-y-2">
+              <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
                 Default API token created on sign up.
               </p>
               {keys.map((key) => (
                 <div
                   key={key.id}
-                  className={`flex items-center gap-3 p-3 rounded-lg border ${
+                  className={`flex items-center gap-2 p-2 rounded-lg border ${
                     theme === 'dark' 
                       ? 'border-gray-700 bg-[#25262B]' 
                       : 'border-gray-200 bg-gray-50'
@@ -461,7 +461,7 @@ const ApiIntegrations = () => {
                 >
                   {/* Token Display */}
                   <div 
-                    className="flex-1 font-mono text-sm select-none"
+                    className="flex-1 font-mono text-xs select-none"
                     style={{ userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none' }}
                   >
                     {showKeyIds[key.id] ? (
