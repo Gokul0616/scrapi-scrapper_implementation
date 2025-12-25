@@ -181,6 +181,28 @@ async def login(credentials: UserLogin):
     if not user_doc or not verify_password(credentials.password, user_doc['hashed_password']):
         raise HTTPException(status_code=401, detail="Invalid username or password")
     
+    # Generate profile color if not exists (for existing users)
+    profile_color = user_doc.get('profile_color')
+    if not profile_color:
+        profile_color = generate_random_profile_color()
+        await db.users.update_one(
+            {"id": user_doc['id']},
+            {"$set": {"profile_color": profile_color}}
+        )
+    
+    # Update last login
+    await db.users.update_one(
+        {"id": user_doc['id']},
+        {"$set": {"last_login_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    # Create access token
+    token = create_access_token({
+        "sub": user_doc['id'], 
+        "username": user_doc['username'],
+        "role": user_doc.get('role', 'user')
+    })
+    
     # Check if account is pending deletion
     account_status = user_doc.get("account_status", "active")
     if account_status == "pending_deletion":
@@ -195,6 +217,8 @@ async def login(credentials: UserLogin):
             days_remaining = (permanent_deletion_at - datetime.now(timezone.utc)).days
             
             return {
+                "access_token": token,
+                "token_type": "bearer",
                 "account_status": "pending_deletion",
                 "deletion_scheduled_at": deletion_scheduled_at.isoformat() if hasattr(deletion_scheduled_at, 'isoformat') else str(deletion_scheduled_at),
                 "permanent_deletion_at": permanent_deletion_at.isoformat() if hasattr(permanent_deletion_at, 'isoformat') else str(permanent_deletion_at),
