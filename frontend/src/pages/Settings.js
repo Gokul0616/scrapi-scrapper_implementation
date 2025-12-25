@@ -518,34 +518,50 @@ Here are some ideas to get you started:
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="account" className="w-full">
-          <TabsList 
-            style={{ backgroundColor: 'transparent !important' }}
-            className={`w-full justify-start border-b rounded-none h-auto p-0 !bg-transparent ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}
-          >
-            {[
-              { value: 'account', label: 'Account' },
-              { value: 'login-privacy', label: 'Login & Privacy' },
-              { value: 'api-integrations', label: 'API & Integrations' },
-              { value: 'organizations', label: 'Organizations' },
-              { value: 'notifications', label: 'Notifications' },
-              { value: 'referrals', label: 'Referrals' }
-            ].map((tab) => (
-              <TabsTrigger
-                key={tab.value}
-                value={tab.value}
-                data-testid={`tab-${tab.value}`}
-                style={{ backgroundColor: 'transparent !important' }}
-                className={`rounded-none border-b-2 border-transparent px-4 py-3 text-sm font-medium transition-colors data-[state=active]:border-blue-500 !bg-transparent data-[state=active]:!bg-transparent hover:!bg-transparent data-[state=active]:!shadow-none ${
-                  theme === 'dark' 
-                    ? 'text-gray-400 data-[state=active]:text-white hover:text-gray-200' 
-                    : 'text-gray-500 data-[state=active]:text-gray-900 hover:text-gray-700'
-                }`}
-              >
-                {tab.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <div className="relative">
+            <TabsList 
+              ref={tabsListRef}
+              style={{ backgroundColor: 'transparent !important' }}
+              className={`w-full justify-start border-b rounded-none h-auto p-0 !bg-transparent ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}
+            >
+              {[
+                { value: 'account', label: 'Account' },
+                { value: 'login-privacy', label: 'Login & Privacy' },
+                { value: 'api-integrations', label: 'API & Integrations' },
+                { value: 'organizations', label: 'Organizations' },
+                { value: 'notifications', label: 'Notifications' },
+                { value: 'referrals', label: 'Referrals' }
+              ].map((tab) => (
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  ref={(el) => (tabRefs.current[tab.value] = el)}
+                  data-testid={`tab-${tab.value}`}
+                  style={{ backgroundColor: 'transparent !important' }}
+                  className={`rounded-none border-b-2 border-transparent px-4 py-3 text-sm font-medium transition-colors !bg-transparent hover:!bg-transparent ${
+                    activeTab === tab.value
+                      ? theme === 'dark' 
+                        ? 'text-white' 
+                        : 'text-gray-900'
+                      : theme === 'dark' 
+                        ? 'text-gray-400 hover:text-gray-200' 
+                        : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  {tab.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            {/* Animated underline */}
+            <div
+              className="absolute bottom-0 h-0.5 bg-blue-500 transition-all duration-300 ease-out"
+              style={{
+                left: `${underlineStyle.left}px`,
+                width: `${underlineStyle.width}px`
+              }}
+            />
+          </div>
 
           {/* Account Tab Content */}
           <TabsContent value="account" className="mt-0 pt-4">
