@@ -291,50 +291,121 @@ const Login = () => {
           {/* Main Content - Centered */}
           <div className="flex items-center justify-center flex-1">
             <div className="max-w-md">
-              <h1 className="text-[28px] leading-[34px] font-semibold text-gray-900 mb-7">
-                Welcome back to SCRAPI
-              </h1>
+              {step === 1 ? (
+                <>
+                  <h1 className="text-[28px] leading-[34px] font-semibold text-gray-900 mb-7">
+                    Welcome back to SCRAPI
+                  </h1>
 
-              <div className="space-y-5">
-                {/* Feature 1 */}
-                <div className="flex items-start space-x-2.5">
-                  <div className="flex-shrink-0 mt-0.5">
-                    <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
-                  </div>
-                  <div>
-                    <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Access your scrapers and data</p>
-                    <p className="text-[13px] leading-[19px] text-gray-600">
-                      Continue managing your Google Maps, Amazon, and custom scraping projects.
-                    </p>
-                  </div>
-                </div>
+                  <div className="space-y-5">
+                    {/* Feature 1 */}
+                    <div className="flex items-start space-x-2.5">
+                      <div className="flex-shrink-0 mt-0.5">
+                        <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
+                      </div>
+                      <div>
+                        <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Access your scrapers and data</p>
+                        <p className="text-[13px] leading-[19px] text-gray-600">
+                          Continue managing your Google Maps, Amazon, and custom scraping projects.
+                        </p>
+                      </div>
+                    </div>
 
-                {/* Feature 2 */}
-                <div className="flex items-start space-x-2.5">
-                  <div className="flex-shrink-0 mt-0.5">
-                    <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
-                  </div>
-                  <div>
-                    <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Monitor scheduled runs</p>
-                    <p className="text-[13px] leading-[19px] text-gray-600">
-                      Track your automated scraping schedules and view real-time run status.
-                    </p>
-                  </div>
-                </div>
+                    {/* Feature 2 */}
+                    <div className="flex items-start space-x-2.5">
+                      <div className="flex-shrink-0 mt-0.5">
+                        <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
+                      </div>
+                      <div>
+                        <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Monitor scheduled runs</p>
+                        <p className="text-[13px] leading-[19px] text-gray-600">
+                          Track your automated scraping schedules and view real-time run status.
+                        </p>
+                      </div>
+                    </div>
 
-                {/* Feature 3 */}
-                <div className="flex items-start space-x-2.5">
-                  <div className="flex-shrink-0 mt-0.5">
-                    <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
+                    {/* Feature 3 */}
+                    <div className="flex items-start space-x-2.5">
+                      <div className="flex-shrink-0 mt-0.5">
+                        <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
+                      </div>
+                      <div>
+                        <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">AI-powered assistance</p>
+                        <p className="text-[13px] leading-[19px] text-gray-600">
+                          Get instant help with our AI chat assistant for lead generation and scraping advice.
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">AI-powered assistance</p>
-                    <p className="text-[13px] leading-[19px] text-gray-600">
-                      Get instant help with our AI chat assistant for lead generation and scraping advice.
-                    </p>
+                </>
+              ) : (
+                <>
+                  <h1 className="text-[32px] leading-[40px] font-bold text-gray-900 mb-4">
+                    Your Account is Scheduled for Deletion
+                  </h1>
+                  <p className="text-[16px] leading-[24px] text-gray-600 mb-8">
+                    We understand plans change. If you've had a change of heart, we'd love to have you back.
+                  </p>
+
+                  <div className="space-y-6">
+                    {/* What you'll lose section */}
+                    <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 border border-red-200">
+                      <h3 className="text-[18px] font-semibold text-red-700 mb-4 flex items-center">
+                        <AlertCircle className="w-5 h-5 mr-2" />
+                        What will be permanently deleted:
+                      </h3>
+                      <div className="space-y-3">
+                        <div className="flex items-start space-x-3">
+                          <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                          <div>
+                            <p className="text-[14px] font-medium text-gray-900">All Your Actors & Tasks</p>
+                            <p className="text-[12px] text-gray-600">Every scraper configuration and saved task will be removed</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start space-x-3">
+                          <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                          <div>
+                            <p className="text-[14px] font-medium text-gray-900">Complete Run History</p>
+                            <p className="text-[12px] text-gray-600">All execution logs, results, and performance data</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start space-x-3">
+                          <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                          <div>
+                            <p className="text-[14px] font-medium text-gray-900">Datasets & Exports</p>
+                            <p className="text-[12px] text-gray-600">All collected data, exports, and storage will be wiped</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start space-x-3">
+                          <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                          <div>
+                            <p className="text-[14px] font-medium text-gray-900">API Keys & Integrations</p>
+                            <p className="text-[12px] text-gray-600">All active API keys will be permanently revoked</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start space-x-3">
+                          <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                          <div>
+                            <p className="text-[14px] font-medium text-gray-900">Scheduled Automations</p>
+                            <p className="text-[12px] text-gray-600">All recurring schedules will stop permanently</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Restore info */}
+                    <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 border border-green-200">
+                      <h3 className="text-[18px] font-semibold text-green-700 mb-3 flex items-center">
+                        <Check className="w-5 h-5 mr-2" />
+                        Reactivate to restore everything
+                      </h3>
+                      <p className="text-[13px] text-gray-700">
+                        Click the reactivate button to immediately cancel the deletion and restore full access to all your data, scrapers, and settings. Your account will be back to normal instantly.
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </div>
+                </>
+              )}
             </div>
           </div>
 
