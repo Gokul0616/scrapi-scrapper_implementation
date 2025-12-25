@@ -257,11 +257,76 @@ export const UsersPage: React.FC = () => {
                             onChange={handleSearch}
                         />
                     </div>
-                    <button className="flex items-center space-x-2 text-aws-text hover:text-aws-blue px-3 py-1.5 border border-gray-300 rounded-sm text-sm font-medium bg-white transition-colors">
+                    <button 
+                        onClick={() => setShowFilters(!showFilters)}
+                        className={`flex items-center space-x-2 px-3 py-1.5 border rounded-sm text-sm font-medium transition-colors ${
+                            hasActiveFilters 
+                                ? 'text-white bg-aws-blue border-aws-blue' 
+                                : 'text-aws-text hover:text-aws-blue border-gray-300 bg-white'
+                        }`}
+                    >
                         <Filter className="h-4 w-4" />
                         <span>Filters</span>
+                        {hasActiveFilters && <span className="ml-1 px-1.5 py-0.5 text-xs bg-white text-aws-blue rounded-full">•</span>}
                     </button>
                 </div>
+
+                {/* Filter Panel */}
+                {showFilters && (
+                    <div className="p-4 bg-blue-50 border-b border-aws-border">
+                        <div className="flex flex-wrap gap-4 items-end">
+                            <div className="flex-1 min-w-[200px]">
+                                <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
+                                <select
+                                    value={statusFilter}
+                                    onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+                                    className="block w-full px-3 py-1.5 border border-gray-300 rounded-sm bg-white text-sm focus:outline-none focus:ring-1 focus:ring-aws-blue focus:border-aws-blue"
+                                    data-testid="status-filter-select"
+                                >
+                                    {STATUS_OPTIONS.map(option => (
+                                        <option key={option.value} value={option.value}>{option.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="flex-1 min-w-[200px]">
+                                <label className="block text-xs font-medium text-gray-700 mb-1">Role</label>
+                                <select
+                                    value={roleFilter}
+                                    onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}
+                                    className="block w-full px-3 py-1.5 border border-gray-300 rounded-sm bg-white text-sm focus:outline-none focus:ring-1 focus:ring-aws-blue focus:border-aws-blue"
+                                    data-testid="role-filter-select"
+                                >
+                                    {ROLE_OPTIONS.map(option => (
+                                        <option key={option.value} value={option.value}>{option.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="flex-1 min-w-[200px]">
+                                <label className="block text-xs font-medium text-gray-700 mb-1">Plan</label>
+                                <select
+                                    value={planFilter}
+                                    onChange={(e) => { setPlanFilter(e.target.value); setPage(1); }}
+                                    className="block w-full px-3 py-1.5 border border-gray-300 rounded-sm bg-white text-sm focus:outline-none focus:ring-1 focus:ring-aws-blue focus:border-aws-blue"
+                                    data-testid="plan-filter-select"
+                                >
+                                    {PLAN_OPTIONS.map(option => (
+                                        <option key={option.value} value={option.value}>{option.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            {hasActiveFilters && (
+                                <button
+                                    onClick={clearFilters}
+                                    className="flex items-center space-x-1 px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 bg-white border border-gray-300 rounded-sm transition-colors"
+                                    data-testid="clear-filters-btn"
+                                >
+                                    <X className="h-4 w-4" />
+                                    <span>Clear</span>
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-aws-border">
