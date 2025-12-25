@@ -1348,7 +1348,6 @@ async def verify_otp(request: VerifyOTPRequest):
                     id=user_doc['id'],
                     username=user_doc['username'],
                     email=user_doc['email'],
-                    organization_name=user_doc.get('organization_name'),
                     plan=user_doc.get('plan', 'Free'),
                     role=user_doc.get('role', 'user'),
                     is_active=user_doc.get('is_active', True),
