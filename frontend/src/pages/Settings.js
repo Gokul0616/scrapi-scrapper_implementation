@@ -20,6 +20,8 @@ const Settings = () => {
   const { theme, setTheme, themePreference, setThemePreference } = useTheme();
   const { user, updateUser } = useAuth();
   const fileInputRef = useRef(null);
+  const tabRefs = useRef({});
+  const tabsListRef = useRef(null);
 const initialReadme =`Markdown as an easy way to elevate the **look** and *feel* of your text.
 
 Here are some ideas to get you started:
@@ -47,6 +49,10 @@ Here are some ideas to get you started:
   const [profilePicture, setProfilePicture] = useState(null);
   const [localThemePreference, setLocalThemePreference] = useState('light');
   const [markdownPreview, setMarkdownPreview] = useState(false);
+  
+  // Tab animation states
+  const [activeTab, setActiveTab] = useState('account');
+  const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 });
   
   // Delete account states
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
