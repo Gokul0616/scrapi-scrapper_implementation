@@ -247,13 +247,13 @@ const ApiIntegrations = () => {
   );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* API tokens Section */}
       <div>
-        <h2 className={`text-2xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+        <h2 className={`text-xl font-bold mb-1.5 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
           API tokens
         </h2>
-        <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} mb-4`}>
+        <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} mb-3`}>
           These tokens enable API access to your Scrapi account or organization.{' '}
           <span className="font-semibold">Do not share them with untrusted parties!</span>{' '}
           <a 
@@ -265,7 +265,7 @@ const ApiIntegrations = () => {
         </p>
 
         {/* User ID */}
-        <div className="flex items-center gap-2 mb-6">
+        <div className="flex items-center gap-2 mb-4">
           <span className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
             Scrapi user ID:
           </span>
