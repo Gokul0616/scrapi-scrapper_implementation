@@ -134,10 +134,10 @@ const UserDropdown = () => {
                 )}
                 <div className="flex-1 min-w-0 text-left">
                   <div className={`font-medium text-xs ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
-                    {user?.organization_name || user?.username || ''}
+                    {user?.username || ''}
                   </div>
                   <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                    {user?.username || ''}
+                    {user?.email || ''}
                   </div>
                 </div>
                 <Check className={`w-4 h-4 flex-shrink-0 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} />
