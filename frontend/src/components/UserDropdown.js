@@ -50,6 +50,160 @@ const UserDropdown = ({ isCollapsed = false }) => {
     return () => window.removeEventListener('keydown', handleEscape);
   }, [isOpen]);
 
+  // Render collapsed mode with tooltip
+  if (isCollapsed) {
+    return (
+      <TooltipProvider delayDuration={500}>
+        <div className="relative" ref={dropdownRef}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="cursor-pointer"
+                data-testid="user-dropdown-trigger-collapsed"
+              >
+                {user?.profile_picture ? (
+                  <img 
+                    key={`sidebar-profile-${profilePictureKey}`}
+                    src={user.profile_picture} 
+                    alt="Profile" 
+                    className="w-9 h-9 rounded-full object-cover"
+                  />
+                ) : (
+                  <div 
+                    key={`sidebar-profile-${profilePictureKey}`}
+                    className="w-9 h-9 rounded-full flex items-center justify-center"
+                    style={{ background: profileColor }}
+                  >
+                    <span className="text-white text-sm font-semibold">{userInitials}</span>
+                  </div>
+                )}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent 
+              side="right" 
+              className={`${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'}`}
+            >
+              {getUserDisplayName(user)}
+            </TooltipContent>
+          </Tooltip>
+
+          {/* Floating Popup Menu with Backdrop */}
+          {isOpen && (
+            <>
+              {/* Transparent backdrop */}
+              <div
+                className="fixed inset-0 z-[9998]"
+                onClick={() => setIsOpen(false)}
+                data-testid="dropdown-backdrop"
+              />
+
+              {/* Floating Popup */}
+              <div
+                className={`fixed rounded-lg border z-[9999] px-2 py-3 ${
+                  theme === 'dark' 
+                    ? 'bg-[#1A1B1E] border-gray-800' 
+                    : 'bg-white border-gray-200'
+                }`}
+                style={{
+                  width: '225px',
+                  left: '76px',
+                  top: dropdownRef.current
+                    ? `${dropdownRef.current.getBoundingClientRect().top}px`
+                    : '16px'
+                }}
+                data-testid="user-dropdown-menu"
+              >
+                {/* Account Type Section */}
+                <div className={`border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
+                  <div className="flex items-center space-x-1.5 mb-1">
+                    <AccountTypeIcon className={`w-3 h-3 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`} />
+                    <div className={`text-xs tracking-wider ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
+                      {accountTypeLabel}
+                    </div>
+                  </div>
+                  <button
+                    className={`w-full flex items-center space-x-2.5 rounded-md transition-colors m-1 p-1 ${
+                      theme === 'dark'
+                        ? 'bg-[#2C2D30] hover:bg-gray-700'
+                        : 'bg-gray-200 hover:bg-gray-300'
+                    }`}
+                  >
+                    {user?.profile_picture ? (
+                      <img 
+                        key={`dropdown-profile-menu-${profilePictureKey}`}
+                        src={user.profile_picture} 
+                        alt="Profile" 
+                        className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                      />
+                    ) : (
+                      <div 
+                        key={`dropdown-profile-menu-${profilePictureKey}`}
+                        className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{ background: profileColor }}
+                      >
+                        <span className="text-white text-xs font-semibold">{userInitials}</span>
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0 text-left">
+                      <div className={`font-medium text-xs ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
+                        {getUserDisplayName(user)}
+                      </div>
+                      <div className={`text-xs truncate ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                        {user?.email || ''}
+                      </div>
+                    </div>
+                    <Check className={`w-4 h-4 flex-shrink-0 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} />
+                  </button>
+                </div>
+
+                {/* Organizations Section - Only show for personal accounts */}
+                {accountType === 'personal' && (
+                  <div className={`border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
+                    <div className="flex items-center space-x-1.5 mb-1 mt-2">
+                      <Building2 className={`w-3 h-3 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`} />
+                      <div className={`text-xs tracking-wider ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
+                        Organizations
+                      </div>
+                    </div>
+                    <button 
+                      style={{fontSize:'13px'}}
+                      className={`w-full flex items-center space-x-2.5 rounded-md text-xs transition-colors m-1 px-1 py-1.5 ${
+                        theme === 'dark'
+                          ? 'text-gray-300 hover:bg-gray-800'
+                          : 'text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>Add organization</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Sign Out */}
+                <div className={`border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
+                  <button
+                    onClick={handleLogout}
+                    className={`w-full flex items-center space-x-2.5 rounded-md text-xs font-medium transition-colors m-1 px-1 py-1.5 ${
+                      theme === 'dark'
+                        ? 'text-gray-300 hover:bg-gray-800'
+                        : 'text-gray-700 hover:bg-gray-200'
+                    }`}
+                    data-testid="sign-out-button"
+                  >
+                    <LogOut className="w-3 h-3" />
+                    <span>Sign out</span>
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </TooltipProvider>
+    );
+  }
+
+  // Render expanded mode (original)
   return (
     <>
       <div className="relative w-full" ref={dropdownRef}>
