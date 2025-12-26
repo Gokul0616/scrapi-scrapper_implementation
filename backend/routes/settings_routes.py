@@ -243,13 +243,6 @@ async def delete_account(
     user_id = current_user.get("id")
     username = current_user.get("username")
     
-    # Validate confirmation text matches username
-    if data.confirmation_text.strip() != username:
-        raise HTTPException(
-            status_code=400, 
-            detail="Confirmation text does not match your username"
-        )
-    
     # Get user from database
     user = await db.users.find_one({"id": user_id})
     if not user:
@@ -257,6 +250,14 @@ async def delete_account(
             user = await db.users.find_one({"_id": ObjectId(user_id)})
         except:
             raise HTTPException(status_code=404, detail="User not found")
+            
+    # Validate confirmation text matches email
+    user_email = user.get("email")
+    if data.confirmation_text.strip() != user_email:
+        raise HTTPException(
+            status_code=400, 
+            detail="Confirmation text does not match your email address"
+        )
     
     # Verify password (re-authentication)
     from auth import verify_password
