@@ -173,6 +173,17 @@ async def register(user_data: UserCreate):
         doc['last_login_at'] = doc['last_login_at'].isoformat()
     await db.users.insert_one(doc)
     
+    # Create welcome notification
+    welcome_notification = Notification(
+        user_id=user.id,
+        title="Welcome to Scrapi! 👋",
+        message="Get started by creating your first actor and exploring our marketplace.",
+        type="welcome",
+        icon="👋",
+        link="/actors"
+    )
+    await db.notifications.insert_one(welcome_notification.model_dump())
+    
     # Create token
     token = create_access_token({"sub": user.id, "username": user.username, "role": user.role})
     
