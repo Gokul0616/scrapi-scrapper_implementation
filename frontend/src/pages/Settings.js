@@ -707,30 +707,72 @@ Here are some ideas to get you started:
                   </p>
                 </div>
                 {/* Right Column */}
-                <div className="flex-1 flex items-start gap-3">
-                  <Input
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    data-testid="username-input"
-                    className={`max-w-sm ${
-                      theme === 'dark' 
-                        ? 'bg-[#25262B] border-gray-700 text-white placeholder:text-gray-500' 
-                        : 'bg-white border-gray-300'
-                    }`}
-                    placeholder=""
-                  />
-                  <Button
-                    onClick={handleSaveUsername}
-                    disabled={username === originalUsername || savingUsername}
-                    data-testid="save-username-btn"
-                    variant={username === originalUsername ? "ghost" : "default"}
-                    className={username === originalUsername 
-                      ? `${theme === 'dark' ? 'text-gray-600' : 'text-gray-400'}` 
-                      : 'bg-blue-600 hover:bg-blue-700 text-white'
-                    }
-                  >
-                    {savingUsername ? 'Saving...' : 'Save'}
-                  </Button>
+                <div className="flex-1">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1 max-w-sm">
+                      <Input
+                        value={username}
+                        onChange={handleUsernameChange}
+                        data-testid="username-input"
+                        className={`w-full ${
+                          theme === 'dark' 
+                            ? 'bg-[#25262B] border-gray-700 text-white placeholder:text-gray-500' 
+                            : 'bg-white border-gray-300'
+                        } ${
+                          usernameValidation.message && username !== originalUsername
+                            ? usernameValidation.available
+                              ? 'border-green-500 focus:border-green-500 focus:ring-green-500'
+                              : 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                            : ''
+                        }`}
+                        placeholder=""
+                      />
+                      {/* Inline validation message */}
+                      {username !== originalUsername && usernameValidation.message && (
+                        <div className={`mt-1.5 text-xs flex items-center gap-1.5 ${
+                          usernameValidation.checking
+                            ? theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                            : usernameValidation.available
+                              ? 'text-green-600 dark:text-green-500'
+                              : 'text-red-600 dark:text-red-500'
+                        }`} data-testid="username-validation-message">
+                          {usernameValidation.checking ? (
+                            <>
+                              <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              <span>{usernameValidation.message}</span>
+                            </>
+                          ) : usernameValidation.available ? (
+                            <>
+                              <Check className="h-3 w-3" />
+                              <span>{usernameValidation.message}</span>
+                            </>
+                          ) : (
+                            <>
+                              <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                              </svg>
+                              <span>{usernameValidation.message}</span>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <Button
+                      onClick={handleSaveUsername}
+                      disabled={username === originalUsername || savingUsername || !usernameValidation.available || usernameValidation.checking}
+                      data-testid="save-username-btn"
+                      variant={username === originalUsername ? "ghost" : "default"}
+                      className={username === originalUsername 
+                        ? `${theme === 'dark' ? 'text-gray-600' : 'text-gray-400'}` 
+                        : 'bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed'
+                      }
+                    >
+                      {savingUsername ? 'Saving...' : 'Save'}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
