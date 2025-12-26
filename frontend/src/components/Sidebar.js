@@ -90,6 +90,53 @@ const Sidebar = () => {
     };
   }, []);
 
+  // Load sidebar state from backend when user logs in
+  useEffect(() => {
+    const loadSidebarPreference = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (token && user) {
+          const response = await axios.get(`${API}/settings/preferences`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (response.data && typeof response.data.sidebar_collapsed === 'boolean') {
+            setIsCollapsed(response.data.sidebar_collapsed);
+            localStorage.setItem('sidebarCollapsed', response.data.sidebar_collapsed.toString());
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load sidebar preference:', error);
+      }
+    };
+    
+    loadSidebarPreference();
+  }, [user]);
+
+  // Save sidebar state to localStorage and backend when it changes
+  useEffect(() => {
+    const saveSidebarState = async () => {
+      // Save to localStorage immediately
+      localStorage.setItem('sidebarCollapsed', isCollapsed.toString());
+      
+      // Save to backend
+      try {
+        const token = localStorage.getItem('token');
+        if (token && user) {
+          await axios.put(
+            `${API}/settings/preferences`,
+            { sidebar_collapsed: isCollapsed },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        }
+      } catch (error) {
+        console.error('Failed to save sidebar state to backend:', error);
+      }
+    };
+    
+    saveSidebarState();
+  }, [isCollapsed, user]);
+
+
   // Close search modal when any modal context modal opens
   useEffect(() => {
     if (currentModal) {
