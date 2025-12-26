@@ -571,7 +571,12 @@ const GlobalChat = () => {
               {/* Messages */}
               <div className={`flex-1 overflow-y-auto px-4 py-4 space-y-2 ${
                 theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'
-              }`}>
+              } scrollbar-hide`}
+                style={{
+                  scrollbarWidth: 'none',
+                  msOverflowStyle: 'none'
+                }}
+              >
                 {messages.length === 0 && (
                   <div className={`text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mt-8`}>
                     <div className={`w-16 h-16 mx-auto mb-4 ${
