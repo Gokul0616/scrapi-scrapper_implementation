@@ -6,11 +6,30 @@ import remarkGfm from 'remark-gfm';
 import AlertModal from './AlertModal';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { MessageCircle, X, Send, Minimize2, Trash2, RefreshCw, Navigation } from 'lucide-react';
+import { X, Send, Minimize2, Trash2, Navigation } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
+
+// Custom Chat Icon SVG Component - Clean and modern
+const ChatIcon = ({ className = "w-5 h-5" }) => (
+  <svg 
+    className={className}
+    viewBox="0 0 24 24" 
+    fill="none" 
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path 
+      d="M12 2C6.48 2 2 6.48 2 12C2 13.54 2.38 15 3.06 16.29L2 22L7.71 20.94C9 21.62 10.46 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2Z" 
+      fill="currentColor"
+      fillOpacity="0.9"
+    />
+    <circle cx="8" cy="12" r="1.25" fill="white"/>
+    <circle cx="12" cy="12" r="1.25" fill="white"/>
+    <circle cx="16" cy="12" r="1.25" fill="white"/>
+  </svg>
+);
 
 const GlobalChat = () => {
   const navigate = useNavigate();
