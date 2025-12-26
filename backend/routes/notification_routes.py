@@ -85,7 +85,7 @@ async def websocket_endpoint(websocket: WebSocket, token: Optional[str] = None):
                         break
                         
     except WebSocketDisconnect:
-        print(f"WebSocket disconnected for user: {user_id}")
+        pass
     except Exception as e:
         print(f"WebSocket error: {e}")
     finally:
