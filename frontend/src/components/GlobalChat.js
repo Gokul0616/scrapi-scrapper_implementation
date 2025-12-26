@@ -569,7 +569,7 @@ const GlobalChat = () => {
               )}
               
               {/* Messages */}
-              <div className={`flex-1 overflow-y-auto px-4 py-4 space-y-4 ${
+              <div className={`flex-1 overflow-y-auto px-4 py-4 space-y-2 ${
                 theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'
               }`}>
                 {messages.length === 0 && (
