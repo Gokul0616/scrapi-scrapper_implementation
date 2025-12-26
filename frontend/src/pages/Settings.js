@@ -103,7 +103,7 @@ Here are some ideas to get you started:
         setFirstName(data.first_name || user?.first_name || '');
         setLastName(data.last_name || user?.last_name || '');
         setBio(data.bio || '');
-        setReadme(data.readme || '');
+        setReadme(data.readme || initialReadme);
         setHomepageUrl(data.homepage_url || '');
         setGithub(data.github || '');
         setTwitter(data.twitter || '');
