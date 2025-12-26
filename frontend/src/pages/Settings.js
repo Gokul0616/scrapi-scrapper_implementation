@@ -445,10 +445,10 @@ Here are some ideas to get you started:
   };
 
   const handleDeleteAccount = async () => {
-    if (deleteConfirmText !== username) {
+    if (deleteConfirmText !== user?.email) {
       setAlertConfig({
         title: 'Confirmation Required',
-        message: 'Please type your username correctly to confirm deletion.',
+        message: 'Please type your email correctly to confirm deletion.',
         type: 'warning'
       });
       setShowAlert(true);
