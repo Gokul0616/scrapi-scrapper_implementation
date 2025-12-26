@@ -1313,10 +1313,10 @@ Here are some ideas to get you started:
                         </AlertDialogCancel>
                         <AlertDialogAction
                           onClick={handleDeleteAccount}
-                          disabled={deleteConfirmText !== username || !deletePassword || isDeleting}
+                          disabled={deleteConfirmText !== user?.email || !deletePassword || isDeleting}
                           data-testid="confirm-delete-btn"
                           className={`text-sm py-1.5 ${
-                            deleteConfirmText !== username || !deletePassword || isDeleting
+                            deleteConfirmText !== user?.email || !deletePassword || isDeleting
                               ? 'opacity-50 cursor-not-allowed bg-gray-400'
                               : theme === 'dark'
                               ? 'bg-red-600 hover:bg-red-700'
