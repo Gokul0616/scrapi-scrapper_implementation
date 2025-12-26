@@ -654,8 +654,8 @@ class EmailValidator:
                 # Strong signal for disposable
                 result.add_error("Email username appears randomly generated")
                 return result
-            elif entropy > 3.0:
-                # Moderate signal
+            elif entropy > 3.8:
+                # Moderate signal - increased threshold to reduce false positives
                 result.add_risk(1, f"Moderate username entropy ({entropy:.2f})")
             
             # Real-time API
