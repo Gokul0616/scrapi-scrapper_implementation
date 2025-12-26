@@ -1232,9 +1232,16 @@ When user mentions multiple locations with "and", create SEPARATE runs for EACH 
             # Construct full prompt with system message and context
             full_prompt = f"{enhanced_prompt}\n\nUSER: {message}"
             
+            # Create chat instance for this request
+            chat = LlmChat(
+                api_key=self.api_key,
+                session_id=f"global_chat_{self.user_id}_{datetime.now().timestamp()}",
+                system_message=enhanced_prompt
+            ).with_model("gemini", "gemini-2.5-flash")
+            
             # Get response using Emergent LLM through emergentintegrations
-            user_msg = UserMessage(text=full_prompt)
-            response = await self.chat.send_message(user_msg)
+            user_msg = UserMessage(text=message)
+            response = await chat.send_message(user_msg)
             
             # LOG: Check what the AI responded
             logger.info(f"AI Response: {response[:500]}...")
