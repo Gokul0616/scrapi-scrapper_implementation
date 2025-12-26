@@ -633,9 +633,9 @@ const GlobalChat = () => {
                       }`}
                     >
                       {msg.role === 'user' ? (
-                        <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                        <p className="text-xs whitespace-pre-wrap leading-relaxed">{msg.content}</p>
                       ) : (
-                        <div className="text-sm prose prose-sm max-w-none leading-relaxed">
+                        <div className="text-xs prose prose-sm max-w-none leading-relaxed">
                           <ReactMarkdown 
                             remarkPlugins={[remarkGfm]}
                             components={{
