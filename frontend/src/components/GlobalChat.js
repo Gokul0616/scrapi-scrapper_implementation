@@ -573,19 +573,19 @@ const GlobalChat = () => {
                             remarkPlugins={[remarkGfm]}
                             components={{
                               p: ({children}) => <p className="mb-2 last:mb-0">{children}</p>,
-                              strong: ({children}) => <strong className="font-bold text-gray-900">{children}</strong>,
+                              strong: ({children}) => <strong className={`font-bold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>{children}</strong>,
                               em: ({children}) => <em className="italic">{children}</em>,
-                              h1: ({children}) => <h1 className="text-sm font-bold mb-1 text-gray-900">{children}</h1>,
-                              h2: ({children}) => <h2 className="text-xs font-bold mb-1 text-gray-900">{children}</h2>,
-                              h3: ({children}) => <h3 className="text-xs font-bold mb-0.5 text-gray-900">{children}</h3>,
+                              h1: ({children}) => <h1 className={`text-sm font-bold mb-1 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>{children}</h1>,
+                              h2: ({children}) => <h2 className={`text-xs font-bold mb-1 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>{children}</h2>,
+                              h3: ({children}) => <h3 className={`text-xs font-bold mb-0.5 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>{children}</h3>,
                               ul: ({children}) => <ul className="list-disc pl-3 mb-1 space-y-0.5">{children}</ul>,
                               ol: ({children}) => <ol className="list-decimal pl-3 mb-1 space-y-0.5">{children}</ol>,
-                              li: ({children}) => <li className="text-gray-800">{children}</li>,
+                              li: ({children}) => <li className={theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}>{children}</li>,
                               code: ({inline, children}) => 
                                 inline ? 
-                                  <code className="bg-gray-100 px-1 py-0.5 rounded text-[10px] font-mono text-emerald-700">{children}</code> :
-                                  <code className="block bg-gray-100 p-1.5 rounded text-[10px] font-mono overflow-x-auto">{children}</code>,
-                              blockquote: ({children}) => <blockquote className="border-l-4 border-emerald-500 pl-3 italic text-gray-700">{children}</blockquote>
+                                  <code className={`${theme === 'dark' ? 'bg-gray-700 text-emerald-400' : 'bg-gray-100 text-emerald-700'} px-1 py-0.5 rounded text-[10px] font-mono`}>{children}</code> :
+                                  <code className={`block ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'} p-1.5 rounded text-[10px] font-mono overflow-x-auto`}>{children}</code>,
+                              blockquote: ({children}) => <blockquote className={`border-l-4 border-emerald-500 pl-3 italic ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>{children}</blockquote>
                             }}
                           >
                             {msg.content}
