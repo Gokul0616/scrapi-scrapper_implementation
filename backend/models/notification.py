@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional, Literal
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 
 class Notification(BaseModel):
@@ -10,7 +10,7 @@ class Notification(BaseModel):
     message: str
     type: Literal['welcome', 'info', 'success', 'warning', 'error'] = 'info'
     read: bool = False
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     link: Optional[str] = None
     icon: Optional[str] = None
 
