@@ -307,12 +307,14 @@ const UserDropdown = ({ isCollapsed = false }) => {
                 }`}
               >
                 {user?.profile_picture ? (
-                  <img 
-                    key={`dropdown-profile-menu-${profilePictureKey}`}
-                    src={user.profile_picture} 
-                    alt="Profile" 
-                    className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                  />
+                  <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+                    <img 
+                      key={`dropdown-profile-menu-${profilePictureKey}`}
+                      src={user.profile_picture} 
+                      alt="Profile" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 ) : (
                   <div 
                     key={`dropdown-profile-menu-${profilePictureKey}`}
