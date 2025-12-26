@@ -12,7 +12,7 @@ import { useTheme } from '../contexts/ThemeContext';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Custom Chat Icon SVG Component - Clean and modern
+// Custom Sparkle Icon SVG Component - Unique and modern
 const ChatIcon = ({ className = "w-5 h-5" }) => (
   <svg 
     className={className}
@@ -21,13 +21,20 @@ const ChatIcon = ({ className = "w-5 h-5" }) => (
     xmlns="http://www.w3.org/2000/svg"
   >
     <path 
-      d="M12 2C6.48 2 2 6.48 2 12C2 13.54 2.38 15 3.06 16.29L2 22L7.71 20.94C9 21.62 10.46 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2Z" 
+      d="M12 2L13.5 8.5L20 10L13.5 11.5L12 18L10.5 11.5L4 10L10.5 8.5L12 2Z" 
       fill="currentColor"
       fillOpacity="0.9"
     />
-    <circle cx="8" cy="12" r="1.25" fill="white"/>
-    <circle cx="12" cy="12" r="1.25" fill="white"/>
-    <circle cx="16" cy="12" r="1.25" fill="white"/>
+    <path 
+      d="M19 3L19.8 5.8L22.5 6.5L19.8 7.2L19 10L18.2 7.2L15.5 6.5L18.2 5.8L19 3Z" 
+      fill="currentColor"
+      fillOpacity="0.7"
+    />
+    <path 
+      d="M6 14L6.6 16.2L9 17L6.6 17.8L6 20L5.4 17.8L3 17L5.4 16.2L6 14Z" 
+      fill="currentColor"
+      fillOpacity="0.7"
+    />
   </svg>
 );
 
