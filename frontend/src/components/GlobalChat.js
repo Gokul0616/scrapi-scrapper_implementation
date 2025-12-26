@@ -610,45 +610,45 @@ const GlobalChat = () => {
                     className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-[80%] rounded-lg px-3 py-1.5 ${
+                      className={`max-w-[85%] rounded-xl px-4 py-2.5 ${
                         msg.role === 'user'
                           ? theme === 'dark'
-                            ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white'
-                            : 'bg-gradient-to-r from-gray-700 to-gray-900 text-white'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-[#1B1D1F] text-white'
                           : theme === 'dark'
                             ? 'bg-gray-800 border border-gray-700 text-gray-100'
                             : 'bg-white border border-gray-200 text-gray-900'
                       }`}
                     >
                       {msg.role === 'user' ? (
-                        <p className="text-xs whitespace-pre-wrap">{msg.content}</p>
+                        <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
                       ) : (
-                        <div className="text-xs prose prose-sm max-w-none">
+                        <div className="text-sm prose prose-sm max-w-none leading-relaxed">
                           <ReactMarkdown 
                             remarkPlugins={[remarkGfm]}
                             components={{
-                              p: ({children}) => <p className="mb-2 last:mb-0">{children}</p>,
-                              strong: ({children}) => <strong className={`font-bold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>{children}</strong>,
+                              p: ({children}) => <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>,
+                              strong: ({children}) => <strong className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>{children}</strong>,
                               em: ({children}) => <em className="italic">{children}</em>,
-                              h1: ({children}) => <h1 className={`text-sm font-bold mb-1 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>{children}</h1>,
-                              h2: ({children}) => <h2 className={`text-xs font-bold mb-1 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>{children}</h2>,
-                              h3: ({children}) => <h3 className={`text-xs font-bold mb-0.5 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>{children}</h3>,
-                              ul: ({children}) => <ul className="list-disc pl-3 mb-1 space-y-0.5">{children}</ul>,
-                              ol: ({children}) => <ol className="list-decimal pl-3 mb-1 space-y-0.5">{children}</ol>,
+                              h1: ({children}) => <h1 className={`text-base font-semibold mb-2 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>{children}</h1>,
+                              h2: ({children}) => <h2 className={`text-sm font-semibold mb-1.5 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>{children}</h2>,
+                              h3: ({children}) => <h3 className={`text-sm font-semibold mb-1 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>{children}</h3>,
+                              ul: ({children}) => <ul className="list-disc pl-4 mb-2 space-y-1">{children}</ul>,
+                              ol: ({children}) => <ol className="list-decimal pl-4 mb-2 space-y-1">{children}</ol>,
                               li: ({children}) => <li className={theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}>{children}</li>,
                               code: ({inline, children}) => 
                                 inline ? 
-                                  <code className={`${theme === 'dark' ? 'bg-gray-700 text-emerald-400' : 'bg-gray-100 text-emerald-700'} px-1 py-0.5 rounded text-[10px] font-mono`}>{children}</code> :
-                                  <code className={`block ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'} p-1.5 rounded text-[10px] font-mono overflow-x-auto`}>{children}</code>,
-                              blockquote: ({children}) => <blockquote className={`border-l-4 border-emerald-500 pl-3 italic ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>{children}</blockquote>
+                                  <code className={`${theme === 'dark' ? 'bg-gray-700 text-emerald-400' : 'bg-gray-100 text-emerald-700'} px-1.5 py-0.5 rounded text-xs font-mono`}>{children}</code> :
+                                  <code className={`block ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'} p-2 rounded text-xs font-mono overflow-x-auto my-2`}>{children}</code>,
+                              blockquote: ({children}) => <blockquote className={`border-l-4 border-[#2BC56B] pl-3 italic ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'} my-2`}>{children}</blockquote>
                             }}
                           >
                             {msg.content}
                           </ReactMarkdown>
                         </div>
                       )}
-                      <p className={`text-[10px] mt-0.5 ${
-                        msg.role === 'user' ? 'text-white/70' : theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+                      <p className={`text-xs mt-1.5 ${
+                        msg.role === 'user' ? 'text-white/60' : theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
                       }`}>
                         {new Date(msg.timestamp).toLocaleTimeString([], { 
                           hour: '2-digit', 
