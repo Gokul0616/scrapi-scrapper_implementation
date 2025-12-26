@@ -531,13 +531,15 @@ const GlobalChat = () => {
                 theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'
               }`}>
                 {messages.length === 0 && (
-                  <div className="text-center text-gray-500 mt-4">
-                    <MessageCircle className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                  <div className={`text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mt-4`}>
+                    <MessageCircle className={`w-8 h-8 mx-auto mb-2 ${theme === 'dark' ? 'text-gray-600' : 'text-gray-300'}`} />
                     <p className="text-xs">Hi! I'm your Scrapi assistant.</p>
-                    <p className="text-[10px] text-gray-400 mt-1">I can help you navigate and control the app!</p>
-                    <div className="mt-3 space-y-1 text-[10px] text-left bg-white p-2 rounded-lg">
-                      <p className="font-semibold text-gray-700">Try asking:</p>
-                      <ul className="list-disc list-inside text-gray-600 space-y-0.5">
+                    <p className={`text-[10px] ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} mt-1`}>I can help you navigate and control the app!</p>
+                    <div className={`mt-3 space-y-1 text-[10px] text-left ${
+                      theme === 'dark' ? 'bg-gray-800 text-gray-300' : 'bg-white'
+                    } p-2 rounded-lg`}>
+                      <p className={`font-semibold ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Try asking:</p>
+                      <ul className={`list-disc list-inside ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} space-y-0.5`}>
                         <li>"Go to Actors page"</li>
                         <li>"Show me my runs"</li>
                         <li>"Export my latest data as CSV"</li>
