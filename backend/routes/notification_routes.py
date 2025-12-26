@@ -125,7 +125,7 @@ async def mark_notifications_as_read(
     request: MarkAsReadRequest,
     current_user: dict = Depends(get_current_user)
 ):
-    user_id = current_user["user_id"]
+    user_id = current_user["id"]
     
     result = await _db.notifications.update_many(
         {
