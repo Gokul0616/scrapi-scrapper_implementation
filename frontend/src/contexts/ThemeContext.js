@@ -110,9 +110,9 @@ export const ThemeProvider = ({ children }) => {
     setBackendThemeLoaded(true);
   };
 
-  const toggleTheme = () => {
+  const toggleTheme = async () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
-    setThemePreference(newTheme);
+    await setThemePreference(newTheme);
   };
 
   return (
