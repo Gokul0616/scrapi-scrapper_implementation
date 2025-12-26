@@ -63,7 +63,7 @@ const UserDropdown = ({ isCollapsed = false }) => {
                 data-testid="user-dropdown-trigger-collapsed"
               >
                 {user?.profile_picture ? (
-                  <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
                     <img 
                       key={`sidebar-profile-${profilePictureKey}`}
                       src={user.profile_picture} 
@@ -74,7 +74,7 @@ const UserDropdown = ({ isCollapsed = false }) => {
                 ) : (
                   <div 
                     key={`sidebar-profile-${profilePictureKey}`}
-                    className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
                     style={{ background: profileColor }}
                   >
                     <span className="text-white text-sm font-semibold">{userInitials}</span>
@@ -132,7 +132,7 @@ const UserDropdown = ({ isCollapsed = false }) => {
                     }`}
                   >
                     {user?.profile_picture ? (
-                      <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+                      <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0">
                         <img 
                           key={`dropdown-profile-menu-${profilePictureKey}`}
                           src={user.profile_picture} 
@@ -143,7 +143,7 @@ const UserDropdown = ({ isCollapsed = false }) => {
                     ) : (
                       <div 
                         key={`dropdown-profile-menu-${profilePictureKey}`}
-                        className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                        className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
                         style={{ background: profileColor }}
                       >
                         <span className="text-white text-xs font-semibold">{userInitials}</span>
@@ -222,7 +222,7 @@ const UserDropdown = ({ isCollapsed = false }) => {
         >
           <div className="flex items-center space-x-2 flex-1 min-w-0">
             {user?.profile_picture ? (
-              <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0">
+              <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
                 <img 
                   key={`dropdown-profile-main-${profilePictureKey}`}
                   src={user.profile_picture} 
@@ -233,7 +233,7 @@ const UserDropdown = ({ isCollapsed = false }) => {
             ) : (
               <div 
                 key={`dropdown-profile-main-${profilePictureKey}`}
-                className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+                className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
                 style={{ background: profileColor }}
               >
                 <span className="text-white text-sm font-semibold">{userInitials}</span>
@@ -307,7 +307,7 @@ const UserDropdown = ({ isCollapsed = false }) => {
                 }`}
               >
                 {user?.profile_picture ? (
-                  <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+                  <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0">
                     <img 
                       key={`dropdown-profile-menu-${profilePictureKey}`}
                       src={user.profile_picture} 
@@ -318,7 +318,7 @@ const UserDropdown = ({ isCollapsed = false }) => {
                 ) : (
                   <div 
                     key={`dropdown-profile-menu-${profilePictureKey}`}
-                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                    className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
                     style={{ background: profileColor }}
                   >
                     <span className="text-white text-xs font-semibold">{userInitials}</span>
