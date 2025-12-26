@@ -198,7 +198,7 @@ const Sidebar = () => {
       // Check for Cmd+L (Mac) or Ctrl+L (Windows/Linux) to toggle theme
       if ((e.metaKey || e.ctrlKey) && e.key === 'l') {
         e.preventDefault();
-        toggleTheme();
+        await toggleTheme();
       }
 
       // Check for Shift+? to show shortcuts modal
