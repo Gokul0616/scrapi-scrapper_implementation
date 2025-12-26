@@ -70,7 +70,7 @@ export const ThemeProvider = ({ children }) => {
     localStorage.setItem('theme', newTheme);
   };
 
-  const setThemePreference = (newPreference) => {
+  const setThemePreference = async (newPreference) => {
     setThemePreferenceState(newPreference);
     localStorage.setItem('themePreference', newPreference);
     
@@ -80,6 +80,20 @@ export const ThemeProvider = ({ children }) => {
       setThemeState(mediaQuery.matches ? 'dark' : 'light');
     } else {
       setThemeState(newPreference);
+    }
+    
+    // Save to backend API
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        await axios.put(
+          `${API}/settings/preferences`,
+          { theme_preference: newPreference },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      }
+    } catch (error) {
+      console.error('Failed to save theme preference to backend:', error);
     }
   };
 
