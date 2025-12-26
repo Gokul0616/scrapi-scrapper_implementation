@@ -924,9 +924,13 @@ Here are some ideas to get you started:
                       value={readme}
                       onChange={(e) => setReadme(e.target.value)}
                       data-testid="readme-textarea"
-                      className={`min-h-[200px] ${theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}`}
+                      className={`min-h-[200px] scrollbar-hide ${theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}`}
                       placeholder={'add Readme!!!'}
                       maxLength={2000}
+                      style={{
+                        msOverflowStyle: 'none',
+                        scrollbarWidth: 'none',
+                      }}
                     />
                     <div className={`text-xs mt-1 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>
                       {readme.length}/2000
