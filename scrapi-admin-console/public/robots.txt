@@ -5,4 +5,4 @@ User-agent: *
 Disallow: /
 
 # Sitemap (for reference, even though indexing is disabled)
-Sitemap: https://theme-fix-11.preview.emergentagent.com/sitemap.xml
+Sitemap: https://startup-script-3.preview.emergentagent.com/sitemap.xml
