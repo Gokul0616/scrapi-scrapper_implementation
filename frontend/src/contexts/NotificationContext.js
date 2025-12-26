@@ -143,7 +143,6 @@ export const NotificationProvider = ({ children }) => {
     const websocket = new WebSocket(`${WS_URL}/api/notifications/ws?token=${token}`);
 
     websocket.onopen = () => {
-      console.log('WebSocket connected');
       setIsConnected(true);
       
       // Send periodic ping to keep connection alive
