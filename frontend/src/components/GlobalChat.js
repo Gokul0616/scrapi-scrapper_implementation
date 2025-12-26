@@ -593,7 +593,7 @@ const GlobalChat = () => {
                         </div>
                       )}
                       <p className={`text-[10px] mt-0.5 ${
-                        msg.role === 'user' ? 'text-white/70' : 'text-gray-400'
+                        msg.role === 'user' ? 'text-white/70' : theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
                       }`}>
                         {new Date(msg.timestamp).toLocaleTimeString([], { 
                           hour: '2-digit', 
