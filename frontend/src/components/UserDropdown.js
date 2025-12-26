@@ -222,12 +222,14 @@ const UserDropdown = ({ isCollapsed = false }) => {
         >
           <div className="flex items-center space-x-2 flex-1 min-w-0">
             {user?.profile_picture ? (
-              <img 
-                key={`dropdown-profile-main-${profilePictureKey}`}
-                src={user.profile_picture} 
-                alt="Profile" 
-                className="w-9 h-9 rounded-full object-cover flex-shrink-0"
-              />
+              <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0">
+                <img 
+                  key={`dropdown-profile-main-${profilePictureKey}`}
+                  src={user.profile_picture} 
+                  alt="Profile" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
             ) : (
               <div 
                 key={`dropdown-profile-main-${profilePictureKey}`}
