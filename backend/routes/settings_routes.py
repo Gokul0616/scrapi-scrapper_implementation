@@ -416,5 +416,3 @@ async def update_preferences(data: UserPreferencesUpdate, current_user: dict = D
                 pass
     
     return {"message": "Preferences updated successfully"}
-
-        raise HTTPException(status_code=500, detail=f"Failed to export data: {str(e)}")
