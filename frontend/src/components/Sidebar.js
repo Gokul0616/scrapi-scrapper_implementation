@@ -780,6 +780,13 @@ const Sidebar = () => {
         />
       </div>
       
+      {/* Notification Dropdown */}
+      <NotificationDropdown
+        isOpen={isNotificationOpen}
+        onClose={() => setIsNotificationOpen(false)}
+        triggerRef={notificationButtonRef}
+      />
+      
       {/* Shortcuts Modal */}
       <ShortcutsModal />
     </TooltipProvider>
