@@ -1239,9 +1239,9 @@ When user mentions multiple locations with "and", create SEPARATE runs for EACH 
             # Construct full prompt with system message and context
             full_prompt = f"{enhanced_prompt}\n\nUSER: {message}"
             
-            # Get response using Gemini
-            response_obj = await self.model.generate_content_async(full_prompt)
-            response = response_obj.text
+            # Get response using Emergent LLM through emergentintegrations
+            user_msg = UserMessage(text=full_prompt)
+            response = await self.chat.send_message(user_msg)
             
             # LOG: Check what the AI responded
             logger.info(f"AI Response: {response[:500]}...")
