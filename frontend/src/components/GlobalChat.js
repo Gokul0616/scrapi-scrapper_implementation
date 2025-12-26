@@ -557,8 +557,12 @@ const GlobalChat = () => {
                     <div
                       className={`max-w-[80%] rounded-lg px-3 py-1.5 ${
                         msg.role === 'user'
-                          ? 'bg-gradient-to-r from-gray-700 to-gray-900 text-white'
-                          : 'bg-white border border-gray-200 text-gray-900'
+                          ? theme === 'dark'
+                            ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white'
+                            : 'bg-gradient-to-r from-gray-700 to-gray-900 text-white'
+                          : theme === 'dark'
+                            ? 'bg-gray-800 border border-gray-700 text-gray-100'
+                            : 'bg-white border border-gray-200 text-gray-900'
                       }`}
                     >
                       {msg.role === 'user' ? (
