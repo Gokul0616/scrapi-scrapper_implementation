@@ -342,4 +342,78 @@ async def export_account_data(current_user: dict = Depends(get_current_user)):
         export_data = await deletion_service.export_user_data(user_id)
         return export_data
     except Exception as e:
+
+@router.get("/preferences", response_model=UserPreferencesResponse)
+async def get_preferences(current_user: dict = Depends(get_current_user)):
+    """Get user preferences (theme, sidebar state, etc.)"""
+    user_id = current_user.get("id")
+    
+    # Get user from users collection for default values
+    user = await db.users.find_one({"id": user_id}, {"theme_preference": 1, "_id": 0})
+    if not user:
+        try:
+            user = await db.users.find_one({"_id": ObjectId(user_id)}, {"theme_preference": 1, "_id": 0})
+        except:
+            user = {}
+    
+    # Get settings from user_settings collection
+    settings = await db.user_settings.find_one({"user_id": user_id}, {"_id": 0})
+    
+    # Build response with defaults
+    preferences = {
+        "theme_preference": user.get("theme_preference", "light"),
+        "sidebar_collapsed": False
+    }
+    
+    # Override with settings if available
+    if settings:
+        if "theme_preference" in settings:
+            preferences["theme_preference"] = settings["theme_preference"]
+        if "sidebar_collapsed" in settings:
+            preferences["sidebar_collapsed"] = settings["sidebar_collapsed"]
+    
+    return UserPreferencesResponse(**preferences)
+
+@router.put("/preferences")
+async def update_preferences(data: UserPreferencesUpdate, current_user: dict = Depends(get_current_user)):
+    """Update user preferences (theme, sidebar state, etc.)"""
+    user_id = current_user.get("id")
+    
+    update_data = data.model_dump(exclude_none=True)
+    if not update_data:
+        return {"message": "No preferences to update"}
+    
+    update_data["user_id"] = user_id
+    update_data["updated_at"] = datetime.now(timezone.utc)
+    
+    # Update in user_settings collection
+    await db.user_settings.update_one(
+        {"user_id": user_id},
+        {"$set": update_data},
+        upsert=True
+    )
+    
+    # Also update theme_preference in users collection for consistency
+    if "theme_preference" in update_data:
+        user_update = {
+            "theme_preference": update_data["theme_preference"],
+            "updated_at": datetime.now(timezone.utc)
+        }
+        # Handle both UUID and ObjectId
+        result = await db.users.update_one(
+            {"id": user_id},
+            {"$set": user_update}
+        )
+        # Fallback to _id for ObjectId-based users
+        if result.modified_count == 0:
+            try:
+                await db.users.update_one(
+                    {"_id": ObjectId(user_id)},
+                    {"$set": user_update}
+                )
+            except:
+                pass
+    
+    return {"message": "Preferences updated successfully"}
+
         raise HTTPException(status_code=500, detail=f"Failed to export data: {str(e)}")
