@@ -78,6 +78,16 @@ Here are some ideas to get you started:
     type: 'info'
   });
 
+  // Username validation states
+  const [usernameValidation, setUsernameValidation] = useState({
+    checking: false,
+    valid: false,
+    available: false,
+    message: ''
+  });
+  const wsRef = useRef(null);
+  const usernameTimeoutRef = useRef(null);
+
   // Load user settings on mount
   useEffect(() => {
     const loadSettings = async () => {
