@@ -182,7 +182,6 @@ export const NotificationProvider = ({ children }) => {
     };
 
     websocket.onclose = () => {
-      console.log('WebSocket disconnected');
       setIsConnected(false);
       if (websocket.pingInterval) {
         clearInterval(websocket.pingInterval);
