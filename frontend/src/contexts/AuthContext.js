@@ -47,6 +47,23 @@ export const AuthProvider = ({ children }) => {
           detail: { theme: response.data.theme_preference } 
         }));
       }
+      
+      // Load user preferences (including sidebar state)
+      try {
+        const prefsResponse = await axios.get(`${API}/settings/preferences`);
+        if (prefsResponse.data) {
+          // Store sidebar preference for Sidebar component to pick up
+          if (typeof prefsResponse.data.sidebar_collapsed === 'boolean') {
+            localStorage.setItem('sidebarCollapsed', prefsResponse.data.sidebar_collapsed.toString());
+          }
+          // Store theme preference
+          if (prefsResponse.data.theme_preference) {
+            localStorage.setItem('themePreference', prefsResponse.data.theme_preference);
+          }
+        }
+      } catch (prefError) {
+        console.error('Failed to fetch user preferences:', prefError);
+      }
     } catch (error) {
       console.error('Failed to fetch user:', error);
       logout();
