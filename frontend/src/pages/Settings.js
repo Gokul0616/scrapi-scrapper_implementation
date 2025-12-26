@@ -142,6 +142,119 @@ Here are some ideas to get you started:
     setLocalThemePreference(themePreference);
   }, [themePreference]);
 
+  // WebSocket for username validation
+  useEffect(() => {
+    // Setup WebSocket connection
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${wsProtocol}//${window.location.host}/api/settings/ws/check-username`;
+    
+    const connectWebSocket = () => {
+      try {
+        const ws = new WebSocket(wsUrl);
+        
+        ws.onopen = () => {
+          console.log('Username validation WebSocket connected');
+        };
+        
+        ws.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          setUsernameValidation({
+            checking: false,
+            valid: data.valid || false,
+            available: data.available || false,
+            message: data.message || ''
+          });
+        };
+        
+        ws.onerror = (error) => {
+          console.error('WebSocket error:', error);
+          setUsernameValidation(prev => ({
+            ...prev,
+            checking: false
+          }));
+        };
+        
+        ws.onclose = () => {
+          console.log('WebSocket closed');
+        };
+        
+        wsRef.current = ws;
+      } catch (error) {
+        console.error('Failed to create WebSocket:', error);
+      }
+    };
+    
+    connectWebSocket();
+    
+    // Cleanup on unmount
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+      if (usernameTimeoutRef.current) {
+        clearTimeout(usernameTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Handle username change with debouncing
+  const handleUsernameChange = (e) => {
+    const newUsername = e.target.value;
+    setUsername(newUsername);
+    
+    // Clear previous timeout
+    if (usernameTimeoutRef.current) {
+      clearTimeout(usernameTimeoutRef.current);
+    }
+    
+    // If username is same as original, clear validation
+    if (newUsername === originalUsername) {
+      setUsernameValidation({
+        checking: false,
+        valid: true,
+        available: true,
+        message: ''
+      });
+      return;
+    }
+    
+    // If username is empty, clear validation
+    if (!newUsername.trim()) {
+      setUsernameValidation({
+        checking: false,
+        valid: false,
+        available: false,
+        message: ''
+      });
+      return;
+    }
+    
+    // Set checking state
+    setUsernameValidation({
+      checking: true,
+      valid: false,
+      available: false,
+      message: 'Checking...'
+    });
+    
+    // Debounce the check (500ms)
+    usernameTimeoutRef.current = setTimeout(() => {
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({
+          username: newUsername,
+          user_id: user?.id
+        }));
+      } else {
+        setUsernameValidation({
+          checking: false,
+          valid: false,
+          available: false,
+          message: 'Connection error. Please try again.'
+        });
+      }
+    }, 500);
+  };
+
   // Update underline position when active tab changes
   useEffect(() => {
     const updateUnderlinePosition = () => {
