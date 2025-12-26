@@ -36,8 +36,6 @@ async def websocket_endpoint(websocket: WebSocket, token: Optional[str] = None):
                     active_connections[user_id] = []
                 active_connections[user_id].append(websocket)
                 
-                print(f"WebSocket connected for user: {user_id}")
-                
                 # Check if this is user's first login
                 user = await _db.users.find_one({"user_id": user_id})
                 if user:
