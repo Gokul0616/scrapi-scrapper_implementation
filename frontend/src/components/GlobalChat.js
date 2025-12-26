@@ -527,7 +527,9 @@ const GlobalChat = () => {
               )}
               
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 bg-gray-50">
+              <div className={`flex-1 overflow-y-auto px-3 py-3 space-y-3 ${
+                theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'
+              }`}>
                 {messages.length === 0 && (
                   <div className="text-center text-gray-500 mt-4">
                     <MessageCircle className="w-8 h-8 mx-auto mb-2 text-gray-300" />
