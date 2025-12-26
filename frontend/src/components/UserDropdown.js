@@ -63,16 +63,18 @@ const UserDropdown = ({ isCollapsed = false }) => {
                 data-testid="user-dropdown-trigger-collapsed"
               >
                 {user?.profile_picture ? (
-                  <img 
-                    key={`sidebar-profile-${profilePictureKey}`}
-                    src={user.profile_picture} 
-                    alt="Profile" 
-                    className="w-9 h-9 rounded-full object-cover"
-                  />
+                  <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0">
+                    <img 
+                      key={`sidebar-profile-${profilePictureKey}`}
+                      src={user.profile_picture} 
+                      alt="Profile" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 ) : (
                   <div 
                     key={`sidebar-profile-${profilePictureKey}`}
-                    className="w-9 h-9 rounded-full flex items-center justify-center"
+                    className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
                     style={{ background: profileColor }}
                   >
                     <span className="text-white text-sm font-semibold">{userInitials}</span>
