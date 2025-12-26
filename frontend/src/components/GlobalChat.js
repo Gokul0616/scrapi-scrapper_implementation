@@ -7,12 +7,14 @@ import AlertModal from './AlertModal';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { MessageCircle, X, Send, Minimize2, Trash2, RefreshCw, Navigation } from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const GlobalChat = () => {
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState([]);
