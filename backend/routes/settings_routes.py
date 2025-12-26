@@ -49,6 +49,14 @@ class ProfileResponse(BaseModel):
     profile_picture: Optional[str] = None
     theme_preference: str = "system"
 
+class UserPreferencesUpdate(BaseModel):
+    theme_preference: Optional[str] = None
+    sidebar_collapsed: Optional[bool] = None
+
+class UserPreferencesResponse(BaseModel):
+    theme_preference: str = "light"
+    sidebar_collapsed: bool = False
+
 # Auth dependency
 from auth import get_current_user
 
