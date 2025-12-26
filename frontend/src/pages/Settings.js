@@ -1392,6 +1392,7 @@ Here are some ideas to get you started:
         type={alertConfig.type}
       />
     </div>
+    </>
   );
 };
 
