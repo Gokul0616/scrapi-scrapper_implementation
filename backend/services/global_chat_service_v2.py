@@ -10,7 +10,7 @@ import re
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone
 from dotenv import load_dotenv
-import google.generativeai as genai
+from emergentintegrations.genai import Client
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -21,15 +21,15 @@ class EnhancedGlobalChatService:
     def __init__(self, db, user_id: str):
         self.db = db
         self.user_id = user_id
-        # Get Gemini API key
-        self.api_key = os.getenv('GEMINI_API_KEY')
+        # Get Emergent LLM key
+        self.api_key = os.getenv('EMERGENT_LLM_KEY')
         
         if not self.api_key:
-            raise ValueError("GEMINI_API_KEY not found in environment")
+            raise ValueError("EMERGENT_LLM_KEY not found in environment")
         
-        genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
-        logger.info(f"EnhancedGlobalChatService initialized with Gemini LLM")
+        # Configure Gemini with Emergent LLM key
+        self.client = Client(api_key=self.api_key, provider='gemini')
+        logger.info(f"EnhancedGlobalChatService initialized with Emergent LLM key")
         
         self.system_prompt = """You are Scrapi AI Agent - an intelligent AI with COMPLETE CONTROL over the Scrapi web scraping platform.
 
