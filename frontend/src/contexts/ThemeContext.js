@@ -33,6 +33,49 @@ export const ThemeProvider = ({ children }) => {
 
   const [backendThemeLoaded, setBackendThemeLoaded] = useState(false);
 
+  // Fetch theme from backend on mount if user is logged in
+  useEffect(() => {
+    const fetchThemeFromBackend = async () => {
+      const token = localStorage.getItem('token');
+      if (token && !backendThemeLoaded) {
+        try {
+          const response = await axios.get(`${API}/settings/preferences`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          if (response.data && response.data.theme_preference) {
+            const backendTheme = response.data.theme_preference;
+            const localPreference = localStorage.getItem('themePreference');
+            
+            // Only update if backend theme differs from local
+            if (backendTheme !== localPreference) {
+              // Update without calling setThemePreference to avoid unnecessary API call
+              setThemePreferenceState(backendTheme);
+              localStorage.setItem('themePreference', backendTheme);
+              
+              if (backendTheme === 'system') {
+                const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+                const actualTheme = mediaQuery.matches ? 'dark' : 'light';
+                setThemeState(actualTheme);
+                localStorage.setItem('theme', actualTheme);
+              } else {
+                setThemeState(backendTheme);
+                localStorage.setItem('theme', backendTheme);
+              }
+            }
+            setBackendThemeLoaded(true);
+          }
+        } catch (error) {
+          console.error('Failed to fetch theme from backend:', error);
+          // If API fails, we'll use what's in localStorage (already initialized)
+          setBackendThemeLoaded(true);
+        }
+      }
+    };
+    
+    fetchThemeFromBackend();
+  }, [backendThemeLoaded]);
+
   // Listen for backend theme loaded event
   useEffect(() => {
     const handleBackendTheme = (event) => {
