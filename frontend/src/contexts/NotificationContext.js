@@ -158,6 +158,11 @@ export const NotificationProvider = ({ children }) => {
 
     websocket.onmessage = (event) => {
       try {
+        // Ignore pong messages
+        if (event.data === 'pong') {
+          return;
+        }
+        
         const data = JSON.parse(event.data);
         
         if (data.type === 'new_notification') {
