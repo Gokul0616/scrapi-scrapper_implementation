@@ -10,7 +10,7 @@ import re
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone
 from dotenv import load_dotenv
-import google.generativeai as genai
+from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -21,16 +21,20 @@ class EnhancedGlobalChatService:
     def __init__(self, db, user_id: str):
         self.db = db
         self.user_id = user_id
-        # Get Emergent LLM key (fallback to GEMINI_API_KEY for backward compatibility)
-        self.api_key = os.getenv('EMERGENT_LLM_KEY') or os.getenv('GEMINI_API_KEY')
+        # Get Emergent LLM key
+        self.api_key = os.getenv('EMERGENT_LLM_KEY')
         
         if not self.api_key:
-            raise ValueError("EMERGENT_LLM_KEY or GEMINI_API_KEY not found in environment")
+            raise ValueError("EMERGENT_LLM_KEY not found in environment")
         
-        # Configure with Emergent LLM key
-        genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel('gemini-2.5-flash')
-        logger.info(f"EnhancedGlobalChatService initialized with {'Emergent LLM' if os.getenv('EMERGENT_LLM_KEY') else 'Gemini'} key")
+        # Configure with Emergent LLM key using emergentintegrations
+        self.chat = LlmChat(
+            api_key=self.api_key,
+            session_id=f"global_chat_{user_id}",
+            system_message=""  # Will be set dynamically per request
+        ).with_model("gemini", "gemini-2.5-flash")
+        
+        logger.info(f"EnhancedGlobalChatService initialized with Emergent LLM key")
         
         self.system_prompt = """You are Scrapi AI Agent - an intelligent AI with COMPLETE CONTROL over the Scrapi web scraping platform.
 
