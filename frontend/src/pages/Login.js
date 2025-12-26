@@ -186,11 +186,7 @@ const Login = () => {
     setIsLoading(true);
     setOtpError('');
     setOtpSuccessMessage('');
-
-    console.log('Starting OTP verification...');
-
     try {
-      console.log('Verifying OTP with axios...');
       // Use axios instead of fetch to avoid rrweb monitoring conflicts
       const response = await axios.post(`${API_URL}/api/auth/verify-otp`, {
         email: formData.email,
@@ -202,23 +198,16 @@ const Login = () => {
           return true;
         }
       });
-
-      console.log('Response received, status:', response.status);
-      console.log('Response data:', response.data);
-
       if (response.status === 200 && response.data.success && response.data.access_token) {
-        console.log('Success! Setting up authentication...');
         const data = response.data;
 
         // Store token and user data
         localStorage.setItem('token', data.access_token);
 
         // Set token in context
-        console.log('Calling setToken...');
         setToken(data.access_token);
 
         // Set axios authorization header
-        console.log('Setting axios header...');
         axios.defaults.headers.common['Authorization'] = `Bearer ${data.access_token}`;
 
         // Check if account is pending deletion
@@ -236,26 +225,18 @@ const Login = () => {
         }
 
         // Set user in context
-        console.log('Calling setUser...');
         setUser(data.user);
-
-        console.log('Navigating to home...');
         navigate(lastPath || '/home');
       } else {
         // Response is not OK (400, 404, etc.) - display the backend error message
-        console.log('Response NOT OK. Status:', response.status);
-        console.log('Error data:', response.data);
         const errorMessage = response.data.detail || response.data.message || 'Invalid verification code';
-        console.log('Setting error message:', errorMessage);
         setOtpError(errorMessage);
-        console.log('Error message set successfully');
       }
     } catch (error) {
       console.error('Caught exception in OTP Verification:', error);
       console.error('Error stack:', error.stack);
       setOtpError('Network error. Please try again.');
     } finally {
-      console.log('Finally block - setting isLoading to false');
       setIsLoading(false);
     }
   };

@@ -169,12 +169,6 @@ const ActorDetail = () => {
       const token = localStorage.getItem('token');
 
       // Log the data being sent to backend for debugging
-      console.log('🚀 Creating run with data:', {
-        actor_id: actorId,
-        actor_name: actor.name,
-        input_data: formData
-      });
-
       const response = await axios.post(
         `${API}/runs`,
         {
@@ -185,9 +179,6 @@ const ActorDetail = () => {
           headers: { Authorization: `Bearer ${token}` }
         }
       );
-
-      console.log('✅ Run created successfully:', response.data);
-
       toast({
         title: 'Run started!',
         description: `${actor.name} is now running. Check the Runs tab for progress.`

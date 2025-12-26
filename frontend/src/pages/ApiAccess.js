@@ -29,7 +29,6 @@ const ApiAccess = () => {
         if (keys.length > 0 && !activeKeyId) {
             const activeKey = keys.find(k => k.has_active_timer);
             if (activeKey) {
-                console.log('Found active timer, reconnecting WebSocket for key:', activeKey.id);
                 setActiveKeyId(activeKey.id);
             }
         }
@@ -43,21 +42,16 @@ const ApiAccess = () => {
         const ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
-            console.log('Connected to timer WS');
         };
 
         ws.onmessage = (event) => {
             try {
                 const data = JSON.parse(event.data);
-                console.log('WebSocket timer update:', data);
-                
                 if (data.remaining <= 0) {
-                    console.log('Timer expired, clearing state');
                     setTimerData(null);
                     setActiveKeyId(null);
                     fetchKeys(); // Refresh list to update status if needed
                 } else {
-                    console.log('Timer active, remaining:', data.remaining);
                     setTimerData(data);
                 }
             } catch (e) {
@@ -66,7 +60,6 @@ const ApiAccess = () => {
         };
 
         ws.onclose = () => {
-            console.log('Timer WS closed');
             setTimerData(null);
             if (activeKeyId) setActiveKeyId(null);
         };

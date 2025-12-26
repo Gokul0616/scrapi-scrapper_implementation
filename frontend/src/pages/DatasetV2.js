@@ -34,8 +34,6 @@ const CustomVideoPlayer = ({ videoUrl, isHLS }) => {
     if (!video) return;
 
     if (isHLS) {
-      console.log('[HLS PLAYER] Initializing HLS for:', videoUrl);
-      
       if (Hls.isSupported()) {
         const hls = new Hls({
           enableWorker: true,
@@ -47,7 +45,6 @@ const CustomVideoPlayer = ({ videoUrl, isHLS }) => {
         hls.attachMedia(video);
         
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          console.log('[HLS PLAYER] Manifest parsed successfully');
         });
         
         hls.on(Hls.Events.ERROR, (event, data) => {
@@ -55,15 +52,12 @@ const CustomVideoPlayer = ({ videoUrl, isHLS }) => {
           if (data.fatal) {
             switch (data.type) {
               case Hls.ErrorTypes.NETWORK_ERROR:
-                console.log('[HLS PLAYER] Fatal network error, trying to recover');
                 hls.startLoad();
                 break;
               case Hls.ErrorTypes.MEDIA_ERROR:
-                console.log('[HLS PLAYER] Fatal media error, trying to recover');
                 hls.recoverMediaError();
                 break;
               default:
-                console.log('[HLS PLAYER] Cannot recover from error, destroying HLS');
                 hls.destroy();
                 break;
             }
@@ -72,7 +66,6 @@ const CustomVideoPlayer = ({ videoUrl, isHLS }) => {
         
         hlsRef.current = hls;
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        console.log('[HLS PLAYER] Using native HLS support');
         video.src = videoUrl;
       }
     } else {
@@ -1871,8 +1864,6 @@ const DatasetV2 = () => {
                   if (currentMedia.type === 'video') {
                     const videoUrl = currentMedia.url;
                     const isHLS = videoUrl.includes('.m3u8');
-                    console.log('[VIDEO PLAYER] Loading video:', videoUrl, 'HLS:', isHLS);
-                    
                     return (
                       <CustomVideoPlayer 
                         videoUrl={videoUrl} 

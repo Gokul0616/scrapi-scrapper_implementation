@@ -64,7 +64,7 @@ const Schedules = () => {
       const response = await axios.get(`${API_URL}/api/actors?page=1&limit=100`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      console.log('Fetched actors:', response.data); // Debug log
+      // Debug log
       setActors(response.data || []);
     } catch (error) {
       console.error('Error fetching actors:', error);
@@ -909,7 +909,7 @@ const ScheduleModal = ({ isEdit, schedule, actors, onClose, onSuccess }) => {
     if (formData.actor_id && actors.length > 0) {
       const actor = actors.find(a => a.id === formData.actor_id);
       setSelectedActor(actor);
-      console.log('Selected actor:', actor); // Debug log
+      // Debug log
     } else {
       setSelectedActor(null);
     }

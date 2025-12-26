@@ -40,7 +40,7 @@ function Home() {
       // Fetch recent runs
       const runsRes = await fetch(`${BACKEND_URL}/api/runs?limit=5&sort_by=created_at&sort_order=desc`, { headers });
       const runsData = await runsRes.json();
-      console.log('Fetched runs data:', runsData); // Debug log
+      // Debug log
       setRecentRuns(runsData.runs || []); // Get runs array from response
 
       setLoading(false);

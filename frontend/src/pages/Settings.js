@@ -153,7 +153,6 @@ Here are some ideas to get you started:
         const ws = new WebSocket(wsUrl);
         
         ws.onopen = () => {
-          console.log('Username validation WebSocket connected');
         };
         
         ws.onmessage = (event) => {
@@ -175,7 +174,6 @@ Here are some ideas to get you started:
         };
         
         ws.onclose = () => {
-          console.log('WebSocket closed');
         };
         
         wsRef.current = ws;

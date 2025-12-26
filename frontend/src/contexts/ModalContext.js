@@ -37,7 +37,6 @@ export const ModalProvider = ({ children }) => {
   const openModalHandler = useCallback((modalId, data = null) => {
     // If a modal is already open, close it first
     if (openModal && openModal !== modalId) {
-      console.log(`Closing ${openModal} to open ${modalId}`);
     }
     setOpenModal(modalId);
     setModalData(data);

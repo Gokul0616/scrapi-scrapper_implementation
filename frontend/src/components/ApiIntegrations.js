@@ -50,7 +50,6 @@ const ApiIntegrations = () => {
     if (keys.length > 0 && !activeKeyId) {
       const activeKey = keys.find(k => k.has_active_timer);
       if (activeKey) {
-        console.log('Found active timer for key:', activeKey.id);
         setActiveKeyId(activeKey.id);
       }
     }
@@ -64,16 +63,12 @@ const ApiIntegrations = () => {
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
-      console.log('Connected to timer WS');
     };
 
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        console.log('WebSocket timer data received:', data);
-        
         if (data.remaining <= 0) {
-          console.log('Timer expired');
           setTimerData(null);
           setActiveKeyId(null);
           // Remove full key from store when timer expires
@@ -91,11 +86,9 @@ const ApiIntegrations = () => {
           }
           fetchKeys();
         } else {
-          console.log('Setting timer data, remaining:', data.remaining);
           setTimerData(data);
           // IMPORTANT: Store the full key when received from WebSocket (for refresh persistence)
           if (data.key && activeKeyId) {
-            console.log('Storing full key for:', activeKeyId);
             setFullKeyStore(prev => ({
               ...prev,
               [activeKeyId]: data.key
@@ -113,7 +106,6 @@ const ApiIntegrations = () => {
     };
 
     ws.onclose = () => {
-      console.log('Timer WS closed');
       setTimerData(null);
       if (activeKeyId) setActiveKeyId(null);
     };
