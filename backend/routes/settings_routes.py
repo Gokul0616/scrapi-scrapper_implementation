@@ -418,3 +418,82 @@ async def update_preferences(data: UserPreferencesUpdate, current_user: dict = D
                 pass
     
     return {"message": "Preferences updated successfully"}
+
+
+@router.websocket("/ws/check-username")
+async def check_username_ws(websocket: WebSocket):
+    """WebSocket endpoint for real-time username validation"""
+    await websocket.accept()
+    
+    try:
+        while True:
+            # Receive username from client
+            data = await websocket.receive_text()
+            message = json.loads(data)
+            
+            username = message.get("username", "").strip().lower()
+            user_id = message.get("user_id")
+            
+            # Validation response
+            response = {
+                "username": username,
+                "valid": False,
+                "available": False,
+                "message": ""
+            }
+            
+            # Basic validation
+            if not username:
+                response["message"] = ""
+                await websocket.send_json(response)
+                continue
+            
+            if len(username) < 3:
+                response["message"] = "Username must be at least 3 characters"
+                await websocket.send_json(response)
+                continue
+            
+            if len(username) > 50:
+                response["message"] = "Username must be at most 50 characters"
+                await websocket.send_json(response)
+                continue
+            
+            # Check special characters
+            import re
+            if not re.match("^[a-z0-9_]+$", username):
+                response["message"] = "Username can only contain lowercase letters, numbers, and underscores"
+                await websocket.send_json(response)
+                continue
+            
+            # Check if username is taken by someone else
+            existing = await db.users.find_one({
+                "username": username,
+                "id": {"$ne": user_id}
+            })
+            
+            if existing:
+                response["message"] = "Username already taken"
+                response["valid"] = True
+                response["available"] = False
+            else:
+                response["message"] = "Username is available"
+                response["valid"] = True
+                response["available"] = True
+            
+            await websocket.send_json(response)
+            
+    except WebSocketDisconnect:
+        pass
+    except Exception as e:
+        try:
+            await websocket.send_json({
+                "error": str(e),
+                "message": "An error occurred while checking username"
+            })
+        except:
+            pass
+        finally:
+            try:
+                await websocket.close()
+            except:
+                pass
