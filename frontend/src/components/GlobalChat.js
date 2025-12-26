@@ -446,7 +446,11 @@ const GlobalChat = () => {
                   transition: 'all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)'
                 }
           }
-          className="w-10 h-10 bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800 text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center z-[70] group active:scale-95"
+          className={`w-10 h-10 ${
+            theme === 'dark' 
+              ? 'bg-gradient-to-r from-gray-600 to-gray-800 hover:from-gray-500 hover:to-gray-700' 
+              : 'bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800'
+          } text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center z-[70] group active:scale-95`}
           title="Chat Assistant (Drag to move)"
         >
           <MessageCircle className="w-5 h-5" />
