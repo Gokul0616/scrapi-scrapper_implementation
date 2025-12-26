@@ -136,19 +136,29 @@ async def get_notifications(current_user: dict = Depends(get_current_user)):
         {"user_id": user_id}
     ).sort("created_at", -1).to_list(length=100)
     
-    return [
-        NotificationResponse(
-            notification_id=n["notification_id"],
-            title=n["title"],
-            message=n["message"],
-            type=n["type"],
-            read=n["read"],
-            created_at=n["created_at"],
-            link=n.get("link"),
-            icon=n.get("icon")
+    
+    # Process notifications to ensure timezone awareness
+    processed_notifications = []
+    for n in notifications:
+        created_at = n["created_at"]
+        # Ensure UTC timezone if naive
+        if created_at.tzinfo is None:
+            created_at = created_at.replace(tzinfo=timezone.utc)
+            
+        processed_notifications.append(
+            NotificationResponse(
+                notification_id=n["notification_id"],
+                title=n["title"],
+                message=n["message"],
+                type=n["type"],
+                read=n["read"],
+                created_at=created_at,
+                link=n.get("link"),
+                icon=n.get("icon")
+            )
         )
-        for n in notifications
-    ]
+        
+    return processed_notifications
 
 # Mark notifications as read
 @router.post("/mark-as-read")
