@@ -10,31 +10,24 @@ const ShortcutsModal = () => {
 
   const isOpen = isModalOpen('shortcuts-modal');
 
-  const navigationAndSystem = [
-    {
-      title: 'Navigation',
-      shortcuts: [
-        { keys: ['S', 'H'], description: 'Go to Home' },
-        { keys: ['S', 'O'], description: 'Go to Scrapi Store' },
-        { keys: ['S', 'A'], description: 'Go to Actors' },
-        { keys: ['S', 'R'], description: 'Go to Runs' },
-        { keys: ['S', 'T'], description: 'Go to Saved Tasks' },
-        { keys: ['S', 'I'], description: 'Go to Integrations' },
-        { keys: ['S', 'C'], description: 'Go to Schedules' },
-        { keys: ['S', 'M'], description: 'Go to My Actors' },
-        { keys: ['S', 'N'], description: 'Go to Insights' },
-        { keys: ['S', 'E'], description: 'Go to Messaging' },
-      ]
-    },
-    {
-      title: 'System',
-      shortcuts: [
-        { keys: ['S', 'P'], description: 'Go to Proxy' },
-        { keys: ['S', 'D'], description: 'Go to Storage' },
-        { keys: ['S', 'B'], description: 'Go to Billing' },
-        { keys: ['S', 'G'], description: 'Go to Settings' },
-      ]
-    }
+  const navigationShortcuts = [
+    { keys: ['S', 'H'], description: 'Go to Home' },
+    { keys: ['S', 'O'], description: 'Go to Scrapi Store' },
+    { keys: ['S', 'A'], description: 'Go to Actors' },
+    { keys: ['S', 'R'], description: 'Go to Runs' },
+    { keys: ['S', 'T'], description: 'Go to Saved Tasks' },
+    { keys: ['S', 'I'], description: 'Go to Integrations' },
+    { keys: ['S', 'C'], description: 'Go to Schedules' },
+    { keys: ['S', 'M'], description: 'Go to My Actors' },
+    { keys: ['S', 'N'], description: 'Go to Insights' },
+    { keys: ['S', 'E'], description: 'Go to Messaging' },
+    { keys: ['S', 'P'], description: 'Go to Proxy' },
+    { keys: ['S', 'D'], description: 'Go to Storage' },
+    { keys: ['S', 'B'], description: 'Go to Billing' },
+  ];
+
+  const settingsShortcuts = [
+    { keys: ['S', 'G'], description: 'Go to Settings' },
   ];
 
   const generalShortcuts = [
@@ -46,7 +39,7 @@ const ShortcutsModal = () => {
   ];
 
   const ShortcutRow = ({ description, keys }) => (
-    <div className={`flex items-center justify-between py-2.5 px-5 transition-colors ${
+    <div className={`flex items-center justify-between py-1.5 px-5 transition-colors ${
       theme === 'dark'
         ? 'hover:bg-gray-800/50'
         : 'hover:bg-gray-50'
@@ -133,38 +126,44 @@ const ShortcutsModal = () => {
           </style>
 
           <div className="grid grid-cols-1 md:grid-cols-2 min-h-full hide-scrollbar">
-            {/* Left Side */}
+            {/* Left Side - Navigation */}
             <div className={`border-r ${theme === 'dark' ? 'border-gray-800' : 'border-gray-100'}`}>
-              {navigationAndSystem.map((section, idx) => (
-                <div key={section.title}>
-                  {idx > 0 && (
-                    <div className={`h-[1px] mx-5 ${
-                      theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
-                    }`} />
-                  )}
-                  <div className="py-2">
-                    <div className={`px-5 py-2 text-xs font-semibold uppercase tracking-wider ${
-                      theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
-                    }`}>
-                      {section.title}
-                    </div>
-                    {section.shortcuts.map((s, i) => (
-                      <ShortcutRow key={i} {...s} />
-                    ))}
-                  </div>
+              <div className="py-1.5">
+                <div className={`px-5 py-1.5 text-xs font-semibold uppercase tracking-wider ${
+                  theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+                }`}>
+                  Navigation
                 </div>
-              ))}
+                {navigationShortcuts.map((s, i) => (
+                  <ShortcutRow key={i} {...s} />
+                ))}
+              </div>
             </div>
 
-            {/* Right Side */}
+            {/* Right Side - General & Settings */}
             <div>
-              <div className="py-2">
-                <div className={`px-5 py-2 text-xs font-semibold uppercase tracking-wider ${
+              <div className="py-1.5">
+                <div className={`px-5 py-1.5 text-xs font-semibold uppercase tracking-wider ${
                   theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
                 }`}>
                   General
                 </div>
                 {generalShortcuts.map((s, i) => (
+                  <ShortcutRow key={i} {...s} />
+                ))}
+              </div>
+              
+              <div className={`h-[1px] mx-5 ${
+                theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
+              }`} />
+              
+              <div className="py-1.5">
+                <div className={`px-5 py-1.5 text-xs font-semibold uppercase tracking-wider ${
+                  theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+                }`}>
+                  Settings
+                </div>
+                {settingsShortcuts.map((s, i) => (
                   <ShortcutRow key={i} {...s} />
                 ))}
               </div>
