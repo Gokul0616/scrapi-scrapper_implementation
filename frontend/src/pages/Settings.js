@@ -286,6 +286,11 @@ Here are some ideas to get you started:
   const handleSaveUsername = async () => {
     if (username === originalUsername) return;
     
+    // Don't save if validation is not passed
+    if (!usernameValidation.available || usernameValidation.checking) {
+      return;
+    }
+    
     setSavingUsername(true);
     try {
       const token = localStorage.getItem('token');
@@ -297,14 +302,22 @@ Here are some ideas to get you started:
       if (updateUser) {
         updateUser({ username });
       }
+      // Clear validation message after successful save
+      setUsernameValidation({
+        checking: false,
+        valid: true,
+        available: true,
+        message: ''
+      });
     } catch (error) {
       console.error('Failed to save username:', error);
-      setAlertConfig({
-        title: 'Failed to Save Username',
-        message: 'Failed to save username. It may already be taken.',
-        type: 'error'
+      // Show error in validation message instead of alert modal
+      setUsernameValidation({
+        checking: false,
+        valid: false,
+        available: false,
+        message: error.response?.data?.detail || 'Failed to save username. Please try again.'
       });
-      setShowAlert(true);
     } finally {
       setSavingUsername(false);
     }
