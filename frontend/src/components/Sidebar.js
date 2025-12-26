@@ -70,7 +70,7 @@ const Sidebar = () => {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [profilePictureKey, setProfilePictureKey] = useState(0);
-  const notificationButtonRef = React.useRef(null);
+  const notificationButtonRef = useRef(null);
 
   const userInitials = getUserInitials(user);
   const profileColor = getProfileColor(user?.profile_color, theme);
