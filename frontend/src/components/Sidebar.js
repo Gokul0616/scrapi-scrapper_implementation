@@ -54,6 +54,7 @@ const Sidebar = () => {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { openModal, closeModal, isModalOpen, currentModal } = useModal();
+  const { unreadCount } = useNotifications();
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -67,7 +68,9 @@ const Sidebar = () => {
   const [searchFocused, setSearchFocused] = useState(false);
   const [activeSection, setActiveSection] = useState('scrapiStore');
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [profilePictureKey, setProfilePictureKey] = useState(0);
+  const notificationButtonRef = React.useRef(null);
 
   const userInitials = getUserInitials(user);
   const profileColor = getProfileColor(user?.profile_color, theme);
