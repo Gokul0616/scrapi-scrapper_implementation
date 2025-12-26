@@ -641,7 +641,19 @@ Here are some ideas to get you started:
   }
 
   return (
-    <div className={`flex-1 min-h-screen ${theme === 'dark' ? 'bg-[#1A1B1E]' : 'bg-white'}`} data-testid="settings-page">
+    <>
+      <style>
+        {`
+          .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+          }
+          .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+        `}
+      </style>
+      <div className={`flex-1 min-h-screen ${theme === 'dark' ? 'bg-[#1A1B1E]' : 'bg-white'}`} data-testid="settings-page">
       <div className="max-w-4xl mx-auto px-6 py-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
