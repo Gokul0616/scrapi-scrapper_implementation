@@ -620,7 +620,7 @@ const GlobalChat = () => {
               </div>
 
               {/* Input */}
-              <div className="px-3 py-2 border-t bg-white rounded-b-lg">
+              <div className={`px-3 py-2 border-t ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white'} rounded-b-lg`}>
                 <div className="flex space-x-2">
                   <Input
                     placeholder="Type your message..."
