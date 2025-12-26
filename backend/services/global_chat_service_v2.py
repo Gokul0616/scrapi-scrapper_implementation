@@ -1308,11 +1308,19 @@ When user mentions multiple locations with "and", create SEPARATE runs for EACH 
                 
                 # Get final response with all function results
                 results_summary = json.dumps(all_function_results, indent=2)
-                follow_up_prompt = f"{enhanced_prompt}\n\nFunction results: {results_summary}\n\nPlease respond naturally to the user's original question with this data. Remember the conversation context. DO NOT include FUNCTION_CALL in your response. If multiple runs were created, mention all of them.\n\nUSER: Original message: {message}\n\nPlease provide a natural response about what was executed."
+                follow_up_system = f"{enhanced_prompt}\n\nFunction results: {results_summary}\n\nPlease respond naturally to the user's original question with this data. Remember the conversation context. DO NOT include FUNCTION_CALL in your response. If multiple runs were created, mention all of them."
+                follow_up_text = f"Original message: {message}\n\nPlease provide a natural response about what was executed."
+                
+                # Create new chat instance for follow-up
+                follow_up_chat = LlmChat(
+                    api_key=self.api_key,
+                    session_id=f"global_chat_followup_{self.user_id}_{datetime.now().timestamp()}",
+                    system_message=follow_up_system
+                ).with_model("gemini", "gemini-2.5-flash")
                 
                 # Generate follow-up response
-                follow_up_msg = UserMessage(text=follow_up_prompt)
-                final_response = await self.chat.send_message(follow_up_msg)
+                follow_up_msg = UserMessage(text=follow_up_text)
+                final_response = await follow_up_chat.send_message(follow_up_msg)
                 
                 # Save assistant response with all function calls
                 await self.save_message("assistant", final_response, {"multiple_calls": function_calls})
