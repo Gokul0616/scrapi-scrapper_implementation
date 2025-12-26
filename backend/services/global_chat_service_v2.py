@@ -10,7 +10,7 @@ import re
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone
 from dotenv import load_dotenv
-from emergentintegrations.genai import Client
+import google.generativeai as genai
 
 load_dotenv()
 logger = logging.getLogger(__name__)
