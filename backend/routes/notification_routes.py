@@ -152,7 +152,7 @@ async def mark_all_notifications_as_read(current_user: dict = Depends(get_curren
 # Get unread count
 @router.get("/unread-count")
 async def get_unread_count(current_user: dict = Depends(get_current_user)):
-    user_id = current_user["user_id"]
+    user_id = current_user["id"]
     
     count = await _db.notifications.count_documents(
         {"user_id": user_id, "read": False}
