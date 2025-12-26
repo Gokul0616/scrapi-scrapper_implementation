@@ -342,6 +342,7 @@ async def export_account_data(current_user: dict = Depends(get_current_user)):
         export_data = await deletion_service.export_user_data(user_id)
         return export_data
     except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to export data: {str(e)}")
 
 @router.get("/preferences", response_model=UserPreferencesResponse)
 async def get_preferences(current_user: dict = Depends(get_current_user)):
