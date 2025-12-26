@@ -633,7 +633,11 @@ const GlobalChat = () => {
                   <Button
                     onClick={handleSendMessage}
                     disabled={isLoading || !inputMessage.trim()}
-                    className="bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800 text-white h-8 w-8 p-0"
+                    className={`${
+                      theme === 'dark'
+                        ? 'bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700'
+                        : 'bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800'
+                    } text-white h-8 w-8 p-0`}
                   >
                     <Send className="w-3 h-3" />
                   </Button>
