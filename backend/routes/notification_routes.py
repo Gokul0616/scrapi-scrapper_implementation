@@ -32,7 +32,7 @@ async def websocket_endpoint(websocket: WebSocket, token: Optional[str] = None):
     try:
         # Authenticate user via token
         if not token:
-            print("WebSocket: No token provided")
+            logger.info("WebSocket: No token provided")
             await websocket.close(code=1008, reason="Authentication required")
             return
             
@@ -42,16 +42,16 @@ async def websocket_endpoint(websocket: WebSocket, token: Optional[str] = None):
             user_id = payload.get("sub")
             
             if not user_id:
-                print("WebSocket: No user_id in token payload")
+                logger.info("WebSocket: No user_id in token payload")
                 await websocket.close(code=1008, reason="Invalid token")
                 return
                 
         except Exception as e:
-            print(f"WebSocket: Token decode error: {e}")
+            logger.info(f"WebSocket: Token decode error: {e}")
             await websocket.close(code=1008, reason="Invalid token")
             return
         
-        print(f"WebSocket: Connection authenticated for user {user_id}")
+        logger.info(f"WebSocket: Connection authenticated for user {user_id}")
         
         # Add connection to active connections
         if user_id not in active_connections:
@@ -97,7 +97,7 @@ async def websocket_endpoint(websocket: WebSocket, token: Optional[str] = None):
                 })
         
         # Keep connection alive
-        print(f"WebSocket: Starting message loop for user {user_id}")
+        logger.info(f"WebSocket: Starting message loop for user {user_id}")
         while True:
             try:
                 data = await websocket.receive_text()
@@ -105,16 +105,16 @@ async def websocket_endpoint(websocket: WebSocket, token: Optional[str] = None):
                 if data == "ping":
                     await websocket.send_text("pong")
             except WebSocketDisconnect:
-                print(f"WebSocket: Client disconnected for user {user_id}")
+                logger.info(f"WebSocket: Client disconnected for user {user_id}")
                 break
             except Exception as e:
-                print(f"WebSocket: Error in message loop for user {user_id}: {e}")
+                logger.info(f"WebSocket: Error in message loop for user {user_id}: {e}")
                 break
                         
     except WebSocketDisconnect:
-        print(f"WebSocket: Disconnected for user {user_id}")
+        logger.info(f"WebSocket: Disconnected for user {user_id}")
     except Exception as e:
-        print(f"WebSocket error for user {user_id}: {e}")
+        logger.info(f"WebSocket error for user {user_id}: {e}")
         import traceback
         traceback.print_exc()
     finally:
@@ -124,7 +124,7 @@ async def websocket_endpoint(websocket: WebSocket, token: Optional[str] = None):
                 active_connections[user_id].remove(websocket)
             if not active_connections[user_id]:
                 del active_connections[user_id]
-        print(f"WebSocket: Cleanup complete for user {user_id}")
+        logger.info(f"WebSocket: Cleanup complete for user {user_id}")
 
 # Get all notifications for current user
 @router.get("", response_model=List[NotificationResponse])
@@ -217,4 +217,4 @@ async def send_notification_to_user(user_id: str, notification: Notification):
             try:
                 await websocket.send_json(notification_data)
             except Exception as e:
-                print(f"Failed to send notification to user {user_id}: {e}")
+                logger.info(f"Failed to send notification to user {user_id}: {e}")
