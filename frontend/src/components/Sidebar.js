@@ -165,7 +165,7 @@ const Sidebar = () => {
 
   // Handle keyboard shortcut
   useEffect(() => {
-    const handleKeyDown = (e) => {
+    const handleKeyDown = async (e) => {
       // Don't trigger shortcuts when user is typing in input fields
       const isTypingInInput = 
         e.target.tagName === 'INPUT' || 
