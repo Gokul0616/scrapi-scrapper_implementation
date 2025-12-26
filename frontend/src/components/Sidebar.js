@@ -50,7 +50,11 @@ const Sidebar = () => {
   const { openModal, closeModal, isModalOpen, currentModal } = useModal();
   const navigate = useNavigate();
   const location = useLocation();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    // Load sidebar state from localStorage
+    const savedCollapsed = localStorage.getItem('sidebarCollapsed');
+    return savedCollapsed === 'true';
+  });
   const [expandedSections, setExpandedSections] = useState({
     development: true
   });
