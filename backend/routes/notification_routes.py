@@ -99,7 +99,7 @@ async def websocket_endpoint(websocket: WebSocket, token: Optional[str] = None):
 # Get all notifications for current user
 @router.get("", response_model=List[NotificationResponse])
 async def get_notifications(current_user: dict = Depends(get_current_user)):
-    user_id = current_user["user_id"]
+    user_id = current_user["id"]
     
     notifications = await _db.notifications.find(
         {"user_id": user_id}
