@@ -22,8 +22,11 @@ def set_notification_db(database):
 async def websocket_endpoint(websocket: WebSocket, token: Optional[str] = None):
     user_id = None
     
+    # Always accept the connection first (required by WebSocket protocol)
+    await websocket.accept()
+    
     try:
-        # Authenticate user via token before accepting connection
+        # Authenticate user via token
         if not token:
             print("WebSocket: No token provided")
             await websocket.close(code=1008, reason="Authentication required")
@@ -44,9 +47,7 @@ async def websocket_endpoint(websocket: WebSocket, token: Optional[str] = None):
             await websocket.close(code=1008, reason="Invalid token")
             return
         
-        # Accept connection only after successful authentication
-        await websocket.accept()
-        print(f"WebSocket: Connection accepted for user {user_id}")
+        print(f"WebSocket: Connection authenticated for user {user_id}")
         
         # Add connection to active connections
         if user_id not in active_connections:
