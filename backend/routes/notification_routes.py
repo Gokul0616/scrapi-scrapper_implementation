@@ -3,8 +3,12 @@ from typing import List, Optional
 from datetime import datetime
 import json
 import asyncio
+import logging
 from auth import get_current_user
 from models.notification import Notification, NotificationResponse, MarkAsReadRequest
+
+# Setup logger
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 
