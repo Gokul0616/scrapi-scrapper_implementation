@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { ModalProvider } from './contexts/ModalContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 import { Toaster } from './components/ui/toaster';
 import { ErrorDisplayContainer } from './components/ErrorDisplay';
 import Sidebar from './components/Sidebar';
@@ -189,11 +190,13 @@ function App() {
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
-          <ModalProvider>
-            <AppRoutes />
-            <Toaster />
-            <ErrorDisplayContainer />
-          </ModalProvider>
+          <NotificationProvider>
+            <ModalProvider>
+              <AppRoutes />
+              <Toaster />
+              <ErrorDisplayContainer />
+            </ModalProvider>
+          </NotificationProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>
