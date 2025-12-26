@@ -465,7 +465,11 @@ const GlobalChat = () => {
             position: 'fixed',
             ...getPositionStyles()
           }}
-          className={`w-80 bg-white rounded-lg shadow-2xl border border-gray-200 flex flex-col z-[70] transition-all duration-300 ${
+          className={`w-80 ${
+            theme === 'dark' 
+              ? 'bg-gray-800 border-gray-700' 
+              : 'bg-white border-gray-200'
+          } rounded-lg shadow-2xl border flex flex-col z-[70] transition-all duration-300 ${
             isMinimized ? 'h-12' : 'h-[500px]'
           }`}
         >
