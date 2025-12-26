@@ -143,6 +143,7 @@ export const NotificationProvider = ({ children }) => {
     const websocket = new WebSocket(`${WS_URL}/api/notifications/ws?token=${token}`);
 
     websocket.onopen = () => {
+      console.log('WebSocket connection established');
       setIsConnected(true);
       
       // Send periodic ping to keep connection alive
@@ -181,7 +182,8 @@ export const NotificationProvider = ({ children }) => {
       setIsConnected(false);
     };
 
-    websocket.onclose = () => {
+    websocket.onclose = (event) => {
+      console.log('WebSocket connection closed', event.code, event.reason);
       setIsConnected(false);
       if (websocket.pingInterval) {
         clearInterval(websocket.pingInterval);
@@ -192,12 +194,14 @@ export const NotificationProvider = ({ children }) => {
 
     // Cleanup
     return () => {
+      console.log('Cleaning up WebSocket connection');
       if (websocket.pingInterval) {
         clearInterval(websocket.pingInterval);
       }
       websocket.close();
     };
-  }, [user, fetchNotifications]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]); // Only re-run when user changes
 
   return (
     <NotificationContext.Provider
