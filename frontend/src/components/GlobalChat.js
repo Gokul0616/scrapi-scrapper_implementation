@@ -562,23 +562,43 @@ const GlobalChat = () => {
               )}
               
               {/* Messages */}
-              <div className={`flex-1 overflow-y-auto px-3 py-3 space-y-3 ${
+              <div className={`flex-1 overflow-y-auto px-4 py-4 space-y-4 ${
                 theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'
               }`}>
                 {messages.length === 0 && (
-                  <div className={`text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mt-4`}>
-                    <MessageCircle className={`w-8 h-8 mx-auto mb-2 ${theme === 'dark' ? 'text-gray-600' : 'text-gray-300'}`} />
-                    <p className="text-xs">Hi! I'm your Scrapi assistant.</p>
-                    <p className={`text-[10px] ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} mt-1`}>I can help you navigate and control the app!</p>
-                    <div className={`mt-3 space-y-1 text-[10px] text-left ${
-                      theme === 'dark' ? 'bg-gray-800 text-gray-300' : 'bg-white'
-                    } p-2 rounded-lg`}>
-                      <p className={`font-semibold ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Try asking:</p>
-                      <ul className={`list-disc list-inside ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} space-y-0.5`}>
-                        <li>"Go to Actors page"</li>
-                        <li>"Show me my runs"</li>
-                        <li>"Export my latest data as CSV"</li>
-                        <li>"How many scrapers do I have?"</li>
+                  <div className={`text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mt-8`}>
+                    <div className={`w-16 h-16 mx-auto mb-4 ${
+                      theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
+                    } rounded-full flex items-center justify-center`}>
+                      <ChatIcon className={`w-8 h-8 ${theme === 'dark' ? 'text-gray-600' : 'text-gray-400'}`} />
+                    </div>
+                    <p className="text-base font-medium mb-1">Hi! I'm your AI assistant.</p>
+                    <p className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} mb-4`}>
+                      I can help you navigate and control the app!
+                    </p>
+                    <div className={`mt-4 space-y-2 text-sm text-left ${
+                      theme === 'dark' ? 'bg-gray-800 text-gray-300' : 'bg-white border border-gray-200'
+                    } p-4 rounded-lg`}>
+                      <p className={`font-semibold mb-2 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
+                        Try asking:
+                      </p>
+                      <ul className={`space-y-1.5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                        <li className="flex items-start">
+                          <span className="text-[#2BC56B] mr-2">•</span>
+                          <span>"Go to Actors page"</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-[#2BC56B] mr-2">•</span>
+                          <span>"Show me my runs"</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-[#2BC56B] mr-2">•</span>
+                          <span>"Export my latest data as CSV"</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-[#2BC56B] mr-2">•</span>
+                          <span>"How many scrapers do I have?"</span>
+                        </li>
                       </ul>
                     </div>
                   </div>
