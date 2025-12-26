@@ -46,5 +46,7 @@ __all__ = [
     # Organization models
     'Organization', 'OrganizationCreate', 'OrganizationUpdate', 'OrganizationResponse',
     'OrganizationMembership', 'MembershipInvite', 'MembershipUpdate', 'MemberResponse',
-    'WorkspaceContext', 'WorkspaceResponse'
+    'WorkspaceContext', 'WorkspaceResponse',
+    # Notification models
+    'Notification', 'NotificationResponse', 'MarkAsReadRequest'
 ]
