@@ -387,12 +387,27 @@ const Sidebar = () => {
                     </div>
                   </div>
                   <button
-                    className={`p-1.5 rounded-lg transition-colors flex-shrink-0 ${theme === 'dark'
-                      ? 'hover:bg-gray-800 text-gray-400'
-                      : 'hover:bg-gray-100 text-gray-600'
-                      }`}
+                    ref={notificationButtonRef}
+                    onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                    className={`p-1.5 rounded-lg transition-colors flex-shrink-0 relative ${
+                      theme === 'dark'
+                        ? 'hover:bg-gray-800 text-gray-400'
+                        : 'hover:bg-gray-100 text-gray-600'
+                    }`}
+                    data-testid="notification-bell-button"
                   >
                     <Bell className="w-4 h-4" />
+                    {unreadCount > 0 && (
+                      <span
+                        className={`absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center ${
+                          theme === 'dark'
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-blue-600 text-white'
+                        }`}
+                      >
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
                   </button>
                 </div>
               </>
