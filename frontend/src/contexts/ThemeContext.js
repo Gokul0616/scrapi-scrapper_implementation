@@ -75,12 +75,18 @@ export const ThemeProvider = ({ children }) => {
     localStorage.setItem('themePreference', newPreference);
     
     // Apply theme based on preference
+    let actualTheme;
     if (newPreference === 'system') {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      setThemeState(mediaQuery.matches ? 'dark' : 'light');
+      actualTheme = mediaQuery.matches ? 'dark' : 'light';
+      setThemeState(actualTheme);
     } else {
+      actualTheme = newPreference;
       setThemeState(newPreference);
     }
+    
+    // Save the actual theme to localStorage as well
+    localStorage.setItem('theme', actualTheme);
     
     // Save to backend API
     try {
@@ -94,6 +100,7 @@ export const ThemeProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Failed to save theme preference to backend:', error);
+      // Even if backend fails, we still have it in localStorage
     }
   };
 
