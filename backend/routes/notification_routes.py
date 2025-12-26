@@ -20,74 +20,98 @@ def set_notification_db(database):
 # WebSocket endpoint for real-time notifications
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, token: Optional[str] = None):
-    await websocket.accept()
-    
     user_id = None
+    
     try:
-        # Authenticate user via token
-        if token:
-            from auth import decode_token
+        # Authenticate user via token before accepting connection
+        if not token:
+            print("WebSocket: No token provided")
+            await websocket.close(code=1008, reason="Authentication required")
+            return
+            
+        from auth import decode_token
+        try:
             payload = decode_token(token)
             user_id = payload.get("sub")
             
-            if user_id:
-                # Add connection to active connections
-                if user_id not in active_connections:
-                    active_connections[user_id] = []
-                active_connections[user_id].append(websocket)
+            if not user_id:
+                print("WebSocket: No user_id in token payload")
+                await websocket.close(code=1008, reason="Invalid token")
+                return
                 
-                # Check if this is user's first login
-                user = await _db.users.find_one({"user_id": user_id})
-                if user:
-                    # Check if welcome notification already sent
-                    existing_welcome = await _db.notifications.find_one({
-                        "user_id": user_id,
-                        "type": "welcome"
-                    })
-                    
-                    if not existing_welcome:
-                        # Send welcome notification
-                        welcome_notification = Notification(
-                            user_id=user_id,
-                            title="Welcome to Scrapi! 👋",
-                            message="Get started by creating your first actor and exploring our marketplace.",
-                            type="welcome",
-                            icon="👋",
-                            link="/actors"
-                        )
-                        
-                        # Save to database
-                        await _db.notifications.insert_one(welcome_notification.model_dump())
-                        
-                        # Send to client
-                        await websocket.send_json({
-                            "type": "new_notification",
-                            "notification": {
-                                "notification_id": welcome_notification.notification_id,
-                                "title": welcome_notification.title,
-                                "message": welcome_notification.message,
-                                "type": welcome_notification.type,
-                                "read": welcome_notification.read,
-                                "created_at": welcome_notification.created_at.isoformat(),
-                                "link": welcome_notification.link,
-                                "icon": welcome_notification.icon
-                            }
-                        })
+        except Exception as e:
+            print(f"WebSocket: Token decode error: {e}")
+            await websocket.close(code=1008, reason="Invalid token")
+            return
+        
+        # Accept connection only after successful authentication
+        await websocket.accept()
+        print(f"WebSocket: Connection accepted for user {user_id}")
+        
+        # Add connection to active connections
+        if user_id not in active_connections:
+            active_connections[user_id] = []
+        active_connections[user_id].append(websocket)
+        
+        # Check if this is user's first login
+        user = await _db.users.find_one({"user_id": user_id})
+        if user:
+            # Check if welcome notification already sent
+            existing_welcome = await _db.notifications.find_one({
+                "user_id": user_id,
+                "type": "welcome"
+            })
+            
+            if not existing_welcome:
+                # Send welcome notification
+                welcome_notification = Notification(
+                    user_id=user_id,
+                    title="Welcome to Scrapi! 👋",
+                    message="Get started by creating your first actor and exploring our marketplace.",
+                    type="welcome",
+                    icon="👋",
+                    link="/actors"
+                )
                 
-                # Keep connection alive
-                while True:
-                    try:
-                        data = await websocket.receive_text()
-                        # Handle ping/pong
-                        if data == "ping":
-                            await websocket.send_text("pong")
-                    except WebSocketDisconnect:
-                        break
+                # Save to database
+                await _db.notifications.insert_one(welcome_notification.model_dump())
+                
+                # Send to client
+                await websocket.send_json({
+                    "type": "new_notification",
+                    "notification": {
+                        "notification_id": welcome_notification.notification_id,
+                        "title": welcome_notification.title,
+                        "message": welcome_notification.message,
+                        "type": welcome_notification.type,
+                        "read": welcome_notification.read,
+                        "created_at": welcome_notification.created_at.isoformat(),
+                        "link": welcome_notification.link,
+                        "icon": welcome_notification.icon
+                    }
+                })
+        
+        # Keep connection alive
+        print(f"WebSocket: Starting message loop for user {user_id}")
+        while True:
+            try:
+                data = await websocket.receive_text()
+                # Handle ping/pong
+                if data == "ping":
+                    await websocket.send_text("pong")
+            except WebSocketDisconnect:
+                print(f"WebSocket: Client disconnected for user {user_id}")
+                break
+            except Exception as e:
+                print(f"WebSocket: Error in message loop for user {user_id}: {e}")
+                break
                         
     except WebSocketDisconnect:
-        pass
+        print(f"WebSocket: Disconnected for user {user_id}")
     except Exception as e:
-        print(f"WebSocket error: {e}")
+        print(f"WebSocket error for user {user_id}: {e}")
+        import traceback
+        traceback.print_exc()
     finally:
         # Remove connection from active connections
         if user_id and user_id in active_connections:
@@ -95,6 +119,7 @@ async def websocket_endpoint(websocket: WebSocket, token: Optional[str] = None):
                 active_connections[user_id].remove(websocket)
             if not active_connections[user_id]:
                 del active_connections[user_id]
+        print(f"WebSocket: Cleanup complete for user {user_id}")
 
 # Get all notifications for current user
 @router.get("", response_model=List[NotificationResponse])
