@@ -371,22 +371,44 @@ class DynamicEmailValidator:
         username = username.lower().strip()
         entropy = DynamicEmailValidator.calculate_entropy(username)
         suspicious_score = 0
-        if entropy > 3.5:
+        
+        # Increased threshold to reduce false positives (was 3.5, now 4.0)
+        if entropy > 4.0:
             suspicious_score += 2
+        
+        # Check for high number density (still a strong signal)
         num_count = sum(c.isdigit() for c in username)
         if len(username) > 0 and num_count / len(username) > 0.4:
             suspicious_score += 2
+        
+        # Letters + numbers combo is common in legitimate usernames, reduce score
         has_letters = any(c.isalpha() for c in username)
         has_numbers = any(c.isdigit() for c in username)
         if has_letters and has_numbers and len(username) > 8:
-            suspicious_score += 1
-        if len(username) > 15 and entropy > 3.0:
-            suspicious_score += 1
-        common_patterns = ['test', 'user', 'admin', 'info', 'hello', 'mail']
-        if not any(pattern in username for pattern in common_patterns):
-            if entropy > 3.0:
+            # Check if it looks random (e.g., abc123xyz vs john2023)
+            # Only add score if entropy is very high
+            if entropy > 3.8:
                 suspicious_score += 1
-        return suspicious_score >= 3, entropy
+        
+        # Very long usernames with high entropy are suspicious
+        if len(username) > 15 and entropy > 3.5:
+            suspicious_score += 1
+        
+        # Expanded list of legitimate patterns
+        common_patterns = [
+            'test', 'user', 'admin', 'info', 'hello', 'mail', 
+            'support', 'contact', 'help', 'sales', 'service',
+            'marketing', 'business', 'company', 'team', 'office',
+            'work', 'official', 'corp', 'group', 'tech', 'digital'
+        ]
+        
+        # Only penalize if no common pattern AND very high entropy
+        if not any(pattern in username for pattern in common_patterns):
+            if entropy > 3.8:
+                suspicious_score += 1
+        
+        # Increased threshold to 4 to reduce false positives (was 3)
+        return suspicious_score >= 4, entropy
     
     @staticmethod
     async def check_mx_reputation(domain: str) -> Tuple[bool, str]:
