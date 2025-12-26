@@ -59,7 +59,7 @@ async def websocket_endpoint(websocket: WebSocket, token: Optional[str] = None):
         active_connections[user_id].append(websocket)
         
         # Check if this is user's first login
-        user = await _db.users.find_one({"user_id": user_id})
+        user = await _db.users.find_one({"id": user_id})
         if user:
             # Check if welcome notification already sent
             existing_welcome = await _db.notifications.find_one({
