@@ -617,10 +617,10 @@ const GlobalChat = () => {
                     className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-[85%] rounded-xl px-4 py-2.5 ${
+                      className={`max-w-[85%] rounded-xl px-3 py-2 ${
                         msg.role === 'user'
                           ? theme === 'dark'
-                            ? 'bg-blue-600 text-white'
+                            ? 'bg-[#2BC56B] text-white'
                             : 'bg-[#1B1D1F] text-white'
                           : theme === 'dark'
                             ? 'bg-gray-800 border border-gray-700 text-gray-100'
