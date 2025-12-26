@@ -27,13 +27,6 @@ class EnhancedGlobalChatService:
         if not self.api_key:
             raise ValueError("EMERGENT_LLM_KEY not found in environment")
         
-        # Configure with Emergent LLM key using emergentintegrations
-        self.chat = LlmChat(
-            api_key=self.api_key,
-            session_id=f"global_chat_{user_id}",
-            system_message=""  # Will be set dynamically per request
-        ).with_model("gemini", "gemini-2.5-flash")
-        
         logger.info(f"EnhancedGlobalChatService initialized with Emergent LLM key")
         
         self.system_prompt = """You are Scrapi AI Agent - an intelligent AI with COMPLETE CONTROL over the Scrapi web scraping platform.
