@@ -13,6 +13,16 @@ from models import Actor
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
+# Auto-update Emergent LLM key if running in Emergent environment
+try:
+    if os.environ.get('EMERGENT_UNIVERSAL_KEY'):
+        from utils.update_emergent_key import main as update_key
+        update_key()
+        # Reload environment variables after update
+        load_dotenv(ROOT_DIR / '.env', override=True)
+except Exception as e:
+    logging.warning(f"Could not auto-update Emergent key: {e}")
+
 # Set Playwright browsers path for containerized environment
 os.environ['PLAYWRIGHT_BROWSERS_PATH'] = '/pw-browsers'
 
