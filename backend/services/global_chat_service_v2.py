@@ -1311,8 +1311,8 @@ When user mentions multiple locations with "and", create SEPARATE runs for EACH 
                 follow_up_prompt = f"{enhanced_prompt}\n\nFunction results: {results_summary}\n\nPlease respond naturally to the user's original question with this data. Remember the conversation context. DO NOT include FUNCTION_CALL in your response. If multiple runs were created, mention all of them.\n\nUSER: Original message: {message}\n\nPlease provide a natural response about what was executed."
                 
                 # Generate follow-up response
-                final_response_obj = await self.model.generate_content_async(follow_up_prompt)
-                final_response = final_response_obj.text
+                follow_up_msg = UserMessage(text=follow_up_prompt)
+                final_response = await self.chat.send_message(follow_up_msg)
                 
                 # Save assistant response with all function calls
                 await self.save_message("assistant", final_response, {"multiple_calls": function_calls})
