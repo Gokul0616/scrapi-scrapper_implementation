@@ -73,11 +73,11 @@ readyState: 3 (CLOSED)
 ```
 
 **Root Cause:**
-The WebSocket URL was being constructed with a simple `.replace('http', 'ws')` which caused issues with https URLs. When the BACKEND_URL is `https://shell-runner-1.preview.emergentagent.com`, the replacement would incorrectly become `wss://fetch-error-fix-1.preview.emergentagent.com` but only replacing the first occurrence of 'http', potentially leaving malformed URLs.
+The WebSocket URL was being constructed with a simple `.replace('http', 'ws')` which caused issues with https URLs. When the BACKEND_URL is `https://error-handler-17.preview.emergentagent.com`, the replacement would incorrectly become `wss://fetch-error-fix-1.preview.emergentagent.com` but only replacing the first occurrence of 'http', potentially leaving malformed URLs.
 
 **Environment:**
 ```
-REACT_APP_BACKEND_URL=https://shell-runner-1.preview.emergentagent.com
+REACT_APP_BACKEND_URL=https://error-handler-17.preview.emergentagent.com
 ```
 
 **Fix:**
