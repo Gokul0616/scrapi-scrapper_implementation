@@ -388,8 +388,9 @@ const ActorDetail = () => {
     );
   }
 
+  // If actor is null after loading, we've navigated to not-found page
   if (!actor) {
-    return <div className="p-8">Actor not found</div>;
+    return null;
   }
 
   // Use legacy form for Google Maps scraper, dynamic form for others
