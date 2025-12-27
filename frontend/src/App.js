@@ -40,6 +40,12 @@ const RootRedirect = () => {
 const RouteTracker = () => {
   const location = useLocation();
   const { updateLastPath, user } = useAuth();
+  const navigate = useNavigate();
+
+  // Setup axios interceptor once
+  useEffect(() => {
+    setupAxiosInterceptor(navigate);
+  }, [navigate]);
 
   useEffect(() => {
     // Only track authenticated routes (not login/register)
