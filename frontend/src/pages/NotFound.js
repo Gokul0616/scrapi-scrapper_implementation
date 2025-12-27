@@ -6,9 +6,7 @@ const NotFound = () => {
   const isDark = theme === 'dark';
 
   return (
-    <div className={`min-h-screen flex items-center justify-center px-8 ${
-      isDark ? 'bg-[#0F1014]' : 'bg-white'
-    }`}>
+    <div className="min-h-screen flex items-center justify-center px-8">
       <div className="max-w-3xl w-full text-center">
         {/* Main Message - Simple and Clean */}
         <h1 className={`text-4xl font-normal mb-6 ${
