@@ -26,6 +26,7 @@ import Schedules from './pages/Schedules';
 import ApiAccess from './pages/ApiAccess';
 import GlobalChat from './components/GlobalChat';
 import Settings from './pages/Settings';
+import NotFound from './pages/NotFound';
 
 // Component to handle root redirect based on last path
 const RootRedirect = () => {
