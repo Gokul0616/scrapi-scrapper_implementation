@@ -61,9 +61,7 @@ async def scrapi_global_search(
 
 @router.post("/scrapi-global-search/recent")
 async def save_search_to_recent(
-    query: str,
-    result_type: str,
-    result_id: str,
+    request: RecentSearchRequest,
     current_user: dict = Depends(get_current_user)
 ):
     """Save a search result to recent searches."""
@@ -72,9 +70,9 @@ async def save_search_to_recent(
     await save_recent_search(
         db=_db,
         user_id=user_id,
-        query=query,
-        result_type=result_type,
-        result_id=result_id
+        query=request.query,
+        result_type=request.result_type,
+        result_id=request.result_id
     )
     
     return {"message": "Search saved to recent"}
