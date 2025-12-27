@@ -181,6 +181,9 @@ function AppRoutes() {
         <Route path="/billing" element={<ProtectedRoute><DashboardLayout><div className="p-8">Billing</div></DashboardLayout></ProtectedRoute>} />
         <Route path="/docs" element={<ProtectedRoute><DashboardLayout><div className="p-8">Documentation</div></DashboardLayout></ProtectedRoute>} />
         <Route path="/help" element={<ProtectedRoute><DashboardLayout><div className="p-8">Help</div></DashboardLayout></ProtectedRoute>} />
+        
+        {/* 404 Catch-all Route - Must be last */}
+        <Route path="*" element={<DashboardLayout><NotFound /></DashboardLayout>} />
       </Routes>
     </>
   );
