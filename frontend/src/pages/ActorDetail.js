@@ -62,6 +62,13 @@ const ActorDetail = () => {
       setActor(response.data);
     } catch (error) {
       console.error('Failed to fetch actor:', error);
+      
+      // If actor not found (404), navigate to not-found page
+      if (error.response && error.response.status === 404) {
+        navigate('/not-found');
+        return;
+      }
+      
       toast({
         title: 'Error',
         description: 'Failed to load actor details',
