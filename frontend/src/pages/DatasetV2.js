@@ -394,6 +394,11 @@ const DatasetV2 = () => {
       setRunDetails(response.data);
     } catch (error) {
       console.error('Failed to fetch run details:', error);
+      
+      // If run not found (404), navigate to not-found page
+      if (error.response && error.response.status === 404) {
+        navigate('/not-found');
+      }
     }
   };
 
@@ -413,6 +418,13 @@ const DatasetV2 = () => {
       setTotalPages(response.data.total_pages || 1);
     } catch (error) {
       console.error('Failed to fetch dataset:', error);
+      
+      // If dataset not found (404), navigate to not-found page
+      if (error.response && error.response.status === 404) {
+        navigate('/not-found');
+        return;
+      }
+      
       toast({
         title: 'Error',
         description: 'Failed to load dataset',
