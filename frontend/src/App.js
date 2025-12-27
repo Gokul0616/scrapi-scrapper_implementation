@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { ModalProvider } from './contexts/ModalContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { Toaster } from './components/ui/toaster';
 import { ErrorDisplayContainer } from './components/ErrorDisplay';
+import { setupAxiosInterceptor } from './utils/axiosInterceptor';
 import Sidebar from './components/Sidebar';
 import Login from './pages/Login';
 import Register from './pages/Register';
