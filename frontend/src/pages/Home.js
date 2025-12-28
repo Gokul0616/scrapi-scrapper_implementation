@@ -175,7 +175,13 @@ function Home() {
 
           <div className="space-y-3">
             <h2 className="text-[17px] font-bold text-foreground">Recently viewed</h2>
-            {recentActors.length > 0 ? (
+            {loadingRecent ? (
+              <div className="grid grid-cols-4 gap-4">
+                {Array.from({ length: 4 }).map((_, idx) => (
+                  <RecentActorSkeleton key={idx} />
+                ))}
+              </div>
+            ) : recentActors.length > 0 ? (
               <div className="grid grid-cols-4 gap-4">
                 {recentActors.slice(0, 4).map((actor, idx) => (
                   <div
