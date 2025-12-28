@@ -113,9 +113,15 @@ const Register = () => {
 
   const handleDetailsSubmit = async (e) => {
     e.preventDefault();
-    setFullNameError('');
-    if (!formData.fullName) {
-      setFullNameError('Full name is required');
+    setFirstNameError('');
+    setLastNameError('');
+    
+    if (!formData.firstName.trim()) {
+      setFirstNameError('First name is required');
+      return;
+    }
+    if (!formData.lastName.trim()) {
+      setLastNameError('Last name is required');
       return;
     }
     setStep(5); // Move to password step
