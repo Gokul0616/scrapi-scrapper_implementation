@@ -35,21 +35,29 @@ function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const token = localStorage.getItem('token');
+        
+        // Fetch recently viewed actors
+        const recentViewsRes = await axios.get(`${BACKEND_URL}/api/actors/recently-viewed?limit=4`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        const recentViewsData = Array.isArray(recentViewsRes.data)
+          ? recentViewsRes.data
+          : [];
+        
+        setRecentActors(recentViewsData);
 
+        // Fetch suggested actors (all actors for now)
         const actorsRes = await axios.get(`${BACKEND_URL}/api/actors`);
 
         const actorsData = Array.isArray(actorsRes.data)
           ? actorsRes.data
           : (actorsRes.data?.items || actorsRes.data?.data || []);
 
-
-
-        setRecentActors(actorsData.slice(0, 4));
-
-
         setSuggestedActors(actorsData.slice(0, 6));
 
-
+        // Fetch recent runs
         const runsRes = await axios.get(`${BACKEND_URL}/api/runs`);
 
         const runsData = Array.isArray(runsRes.data?.runs)
