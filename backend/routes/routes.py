@@ -9,7 +9,7 @@ from pydantic import ValidationError
 from models import (
     UserCreate, UserLogin, UserResponse, 
     AdminUserCreate, AdminUserLogin, AdminUserResponse,
-    Actor, ActorCreate, ActorUpdate, ActorPublish,
+    Actor, ActorCreate, ActorUpdate, ActorPublish, ActorView,
     Run, RunCreate, Dataset, DatasetItem, Proxy, ProxyCreate,
     LeadChatMessage, LeadChatRequest, Schedule, ScheduleCreate, ScheduleUpdate,
     OTP, SendOTPRequest, VerifyOTPRequest, OTPResponse,
