@@ -492,25 +492,49 @@ const Register = () => {
                 )}
 
                 <div>
-                  <label htmlFor="fullName" className="block text-[13px] font-medium text-gray-700 mb-1.5">
-                    Full Name
+                  <label htmlFor="firstName" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                    First Name
                   </label>
                   <Input
-                    id="fullName"
+                    id="firstName"
                     type="text"
-                    placeholder="Enter your full name"
-                    value={formData.fullName}
+                    placeholder="Enter your first name"
+                    value={formData.firstName}
                     onChange={(e) => {
-                      setFormData({ ...formData, fullName: e.target.value });
-                      setFullNameError('');
+                      setFormData({ ...formData, firstName: e.target.value });
+                      setFirstNameError('');
                     }}
                     required
-                    className={`w-full h-[38px] text-[14px] rounded-md ${fullNameError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
+                    className={`w-full h-[38px] text-[14px] rounded-md ${firstNameError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
                   />
-                  {fullNameError && (
+                  {firstNameError && (
                     <p className="mt-1.5 text-[12px] text-red-600 flex items-center">
                       <AlertCircle className="w-3.5 h-3.5 mr-1" />
-                      {fullNameError}
+                      {firstNameError}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label htmlFor="lastName" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                    Last Name
+                  </label>
+                  <Input
+                    id="lastName"
+                    type="text"
+                    placeholder="Enter your last name"
+                    value={formData.lastName}
+                    onChange={(e) => {
+                      setFormData({ ...formData, lastName: e.target.value });
+                      setLastNameError('');
+                    }}
+                    required
+                    className={`w-full h-[38px] text-[14px] rounded-md ${lastNameError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
+                  />
+                  {lastNameError && (
+                    <p className="mt-1.5 text-[12px] text-red-600 flex items-center">
+                      <AlertCircle className="w-3.5 h-3.5 mr-1" />
+                      {lastNameError}
                     </p>
                   )}
                 </div>
