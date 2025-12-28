@@ -174,7 +174,7 @@ function Home() {
                         {actor.name}
                       </h3>
                       <p className={`text-[11px] truncate leading-tight ${theme === 'dark' ? 'text-gray-500' : 'text-[#6B7280]'}`}>
-                        Started at {formatDate(actor.last_run_at || new Date().toISOString())}...
+                        Last viewed {formatDate(actor.last_viewed_at || actor.last_run_at || new Date().toISOString())}
                       </p>
                     </div>
                   </div>
