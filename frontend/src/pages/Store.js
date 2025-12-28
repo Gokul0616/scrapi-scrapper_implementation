@@ -372,6 +372,22 @@ function Store() {
     }`}>
       <div className="max-w-[1240px] mx-auto">
         
+        {/* Back Button */}
+        <div className="mb-5">
+          <button
+            onClick={handleBackToLanding}
+            data-testid="back-to-landing-button"
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[14px] font-medium transition-all ${
+              theme === 'dark'
+                ? 'text-foreground hover:bg-muted'
+                : 'text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Store
+          </button>
+        </div>
+
         {/* Search Bar */}
         <div className="mb-5">
           <div className="relative">
@@ -423,77 +439,8 @@ function Store() {
           ))}
         </div>
 
-        {/* Filters and Count */}
-        <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-3">
-            {/* Category Filter Dropdown (Hidden as we have pills above) */}
-            
-            {/* Pricing Filter */}
-            <div className="relative">
-              <select
-                value={selectedPricing}
-                onChange={(e) => setSelectedPricing(e.target.value)}
-                data-testid="pricing-filter"
-                className={`appearance-none h-10 pl-4 pr-10 border rounded-lg text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-colors ${
-                  theme === 'dark'
-                    ? 'bg-card border-border text-foreground'
-                    : 'bg-white border-gray-300 text-gray-700'
-                }`}
-              >
-                <option value="all">All pricing models</option>
-                <option value="free">Free</option>
-                <option value="paid">Paid</option>
-              </select>
-              <ChevronDown className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none ${
-                theme === 'dark' ? 'text-muted-foreground' : 'text-gray-400'
-              }`} />
-            </div>
-
-            {/* Developer Filter */}
-            <div className="relative">
-              <select
-                value={selectedDeveloper}
-                onChange={(e) => setSelectedDeveloper(e.target.value)}
-                data-testid="developer-filter"
-                className={`appearance-none h-10 pl-4 pr-10 border rounded-lg text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-colors ${
-                  theme === 'dark'
-                    ? 'bg-card border-border text-foreground'
-                    : 'bg-white border-gray-300 text-gray-700'
-                }`}
-              >
-                {developers.map(dev => (
-                  <option key={dev.id} value={dev.id}>{dev.name}</option>
-                ))}
-              </select>
-              <ChevronDown className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none ${
-                theme === 'dark' ? 'text-muted-foreground' : 'text-gray-400'
-              }`} />
-            </div>
-
-            {/* Sort Filter */}
-            <div className="relative">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                data-testid="sort-filter"
-                className={`appearance-none h-10 pl-4 pr-10 border rounded-lg text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-colors ${
-                  theme === 'dark'
-                    ? 'bg-card border-border text-foreground'
-                    : 'bg-white border-gray-300 text-gray-700'
-                }`}
-              >
-                <option value="relevant">Most relevant</option>
-                <option value="rating">Highest rated</option>
-                <option value="newest">Newest</option>
-                <option value="name">Name</option>
-              </select>
-              <ChevronDown className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none ${
-                theme === 'dark' ? 'text-muted-foreground' : 'text-gray-400'
-              }`} />
-            </div>
-          </div>
-
-          {/* Actor Count */}
+        {/* Actor Count */}
+        <div className="mb-6 flex items-center justify-between">
           <div className={`text-[15px] font-semibold ${
             theme === 'dark' ? 'text-foreground' : 'text-gray-900'
           }`} data-testid="actor-count">
