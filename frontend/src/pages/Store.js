@@ -104,10 +104,20 @@ function Store() {
   const handleBackToLanding = () => {
     setView('landing');
     setSearchQuery('');
+  };
+
+  const handleClearFilters = () => {
     setSelectedCategory('all');
     setSelectedDeveloper('all');
     setSelectedPricing('all');
     setSortBy('relevant');
+  };
+
+  const hasActiveFilters = () => {
+    return selectedCategory !== 'all' || 
+           selectedDeveloper !== 'all' || 
+           selectedPricing !== 'all' || 
+           sortBy !== 'relevant';
   };
 
   const handleCategoryClick = (categoryId) => {
