@@ -393,97 +393,76 @@ function Store() {
           </div>
         </div>
 
-        {/* Filter Dropdowns */}
+        {/* Filter Dropdowns and Clear Button */}
         <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3 flex-wrap">
-            {/* Category Filter */}
-            <div className="relative">
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                data-testid="category-filter"
-                className={`appearance-none h-10 pl-4 pr-10 border rounded-lg text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-colors ${
-                  theme === 'dark'
-                    ? 'bg-card border-border text-foreground hover:bg-muted/50'
-                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <option value="all">All categories</option>
-                {categories.filter(c => c.id !== 'all').map(cat => (
-                  <option key={cat.id} value={cat.id}>{cat.name}</option>
-                ))}
-              </select>
-              <ChevronDown className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none ${
-                theme === 'dark' ? 'text-muted-foreground' : 'text-gray-400'
-              }`} />
-            </div>
-            
-            {/* Pricing Filter */}
-            <div className="relative">
-              <select
-                value={selectedPricing}
-                onChange={(e) => setSelectedPricing(e.target.value)}
-                data-testid="pricing-filter"
-                className={`appearance-none h-10 pl-4 pr-10 border rounded-lg text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-colors ${
-                  theme === 'dark'
-                    ? 'bg-card border-border text-foreground hover:bg-muted/50'
-                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <option value="all">All pricing models</option>
-                <option value="free">Free</option>
-                <option value="pay_per_result">Pay per result</option>
-                <option value="pay_per_event">Pay per event</option>
-                <option value="pay_per_usage">Pay per usage</option>
-                <option value="rental">Rental</option>
-              </select>
-              <ChevronDown className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none ${
-                theme === 'dark' ? 'text-muted-foreground' : 'text-gray-400'
-              }`} />
-            </div>
+            <CustomDropdown
+              value={selectedCategory}
+              onChange={(val) => setSelectedCategory(val)}
+              options={[
+                { value: 'all', label: 'All categories' },
+                ...categories.filter(c => c.id !== 'all').map(cat => ({
+                  value: cat.id,
+                  label: cat.name
+                }))
+              ]}
+              placeholder="All categories"
+              testId="category-filter"
+            />
 
-            {/* Developer Filter */}
-            <div className="relative">
-              <select
-                value={selectedDeveloper}
-                onChange={(e) => setSelectedDeveloper(e.target.value)}
-                data-testid="developer-filter"
-                className={`appearance-none h-10 pl-4 pr-10 border rounded-lg text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-colors ${
-                  theme === 'dark'
-                    ? 'bg-card border-border text-foreground hover:bg-muted/50'
-                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                {developers.map(dev => (
-                  <option key={dev.id} value={dev.id}>{dev.name}</option>
-                ))}
-              </select>
-              <ChevronDown className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none ${
-                theme === 'dark' ? 'text-muted-foreground' : 'text-gray-400'
-              }`} />
-            </div>
+            <CustomDropdown
+              value={selectedPricing}
+              onChange={(val) => setSelectedPricing(val)}
+              options={[
+                { value: 'all', label: 'All pricing models' },
+                { value: 'free', label: 'Free' },
+                { value: 'pay_per_result', label: 'Pay per result' },
+                { value: 'pay_per_event', label: 'Pay per event' },
+                { value: 'pay_per_usage', label: 'Pay per usage' },
+                { value: 'rental', label: 'Rental' }
+              ]}
+              placeholder="All pricing models"
+              testId="pricing-filter"
+            />
 
-            {/* Sort Filter */}
-            <div className="relative">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                data-testid="sort-filter"
-                className={`appearance-none h-10 pl-4 pr-10 border rounded-lg text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-colors ${
+            <CustomDropdown
+              value={selectedDeveloper}
+              onChange={(val) => setSelectedDeveloper(val)}
+              options={developers.map(dev => ({
+                value: dev.id,
+                label: dev.name
+              }))}
+              placeholder="All developers"
+              testId="developer-filter"
+            />
+
+            <CustomDropdown
+              value={sortBy}
+              onChange={(val) => setSortBy(val)}
+              options={[
+                { value: 'relevant', label: 'Most relevant' },
+                { value: 'rating', label: 'Highest rated' },
+                { value: 'newest', label: 'Newest' },
+                { value: 'name', label: 'Name' }
+              ]}
+              placeholder="Most relevant"
+              testId="sort-filter"
+            />
+
+            {hasActiveFilters() && (
+              <button
+                onClick={handleClearFilters}
+                data-testid="clear-filters-button"
+                className={`flex items-center gap-2 px-4 h-10 rounded-lg text-[13px] font-medium transition-all ${
                   theme === 'dark'
-                    ? 'bg-card border-border text-foreground hover:bg-muted/50'
-                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                    ? 'bg-red-600/20 text-red-400 hover:bg-red-600/30'
+                    : 'bg-red-50 text-red-600 hover:bg-red-100'
                 }`}
               >
-                <option value="relevant">Most relevant</option>
-                <option value="rating">Highest rated</option>
-                <option value="newest">Newest</option>
-                <option value="name">Name</option>
-              </select>
-              <ChevronDown className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none ${
-                theme === 'dark' ? 'text-muted-foreground' : 'text-gray-400'
-              }`} />
-            </div>
+                <X className="w-4 h-4" />
+                Clear filters
+              </button>
+            )}
           </div>
 
           {/* Actor Count */}
