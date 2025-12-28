@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Star, Users, ChevronDown, ArrowLeft } from 'lucide-react';
+import { Search, Star, Users, ArrowLeft, X } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { SkeletonGrid } from '../components/SkeletonLoader';
+import CustomDropdown from '../components/CustomDropdown';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
