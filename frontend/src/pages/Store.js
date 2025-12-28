@@ -177,7 +177,7 @@ function Store() {
             <h1 className={`text-[40px] font-normal mb-4 tracking-tight ${
               theme === 'dark' ? 'text-foreground' : 'text-gray-900'
             }`}>
-              Apify Store
+              Scrapi Store
             </h1>
           </div>
 
