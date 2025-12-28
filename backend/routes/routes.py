@@ -1702,6 +1702,59 @@ async def get_recently_viewed_actors(current_user: dict = Depends(get_current_us
 # ============= Run Routes =============
 async def execute_scraping_job(run_id: str, actor_id: str, user_id: str, input_data: dict):
     """Background task to execute scraping."""
+
+@router.get("/actors/suggested")
+async def get_suggested_actors(current_user: dict = Depends(get_current_user), limit: int = 6):
+    """Get suggested actors based on user's recent views or popular actors for new users."""
+    try:
+        # Get user's recent views
+        recent_views = await db.actor_views.find(
+            {"user_id": current_user['id']}
+        ).sort("viewed_at", -1).limit(10).to_list(length=10)
+        
+        if recent_views:
+            # Get categories from recently viewed actors
+            viewed_actor_ids = [view["actor_id"] for view in recent_views]
+            viewed_actors = await db.actors.find(
+                {"id": {"$in": viewed_actor_ids}}
+            ).to_list(length=10)
+            
+            # Extract categories
+            categories = list(set([actor.get("category") for actor in viewed_actors if actor.get("category")]))
+            
+            # Suggest actors from same categories, excluding already viewed
+            suggested = await db.actors.find({
+                "category": {"$in": categories},
+                "id": {"$nin": viewed_actor_ids},
+                "is_public": True
+            }).limit(limit).to_list(length=limit)
+            
+            # If we don't have enough suggestions, add popular actors
+            if len(suggested) < limit:
+                additional = await db.actors.find({
+                    "id": {"$nin": viewed_actor_ids + [a["id"] for a in suggested]},
+                    "is_public": True
+                }).sort("runs_count", -1).limit(limit - len(suggested)).to_list(length=limit)
+                suggested.extend(additional)
+        else:
+            # New user - show most popular/featured actors
+            suggested = await db.actors.find({
+                "is_public": True
+            }).sort([("is_featured", -1), ("runs_count", -1), ("created_at", -1)]).limit(limit).to_list(length=limit)
+        
+        # Convert datetime strings
+        for actor in suggested:
+            if isinstance(actor.get('created_at'), str):
+                actor['created_at'] = datetime.fromisoformat(actor['created_at'])
+            if isinstance(actor.get('updated_at'), str):
+                actor['updated_at'] = datetime.fromisoformat(actor['updated_at'])
+        
+        return suggested
+    except Exception as e:
+        logger.error(f"Error getting suggested actors: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
     try:
         logger.info(f"🔧 Executing scraping job for run {run_id}")
         logger.info(f"   Input data type: {type(input_data)}")
