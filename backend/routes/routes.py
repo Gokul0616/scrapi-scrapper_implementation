@@ -296,7 +296,7 @@ async def login(credentials: UserLogin):
             email=user_doc['email'],
             first_name=user_doc.get('first_name'),
             last_name=user_doc.get('last_name'),
-            full_name=f"{user_doc.get('first_name', '')} {user_doc.get('last_name', '')}".strip() or None,
+            full_name=f"{user_doc.get('first_name') or ''} {user_doc.get('last_name') or ''}".strip() or None,
             plan=user_doc.get('plan', 'Free'),
             role=user_doc.get('role', 'user'),
             is_active=user_doc.get('is_active', True),
