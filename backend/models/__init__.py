@@ -26,6 +26,8 @@ __all__ = [
     'AdminUser', 'AdminUserCreate', 'AdminUserLogin', 'AdminUserResponse',
     # Actor models
     'Actor', 'ActorCreate', 'ActorUpdate', 'ActorPublish',
+    # Actor view models
+    'ActorView',
     # Run models
     'Run', 'RunCreate', 'RunInput',
     # Dataset models
