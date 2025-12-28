@@ -111,8 +111,8 @@ function Store() {
       onClick={() => navigate(`/actor/${actor.id}`)}
       className={`border rounded-xl p-5 transition-all cursor-pointer group hover:shadow-lg hover:-translate-y-1 ${
         theme === 'dark' 
-          ? 'bg-card border-border hover:border-muted-foreground/30' 
-          : 'bg-white border-gray-200 hover:border-gray-400'
+          ? 'bg-card border-border' 
+          : 'bg-white border-gray-200'
       }`}
     >
       {/* Actor Icon and Info */}
