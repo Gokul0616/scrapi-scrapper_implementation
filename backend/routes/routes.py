@@ -1629,6 +1629,169 @@ async def get_suggested_actors(current_user: dict = Depends(get_current_user), l
         logger.error(f"Error getting suggested actors: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# Store endpoints
+@router.get("/store/categories")
+async def get_store_categories(current_user: dict = Depends(get_current_user)):
+    """Get all categories with actor counts for store filtering."""
+    try:
+        # Get all public actors
+        actors = await db.actors.find({"is_public": True}, {"category": 1}).to_list(10000)
+        
+        # Define category mappings
+        category_map = {
+            'all': 'All',
+            'social': 'Social media',
+            'ai': 'AI',
+            'agents': 'Agents',
+            'lead': 'Lead generation',
+            'ecommerce': 'E-commerce',
+            'seo': 'SEO tools',
+            'jobs': 'Jobs',
+            'mcp': 'MCP servers',
+            'news': 'News',
+            'realestate': 'Real estate',
+            'developer': 'Developer tools',
+            'travel': 'Travel',
+            'videos': 'Videos',
+            'automation': 'Automation',
+            'integrations': 'Integrations',
+            'opensource': 'Open source',
+            'other': 'Other'
+        }
+        
+        # Count actors per category
+        category_counts = {}
+        total_count = len(actors)
+        
+        for category_id, category_name in category_map.items():
+            if category_id == 'all':
+                category_counts[category_id] = {
+                    'id': category_id,
+                    'name': category_name,
+                    'count': total_count
+                }
+            else:
+                count = sum(1 for actor in actors if actor.get('category', '').lower().replace(' ', '').replace('-', '') == category_id.replace(' ', '').replace('-', ''))
+                category_counts[category_id] = {
+                    'id': category_id,
+                    'name': category_name,
+                    'count': count
+                }
+        
+        return list(category_counts.values())
+    except Exception as e:
+        logger.error(f"Error getting store categories: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/store/featured")
+async def get_featured_actors(current_user: dict = Depends(get_current_user), limit: int = 6):
+    """Get featured actors for store landing page."""
+    try:
+        actors = await db.actors.find(
+            {"is_public": True, "is_featured": True},
+            {"_id": 0}
+        ).sort("runs_count", -1).limit(limit).to_list(limit)
+        
+        # If not enough featured actors, get popular ones
+        if len(actors) < limit:
+            additional = await db.actors.find(
+                {"is_public": True, "is_featured": {"$ne": True}},
+                {"_id": 0}
+            ).sort("runs_count", -1).limit(limit - len(actors)).to_list(limit)
+            actors.extend(additional)
+        
+        # Convert datetime strings
+        for actor in actors:
+            if isinstance(actor.get('created_at'), str):
+                actor['created_at'] = datetime.fromisoformat(actor['created_at'])
+            if isinstance(actor.get('updated_at'), str):
+                actor['updated_at'] = datetime.fromisoformat(actor['updated_at'])
+        
+        return actors
+    except Exception as e:
+        logger.error(f"Error getting featured actors: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/store/actors")
+async def get_store_actors(
+    current_user: dict = Depends(get_current_user),
+    search: Optional[str] = None,
+    category: Optional[str] = None,
+    developer: Optional[str] = None,
+    sort_by: str = "relevant",
+    skip: int = 0,
+    limit: int = 50
+):
+    """Get all store actors with filtering, search, and pagination."""
+    try:
+        # Build query
+        query = {"is_public": True}
+        
+        # Search filter
+        if search:
+            query["$or"] = [
+                {"name": {"$regex": search, "$options": "i"}},
+                {"description": {"$regex": search, "$options": "i"}},
+                {"tags": {"$regex": search, "$options": "i"}}
+            ]
+        
+        # Category filter
+        if category and category != 'all':
+            query["category"] = {"$regex": category, "$options": "i"}
+        
+        # Developer filter
+        if developer and developer != 'all':
+            query["author_name"] = developer
+        
+        # Get total count
+        total = await db.actors.count_documents(query)
+        
+        # Sort options
+        sort_field = "runs_count"
+        sort_order = -1
+        
+        if sort_by == "rating":
+            sort_field = "rating"
+        elif sort_by == "newest":
+            sort_field = "created_at"
+        elif sort_by == "name":
+            sort_field = "name"
+            sort_order = 1
+        
+        # Get actors
+        actors = await db.actors.find(
+            query,
+            {"_id": 0}
+        ).sort(sort_field, sort_order).skip(skip).limit(limit).to_list(limit)
+        
+        # Convert datetime strings
+        for actor in actors:
+            if isinstance(actor.get('created_at'), str):
+                actor['created_at'] = datetime.fromisoformat(actor['created_at'])
+            if isinstance(actor.get('updated_at'), str):
+                actor['updated_at'] = datetime.fromisoformat(actor['updated_at'])
+        
+        return {
+            "actors": actors,
+            "total": total,
+            "skip": skip,
+            "limit": limit
+        }
+    except Exception as e:
+        logger.error(f"Error getting store actors: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/store/developers")
+async def get_store_developers(current_user: dict = Depends(get_current_user)):
+    """Get list of unique developers for filtering."""
+    try:
+        # Get distinct author names
+        developers = await db.actors.distinct("author_name", {"is_public": True})
+        return [{"id": dev, "name": dev} for dev in developers if dev]
+    except Exception as e:
+        logger.error(f"Error getting developers: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/actors/{actor_id}", response_model=Actor)
 async def get_actor(actor_id: str, current_user: dict = Depends(get_current_user)):
     """Get specific actor."""
