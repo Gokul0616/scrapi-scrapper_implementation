@@ -110,35 +110,36 @@ function Store() {
   const ActorCard = ({ actor }) => (
     <div
       onClick={() => navigate(`/actor/${actor.id}`)}
-      className={`border rounded-xl p-5 transition-all cursor-pointer group hover:shadow-lg hover:-translate-y-1 ${
+      data-testid={`actor-card-${actor.id}`}
+      className={`border rounded-xl p-5 transition-all cursor-pointer group hover:shadow-md ${
         theme === 'dark' 
-          ? 'bg-card border-border' 
-          : 'bg-white border-gray-200'
+          ? 'bg-card border-border hover:border-muted-foreground/40' 
+          : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
       }`}
     >
       {/* Actor Icon and Info */}
       <div className="flex items-start gap-3 mb-4">
         <div 
-          className={`w-10 h-10 rounded flex items-center justify-center text-2xl flex-shrink-0 border ${
-            theme === 'dark' ? 'bg-card border-border' : 'bg-gradient-to-br from-gray-100 to-gray-200 border-gray-200'
+          className={`w-12 h-12 rounded flex items-center justify-center text-2xl flex-shrink-0 ${
+            theme === 'dark' ? 'bg-muted/50' : 'bg-gray-50'
           }`}
         >
           {actor.icon || '🗺️'}
         </div>
         <div className="flex-1 min-w-0">
           <h3 className={`font-semibold text-[15px] leading-tight mb-1 transition-colors ${
-            theme === 'dark' ? 'text-card-foreground group-hover:text-blue-400' : 'text-gray-900 group-hover:text-blue-600'
+            theme === 'dark' ? 'text-card-foreground' : 'text-gray-900'
           }`}>
             {actor.name}
           </h3>
-          <p className={`text-xs ${theme === 'dark' ? 'text-muted-foreground' : 'text-gray-500'}`}>
+          <p className={`text-[12px] ${theme === 'dark' ? 'text-muted-foreground' : 'text-gray-500'}`}>
             {actor.author_name || 'unknown'}
           </p>
         </div>
       </div>
 
       {/* Description */}
-      <p className={`text-[13.5px] leading-5 mb-5 line-clamp-3 ${
+      <p className={`text-[13px] leading-[1.6] mb-4 line-clamp-3 min-h-[62px] ${
         theme === 'dark' ? 'text-muted-foreground' : 'text-gray-600'
       }`}>
         {actor.description || 'No description available'}
@@ -150,13 +151,13 @@ function Store() {
       }`}>
         <div className="flex items-center gap-1.5">
           <Users className="w-3.5 h-3.5" />
-          <span>{actor.runs_count || '0'}</span>
+          <span>{(actor.runs_count || 0).toLocaleString()}</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <Star className="w-3.5 h-3.5 fill-yellow-500 text-yellow-500" />
-          <span className={theme === 'dark' ? 'text-foreground' : 'text-gray-900'}>{actor.rating || '4.8'}</span>
+          <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+          <span className={theme === 'dark' ? 'text-foreground' : 'text-gray-900'}>{actor.rating || '4.7'}</span>
           <span className={theme === 'dark' ? 'text-muted-foreground font-normal' : 'text-gray-500 font-normal'}>
-            ({actor.reviews_count || '0'})
+            ({(actor.reviews_count || 0).toLocaleString()})
           </span>
         </div>
       </div>
