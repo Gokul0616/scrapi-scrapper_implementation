@@ -149,6 +149,8 @@ const Register = () => {
       formData.email, 
       formData.email, 
       formData.password, 
+      formData.firstName,
+      formData.lastName,
       formData.organizationName,
       formData.accountType
     );
