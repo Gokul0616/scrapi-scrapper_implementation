@@ -7,6 +7,7 @@ class UserCreate(BaseModel):
     username: str
     email: str
     password: str
+    full_name: Optional[str] = None
 
 class UserLogin(BaseModel):
     username: str
@@ -41,6 +42,7 @@ class UserResponse(BaseModel):
     email: str
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+    full_name: Optional[str] = None
     plan: str
     role: str = "user"
     is_active: bool = True

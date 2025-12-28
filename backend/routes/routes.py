@@ -157,12 +157,23 @@ async def register(user_data: UserCreate):
     
     generated_username = generate_unique_username(existing_usernames)
     
+    # Parse full name if provided
+    first_name = None
+    last_name = None
+    if user_data.full_name:
+        parts = user_data.full_name.strip().split(' ', 1)
+        first_name = parts[0]
+        if len(parts) > 1:
+            last_name = parts[1]
+
     # Create user with 'user' role (normal user from scraper website)
     from models import User
     user = User(
         username=generated_username,
         email=user_data.email,
         hashed_password=hash_password(user_data.password),
+        first_name=first_name,
+        last_name=last_name,
         role="user",  # Always 'user' for scraper website signups
         profile_color=generate_random_profile_color()  # Generate random profile color
     )
@@ -187,7 +198,7 @@ async def register(user_data: UserCreate):
     # Create token
     token = create_access_token({"sub": user.id, "username": user.username, "role": user.role})
     
-    return {
+        return {
         "access_token": token,
         "token_type": "bearer",
         "needs_role_selection": False,  # No role selection for normal users
@@ -197,6 +208,7 @@ async def register(user_data: UserCreate):
             email=user.email,
             first_name=user.first_name,
             last_name=user.last_name,
+            full_name=f"{user.first_name} {user.last_name}".strip() if user.first_name else None,
             plan=user.plan,
             role=user.role,
             is_active=user.is_active,
@@ -289,6 +301,7 @@ async def login(credentials: UserLogin):
             email=user_doc['email'],
             first_name=user_doc.get('first_name'),
             last_name=user_doc.get('last_name'),
+            full_name=f"{user_doc.get('first_name', '')} {user_doc.get('last_name', '')}".strip() or None,
             plan=user_doc.get('plan', 'Free'),
             role=user_doc.get('role', 'user'),
             is_active=user_doc.get('is_active', True),
@@ -988,6 +1001,7 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         email=user_doc['email'],
         first_name=user_doc.get('first_name'),
         last_name=user_doc.get('last_name'),
+        full_name=f"{user_doc.get('first_name', '')} {user_doc.get('last_name', '')}".strip() or None,
         plan=user_doc.get('plan', 'Free'),
         role=user_doc.get('role', 'user'),
         is_active=user_doc.get('is_active', True),
