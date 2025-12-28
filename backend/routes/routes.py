@@ -1638,6 +1638,72 @@ async def get_actors_used(current_user: dict = Depends(get_current_user)):
         logger.error(f"Error getting actors used: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.post("/actors/{actor_id}/view")
+async def track_actor_view(actor_id: str, current_user: dict = Depends(get_current_user)):
+    """Track when a user views an actor."""
+    try:
+        # Check if actor exists
+        actor = await db.actors.find_one({"id": actor_id})
+        if not actor:
+            raise HTTPException(status_code=404, detail="Actor not found")
+        
+        # Create or update actor view record
+        actor_view = ActorView(
+            user_id=current_user['id'],
+            actor_id=actor_id,
+            viewed_at=datetime.now(timezone.utc)
+        )
+        
+        # Remove old view from this user for this actor (to update the timestamp)
+        await db.actor_views.delete_many({
+            "user_id": current_user['id'],
+            "actor_id": actor_id
+        })
+        
+        # Insert new view record
+        doc = actor_view.model_dump()
+        doc['viewed_at'] = doc['viewed_at'].isoformat()
+        await db.actor_views.insert_one(doc)
+        
+        return {"message": "View tracked successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error tracking actor view: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/actors/recently-viewed")
+async def get_recently_viewed_actors(current_user: dict = Depends(get_current_user), limit: int = 10):
+    """Get recently viewed actors for the current user."""
+    try:
+        # Get recent views for this user
+        cursor = db.actor_views.find(
+            {"user_id": current_user['id']}
+        ).sort("viewed_at", -1).limit(limit)
+        
+        views = await cursor.to_list(length=limit)
+        
+        # Get actor details for each view
+        result = []
+        for view in views:
+            actor = await db.actors.find_one({"id": view["actor_id"]}, {"_id": 0})
+            if actor:
+                # Convert datetime strings if needed
+                if isinstance(actor.get('created_at'), str):
+                    actor['created_at'] = datetime.fromisoformat(actor['created_at'])
+                if isinstance(actor.get('updated_at'), str):
+                    actor['updated_at'] = datetime.fromisoformat(actor['updated_at'])
+                
+                # Add view timestamp
+                actor['last_viewed_at'] = view['viewed_at']
+                result.append(actor)
+        
+        return result
+    except Exception as e:
+        logger.error(f"Error getting recently viewed actors: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ============= Run Routes =============
 async def execute_scraping_job(run_id: str, actor_id: str, user_id: str, input_data: dict):
     """Background task to execute scraping."""
