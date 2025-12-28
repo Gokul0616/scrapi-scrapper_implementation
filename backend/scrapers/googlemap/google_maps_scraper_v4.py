@@ -269,9 +269,9 @@ class GoogleMapsScraperV4(BaseScraper):
         """Handle detail page - extract place information."""
         page = context.page
         url = context.request.url
-        extract_reviews = context.user_data['extract_reviews']
-        extract_images = context.user_data['extract_images']
-        progress_callback = context.user_data.get('progress_callback')
+        extract_reviews = self.current_config['extract_reviews']
+        extract_images = self.current_config['extract_images']
+        progress_callback = self.current_config.get('progress_callback')
         
         if stealth_async:
             await stealth_async(page)
