@@ -138,12 +138,14 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (username, email, password, organizationName, accountType) => {
+  const register = async (username, email, password, firstName, lastName, organizationName, accountType) => {
     try {
       const response = await axios.post(`${API}/auth/register`, {
         username,
         email,
         password,
+        first_name: firstName,
+        last_name: lastName,
         organization_name: organizationName,
         account_type: accountType || 'personal'
       });
