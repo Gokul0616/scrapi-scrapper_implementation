@@ -5,8 +5,8 @@ import math
 from typing import List, Dict, Any, Optional, Callable
 from ..base_scraper import BaseScraper
 from ..scraper_engine import ScraperEngine
-from crawlee.playwright_crawler import PlaywrightCrawler, PlaywrightCrawlingContext
-from crawlee.proxy_configuration import ProxyConfiguration
+from crawlee.crawlers import PlaywrightCrawler, PlaywrightCrawlingContext
+from crawlee.configuration import Configuration
 from playwright.async_api import Page
 from bs4 import BeautifulSoup
 import aiohttp
