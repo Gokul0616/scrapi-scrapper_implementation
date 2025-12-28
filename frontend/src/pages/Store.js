@@ -111,17 +111,17 @@ function Store() {
     <div
       onClick={() => navigate(`/actor/${actor.id}`)}
       data-testid={`actor-card-${actor.id}`}
-      className={`border rounded-xl p-5 transition-all cursor-pointer group hover:shadow-md ${
+      className={`border rounded-xl p-5 transition-all cursor-pointer group hover:shadow-lg hover:-translate-y-1 ${
         theme === 'dark' 
-          ? 'bg-card border-border hover:border-muted-foreground/40' 
-          : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
+          ? 'bg-card border-border hover:border-muted-foreground/30' 
+          : 'bg-white border-gray-200 hover:border-gray-300'
       }`}
     >
       {/* Actor Icon and Info */}
       <div className="flex items-start gap-3 mb-4">
         <div 
-          className={`w-12 h-12 rounded flex items-center justify-center text-2xl flex-shrink-0 ${
-            theme === 'dark' ? 'bg-muted/50' : 'bg-gray-50'
+          className={`w-12 h-12 rounded flex items-center justify-center text-2xl flex-shrink-0 border ${
+            theme === 'dark' ? 'bg-card border-border' : 'bg-white border-gray-200'
           }`}
         >
           {actor.icon || '🗺️'}
