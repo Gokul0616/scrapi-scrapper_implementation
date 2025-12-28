@@ -277,14 +277,14 @@ function Store() {
   // All Actors View
   return (
     <div className={`min-h-screen p-8 font-sans transition-colors ${
-      theme === 'dark' ? 'bg-background' : 'bg-gray-50'
+      theme === 'dark' ? 'bg-background' : 'bg-background'
     }`}>
       <div className="max-w-[1240px] mx-auto">
         
         {/* Search Bar */}
-        <div className="mb-6">
+        <div className="mb-5">
           <div className="relative">
-            <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 ${
+            <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 w-[18px] h-[18px] ${
               theme === 'dark' ? 'text-muted-foreground' : 'text-gray-400'
             }`} />
             <input
@@ -292,10 +292,11 @@ function Store() {
               placeholder="Search for Actors"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`w-full h-12 pl-12 pr-4 border rounded-lg text-[16px] focus:outline-none focus:ring-2 transition-colors ${
+              data-testid="all-actors-search-input"
+              className={`w-full h-[52px] pl-12 pr-4 border rounded-lg text-[15px] focus:outline-none focus:ring-2 transition-colors ${
                 theme === 'dark' 
                   ? 'bg-card border-border text-foreground placeholder-muted-foreground focus:ring-blue-500' 
-                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-blue-600'
+                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500 focus:border-blue-500'
               }`}
             />
           </div>
@@ -309,6 +310,7 @@ function Store() {
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
+                data-testid="category-filter"
                 className={`appearance-none h-10 pl-4 pr-10 border rounded-lg text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-colors ${
                   theme === 'dark'
                     ? 'bg-card border-border text-foreground'
@@ -330,6 +332,7 @@ function Store() {
               <select
                 value={selectedPricing}
                 onChange={(e) => setSelectedPricing(e.target.value)}
+                data-testid="pricing-filter"
                 className={`appearance-none h-10 pl-4 pr-10 border rounded-lg text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-colors ${
                   theme === 'dark'
                     ? 'bg-card border-border text-foreground'
@@ -350,6 +353,7 @@ function Store() {
               <select
                 value={selectedDeveloper}
                 onChange={(e) => setSelectedDeveloper(e.target.value)}
+                data-testid="developer-filter"
                 className={`appearance-none h-10 pl-4 pr-10 border rounded-lg text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-colors ${
                   theme === 'dark'
                     ? 'bg-card border-border text-foreground'
@@ -370,6 +374,7 @@ function Store() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
+                data-testid="sort-filter"
                 className={`appearance-none h-10 pl-4 pr-10 border rounded-lg text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-colors ${
                   theme === 'dark'
                     ? 'bg-card border-border text-foreground'
@@ -390,7 +395,7 @@ function Store() {
           {/* Actor Count */}
           <div className={`text-[15px] font-semibold ${
             theme === 'dark' ? 'text-foreground' : 'text-gray-900'
-          }`}>
+          }`} data-testid="actor-count">
             {totalActors.toLocaleString()} Actors
           </div>
         </div>
@@ -399,6 +404,7 @@ function Store() {
         <div className="mb-4">
           <button
             onClick={() => setView('landing')}
+            data-testid="back-to-store-button"
             className={`text-[13px] font-medium transition-colors ${
               theme === 'dark' 
                 ? 'text-muted-foreground hover:text-foreground' 
@@ -411,13 +417,9 @@ function Store() {
 
         {/* Actors Grid */}
         {loading ? (
-          <div className="text-center py-12">
-            <div className={`animate-spin rounded-full h-12 w-12 border-b-2 mx-auto ${
-              theme === 'dark' ? 'border-blue-500' : 'border-gray-900'
-            }`}></div>
-          </div>
+          <SkeletonGrid count={12} columns={3} />
         ) : actors.length > 0 ? (
-          <div className="grid grid-cols-4 gap-6">
+          <div className="grid grid-cols-3 gap-6" data-testid="all-actors-grid">
             {actors.map((actor) => (
               <ActorCard key={actor.id} actor={actor} />
             ))}
