@@ -25,8 +25,31 @@ const ActorsV2 = () => {
   const [itemsPerPage, setItemsPerPage] = useState(20);
 
   useEffect(() => {
-    fetchActorsUsed();
-  }, []);
+    if (activeTab === 'recent') {
+      fetchRecentlyViewedActors();
+    } else {
+      fetchActorsUsed();
+    }
+  }, [activeTab]);
+
+  const fetchRecentlyViewedActors = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/actors/recently-viewed?limit=100`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setActors(response.data);
+    } catch (error) {
+      console.error('Failed to fetch recently viewed actors:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load recently viewed actors',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchActorsUsed = async () => {
     try {
