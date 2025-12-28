@@ -198,7 +198,7 @@ async def register(user_data: UserCreate):
     # Create token
     token = create_access_token({"sub": user.id, "username": user.username, "role": user.role})
     
-        return {
+    return {
         "access_token": token,
         "token_type": "bearer",
         "needs_role_selection": False,  # No role selection for normal users
