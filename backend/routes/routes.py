@@ -1583,31 +1583,39 @@ async def get_suggested_actors(current_user: dict = Depends(get_current_user), l
             # Get categories from recently viewed actors
             viewed_actor_ids = [view["actor_id"] for view in recent_views]
             viewed_actors = await db.actors.find(
-                {"id": {"$in": viewed_actor_ids}}
+                {"id": {"$in": viewed_actor_ids}},
+                {"_id": 0}
             ).to_list(length=10)
             
             # Extract categories
             categories = list(set([actor.get("category") for actor in viewed_actors if actor.get("category")]))
             
             # Suggest actors from same categories, excluding already viewed
-            suggested = await db.actors.find({
-                "category": {"$in": categories},
-                "id": {"$nin": viewed_actor_ids},
-                "is_public": True
-            }).limit(limit).to_list(length=limit)
+            suggested = await db.actors.find(
+                {
+                    "category": {"$in": categories},
+                    "id": {"$nin": viewed_actor_ids},
+                    "is_public": True
+                },
+                {"_id": 0}
+            ).limit(limit).to_list(length=limit)
             
             # If we don't have enough suggestions, add popular actors
             if len(suggested) < limit:
-                additional = await db.actors.find({
-                    "id": {"$nin": viewed_actor_ids + [a["id"] for a in suggested]},
-                    "is_public": True
-                }).sort("runs_count", -1).limit(limit - len(suggested)).to_list(length=limit)
+                additional = await db.actors.find(
+                    {
+                        "id": {"$nin": viewed_actor_ids + [a["id"] for a in suggested]},
+                        "is_public": True
+                    },
+                    {"_id": 0}
+                ).sort("runs_count", -1).limit(limit - len(suggested)).to_list(length=limit)
                 suggested.extend(additional)
         else:
             # New user - show most popular/featured actors
-            suggested = await db.actors.find({
-                "is_public": True
-            }).sort([("is_featured", -1), ("runs_count", -1), ("created_at", -1)]).limit(limit).to_list(length=limit)
+            suggested = await db.actors.find(
+                {"is_public": True},
+                {"_id": 0}
+            ).sort([("is_featured", -1), ("runs_count", -1), ("created_at", -1)]).limit(limit).to_list(length=limit)
         
         # Convert datetime strings
         for actor in suggested:
