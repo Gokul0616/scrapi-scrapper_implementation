@@ -326,38 +326,100 @@ function Store() {
           </div>
         </div>
 
-        {/* Category Pills */}
-        <div className="mb-6 flex flex-wrap gap-2">
-          {['All', 'Social media', 'AI', 'Agents', 'Lead generation', 'E-commerce', 'SEO tools', 'Jobs', 'MCP servers', 'News', 'Real estate', 'Developer tools', 'Travel', 'Videos', 'Automation', 'Integrations', 'Open source', 'Other'].map((categoryName) => (
-            <button
-              key={categoryName}
-              onClick={() => {
-                if (categoryName === 'All') {
-                  setSelectedCategory('all');
-                } else {
-                  const cat = categories.find(c => c.name === categoryName);
-                  if (cat) setSelectedCategory(cat.id);
-                }
-              }}
-              data-testid={`search-category-pill-${categoryName.toLowerCase().replace(/\s+/g, '-')}`}
-              className={`px-4 py-2 rounded-md text-[13px] font-medium transition-all ${
-                (categoryName === 'All' && selectedCategory === 'all') || 
-                (categories.find(c => c.id === selectedCategory)?.name === categoryName)
-                  ? theme === 'dark'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-900 text-white'
-                  : theme === 'dark'
-                    ? 'bg-muted text-muted-foreground hover:bg-muted/80'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {categoryName}
-            </button>
-          ))}
-        </div>
+        {/* Filter Dropdowns */}
+        <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Category Filter */}
+            <div className="relative">
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                data-testid="category-filter"
+                className={`appearance-none h-10 pl-4 pr-10 border rounded-lg text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-colors ${
+                  theme === 'dark'
+                    ? 'bg-card border-border text-foreground hover:bg-muted/50'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <option value="all">All categories</option>
+                {categories.filter(c => c.id !== 'all').map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+              <ChevronDown className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none ${
+                theme === 'dark' ? 'text-muted-foreground' : 'text-gray-400'
+              }`} />
+            </div>
+            
+            {/* Pricing Filter */}
+            <div className="relative">
+              <select
+                value={selectedPricing}
+                onChange={(e) => setSelectedPricing(e.target.value)}
+                data-testid="pricing-filter"
+                className={`appearance-none h-10 pl-4 pr-10 border rounded-lg text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-colors ${
+                  theme === 'dark'
+                    ? 'bg-card border-border text-foreground hover:bg-muted/50'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <option value="all">All pricing models</option>
+                <option value="free">Free</option>
+                <option value="pay_per_result">Pay per result</option>
+                <option value="pay_per_event">Pay per event</option>
+                <option value="pay_per_usage">Pay per usage</option>
+                <option value="rental">Rental</option>
+              </select>
+              <ChevronDown className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none ${
+                theme === 'dark' ? 'text-muted-foreground' : 'text-gray-400'
+              }`} />
+            </div>
 
-        {/* Actor Count */}
-        <div className="mb-6 flex items-center justify-between">
+            {/* Developer Filter */}
+            <div className="relative">
+              <select
+                value={selectedDeveloper}
+                onChange={(e) => setSelectedDeveloper(e.target.value)}
+                data-testid="developer-filter"
+                className={`appearance-none h-10 pl-4 pr-10 border rounded-lg text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-colors ${
+                  theme === 'dark'
+                    ? 'bg-card border-border text-foreground hover:bg-muted/50'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {developers.map(dev => (
+                  <option key={dev.id} value={dev.id}>{dev.name}</option>
+                ))}
+              </select>
+              <ChevronDown className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none ${
+                theme === 'dark' ? 'text-muted-foreground' : 'text-gray-400'
+              }`} />
+            </div>
+
+            {/* Sort Filter */}
+            <div className="relative">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                data-testid="sort-filter"
+                className={`appearance-none h-10 pl-4 pr-10 border rounded-lg text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-colors ${
+                  theme === 'dark'
+                    ? 'bg-card border-border text-foreground hover:bg-muted/50'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <option value="relevant">Most relevant</option>
+                <option value="rating">Highest rated</option>
+                <option value="newest">Newest</option>
+                <option value="name">Name</option>
+              </select>
+              <ChevronDown className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none ${
+                theme === 'dark' ? 'text-muted-foreground' : 'text-gray-400'
+              }`} />
+            </div>
+          </div>
+
+          {/* Actor Count */}
           <div className={`text-[15px] font-semibold ${
             theme === 'dark' ? 'text-foreground' : 'text-gray-900'
           }`} data-testid="actor-count">
