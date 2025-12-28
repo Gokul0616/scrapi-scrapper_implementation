@@ -176,8 +176,8 @@ class GoogleMapsScraperV4(BaseScraper):
         page = context.page
         query = context.request.user_data.get('query', '')
         search_term = context.request.user_data.get('search_term', '')
-        max_results = context.user_data['max_results']
-        progress_callback = context.user_data.get('progress_callback')
+        max_results = self.current_config['max_results']
+        progress_callback = self.current_config.get('progress_callback')
         
         if stealth_async:
             await stealth_async(page)
