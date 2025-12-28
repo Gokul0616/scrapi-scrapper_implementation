@@ -168,28 +168,23 @@ function Store() {
   if (view === 'landing') {
     return (
       <div className={`min-h-screen p-8 font-sans transition-colors ${
-        theme === 'dark' ? 'bg-background' : 'bg-gray-50'
+        theme === 'dark' ? 'bg-background' : 'bg-background'
       }`}>
         <div className="max-w-[1240px] mx-auto">
           
           {/* Header */}
           <div className="mb-8 text-center">
-            <h1 className={`text-[36px] font-bold mb-3 tracking-tight ${
+            <h1 className={`text-[40px] font-normal mb-4 tracking-tight ${
               theme === 'dark' ? 'text-foreground' : 'text-gray-900'
             }`}>
               Apify Store
             </h1>
-            <p className={`text-[16px] ${
-              theme === 'dark' ? 'text-muted-foreground' : 'text-gray-600'
-            }`}>
-              Discover and use ready-made actors for your data extraction needs
-            </p>
           </div>
 
           {/* Search Bar */}
-          <div className="mb-6 max-w-[560px] mx-auto">
+          <div className="mb-7 max-w-[640px] mx-auto">
             <div className="relative">
-              <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 ${
+              <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 w-[18px] h-[18px] ${
                 theme === 'dark' ? 'text-muted-foreground' : 'text-gray-400'
               }`} />
               <input
@@ -200,22 +195,24 @@ function Store() {
                   setSearchQuery(e.target.value);
                   if (e.target.value) setView('all');
                 }}
-                className={`w-full h-12 pl-12 pr-4 border rounded-lg text-[16px] focus:outline-none focus:ring-2 transition-colors ${
+                data-testid="store-search-input"
+                className={`w-full h-[52px] pl-12 pr-4 border rounded-lg text-[15px] focus:outline-none focus:ring-2 transition-colors ${
                   theme === 'dark' 
                     ? 'bg-card border-border text-foreground placeholder-muted-foreground focus:ring-blue-500' 
-                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-blue-600'
+                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500 focus:border-blue-500'
                 }`}
               />
             </div>
           </div>
 
           {/* Category Pills */}
-          <div className="mb-8 flex flex-wrap gap-2 justify-center">
+          <div className="mb-10 flex flex-wrap gap-2 justify-center">
             {categories.map((category) => (
               <button
                 key={category.id}
                 onClick={() => handleCategoryClick(category.id)}
-                className={`px-4 py-[6px] rounded-md text-[13px] font-medium transition-all ${
+                data-testid={`category-pill-${category.id}`}
+                className={`px-4 py-2 rounded-md text-[13px] font-medium transition-all ${
                   selectedCategory === category.id
                     ? theme === 'dark'
                       ? 'bg-blue-600 text-white'
@@ -233,17 +230,18 @@ function Store() {
           {/* All Actors Section */}
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h2 className={`text-[22px] font-bold ${
+              <h2 className={`text-[22px] font-semibold ${
                 theme === 'dark' ? 'text-foreground' : 'text-gray-900'
               }`}>
                 All Actors
               </h2>
               <button 
                 onClick={handleViewAll}
-                className={`text-[13px] font-medium flex items-center gap-1 transition-colors ${
+                data-testid="view-all-button"
+                className={`text-[14px] font-medium flex items-center gap-1 transition-colors ${
                   theme === 'dark' 
-                    ? 'text-muted-foreground hover:text-foreground' 
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'text-blue-400 hover:text-blue-300' 
+                    : 'text-blue-600 hover:text-blue-700'
                 }`}
               >
                 View all →
@@ -251,13 +249,9 @@ function Store() {
             </div>
 
             {loading ? (
-              <div className="text-center py-12">
-                <div className={`animate-spin rounded-full h-12 w-12 border-b-2 mx-auto ${
-                  theme === 'dark' ? 'border-blue-500' : 'border-gray-900'
-                }`}></div>
-              </div>
+              <SkeletonGrid count={6} columns={3} />
             ) : featuredActors.length > 0 ? (
-              <div className="grid grid-cols-3 gap-6">
+              <div className="grid grid-cols-3 gap-6" data-testid="featured-actors-grid">
                 {featuredActors.map((actor) => (
                   <ActorCard key={actor.id} actor={actor} />
                 ))}
