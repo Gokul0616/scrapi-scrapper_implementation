@@ -206,23 +206,22 @@ function Store() {
           </div>
 
           {/* Category Pills */}
-          <div className="mb-10 flex flex-wrap gap-2 justify-center">
-            {categories.map((category) => (
+          <div className="mb-10 flex flex-wrap gap-2 justify-center max-w-[900px] mx-auto">
+            {['Social media', 'AI', 'Agents', 'Lead generation', 'E-commerce', 'SEO tools', 'Jobs', 'MCP servers', 'News', 'Real estate', 'Developer tools', 'Travel', 'Videos', 'Automation', 'Integrations', 'Open source', 'Other'].map((categoryName) => (
               <button
-                key={category.id}
-                onClick={() => handleCategoryClick(category.id)}
-                data-testid={`category-pill-${category.id}`}
+                key={categoryName}
+                onClick={() => {
+                  const cat = categories.find(c => c.name === categoryName);
+                  if (cat) handleCategoryClick(cat.id);
+                }}
+                data-testid={`category-pill-${categoryName.toLowerCase().replace(/\s+/g, '-')}`}
                 className={`px-4 py-2 rounded-md text-[13px] font-medium transition-all ${
-                  selectedCategory === category.id
-                    ? theme === 'dark'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-900 text-white'
-                    : theme === 'dark'
-                      ? 'bg-muted text-muted-foreground hover:bg-muted/80'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  theme === 'dark'
+                    ? 'bg-muted text-muted-foreground hover:bg-muted/80'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                {category.name}
+                {categoryName}
               </button>
             ))}
           </div>
