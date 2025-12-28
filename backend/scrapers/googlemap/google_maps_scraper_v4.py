@@ -114,6 +114,29 @@ class GoogleMapsScraperV4(BaseScraper):
         # Reset results for this scrape
         self.results = []
         
+        # Create router for handling different request types
+        router = Router[PlaywrightCrawlingContext]()
+        
+        # Store config in instance for handlers to access
+        self.current_config = {
+            'location': location,
+            'max_results': max_results,
+            'extract_reviews': extract_reviews,
+            'extract_images': extract_images,
+            'progress_callback': progress_callback,
+            'places_found': 0,
+        }
+        
+        # Handler for search pages
+        @router.handler('search')
+        async def search_handler(context: PlaywrightCrawlingContext) -> None:
+            await self._handle_search(context)
+        
+        # Handler for detail pages
+        @router.handler('detail')
+        async def detail_handler(context: PlaywrightCrawlingContext) -> None:
+            await self._handle_detail(context)
+        
         # Create Crawlee crawler
         crawler = PlaywrightCrawler(
             max_concurrency=max_concurrency,
@@ -121,26 +144,8 @@ class GoogleMapsScraperV4(BaseScraper):
             headless=True,
             # Use Chromium for better compatibility
             browser_type='chromium',
+            request_handler=router,
         )
-        
-        # Store shared config in crawler's user_data
-        crawler.user_data = {
-            'location': location,
-            'max_results': max_results,
-            'extract_reviews': extract_reviews,
-            'extract_images': extract_images,
-            'scraper': self,
-            'progress_callback': progress_callback,
-            'places_found': 0,
-        }
-        
-        # Handler for search/list pages (enqueues detail URLs)
-        @crawler.router.default_handler
-        async def search_handler(context: PlaywrightCrawlingContext) -> None:
-            if context.request.label == 'search':
-                await self._handle_search(context)
-            elif context.request.label == 'detail':
-                await self._handle_detail(context)
         
         # Build initial search requests
         start_requests = []
