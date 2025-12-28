@@ -223,7 +223,13 @@ function Home() {
               </div>
             </div>
 
-            {suggestedActors.length > 0 ? (
+            {loadingSuggested ? (
+              <div className="grid grid-cols-3 gap-6">
+                {Array.from({ length: 6 }).map((_, idx) => (
+                  <SuggestedActorSkeleton key={idx} />
+                ))}
+              </div>
+            ) : suggestedActors.length > 0 ? (
               <div className="grid grid-cols-3 gap-6">
                 {suggestedActors.map((actor, idx) => (
                   <div
