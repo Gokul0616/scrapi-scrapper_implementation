@@ -305,13 +305,13 @@ function Store() {
           <button
             onClick={handleBackToLanding}
             data-testid="back-to-landing-button"
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[14px] font-medium transition-all ${
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] font-medium transition-all border ${
               theme === 'dark'
-                ? 'text-foreground hover:bg-muted'
-                : 'text-gray-700 hover:bg-gray-100'
+                ? 'bg-card border-border text-foreground hover:bg-muted/50'
+                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
             }`}
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-3.5 h-3.5" />
             Back to Store
           </button>
         </div>
