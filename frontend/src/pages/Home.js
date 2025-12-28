@@ -48,14 +48,16 @@ function Home() {
         
         setRecentActors(recentViewsData);
 
-        // Fetch suggested actors (all actors for now)
-        const actorsRes = await axios.get(`${BACKEND_URL}/api/actors`);
+        // Fetch suggested actors (smart suggestions based on recent views)
+        const suggestedRes = await axios.get(`${BACKEND_URL}/api/actors/suggested?limit=6`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
 
-        const actorsData = Array.isArray(actorsRes.data)
-          ? actorsRes.data
-          : (actorsRes.data?.items || actorsRes.data?.data || []);
+        const suggestedData = Array.isArray(suggestedRes.data)
+          ? suggestedRes.data
+          : [];
 
-        setSuggestedActors(actorsData.slice(0, 6));
+        setSuggestedActors(suggestedData);
 
         // Fetch recent runs
         const runsRes = await axios.get(`${BACKEND_URL}/api/runs`);
