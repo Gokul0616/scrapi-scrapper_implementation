@@ -29,7 +29,8 @@ const Register = () => {
   const [emailError, setEmailError] = useState('');
   const [otpError, setOtpError] = useState('');
   const [otpSuccessMessage, setOtpSuccessMessage] = useState('');
-  const [fullNameError, setFullNameError] = useState('');
+  const [firstNameError, setFirstNameError] = useState('');
+  const [lastNameError, setLastNameError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
