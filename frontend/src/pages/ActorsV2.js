@@ -154,7 +154,7 @@ const ActorsV2 = () => {
     // Bookmarked filter
     const matchesBookmarked = !filterBookmarked || actor.is_starred;
     
-    // Tab filter
+    // For issues tab, only show failed actors
     const matchesTab = activeTab === 'recent' || (activeTab === 'issues' && actor.last_run_status === 'failed');
     
     return matchesSearch && matchesStatus && matchesBookmarked && matchesTab;
