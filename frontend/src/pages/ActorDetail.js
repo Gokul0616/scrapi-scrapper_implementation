@@ -32,7 +32,20 @@ const ActorDetail = () => {
 
   useEffect(() => {
     fetchActor();
+    trackActorView();
   }, [actorId]);
+
+  const trackActorView = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/actors/${actorId}/view`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (error) {
+      // Silently fail - tracking shouldn't interrupt user experience
+      console.log('Failed to track actor view:', error);
+    }
+  };
 
   useEffect(() => {
     // Initialize form data from actor's input schema
