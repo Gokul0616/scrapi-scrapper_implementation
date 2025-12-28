@@ -14,6 +14,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { getProfileColor, getUserInitials, getUserDisplayName } from '../utils/userUtils';
 import { useTheme } from '../contexts/ThemeContext';
+import { RecentActorSkeleton, SuggestedActorSkeleton, RunRowSkeleton } from '../components/SkeletonLoader';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
@@ -26,6 +27,11 @@ function Home() {
   const [recentActors, setRecentActors] = useState([]);
   const [suggestedActors, setSuggestedActors] = useState([]);
   const [recentRuns, setRecentRuns] = useState([]);
+  
+  // Loading states
+  const [loadingRecent, setLoadingRecent] = useState(true);
+  const [loadingSuggested, setLoadingSuggested] = useState(true);
+  const [loadingRuns, setLoadingRuns] = useState(true);
 
   const userInitials = getUserInitials(user);
   const userDisplayName = getUserDisplayName(user);
@@ -34,10 +40,11 @@ function Home() {
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token');
 
-        // Fetch recently viewed actors
+      // Fetch recently viewed actors
+      try {
+        setLoadingRecent(true);
         const recentViewsRes = await axios.get(`${BACKEND_URL}/api/actors/recently-viewed?limit=4`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -47,8 +54,16 @@ function Home() {
           : [];
 
         setRecentActors(recentViewsData);
+      } catch (error) {
+        console.error("Failed to fetch recent actors:", error);
+        setRecentActors([]);
+      } finally {
+        setLoadingRecent(false);
+      }
 
-        // Fetch suggested actors (smart suggestions based on recent views)
+      // Fetch suggested actors
+      try {
+        setLoadingSuggested(true);
         const suggestedRes = await axios.get(`${BACKEND_URL}/api/actors/suggested?limit=6`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -58,8 +73,16 @@ function Home() {
           : [];
 
         setSuggestedActors(suggestedData);
+      } catch (error) {
+        console.error("Failed to fetch suggested actors:", error);
+        setSuggestedActors([]);
+      } finally {
+        setLoadingSuggested(false);
+      }
 
-        // Fetch recent runs
+      // Fetch recent runs
+      try {
+        setLoadingRuns(true);
         const runsRes = await axios.get(`${BACKEND_URL}/api/runs`);
 
         const runsData = Array.isArray(runsRes.data?.runs)
@@ -67,13 +90,11 @@ function Home() {
           : (Array.isArray(runsRes.data) ? runsRes.data : []);
 
         setRecentRuns(runsData);
-
       } catch (error) {
-        console.error("Failed to fetch home data:", error);
-
-        setRecentActors([]);
-        setSuggestedActors([]);
+        console.error("Failed to fetch runs:", error);
         setRecentRuns([]);
+      } finally {
+        setLoadingRuns(false);
       }
     };
 
