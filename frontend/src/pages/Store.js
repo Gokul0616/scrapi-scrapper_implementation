@@ -109,10 +109,10 @@ function Store() {
   const ActorCard = ({ actor }) => (
     <div
       onClick={() => navigate(`/actor/${actor.id}`)}
-      className={`border rounded-lg p-5 transition-all cursor-pointer group ${
+      className={`border rounded-xl p-5 transition-all cursor-pointer group hover:shadow-lg hover:-translate-y-1 ${
         theme === 'dark' 
-          ? 'bg-card border-border hover:border-muted-foreground/30 hover:shadow-lg' 
-          : 'bg-white border-gray-200 hover:border-gray-400 hover:shadow-md'
+          ? 'bg-card border-border hover:border-muted-foreground/30' 
+          : 'bg-white border-gray-200 hover:border-gray-400'
       }`}
     >
       {/* Actor Icon and Info */}
