@@ -39,7 +39,7 @@ const GlobalModal = ({
 }) => {
   const { theme } = useTheme();
   const { isModalOpen, closeModal } = useModal();
-  
+
   const isOpen = isModalOpen(modalId);
 
   // Size configurations
@@ -66,26 +66,20 @@ const GlobalModal = ({
       data-testid={`${modalId}-backdrop`}
     >
       <div
-        className={`w-full ${sizeClasses[size]} rounded-lg shadow-xl ${
-          theme === 'dark' ? 'bg-[#1A1B1E]' : 'bg-white'
-        } ${className}`}
+        className={`w-full ${sizeClasses[size]} rounded-lg shadow-xl bg-background border border-border ${className}`}
         onClick={(e) => e.stopPropagation()}
         data-testid={`${modalId}-container`}
       >
         {/* Header */}
         {(title || customHeader || showCloseButton) && (
           <div
-            className={`flex items-center justify-between px-5 py-3 border-b ${
-              theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
-            }`}
+            className="flex items-center justify-between px-5 py-3 border-b border-border"
           >
             {customHeader ? (
               customHeader
             ) : (
               <h2
-                className={`text-sm font-semibold ${
-                  theme === 'dark' ? 'text-white' : 'text-gray-900'
-                }`}
+                className="text-sm font-semibold text-foreground"
               >
                 {title}
               </h2>
@@ -93,11 +87,7 @@ const GlobalModal = ({
             {showCloseButton && (
               <button
                 onClick={closeModal}
-                className={`p-1 rounded transition-colors ${
-                  theme === 'dark'
-                    ? 'hover:bg-gray-800 text-gray-400 hover:text-white'
-                    : 'hover:bg-gray-100 text-gray-500 hover:text-gray-900'
-                }`}
+                className="p-1 rounded transition-colors text-muted-foreground hover:bg-muted hover:text-foreground"
                 data-testid={`${modalId}-close-button`}
               >
                 <X className="w-4 h-4" />
@@ -114,9 +104,7 @@ const GlobalModal = ({
         {/* Footer */}
         {customFooter && (
           <div
-            className={`px-5 py-3 border-t ${
-              theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
-            }`}
+            className="px-5 py-3 border-t border-border"
           >
             {customFooter}
           </div>

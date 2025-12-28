@@ -39,30 +39,18 @@ const ShortcutsModal = () => {
   ];
 
   const ShortcutRow = ({ description, keys }) => (
-    <div className={`flex items-center justify-between py-1.5 px-5 transition-colors ${
-      theme === 'dark'
-        ? 'hover:bg-gray-800/50'
-        : 'hover:bg-gray-50'
-    }`}>
-      <span className={`text-sm ${
-        theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-      }`}>
+    <div className="flex items-center justify-between py-1.5 px-5 transition-colors hover:bg-muted/50">
+      <span className="text-sm text-foreground">
         {description}
       </span>
       <div className="flex items-center gap-1">
         {keys.map((key, i) => (
           <React.Fragment key={i}>
-            <kbd className={`px-2 py-0.5 text-xs font-semibold rounded-md ${
-              theme === 'dark'
-                ? 'bg-gray-800 text-gray-300 border border-gray-700'
-                : 'bg-gray-100 text-gray-600 border border-gray-200'
-            }`}>
+            <kbd className="px-2 py-0.5 text-xs font-semibold rounded-md bg-muted text-muted-foreground border border-border">
               {key}
             </kbd>
             {i < keys.length - 1 && (
-              <span className={`text-xs mx-0.5 ${
-                theme === 'dark' ? 'text-gray-600' : 'text-gray-400'
-              }`}>
+              <span className="text-xs mx-0.5 text-muted-foreground">
                 +
               </span>
             )}
@@ -75,42 +63,27 @@ const ShortcutsModal = () => {
   if (!isOpen) return null;
 
   return (
-    <div 
-      className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] px-4 backdrop-blur-sm"
-      style={{ 
-        backgroundColor: theme === 'dark' ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.2)'
-      }}
+    <div
+      className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] px-4 backdrop-blur-sm bg-black/40"
       onClick={closeModal}
     >
       <div
-        className={`w-full max-w-3xl rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[75vh] animate-in fade-in zoom-in-95 duration-200 ${
-          theme === 'dark' 
-            ? 'bg-[#1A1B1E] border border-gray-800' 
-            : 'bg-white border border-gray-200'
-        }`}
+        className="w-full max-w-3xl rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[75vh] animate-in fade-in zoom-in-95 duration-200 bg-background border border-border"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className={`flex items-center gap-3 px-4 py-3 border-b ${
-          theme === 'dark' ? 'border-gray-800' : 'border-gray-100'
-        }`}>
-          <Keyboard className={`w-5 h-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-400'}`} />
-          <h2 className={`flex-1 text-lg font-semibold ${
-            theme === 'dark' ? 'text-white' : 'text-gray-900'
-          }`}>
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
+          <Keyboard className="w-5 h-5 text-muted-foreground" />
+          <h2 className="flex-1 text-lg font-semibold text-foreground">
             Keyboard Shortcuts
           </h2>
-          <kbd className={`hidden sm:inline-block px-2 py-0.5 text-xs font-semibold rounded-md ${
-            theme === 'dark'
-              ? 'text-gray-400 bg-gray-800 border border-gray-700'
-              : 'text-gray-400 bg-gray-50 border border-gray-200'
-          }`}>
+          <kbd className="hidden sm:inline-block px-2 py-0.5 text-xs font-semibold rounded-md text-muted-foreground bg-muted border border-border">
             ESC
           </kbd>
         </div>
 
         {/* Content Area - No Scrollbar */}
-        <div 
+        <div
           className="flex-1 overflow-y-auto"
           style={{
             msOverflowStyle: 'none',
@@ -127,11 +100,9 @@ const ShortcutsModal = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 min-h-full hide-scrollbar">
             {/* Left Side - Navigation */}
-            <div className={`border-r ${theme === 'dark' ? 'border-gray-800' : 'border-gray-100'}`}>
+            <div className="border-r border-border">
               <div className="py-1.5">
-                <div className={`px-5 py-1.5 text-xs font-semibold uppercase tracking-wider ${
-                  theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
-                }`}>
+                <div className="px-5 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Navigation
                 </div>
                 {navigationShortcuts.map((s, i) => (
@@ -143,24 +114,18 @@ const ShortcutsModal = () => {
             {/* Right Side - General & Settings */}
             <div>
               <div className="py-1.5">
-                <div className={`px-5 py-1.5 text-xs font-semibold uppercase tracking-wider ${
-                  theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
-                }`}>
+                <div className="px-5 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   General
                 </div>
                 {generalShortcuts.map((s, i) => (
                   <ShortcutRow key={i} {...s} />
                 ))}
               </div>
-              
-              <div className={`h-[1px] mx-5 ${
-                theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
-              }`} />
-              
+
+              <div className="h-[1px] mx-5 bg-border" />
+
               <div className="py-1.5">
-                <div className={`px-5 py-1.5 text-xs font-semibold uppercase tracking-wider ${
-                  theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
-                }`}>
+                <div className="px-5 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Settings
                 </div>
                 {settingsShortcuts.map((s, i) => (
@@ -172,11 +137,7 @@ const ShortcutsModal = () => {
         </div>
 
         {/* Footer */}
-        <div className={`px-4 py-2 text-xs border-t flex items-center justify-between ${
-          theme === 'dark'
-            ? 'bg-gray-900/50 text-gray-500 border-gray-800'
-            : 'bg-gray-50 text-gray-400 border-gray-100'
-        }`}>
+        <div className="px-4 py-2 text-xs border-t flex items-center justify-between bg-muted/50 text-muted-foreground border-border">
           <span>Press any key combination to use</span>
           <span className="hidden sm:inline">Use <span className="font-semibold">Shift + ?</span> anytime</span>
         </div>

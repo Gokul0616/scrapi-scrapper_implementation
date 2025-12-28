@@ -84,11 +84,7 @@ const NotificationDropdown = ({ isOpen, onClose, triggerRef }) => {
       {/* Notification Dropdown */}
       <div
         ref={dropdownRef}
-        className={`fixed rounded-lg border z-[9999] shadow-2xl ${
-          theme === 'dark'
-            ? 'bg-[#1A1B1E] border-gray-800'
-            : 'bg-white border-gray-200'
-        }`}
+        className="fixed rounded-lg border z-[9999] shadow-2xl bg-popover border-border"
         style={{
           width: '380px',
           maxHeight: '500px',
@@ -98,29 +94,20 @@ const NotificationDropdown = ({ isOpen, onClose, triggerRef }) => {
       >
         {/* Header */}
         <div
-          className={`flex items-center justify-between px-4 py-3 border-b ${
-            theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
-          }`}
+          className="flex items-center justify-between px-4 py-3 border-b border-border"
         >
           <h3
-            className={`text-sm font-semibold ${
-              theme === 'dark' ? 'text-white' : 'text-gray-900'
-            }`}
+            className="text-sm font-semibold text-foreground"
           >
             Notifications
           </h3>
           <button
             onClick={handleMarkAllAsRead}
             disabled={unreadCount === 0}
-            className={`flex items-center space-x-1 text-xs font-medium px-2 py-1 rounded transition-colors ${
-              unreadCount === 0
-                ? theme === 'dark'
-                  ? 'text-gray-600 cursor-not-allowed'
-                  : 'text-gray-400 cursor-not-allowed'
-                : theme === 'dark'
-                ? 'text-gray-300 hover:bg-gray-800'
-                : 'text-gray-700 hover:bg-gray-100'
-            }`}
+            className={`flex items-center space-x-1 text-xs font-medium px-2 py-1 rounded transition-colors ${unreadCount === 0
+                ? 'text-muted-foreground/50 cursor-not-allowed'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              }`}
             data-testid="mark-all-as-read-button"
           >
             <Check className="w-3 h-3" />
@@ -137,20 +124,14 @@ const NotificationDropdown = ({ isOpen, onClose, triggerRef }) => {
             // Empty State
             <div className="flex flex-col items-center justify-center py-16 px-6">
               <div
-                className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${
-                  theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
-                }`}
+                className="w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-muted"
               >
                 <Sun
-                  className={`w-8 h-8 ${
-                    theme === 'dark' ? 'text-gray-600' : 'text-gray-400'
-                  }`}
+                  className="w-8 h-8 text-muted-foreground"
                 />
               </div>
               <p
-                className={`text-sm font-medium ${
-                  theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                }`}
+                className="text-sm font-medium text-muted-foreground"
               >
                 Nothing here, you're all good.
               </p>
@@ -162,11 +143,7 @@ const NotificationDropdown = ({ isOpen, onClose, triggerRef }) => {
                 <button
                   key={notification.notification_id}
                   onClick={() => handleNotificationClick(notification)}
-                  className={`w-full px-4 py-3 text-left transition-colors border-b ${
-                    theme === 'dark'
-                      ? 'border-gray-800 hover:bg-gray-800/50'
-                      : 'border-gray-100 hover:bg-gray-50'
-                  } ${!notification.read ? (theme === 'dark' ? 'bg-gray-900/30' : 'bg-blue-50/30') : ''}`}
+                  className={`w-full px-4 py-3 text-left transition-colors border-b border-border hover:bg-muted/50 ${!notification.read ? 'bg-accent/30' : ''}`}
                   data-testid={`notification-item-${notification.notification_id}`}
                 >
                   <div className="flex items-start space-x-3">
@@ -181,31 +158,23 @@ const NotificationDropdown = ({ isOpen, onClose, triggerRef }) => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between mb-1">
                         <h4
-                          className={`text-sm font-semibold ${
-                            theme === 'dark' ? 'text-white' : 'text-gray-900'
-                          }`}
+                          className="text-sm font-semibold text-foreground"
                         >
                           {notification.title}
                         </h4>
                         {!notification.read && (
                           <div
-                            className={`w-2 h-2 rounded-full flex-shrink-0 ml-2 mt-1 ${
-                              theme === 'dark' ? 'bg-blue-500' : 'bg-blue-600'
-                            }`}
+                            className="w-2 h-2 rounded-full flex-shrink-0 ml-2 mt-1 bg-primary"
                           />
                         )}
                       </div>
                       <p
-                        className={`text-xs mb-2 ${
-                          theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                        }`}
+                        className="text-xs mb-2 text-muted-foreground"
                       >
                         {notification.message}
                       </p>
                       <span
-                        className={`text-xs ${
-                          theme === 'dark' ? 'text-gray-500' : 'text-gray-500'
-                        }`}
+                        className="text-xs text-muted-foreground"
                       >
                         {formatDistanceToNow(new Date(notification.created_at), {
                           addSuffix: true

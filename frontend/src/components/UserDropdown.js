@@ -14,8 +14,8 @@ const UserDropdown = ({ isCollapsed = false }) => {
 
   const userInitials = getUserInitials(user);
   const profileColor = getProfileColor(user?.profile_color, theme);
-  
-  // Get account type label and icon
+
+
   const accountType = user?.account_type || 'personal';
   const accountTypeLabel = accountType === 'organization' ? 'Organization' : 'Personal';
   const AccountTypeIcon = accountType === 'organization' ? Building2 : User;
@@ -25,10 +25,10 @@ const UserDropdown = ({ isCollapsed = false }) => {
     logout();
   };
 
-  // Listen for profile picture updates
+
   useEffect(() => {
     const handleProfilePictureUpdate = (event) => {
-      // Force re-render by updating key
+
       setProfilePictureKey(prev => prev + 1);
     };
 
@@ -38,7 +38,7 @@ const UserDropdown = ({ isCollapsed = false }) => {
     };
   }, []);
 
-  // Handle ESC key to close dropdown
+
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape' && isOpen) {
@@ -50,7 +50,7 @@ const UserDropdown = ({ isCollapsed = false }) => {
     return () => window.removeEventListener('keydown', handleEscape);
   }, [isOpen]);
 
-  // Render collapsed mode with tooltip
+
   if (isCollapsed) {
     return (
       <TooltipProvider delayDuration={500}>
@@ -64,15 +64,15 @@ const UserDropdown = ({ isCollapsed = false }) => {
               >
                 {user?.profile_picture ? (
                   <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0">
-                    <img 
+                    <img
                       key={`sidebar-profile-${profilePictureKey}`}
-                      src={user.profile_picture} 
-                      alt="Profile" 
+                      src={user.profile_picture}
+                      alt="Profile"
                       className="w-full h-full object-cover"
                     />
                   </div>
                 ) : (
-                  <div 
+                  <div
                     key={`sidebar-profile-${profilePictureKey}`}
                     className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
                     style={{ background: profileColor }}
@@ -82,31 +82,27 @@ const UserDropdown = ({ isCollapsed = false }) => {
                 )}
               </button>
             </TooltipTrigger>
-            <TooltipContent 
-              side="right" 
-              className={`${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'}`}
+            <TooltipContent
+              side="right"
+              className="bg-popover text-popover-foreground border border-border"
             >
               {getUserDisplayName(user)}
             </TooltipContent>
           </Tooltip>
 
-          {/* Floating Popup Menu with Backdrop */}
+
           {isOpen && (
             <>
-              {/* Transparent backdrop */}
+
               <div
                 className="fixed inset-0 z-[9998]"
                 onClick={() => setIsOpen(false)}
                 data-testid="dropdown-backdrop"
               />
 
-              {/* Floating Popup */}
+
               <div
-                className={`fixed rounded-lg border z-[9999] px-2 py-3 ${
-                  theme === 'dark' 
-                    ? 'bg-[#1A1B1E] border-gray-800' 
-                    : 'bg-white border-gray-200'
-                }`}
+                className="fixed rounded-lg border z-[9999] px-2 py-3 bg-popover border-border"
                 style={{
                   width: '225px',
                   left: '76px',
@@ -116,32 +112,28 @@ const UserDropdown = ({ isCollapsed = false }) => {
                 }}
                 data-testid="user-dropdown-menu"
               >
-                {/* Account Type Section */}
-                <div className={`border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
+
+                <div className="border-b border-border">
                   <div className="flex items-center space-x-1.5 mb-1">
-                    <AccountTypeIcon className={`w-3 h-3 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`} />
-                    <div className={`text-xs tracking-wider ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
+                    <AccountTypeIcon className="w-3 h-3 text-muted-foreground" />
+                    <div className="text-xs tracking-wider text-muted-foreground">
                       {accountTypeLabel}
                     </div>
                   </div>
                   <button
-                    className={`w-full flex items-center space-x-2.5 rounded-md transition-colors m-1 p-1 ${
-                      theme === 'dark'
-                        ? 'bg-[#2C2D30] hover:bg-gray-700'
-                        : 'bg-gray-200 hover:bg-gray-300'
-                    }`}
+                    className="w-full flex items-center space-x-2.5 rounded-md transition-colors m-1 p-1 bg-muted hover:bg-muted/80 text-foreground"
                   >
                     {user?.profile_picture ? (
                       <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
-                        <img 
+                        <img
                           key={`dropdown-profile-menu-${profilePictureKey}`}
-                          src={user.profile_picture} 
-                          alt="Profile" 
+                          src={user.profile_picture}
+                          alt="Profile"
                           className="w-full h-full object-cover"
                         />
                       </div>
                     ) : (
-                      <div 
+                      <div
                         key={`dropdown-profile-menu-${profilePictureKey}`}
                         className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
                         style={{ background: profileColor }}
@@ -150,33 +142,29 @@ const UserDropdown = ({ isCollapsed = false }) => {
                       </div>
                     )}
                     <div className="flex-1 min-w-0 text-left">
-                      <div className={`font-medium text-xs ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
+                      <div className="font-medium text-xs text-foreground">
                         {getUserDisplayName(user)}
                       </div>
-                      <div className={`text-xs truncate ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                      <div className="text-xs truncate text-muted-foreground">
                         {user?.email || ''}
                       </div>
                     </div>
-                    <Check className={`w-4 h-4 flex-shrink-0 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} />
+                    <Check className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
                   </button>
                 </div>
 
-                {/* Organizations Section - Only show for personal accounts */}
+
                 {accountType === 'personal' && (
-                  <div className={`border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
+                  <div className="border-b border-border">
                     <div className="flex items-center space-x-1.5 mb-1 mt-2">
-                      <Building2 className={`w-3 h-3 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`} />
-                      <div className={`text-xs tracking-wider ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
+                      <Building2 className="w-3 h-3 text-muted-foreground" />
+                      <div className="text-xs tracking-wider text-muted-foreground">
                         Organizations
                       </div>
                     </div>
-                    <button 
-                      style={{fontSize:'13px'}}
-                      className={`w-full flex items-center space-x-2.5 rounded-md text-xs transition-colors m-1 px-1 py-1.5 ${
-                        theme === 'dark'
-                          ? 'text-gray-300 hover:bg-gray-800'
-                          : 'text-gray-700 hover:bg-gray-200'
-                      }`}
+                    <button
+                      style={{ fontSize: '13px' }}
+                      className="w-full flex items-center space-x-2.5 rounded-md text-xs transition-colors m-1 px-1 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                     >
                       <Plus className="w-3 h-3" />
                       <span>Add organization</span>
@@ -184,15 +172,11 @@ const UserDropdown = ({ isCollapsed = false }) => {
                   </div>
                 )}
 
-                {/* Sign Out */}
-                <div className={`border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
+
+                <div className="border-b border-border">
                   <button
                     onClick={handleLogout}
-                    className={`w-full flex items-center space-x-2.5 rounded-md text-xs font-medium transition-colors m-1 px-1 py-1.5 ${
-                      theme === 'dark'
-                        ? 'text-gray-300 hover:bg-gray-800'
-                        : 'text-gray-700 hover:bg-gray-200'
-                    }`}
+                    className="w-full flex items-center space-x-2.5 rounded-md text-xs font-medium transition-colors m-1 px-1 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                     data-testid="sign-out-button"
                   >
                     <LogOut className="w-3 h-3" />
@@ -207,31 +191,28 @@ const UserDropdown = ({ isCollapsed = false }) => {
     );
   }
 
-  // Render expanded mode (original)
+
   return (
     <>
       <div className="relative w-full" ref={dropdownRef}>
-        {/* Dropdown Trigger */}
+
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg transition-colors ${theme === 'dark'
-              ? 'hover:bg-gray-800 text-gray-200'
-              : 'hover:bg-gray-100 text-gray-700'
-            }`}
+          className="w-full flex items-center justify-between px-2 py-1.5 rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground text-foreground"
           data-testid="user-dropdown-trigger"
         >
           <div className="flex items-center space-x-2 flex-1 min-w-0">
             {user?.profile_picture ? (
               <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0">
-                <img 
+                <img
                   key={`dropdown-profile-main-${profilePictureKey}`}
-                  src={user.profile_picture} 
-                  alt="Profile" 
+                  src={user.profile_picture}
+                  alt="Profile"
                   className="w-full h-full object-cover"
                 />
               </div>
             ) : (
-              <div 
+              <div
                 key={`dropdown-profile-main-${profilePictureKey}`}
                 className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
                 style={{ background: profileColor }}
@@ -241,16 +222,14 @@ const UserDropdown = ({ isCollapsed = false }) => {
             )}
             <div className="flex-1 min-w-0 text-left">
               <div
-                className={`font-semibold text-sm leading-tight ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
-                  }`}
+                className="font-semibold text-sm leading-tight text-foreground"
               >
                 {getUserDisplayName(user)}
               </div>
               <div className="flex items-center space-x-1">
-                <AccountTypeIcon className={`w-3 h-3 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                <AccountTypeIcon className="w-3 h-3 text-muted-foreground" />
                 <span
-                  className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                    }`}
+                  className="text-xs text-muted-foreground"
                 >
                   {accountTypeLabel}
                 </span>
@@ -265,23 +244,19 @@ const UserDropdown = ({ isCollapsed = false }) => {
         </button>
       </div>
 
-      {/* Floating Popup Menu with Backdrop */}
+
       {isOpen && (
         <>
-          {/* Transparent backdrop */}
+
           <div
             className="fixed inset-0 z-[9998]"
             onClick={() => setIsOpen(false)}
             data-testid="dropdown-backdrop"
           />
 
-          {/* Floating Popup */}
+
           <div
-            className={`fixed rounded-lg border z-[9999] px-2 py-3 ${
-              theme === 'dark' 
-                ? 'bg-[#1A1B1E] border-gray-800' 
-                : 'bg-white border-gray-200'
-            }`}
+            className="fixed rounded-lg border z-[9999] px-2 py-3 bg-popover border-border"
             style={{
               width: '225px',
               left: '16px',
@@ -291,32 +266,28 @@ const UserDropdown = ({ isCollapsed = false }) => {
             }}
             data-testid="user-dropdown-menu"
           >
-            {/* Account Type Section */}
-            <div className={`border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
+
+            <div className="border-b border-border">
               <div className="flex items-center space-x-1.5 mb-1">
-                <AccountTypeIcon className={`w-3 h-3 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`} />
-                <div className={`text-xs tracking-wider ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
+                <AccountTypeIcon className="w-3 h-3 text-muted-foreground" />
+                <div className="text-xs tracking-wider text-muted-foreground">
                   {accountTypeLabel}
                 </div>
               </div>
               <button
-                className={`w-full flex items-center space-x-2.5 rounded-md transition-colors m-1 p-1 ${
-                  theme === 'dark'
-                    ? 'bg-[#2C2D30] hover:bg-gray-700'
-                    : 'bg-gray-200 hover:bg-gray-300'
-                }`}
+                className="w-full flex items-center space-x-2.5 rounded-md transition-colors m-1 p-1 bg-muted hover:bg-muted/80"
               >
                 {user?.profile_picture ? (
                   <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
-                    <img 
+                    <img
                       key={`dropdown-profile-menu-${profilePictureKey}`}
-                      src={user.profile_picture} 
-                      alt="Profile" 
+                      src={user.profile_picture}
+                      alt="Profile"
                       className="w-full h-full object-cover"
                     />
                   </div>
                 ) : (
-                  <div 
+                  <div
                     key={`dropdown-profile-menu-${profilePictureKey}`}
                     className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
                     style={{ background: profileColor }}
@@ -325,33 +296,29 @@ const UserDropdown = ({ isCollapsed = false }) => {
                   </div>
                 )}
                 <div className="flex-1 min-w-0 text-left">
-                  <div className={`font-medium text-xs ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
+                  <div className="font-medium text-xs text-foreground">
                     {getUserDisplayName(user)}
                   </div>
-                  <div className={`text-xs truncate ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                  <div className="text-xs truncate text-muted-foreground">
                     {user?.email || ''}
                   </div>
                 </div>
-                <Check className={`w-4 h-4 flex-shrink-0 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} />
+                <Check className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
               </button>
             </div>
 
-            {/* Organizations Section - Only show for personal accounts */}
+
             {accountType === 'personal' && (
-              <div className={`border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
+              <div className="border-b border-border">
                 <div className="flex items-center space-x-1.5 mb-1 mt-2">
-                  <Building2 className={`w-3 h-3 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`} />
-                  <div className={`text-xs tracking-wider ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
+                  <Building2 className="w-3 h-3 text-muted-foreground" />
+                  <div className="text-xs tracking-wider text-muted-foreground">
                     Organizations
                   </div>
                 </div>
-                <button 
-                  style={{fontSize:'13px'}}
-                  className={`w-full flex items-center space-x-2.5 rounded-md text-xs transition-colors m-1 px-1 py-1.5 ${
-                    theme === 'dark'
-                      ? 'text-gray-300 hover:bg-gray-800'
-                      : 'text-gray-700 hover:bg-gray-200'
-                  }`}
+                <button
+                  style={{ fontSize: '13px' }}
+                  className="w-full flex items-center space-x-2.5 rounded-md text-xs transition-colors m-1 px-1 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                 >
                   <Plus className="w-3 h-3" />
                   <span>Add organization</span>
@@ -359,15 +326,11 @@ const UserDropdown = ({ isCollapsed = false }) => {
               </div>
             )}
 
-            {/* Sign Out */}
-            <div className={`border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
+
+            <div className="border-b border-border">
               <button
                 onClick={handleLogout}
-                className={`w-full flex items-center space-x-2.5 rounded-md text-xs font-medium transition-colors m-1 px-1 py-1.5 ${
-                  theme === 'dark'
-                    ? 'text-gray-300 hover:bg-gray-800'
-                    : 'text-gray-700 hover:bg-gray-200'
-                }`}
+                className="w-full flex items-center space-x-2.5 rounded-md text-xs font-medium transition-colors m-1 px-1 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                 data-testid="sign-out-button"
               >
                 <LogOut className="w-3 h-3" />

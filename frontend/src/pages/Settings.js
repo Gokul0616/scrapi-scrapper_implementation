@@ -22,7 +22,7 @@ const Settings = () => {
   const fileInputRef = useRef(null);
   const tabRefs = useRef({});
   const tabsListRef = useRef(null);
-const initialReadme =`Markdown as an easy way to elevate the **look** and *feel* of your text.
+  const initialReadme = `Markdown as an easy way to elevate the **look** and *feel* of your text.
 
 Here are some ideas to get you started:
 - ✅ Who I am: freelance scraper architect from [place]
@@ -32,7 +32,7 @@ Here are some ideas to get you started:
 - 🇬🇧 My languages: fluent in [Duolingo]
 - 🤝 Work with me: open for scraping challenges at [email]
 - 🌟 Preferred comm method: telepathically, pronouns: [they/them] →`
-  // Form states
+
   const [username, setUsername] = useState('');
   const [originalUsername, setOriginalUsername] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -49,12 +49,12 @@ Here are some ideas to get you started:
   const [profilePicture, setProfilePicture] = useState(null);
   const [localThemePreference, setLocalThemePreference] = useState('light');
   const [markdownPreview, setMarkdownPreview] = useState(false);
-  
-  // Tab animation states
+
+
   const [activeTab, setActiveTab] = useState('account');
   const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 });
-  
-  // Delete account states
+
+
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteFeedbackReason, setDeleteFeedbackReason] = useState('');
@@ -65,12 +65,12 @@ Here are some ideas to get you started:
   const [showDeletePassword, setShowDeletePassword] = useState(false);
   const [showDeleteSuccessAlert, setShowDeleteSuccessAlert] = useState(false);
 
-  // Loading states
+
   const [savingUsername, setSavingUsername] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Alert states for replacing browser alerts
+
   const [showAlert, setShowAlert] = useState(false);
   const [alertConfig, setAlertConfig] = useState({
     title: '',
@@ -78,7 +78,7 @@ Here are some ideas to get you started:
     type: 'info'
   });
 
-  // Username validation states
+
   const [usernameValidation, setUsernameValidation] = useState({
     checking: false,
     valid: false,
@@ -88,7 +88,7 @@ Here are some ideas to get you started:
   const wsRef = useRef(null);
   const usernameTimeoutRef = useRef(null);
 
-  // Load user settings on mount
+
   useEffect(() => {
     const loadSettings = async () => {
       try {
@@ -97,7 +97,7 @@ Here are some ideas to get you started:
           headers: { Authorization: `Bearer ${token}` }
         });
         const data = response.data;
-        
+
         setUsername(data.username || user?.username || '');
         setOriginalUsername(data.username || user?.username || '');
         setFirstName(data.first_name || user?.first_name || '');
@@ -112,16 +112,16 @@ Here are some ideas to get you started:
         setIsPublic(data.is_public || false);
         setShowEmail(data.show_email || false);
         setProfilePicture(data.profile_picture || null);
-        
-        // Load theme preference from backend or use current
+
+
         const backendTheme = data.theme_preference || user?.theme_preference || themePreference || 'light';
         setLocalThemePreference(backendTheme);
-        
-        // Don't sync theme automatically to prevent auto-toggle when navigating to settings
-        // Theme should only change when user explicitly changes it
+
+
+
       } catch (error) {
         console.error('Failed to load settings:', error);
-        // Use default values from user context
+
         if (user) {
           setUsername(user.username || '');
           setOriginalUsername(user.username || '');
@@ -133,28 +133,28 @@ Here are some ideas to get you started:
         setLoading(false);
       }
     };
-    
+
     loadSettings();
   }, [user]);
 
-  // Keep local theme preference in sync
+
   useEffect(() => {
     setLocalThemePreference(themePreference);
   }, [themePreference]);
 
-  // WebSocket for username validation
+
   useEffect(() => {
-    // Setup WebSocket connection
+
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${wsProtocol}//${window.location.host}/api/settings/ws/check-username`;
-    
+
     const connectWebSocket = () => {
       try {
         const ws = new WebSocket(wsUrl);
-        
+
         ws.onopen = () => {
         };
-        
+
         ws.onmessage = (event) => {
           const data = JSON.parse(event.data);
           setUsernameValidation({
@@ -164,7 +164,7 @@ Here are some ideas to get you started:
             message: data.message || ''
           });
         };
-        
+
         ws.onerror = (error) => {
           console.error('WebSocket error:', error);
           setUsernameValidation(prev => ({
@@ -172,19 +172,19 @@ Here are some ideas to get you started:
             checking: false
           }));
         };
-        
+
         ws.onclose = () => {
         };
-        
+
         wsRef.current = ws;
       } catch (error) {
         console.error('Failed to create WebSocket:', error);
       }
     };
-    
+
     connectWebSocket();
-    
-    // Cleanup on unmount
+
+
     return () => {
       if (wsRef.current) {
         wsRef.current.close();
@@ -195,17 +195,17 @@ Here are some ideas to get you started:
     };
   }, []);
 
-  // Handle username change with debouncing
+
   const handleUsernameChange = (e) => {
     const newUsername = e.target.value;
     setUsername(newUsername);
-    
-    // Clear previous timeout
+
+
     if (usernameTimeoutRef.current) {
       clearTimeout(usernameTimeoutRef.current);
     }
-    
-    // If username is same as original, clear validation
+
+
     if (newUsername === originalUsername) {
       setUsernameValidation({
         checking: false,
@@ -215,8 +215,8 @@ Here are some ideas to get you started:
       });
       return;
     }
-    
-    // If username is empty, clear validation
+
+
     if (!newUsername.trim()) {
       setUsernameValidation({
         checking: false,
@@ -226,16 +226,16 @@ Here are some ideas to get you started:
       });
       return;
     }
-    
-    // Set checking state
+
+
     setUsernameValidation({
       checking: true,
       valid: false,
       available: false,
       message: 'Checking...'
     });
-    
-    // Debounce the check (500ms)
+
+
     usernameTimeoutRef.current = setTimeout(() => {
       if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
         wsRef.current.send(JSON.stringify({
@@ -253,16 +253,16 @@ Here are some ideas to get you started:
     }, 500);
   };
 
-  // Update underline position when active tab changes
+
   useEffect(() => {
     const updateUnderlinePosition = () => {
       const activeTabElement = tabRefs.current[activeTab];
       const tabsListElement = tabsListRef.current;
-      
+
       if (activeTabElement && tabsListElement) {
         const tabsListRect = tabsListElement.getBoundingClientRect();
         const activeTabRect = activeTabElement.getBoundingClientRect();
-        
+
         setUnderlineStyle({
           left: activeTabRect.left - tabsListRect.left,
           width: activeTabRect.width
@@ -270,10 +270,10 @@ Here are some ideas to get you started:
       }
     };
 
-    // Small delay to ensure DOM is fully rendered
+
     const timer = setTimeout(updateUnderlinePosition, 50);
-    
-    // Update on window resize
+
+
     window.addEventListener('resize', updateUnderlinePosition);
     return () => {
       clearTimeout(timer);
@@ -283,16 +283,16 @@ Here are some ideas to get you started:
 
   const handleSaveUsername = async () => {
     if (username === originalUsername) return;
-    
-    // Don't save if validation is not passed
+
+
     if (!usernameValidation.available || usernameValidation.checking) {
       return;
     }
-    
+
     setSavingUsername(true);
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`${API_URL}/api/settings/username`, 
+      await axios.put(`${API_URL}/api/settings/username`,
         { username },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -300,7 +300,7 @@ Here are some ideas to get you started:
       if (updateUser) {
         updateUser({ username });
       }
-      // Clear validation message after successful save
+
       setUsernameValidation({
         checking: false,
         valid: true,
@@ -309,7 +309,7 @@ Here are some ideas to get you started:
       });
     } catch (error) {
       console.error('Failed to save username:', error);
-      // Show error in validation message instead of alert modal
+
       setUsernameValidation({
         checking: false,
         valid: false,
@@ -341,11 +341,11 @@ Here are some ideas to get you started:
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
-      // Update user context
+
+
       if (updateUser) {
-        updateUser({ 
-          first_name: firstName, 
+        updateUser({
+          first_name: firstName,
           last_name: lastName,
           theme_preference: localThemePreference
         });
@@ -366,7 +366,7 @@ Here are some ideas to get you started:
   const handleThemeChange = async (newTheme) => {
     setLocalThemePreference(newTheme);
     setThemePreference(newTheme);
-    
+
     try {
       const token = localStorage.getItem('token');
       await axios.put(`${API_URL}/api/settings/profile`, {
@@ -374,8 +374,8 @@ Here are some ideas to get you started:
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
-      // Update user context
+
+
       if (updateUser) {
         updateUser({ theme_preference: newTheme });
       }
@@ -394,28 +394,28 @@ Here are some ideas to get you started:
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(`${API_URL}/api/settings/profile-picture`, formData, {
-        headers: { 
+        headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
         }
       });
-      
+
       const newProfilePicture = response.data.url;
       setProfilePicture(newProfilePicture);
-      
-      // Immediately update user context with new profile picture
+
+
       if (updateUser) {
         await updateUser({ profile_picture: newProfilePicture });
       }
-      
-      // Force a small delay to ensure state propagates
+
+
       setTimeout(() => {
-        // Trigger a re-render by updating a dummy state if needed
-        window.dispatchEvent(new CustomEvent('profilePictureUpdated', { 
-          detail: { profile_picture: newProfilePicture } 
+
+        window.dispatchEvent(new CustomEvent('profilePictureUpdated', {
+          detail: { profile_picture: newProfilePicture }
         }));
       }, 100);
-      
+
     } catch (error) {
       console.error('Failed to upload image:', error);
       setAlertConfig({
@@ -434,8 +434,8 @@ Here are some ideas to get you started:
         headers: { Authorization: `Bearer ${token}` }
       });
       setProfilePicture(null);
-      
-      // Update user context to remove profile picture
+
+
       if (updateUser) {
         updateUser({ profile_picture: null });
       }
@@ -454,7 +454,7 @@ Here are some ideas to get you started:
       setShowAlert(true);
       return;
     }
-    
+
     if (!deletePassword) {
       setAlertConfig({
         title: 'Password Required',
@@ -464,24 +464,24 @@ Here are some ideas to get you started:
       setShowAlert(true);
       return;
     }
-    
+
     setIsDeleting(true);
     try {
       const token = localStorage.getItem('token');
       await axios.delete(`${API_URL}/api/settings/account`, {
         headers: { Authorization: `Bearer ${token}` },
-        data: { 
+        data: {
           confirmation_text: deleteConfirmText,
           password: deletePassword,
           feedback_reason: deleteFeedbackReason || null,
           feedback_text: deleteFeedbackText || null
         }
       });
-      
-      // Show success alert instead of browser alert
+
+
       setShowDeleteSuccessAlert(true);
-      
-      // Clear token and redirect after user closes alert
+
+
       setTimeout(() => {
         localStorage.removeItem('token');
         window.location.href = '/login';
@@ -505,8 +505,8 @@ Here are some ideas to get you started:
       const response = await axios.get(`${API_URL}/api/settings/account/export`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
-      // Download as JSON file
+
+
       const dataStr = JSON.stringify(response.data, null, 2);
       const dataBlob = new Blob([dataStr], { type: 'application/json' });
       const url = URL.createObjectURL(dataBlob);
@@ -531,20 +531,20 @@ Here are some ideas to get you started:
   const userInitials = getUserInitials(user || { username: firstName || username });
   const profileColorValue = getProfileColor(user?.profile_color, theme);
 
-  // Helper component for optional label with tooltip
+
   const OptionalLabel = ({ label, tooltip }) => (
     <div className="flex items-center gap-1.5 mb-2">
-      <span className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
+      <span className="text-sm font-medium text-foreground">
         {label}
       </span>
-      <span className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>(optional)</span>
+      <span className="text-sm text-muted-foreground">(optional)</span>
       {tooltip && (
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <HelpCircle className={`w-3.5 h-3.5 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} cursor-help`} />
+              <HelpCircle className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
             </TooltipTrigger>
-            <TooltipContent side="top" className={theme === 'dark' ? 'bg-gray-800 text-white' : ''}>
+            <TooltipContent side="top" className="bg-popover text-popover-foreground">
               <p className="text-xs max-w-xs">{tooltip}</p>
             </TooltipContent>
           </Tooltip>
@@ -553,73 +553,61 @@ Here are some ideas to get you started:
     </div>
   );
 
-  // Theme card component with mini UI preview
+
   const ThemeCard = ({ value, label }) => {
     const isSelected = localThemePreference === value;
     const isDarkPreview = value === 'dark';
     const isSystemPreview = value === 'system';
-    
+
     return (
       <button
         onClick={() => handleThemeChange(value)}
         data-testid={`theme-${value}`}
-        className={`relative flex flex-col rounded-lg border-2 transition-all overflow-hidden ${
-          isSelected 
-            ? 'border-blue-500' 
-            : theme === 'dark' 
-              ? 'border-gray-700 hover:border-gray-600' 
-              : 'border-gray-200 hover:border-gray-300'
-        }`}
+        className={`relative flex flex-col rounded-lg border-2 transition-all overflow-hidden ${isSelected
+          ? 'border-blue-500'
+          : 'border-muted hover:border-muted-foreground/30'
+          }`}
         style={{ width: '140px' }}
       >
-        {/* Mini UI Preview */}
-        <div className={`h-20 relative p-2 ${
-          isDarkPreview ? 'bg-[#1a1a1a]' : 
-          isSystemPreview ? 'bg-gradient-to-r from-gray-100 to-gray-800' : 
-          'bg-gray-100'
-        }`}>
-          {/* Mini sidebar */}
-          <div className={`absolute left-1 top-1 bottom-1 w-4 rounded-sm ${
-            isDarkPreview ? 'bg-[#2a2a2a]' : 
-            isSystemPreview ? 'bg-gray-200/50' : 
-            'bg-white'
+
+        <div className={`h-20 relative p-2 ${isDarkPreview ? 'bg-[#1a1a1a]' :
+          isSystemPreview ? 'bg-gradient-to-r from-gray-100 to-gray-800' :
+            'bg-gray-100'
           }`}>
-            <div className={`w-2 h-2 mx-auto mt-1 rounded-full ${
-              isDarkPreview ? 'bg-gray-600' : 'bg-gray-300'
-            }`}></div>
-            <div className={`w-2 h-0.5 mx-auto mt-1 rounded ${
-              isDarkPreview ? 'bg-gray-600' : 'bg-gray-300'
-            }`}></div>
-            <div className={`w-2 h-0.5 mx-auto mt-0.5 rounded ${
-              isDarkPreview ? 'bg-gray-600' : 'bg-gray-300'
-            }`}></div>
+
+          <div className={`absolute left-1 top-1 bottom-1 w-4 rounded-sm ${isDarkPreview ? 'bg-[#2a2a2a]' :
+            isSystemPreview ? 'bg-gray-200/50' :
+              'bg-white'
+            }`}>
+            <div className={`w-2 h-2 mx-auto mt-1 rounded-full ${isDarkPreview ? 'bg-gray-600' : 'bg-gray-300'
+              }`}></div>
+            <div className={`w-2 h-0.5 mx-auto mt-1 rounded ${isDarkPreview ? 'bg-gray-600' : 'bg-gray-300'
+              }`}></div>
+            <div className={`w-2 h-0.5 mx-auto mt-0.5 rounded ${isDarkPreview ? 'bg-gray-600' : 'bg-gray-300'
+              }`}></div>
           </div>
-          {/* Mini content area */}
-          <div className={`absolute left-6 right-1 top-1 bottom-1 rounded-sm ${
-            isDarkPreview ? 'bg-[#0f0f10]' : 
-            isSystemPreview ? 'bg-white/50' : 
-            'bg-white'
-          }`}>
-            <div className={`w-8 h-1 mt-2 ml-2 rounded ${
-              isDarkPreview ? 'bg-gray-700' : 'bg-gray-200'
-            }`}></div>
-            <div className={`w-12 h-1.5 mt-1 ml-2 rounded ${
-              isDarkPreview ? 'bg-gray-800' : 'bg-gray-100'
-            }`}></div>
-            <div className={`w-10 h-1.5 mt-0.5 ml-2 rounded ${
-              isDarkPreview ? 'bg-gray-800' : 'bg-gray-100'
-            }`}></div>
+
+          <div className={`absolute left-6 right-1 top-1 bottom-1 rounded-sm ${isDarkPreview ? 'bg-[#0f0f10]' :
+            isSystemPreview ? 'bg-white/50' :
+              'bg-white'
+            }`}>
+            <div className={`w-8 h-1 mt-2 ml-2 rounded ${isDarkPreview ? 'bg-gray-700' : 'bg-gray-200'
+              }`}></div>
+            <div className={`w-12 h-1.5 mt-1 ml-2 rounded ${isDarkPreview ? 'bg-gray-800' : 'bg-gray-100'
+              }`}></div>
+            <div className={`w-10 h-1.5 mt-0.5 ml-2 rounded ${isDarkPreview ? 'bg-gray-800' : 'bg-gray-100'
+              }`}></div>
           </div>
-          {/* Selection checkmark */}
+
           {isSelected && (
             <div className="absolute top-1 right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
               <Check className="w-2.5 h-2.5 text-white" />
             </div>
           )}
         </div>
-        {/* Label */}
-        <div className={`px-3 py-2 text-left ${theme === 'dark' ? 'bg-[#1A1B1E]' : 'bg-white'}`}>
-          <span className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
+
+        <div className="px-3 py-2 text-left bg-card text-card-foreground">
+          <span className="text-sm font-medium text-foreground">
             {label}
           </span>
         </div>
@@ -629,10 +617,10 @@ Here are some ideas to get you started:
 
   if (loading) {
     return (
-      <div className={`flex-1 p-8 ${theme === 'dark' ? 'bg-[#1A1B1E]' : 'bg-gray-50'}`}>
+      <div className="flex-1 p-8 bg-background">
         <div className="animate-pulse">
-          <div className={`h-8 w-32 ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-200'} rounded mb-6`}></div>
-          <div className={`h-10 w-full max-w-xl ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-200'} rounded`}></div>
+          <div className="h-8 w-32 bg-muted rounded mb-6"></div>
+          <div className="h-10 w-full max-w-xl bg-muted rounded"></div>
         </div>
       </div>
     );
@@ -651,745 +639,711 @@ Here are some ideas to get you started:
           }
         `}
       </style>
-      <div className={`flex-1 min-h-screen ${theme === 'dark' ? 'bg-[#1A1B1E]' : 'bg-white'}`} data-testid="settings-page">
-      <div className="max-w-4xl mx-auto px-6 py-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <h1 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`} data-testid="settings-title">
-            Settings
-          </h1>
-          <Button
-            variant="outline"
-            size="sm"
-            data-testid="api-button"
-            className={theme === 'dark' ? 'border-gray-700 text-gray-300 hover:bg-gray-800' : ''}
-          >
-            API
-          </Button>
-        </div>
-
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="relative">
-            <TabsList 
-              ref={tabsListRef}
-              style={{ backgroundColor: 'transparent !important' }}
-              className={`w-full justify-start border-b rounded-none h-auto p-0 !bg-transparent ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}
+      <div className="flex-1 min-h-screen bg-background" data-testid="settings-page">
+        <div className="max-w-4xl mx-auto px-6 py-6">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-2xl font-bold text-foreground" data-testid="settings-title">
+              Settings
+            </h1>
+            <Button
+              variant="outline"
+              size="sm"
+              data-testid="api-button"
+              className="border-border text-muted-foreground hover:bg-muted"
             >
-              {[
-                { value: 'account', label: 'Account' },
-                { value: 'login-privacy', label: 'Login & Privacy' },
-                { value: 'api-integrations', label: 'API & Integrations' },
-                { value: 'organizations', label: 'Organizations' },
-                { value: 'notifications', label: 'Notifications' },
-                { value: 'referrals', label: 'Referrals' }
-              ].map((tab) => (
-                <TabsTrigger
-                  key={tab.value}
-                  value={tab.value}
-                  ref={(el) => (tabRefs.current[tab.value] = el)}
-                  data-testid={`tab-${tab.value}`}
-                  style={{ backgroundColor: 'transparent !important' }}
-                  className={`rounded-none border-b-2 border-transparent px-4 py-3 text-sm font-medium transition-colors !bg-transparent hover:!bg-transparent ${
-                    activeTab === tab.value
-                      ? theme === 'dark' 
-                        ? 'text-white' 
-                        : 'text-gray-900'
-                      : theme === 'dark' 
-                        ? 'text-gray-400 hover:text-gray-200' 
-                        : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  {tab.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-            {/* Animated underline */}
-            <div
-              className="absolute bottom-0 h-0.5 bg-blue-500 transition-all duration-300 ease-in-out"
-              style={{
-                left: `${underlineStyle.left}px`,
-                width: `${underlineStyle.width}px`,
-                opacity: underlineStyle.width > 0 ? 1 : 0
-              }}
-            />
+              API
+            </Button>
           </div>
 
-          {/* Account Tab Content */}
-          <TabsContent value="account" className="mt-0 pt-4">
-            {/* Username Section */}
-            <div className={`pb-4 border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
-              <div className="flex gap-8">
-                {/* Left Column */}
-                <div className="w-40 flex-shrink-0">
-                  <h2 className={`text-base font-semibold mb-1.5 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                    Username
-                  </h2>
-                  <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                    This might become visible to others, e.g. if you submit an Actor issue.
-                  </p>
-                </div>
-                {/* Right Column */}
-                <div className="flex-1">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-1 max-w-sm">
-                      <Input
-                        value={username}
-                        onChange={handleUsernameChange}
-                        data-testid="username-input"
-                        className={`w-full ${
-                          theme === 'dark' 
-                            ? 'bg-[#25262B] border-gray-700 text-white placeholder:text-gray-500' 
-                            : 'bg-white border-gray-300'
-                        } ${
-                          usernameValidation.message && username !== originalUsername
+
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <div className="relative">
+              <TabsList
+                ref={tabsListRef}
+                style={{ backgroundColor: 'transparent !important' }}
+                className="w-full justify-start border-b rounded-none h-auto p-0 !bg-transparent border-border"
+              >
+                {[
+                  { value: 'account', label: 'Account' },
+                  { value: 'login-privacy', label: 'Login & Privacy' },
+                  { value: 'api-integrations', label: 'API & Integrations' },
+                  { value: 'organizations', label: 'Organizations' },
+                  { value: 'notifications', label: 'Notifications' },
+                  { value: 'referrals', label: 'Referrals' }
+                ].map((tab) => (
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    ref={(el) => (tabRefs.current[tab.value] = el)}
+                    data-testid={`tab-${tab.value}`}
+                    style={{ backgroundColor: 'transparent !important' }}
+                    className={`rounded-none border-b-2 border-transparent px-4 py-3 text-sm font-medium transition-colors !bg-transparent hover:!bg-transparent ${activeTab === tab.value
+                      ? 'text-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                  >
+                    {tab.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+
+              <div
+                className="absolute bottom-0 h-0.5 bg-blue-500 transition-all duration-300 ease-in-out"
+                style={{
+                  left: `${underlineStyle.left}px`,
+                  width: `${underlineStyle.width}px`,
+                  opacity: underlineStyle.width > 0 ? 1 : 0
+                }}
+              />
+            </div>
+
+
+            <TabsContent value="account" className="mt-0 pt-4">
+              {/* Username Section */}
+              <div className="pb-4 border-b border-border">
+                <div className="flex gap-8">
+                  {/* Left Column */}
+                  <div className="w-40 flex-shrink-0">
+                    <h2 className="text-base font-semibold mb-1.5 text-foreground">
+                      Username
+                    </h2>
+                    <p className="text-xs text-muted-foreground">
+                      This might become visible to others, e.g. if you submit an Actor issue.
+                    </p>
+                  </div>
+                  {/* Right Column */}
+                  <div className="flex-1">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-1 max-w-sm">
+                        <Input
+                          value={username}
+                          onChange={handleUsernameChange}
+                          data-testid="username-input"
+                          className={`w-full bg-background border-input ${usernameValidation.message && username !== originalUsername
                             ? usernameValidation.available
                               ? 'border-green-500 focus:border-green-500 focus:ring-green-500'
                               : 'border-red-500 focus:border-red-500 focus:ring-red-500'
                             : ''
-                        }`}
-                        placeholder=""
-                      />
-                      {/* Inline validation message */}
-                      {username !== originalUsername && usernameValidation.message && (
-                        <div className={`mt-1.5 text-xs flex items-center gap-1.5 ${
-                          usernameValidation.checking
-                            ? theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                            }`}
+                          placeholder=""
+                        />
+
+                        {username !== originalUsername && usernameValidation.message && (
+                          <div className={`mt-1.5 text-xs flex items-center gap-1.5 ${usernameValidation.checking
+                            ? 'text-muted-foreground'
                             : usernameValidation.available
                               ? 'text-green-600 dark:text-green-500'
-                              : 'text-red-600 dark:text-red-500'
-                        }`} data-testid="username-validation-message">
-                          {usernameValidation.checking ? (
-                            <>
-                              <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                              <span>{usernameValidation.message}</span>
-                            </>
-                          ) : usernameValidation.available ? (
-                            <>
-                              <Check className="h-3 w-3" />
-                              <span>{usernameValidation.message}</span>
-                            </>
-                          ) : (
-                            <>
-                              <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                              </svg>
-                              <span>{usernameValidation.message}</span>
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    <Button
-                      onClick={handleSaveUsername}
-                      disabled={username === originalUsername || savingUsername || !usernameValidation.available || usernameValidation.checking}
-                      data-testid="save-username-btn"
-                      variant={username === originalUsername ? "ghost" : "default"}
-                      className={username === originalUsername 
-                        ? `${theme === 'dark' ? 'text-gray-600' : 'text-gray-400'}` 
-                        : 'bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed'
-                      }
-                    >
-                      {savingUsername ? 'Saving...' : 'Save'}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Profile Section */}
-            <div className={`py-4 border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
-              <div className="flex gap-8">
-                {/* Left Column */}
-                <div className="w-40 flex-shrink-0">
-                  <h2 className={`text-base font-semibold mb-1.5 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                    Profile
-                  </h2>
-                  <p className={`text-xs mb-3 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                    Tell the world a little bit about yourself.
-                  </p>
-                  <a 
-                    href="#" 
-                    className={`text-xs flex items-center gap-1 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`}
-                    data-testid="view-profile-link"
-                  >
-                    View your public profile <ExternalLink className="w-3 h-3" />
-                  </a>
-                </div>
-                
-                {/* Right Column */}
-                <div className="flex-1 space-y-4">
-                  {/* Picture */}
-                  <div>
-                    <OptionalLabel label="Picture" tooltip="Upload a profile picture. Recommended size: 256x256 pixels." />
-                    <div className="flex items-center gap-3">
-                      {profilePicture ? (
-                        <img 
-                          src={profilePicture} 
-                          alt="Profile" 
-                          className="w-12 h-12 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div 
-                          className="w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold"
-                          style={{ background: profileColorValue }}
-                        >
-                          {userInitials}
-                        </div>
-                      )}
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleImageUpload}
-                        accept="image/*"
-                        className="hidden"
-                      />
+                              : 'text-destructive'
+                            }`} data-testid="username-validation-message">
+                            {usernameValidation.checking ? (
+                              <>
+                                <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span>{usernameValidation.message}</span>
+                              </>
+                            ) : usernameValidation.available ? (
+                              <>
+                                <Check className="h-3 w-3" />
+                                <span>{usernameValidation.message}</span>
+                              </>
+                            ) : (
+                              <>
+                                <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                </svg>
+                                <span>{usernameValidation.message}</span>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
                       <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => fileInputRef.current?.click()}
-                        data-testid="upload-image-btn"
-                        className={theme === 'dark' ? 'border-gray-700 text-gray-300 hover:bg-gray-800' : ''}
+                        onClick={handleSaveUsername}
+                        disabled={username === originalUsername || savingUsername || !usernameValidation.available || usernameValidation.checking}
+                        data-testid="save-username-btn"
+                        variant={username === originalUsername ? "ghost" : "default"}
+                        className={username === originalUsername
+                          ? 'text-muted-foreground/50'
+                          : 'bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed'
+                        }
                       >
-                        <Upload className="w-4 h-4 mr-2" />
-                        Upload new image
+                        {savingUsername ? 'Saving...' : 'Save'}
                       </Button>
-                      {profilePicture && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={handleDeleteImage}
-                          data-testid="delete-image-btn"
-                          className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      )}
                     </div>
-                  </div>
-
-                  {/* First Name & Last Name */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
-                        First name
-                      </label>
-                      <Input
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        data-testid="first-name-input"
-                        className={theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}
-                        placeholder=""
-                      />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5 mb-2">
-                        <span className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
-                          Last name
-                        </span>
-                        <span className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>(optional)</span>
-                      </div>
-                      <Input
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        data-testid="last-name-input"
-                        className={theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}
-                        placeholder=""
-                      />
-                    </div>
-                  </div>
-
-                  {/* Bio */}
-                  <div>
-                    <OptionalLabel label="Bio" tooltip="A short bio about yourself. Max 200 characters." />
-                    <Input
-                      value={bio}
-                      onChange={(e) => setBio(e.target.value)}
-                      data-testid="bio-input"
-                      className={theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}
-                      placeholder=""
-                      maxLength={200}
-                    />
-                  </div>
-
-                  {/* README */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <OptionalLabel label="README" tooltip="Write a detailed description using Markdown. Max 2000 characters." />
-                      <div className="flex items-center gap-2">
-                        <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                          Markdown preview
-                        </span>
-                        <Switch
-                          checked={markdownPreview}
-                          onCheckedChange={setMarkdownPreview}
-                          data-testid="markdown-preview-toggle"
-                        />
-                      </div>
-                    </div>
-                    <Textarea
-                      value={readme}
-                      onChange={(e) => setReadme(e.target.value)}
-                      data-testid="readme-textarea"
-                      className={`min-h-[200px] scrollbar-hide ${theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}`}
-                      placeholder={'add Readme!!!'}
-                      maxLength={2000}
-                      style={{
-                        msOverflowStyle: 'none',
-                        scrollbarWidth: 'none',
-                      }}
-                    />
-                    <div className={`text-xs mt-1 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>
-                      {readme.length}/2000
-                    </div>
-                  </div>
-
-                  {/* Homepage URL */}
-                  <div>
-                    <OptionalLabel label="Homepage URL" tooltip="Your personal website or portfolio." />
-                    <Input
-                      value={homepageUrl}
-                      onChange={(e) => setHomepageUrl(e.target.value)}
-                      data-testid="homepage-url-input"
-                      className={theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}
-                      placeholder=""
-                    />
-                  </div>
-
-                  {/* GitHub & Twitter */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <OptionalLabel label="GitHub" tooltip="Your GitHub username." />
-                      <Input
-                        value={github}
-                        onChange={(e) => setGithub(e.target.value)}
-                        data-testid="github-input"
-                        className={theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}
-                        placeholder=""
-                      />
-                    </div>
-                    <div>
-                      <OptionalLabel label="Twitter/X username" tooltip="Your Twitter/X username without the @ symbol." />
-                      <Input
-                        value={twitter}
-                        onChange={(e) => setTwitter(e.target.value)}
-                        data-testid="twitter-input"
-                        className={theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}
-                        placeholder=""
-                      />
-                    </div>
-                  </div>
-
-                  {/* LinkedIn & Discord */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <OptionalLabel label="LinkedIn URL" tooltip="Your LinkedIn profile URL." />
-                      <Input
-                        value={linkedin}
-                        onChange={(e) => setLinkedin(e.target.value)}
-                        data-testid="linkedin-input"
-                        className={theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}
-                        placeholder=""
-                      />
-                    </div>
-                    <div>
-                      <OptionalLabel label="Discord user ID" tooltip="Your Discord user ID (18-19 digits). Right-click your username in Discord to copy." />
-                      <Input
-                        value={discord}
-                        onChange={(e) => setDiscord(e.target.value)}
-                        data-testid="discord-input"
-                        className={theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}
-                        placeholder=""
-                      />
-                    </div>
-                  </div>
-
-                  {/* Privacy Toggles */}
-                  <div className="space-y-3 pt-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
-                          Make profile publicly visible
-                        </span>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <HelpCircle className={`w-3.5 h-3.5 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} cursor-help`} />
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className={theme === 'dark' ? 'bg-gray-800 text-white' : ''}>
-                              <p className="text-xs">Allow others to see your profile.</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                      <Switch
-                        checked={isPublic}
-                        onCheckedChange={setIsPublic}
-                        data-testid="public-profile-toggle"
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`text-sm ${isPublic ? (theme === 'dark' ? 'text-gray-200' : 'text-gray-700') : (theme === 'dark' ? 'text-gray-600' : 'text-gray-400')} font-medium`}>
-                          Show my contact email
-                        </span>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <HelpCircle className={`w-3.5 h-3.5 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} cursor-help`} />
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className={theme === 'dark' ? 'bg-gray-800 text-white' : ''}>
-                              <p className="text-xs">Display your email on your public profile.</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                      <Switch
-                        checked={showEmail}
-                        onCheckedChange={setShowEmail}
-                        disabled={!isPublic}
-                        data-testid="show-email-toggle"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Save Button */}
-                  <div className="pt-3">
-                    <Button
-                      onClick={handleSaveProfile}
-                      disabled={savingProfile}
-                      data-testid="save-profile-btn"
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                    >
-                      {savingProfile ? 'Saving...' : 'Save'}
-                    </Button>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Theme Section */}
-            <div className={`py-4 border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
-              <div className="flex gap-8">
-                {/* Left Column */}
-                <div className="w-40 flex-shrink-0">
-                  <h2 className={`text-base font-semibold mb-1.5 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                    Theme
-                  </h2>
-                  <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                    Choose how Scrapi Console looks to you.
-                  </p>
-                </div>
-                
-                {/* Right Column */}
-                <div className="flex-1">
-                  <div className="flex gap-4">
-                    <ThemeCard 
-                      value="system" 
-                      label="Sync with system" 
-                      icon={Monitor}
-                      preview={`bg-gradient-to-r from-gray-200 to-gray-800`}
-                    />
-                    <ThemeCard 
-                      value="light" 
-                      label="Light theme" 
-                      icon={Sun}
-                      preview="bg-gray-100"
-                    />
-                    <ThemeCard 
-                      value="dark" 
-                      label="Dark theme" 
-                      icon={Moon}
-                      preview="bg-gray-800"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            {/* Danger Zone */}
-            <div className="py-4">
-              <div className="flex gap-8">
-                {/* Left Column */}
-                <div className="w-40 flex-shrink-0">
-                  <h2 className="text-base font-semibold mb-1.5 text-red-500">
-                    Danger zone
-                  </h2>
-                </div>
-                
-                {/* Right Column */}
-                <div className="flex-1">
-                  {/* Export Data Button */}
-                  <div className="mb-3">
-                    <Button
-                      onClick={handleExportData}
-                      disabled={isExporting}
-                      variant="outline"
-                      data-testid="export-data-btn"
-                      className={`${theme === 'dark' ? 'border-gray-700 text-gray-300 hover:bg-gray-800' : ''}`}
-                    >
-                      {isExporting ? 'Exporting...' : '📥 Export My Data'}
-                    </Button>
-                    <p className={`mt-1.5 text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                      Download all your data before deletion (actors, runs, datasets, etc.)
+              <div className="py-4 border-b border-border">
+                <div className="flex gap-8">
+
+                  <div className="w-40 flex-shrink-0">
+                    <h2 className="text-base font-semibold mb-1.5 text-foreground">
+                      Profile
+                    </h2>
+                    <p className="text-xs mb-3 text-muted-foreground">
+                      Tell the world a little bit about yourself.
                     </p>
+                    <a
+                      href="#"
+                      className="text-xs flex items-center gap-1 text-muted-foreground hover:text-foreground"
+                      data-testid="view-profile-link"
+                    >
+                      View your public profile <ExternalLink className="w-3 h-3" />
+                    </a>
                   </div>
 
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        data-testid="delete-account-btn"
-                        onClick={() => {
-                          setDeleteConfirmText('');
-                          setDeletePassword('');
-                          setDeleteFeedbackReason('');
-                          setDeleteFeedbackText('');
-                          setShowFeedbackForm(false);
-                        }}
-                        className={`border-red-500/50 text-red-500 hover:bg-red-500/10 hover:text-red-600 ${
-                          theme === 'dark' ? 'bg-transparent' : ''
-                        }`}
-                      >
-                        Delete account
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent 
-                      className={`max-w-[480px] ${
-                        theme === 'dark' 
-                          ? 'bg-[#1e1e1e] border border-gray-700' 
-                          : 'bg-white border border-gray-300'
-                      }`}
-                    >
-                      <AlertDialogHeader>
-                        <AlertDialogTitle className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                          Delete account
-                        </AlertDialogTitle>
-                      </AlertDialogHeader>
-                      
-                      <div className="space-y-3 py-3">
-                        <div className={`space-y-2 text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                          <p>
-                            Do you <span className="font-semibold">really</span> want to{' '}
-                            <span className={`font-semibold ${theme === 'dark' ? 'text-red-400' : 'text-red-600'}`}>
-                              delete your account?
-                            </span>
-                          </p>
-                          
-                          <div className={`p-3 rounded-lg border ${theme === 'dark' ? 'bg-[#25262B] border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
-                            <p className="font-semibold mb-1 text-sm">Grace Period: 7 days</p>
-                            <p className="text-xs">Your account will be scheduled for deletion. You'll have 7 days to reactivate by simply logging in.</p>
+
+                  <div className="flex-1 space-y-4">
+
+                    <div>
+                      <OptionalLabel label="Picture" tooltip="Upload a profile picture. Recommended size: 256x256 pixels." />
+                      <div className="flex items-center gap-3">
+                        {profilePicture ? (
+                          <img
+                            src={profilePicture}
+                            alt="Profile"
+                            className="w-12 h-12 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div
+                            className="w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold"
+                            style={{ background: profileColorValue }}
+                          >
+                            {userInitials}
                           </div>
-                          
-                          <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                            All Actors, Actor tasks, schedules, results, datasets, and API keys will be deleted.
-                          </p>
-                        </div>
-                        
-                        {/* Feedback Form */}
-                        <div className={`pt-3 border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
-                          <button
-                            onClick={() => setShowFeedbackForm(!showFeedbackForm)}
-                            className={`text-xs font-medium mb-2 ${theme === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}
+                        )}
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          onChange={handleImageUpload}
+                          accept="image/*"
+                          className="hidden"
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => fileInputRef.current?.click()}
+                          data-testid="upload-image-btn"
+                          className="border-border text-muted-foreground hover:bg-muted"
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload new image
+                        </Button>
+                        {profilePicture && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleDeleteImage}
+                            data-testid="delete-image-btn"
+                            className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
                           >
-                            {showFeedbackForm ? '▼' : '▶'} Tell us why you're leaving (optional)
-                          </button>
-                          
-                          {showFeedbackForm && (
-                            <div className="space-y-2">
-                              <div className="space-y-1.5">
-                                {[
-                                  { value: 'too_expensive', label: 'Too expensive' },
-                                  { value: 'lack_features', label: 'Lack of features I need' },
-                                  { value: 'found_alternative', label: 'Found a better alternative' },
-                                  { value: 'privacy_concerns', label: 'Privacy concerns' },
-                                  { value: 'other', label: 'Other reason' }
-                                ].map((reason) => (
-                                  <label key={reason.value} className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                      type="radio"
-                                      name="feedback_reason"
-                                      value={reason.value}
-                                      checked={deleteFeedbackReason === reason.value}
-                                      onChange={(e) => setDeleteFeedbackReason(e.target.value)}
-                                      className="w-3.5 h-3.5"
-                                    />
-                                    <span className={`text-xs ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                                      {reason.label}
-                                    </span>
-                                  </label>
-                                ))}
-                              </div>
-                              <Textarea
-                                value={deleteFeedbackText}
-                                onChange={(e) => setDeleteFeedbackText(e.target.value)}
-                                placeholder="Additional feedback (optional)"
-                                className={`min-h-[60px] text-xs ${theme === 'dark' ? 'bg-[#25262B] border-gray-700 text-white' : ''}`}
-                                maxLength={500}
-                              />
-                            </div>
-                          )}
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-muted-foreground">
+                          First name
+                        </label>
+                        <Input
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                          data-testid="first-name-input"
+                          className="bg-background border-input text-foreground placeholder:text-muted-foreground"
+                          placeholder=""
+                        />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1.5 mb-2">
+                          <span className="text-sm font-medium text-foreground">
+                            Last name
+                          </span>
+                          <span className="text-sm text-muted-foreground">(optional)</span>
                         </div>
-                        
-                        {/* Password Re-authentication */}
-                        <div className={`pt-3 border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
-                          <label 
-                            htmlFor="delete-password-input"
-                            className={`block text-xs font-medium mb-1.5 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}
-                          >
-                            Enter your password to confirm
-                          </label>
-                          <div className="relative">
-                            <Input
-                              id="delete-password-input"
-                              type={showDeletePassword ? 'text' : 'password'}
-                              value={deletePassword}
-                              onChange={(e) => setDeletePassword(e.target.value)}
-                              placeholder="Your password"
-                              autoComplete="current-password"
-                              data-testid="delete-password-input"
-                              className={`w-full text-sm pr-10 ${
-                                theme === 'dark'
-                                  ? 'bg-[#333333] border-gray-600 text-white focus:border-[#007bff] focus:ring-[#007bff]'
-                                  : 'bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500'
-                              }`}
-                            />
-                            <div
-                              onClick={() => setShowDeletePassword(!showDeletePassword)}
-                              className={`absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer ${
-                                theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'
-                              }`}
-                            >
-                              {showDeletePassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Username Confirmation */}
-                        <div className={`pt-3 border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
-                          <label 
-                            htmlFor="delete-confirm-input"
-                            className={`block text-xs font-medium mb-1.5 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}
-                          >
-                            Type <span className="font-bold select-none" style={{ userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none' }}>{user?.email}</span> to confirm
-                          </label>
-                          <Input
-                            id="delete-confirm-input"
-                            type="text"
-                            value={deleteConfirmText}
-                            onChange={(e) => setDeleteConfirmText(e.target.value)}
-                            placeholder=""
-                            autoComplete="off"
-                            data-testid="delete-confirm-input"
-                            className={`w-full text-sm ${
-                              theme === 'dark'
-                                ? 'bg-[#333333] border-gray-600 text-white focus:border-[#007bff] focus:ring-[#007bff]'
-                                : 'bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500'
-                            }`}
+                        <Input
+                          value={lastName}
+                          onChange={(e) => setLastName(e.target.value)}
+                          data-testid="last-name-input"
+                          className="bg-background border-input text-foreground placeholder:text-muted-foreground"
+                          placeholder=""
+                        />
+                      </div>
+                    </div>
+
+
+                    <div>
+                      <OptionalLabel label="Bio" tooltip="A short bio about yourself. Max 200 characters." />
+                      <Input
+                        value={bio}
+                        onChange={(e) => setBio(e.target.value)}
+                        data-testid="bio-input"
+                        className="bg-background border-input text-foreground placeholder:text-muted-foreground"
+                        placeholder=""
+                        maxLength={200}
+                      />
+                    </div>
+
+
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <OptionalLabel label="README" tooltip="Write a detailed description using Markdown. Max 2000 characters." />
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-muted-foreground">
+                            Markdown preview
+                          </span>
+                          <Switch
+                            checked={markdownPreview}
+                            onCheckedChange={setMarkdownPreview}
+                            data-testid="markdown-preview-toggle"
                           />
                         </div>
                       </div>
-                      
-                      <AlertDialogFooter className="gap-2">
-                        <AlertDialogCancel 
-                          disabled={isDeleting}
-                          className={`text-sm py-1.5 ${
-                            theme === 'dark'
-                              ? 'bg-[#444444] border-gray-600 text-white hover:bg-[#4a4a4a]'
-                              : 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200'
-                          }`}
+                      <Textarea
+                        value={readme}
+                        onChange={(e) => setReadme(e.target.value)}
+                        data-testid="readme-textarea"
+                        className="min-h-[200px] scrollbar-hide bg-background border-input text-foreground placeholder:text-muted-foreground"
+                        placeholder={'add Readme!!!'}
+                        maxLength={2000}
+                        style={{
+                          msOverflowStyle: 'none',
+                          scrollbarWidth: 'none',
+                        }}
+                      />
+                      <div className="text-xs mt-1 text-muted-foreground">
+                        {readme.length}/2000
+                      </div>
+                    </div>
+
+
+                    <div>
+                      <OptionalLabel label="Homepage URL" tooltip="Your personal website or portfolio." />
+                      <Input
+                        value={homepageUrl}
+                        onChange={(e) => setHomepageUrl(e.target.value)}
+                        data-testid="homepage-url-input"
+                        className="bg-background border-input text-foreground placeholder:text-muted-foreground"
+                        placeholder=""
+                      />
+                    </div>
+
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <OptionalLabel label="GitHub" tooltip="Your GitHub username." />
+                        <Input
+                          value={github}
+                          onChange={(e) => setGithub(e.target.value)}
+                          data-testid="github-input"
+                          className="bg-background border-input text-foreground placeholder:text-muted-foreground"
+                          placeholder=""
+                        />
+                      </div>
+                      <div>
+                        <OptionalLabel label="Twitter/X username" tooltip="Your Twitter/X username without the @ symbol." />
+                        <Input
+                          value={twitter}
+                          onChange={(e) => setTwitter(e.target.value)}
+                          data-testid="twitter-input"
+                          className="bg-background border-input text-foreground placeholder:text-muted-foreground"
+                          placeholder=""
+                        />
+                      </div>
+                    </div>
+
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <OptionalLabel label="LinkedIn URL" tooltip="Your LinkedIn profile URL." />
+                        <Input
+                          value={linkedin}
+                          onChange={(e) => setLinkedin(e.target.value)}
+                          data-testid="linkedin-input"
+                          className="bg-background border-input text-foreground placeholder:text-muted-foreground"
+                          placeholder=""
+                        />
+                      </div>
+                      <div>
+                        <OptionalLabel label="Discord user ID" tooltip="Your Discord user ID (18-19 digits). Right-click your username in Discord to copy." />
+                        <Input
+                          value={discord}
+                          onChange={(e) => setDiscord(e.target.value)}
+                          data-testid="discord-input"
+                          className="bg-background border-input text-foreground placeholder:text-muted-foreground"
+                          placeholder=""
+                        />
+                      </div>
+                    </div>
+
+
+                    <div className="space-y-3 pt-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm font-medium text-foreground">
+                            Make profile publicly visible
+                          </span>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <HelpCircle className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="bg-popover text-popover-foreground">
+                                <p className="text-xs">Allow others to see your profile.</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                        <Switch
+                          checked={isPublic}
+                          onCheckedChange={setIsPublic}
+                          data-testid="public-profile-toggle"
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`text-sm font-medium ${isPublic ? 'text-foreground' : 'text-muted-foreground'}`}>
+                            Show my contact email
+                          </span>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <HelpCircle className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="bg-popover text-popover-foreground">
+                                <p className="text-xs">Display your email on your public profile.</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                        <Switch
+                          checked={showEmail}
+                          onCheckedChange={setShowEmail}
+                          disabled={!isPublic}
+                          data-testid="show-email-toggle"
+                        />
+                      </div>
+                    </div>
+
+
+                    <div className="pt-3">
+                      <Button
+                        onClick={handleSaveProfile}
+                        disabled={savingProfile}
+                        data-testid="save-profile-btn"
+                        className="bg-primary text-primary-foreground hover:bg-primary/90"
+                      >
+                        {savingProfile ? 'Saving...' : 'Save'}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+              <div className="py-4 border-b border-border">
+                <div className="flex gap-8">
+
+                  <div className="w-40 flex-shrink-0">
+                    <h2 className="text-base font-semibold mb-1.5 text-foreground">
+                      Theme
+                    </h2>
+                    <p className="text-xs text-muted-foreground">
+                      Choose how Scrapi Console looks to you.
+                    </p>
+                  </div>
+
+
+                  <div className="flex-1">
+                    <div className="flex gap-4">
+                      <ThemeCard
+                        value="system"
+                        label="Sync with system"
+                        icon={Monitor}
+                        preview={`bg-gradient-to-r from-gray-200 to-gray-800`}
+                      />
+                      <ThemeCard
+                        value="light"
+                        label="Light theme"
+                        icon={Sun}
+                        preview="bg-gray-100"
+                      />
+                      <ThemeCard
+                        value="dark"
+                        label="Dark theme"
+                        icon={Moon}
+                        preview="bg-gray-800"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+              <div className="py-4">
+                <div className="flex gap-8">
+
+                  <div className="w-40 flex-shrink-0">
+                    <h2 className="text-base font-semibold mb-1.5 text-red-500">
+                      Danger zone
+                    </h2>
+                  </div>
+
+
+                  <div className="flex-1">
+
+                    <div className="mb-3">
+                      <Button
+                        onClick={handleExportData}
+                        disabled={isExporting}
+                        variant="outline"
+                        data-testid="export-data-btn"
+                        className="border-border text-muted-foreground hover:bg-muted"
+                      >
+                        {isExporting ? 'Exporting...' : '📥 Export My Data'}
+                      </Button>
+                      <p className="mt-1.5 text-xs text-muted-foreground">
+                        Download all your data before deletion (actors, runs, datasets, etc.)
+                      </p>
+                    </div>
+
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          data-testid="delete-account-btn"
                           onClick={() => {
                             setDeleteConfirmText('');
                             setDeletePassword('');
                             setDeleteFeedbackReason('');
                             setDeleteFeedbackText('');
+                            setShowFeedbackForm(false);
                           }}
+                          className="border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive bg-transparent"
                         >
-                          Cancel
-                        </AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={handleDeleteAccount}
-                          disabled={deleteConfirmText !== user?.email || !deletePassword || isDeleting}
-                          data-testid="confirm-delete-btn"
-                          className={`text-sm py-1.5 ${
-                            deleteConfirmText !== user?.email || !deletePassword || isDeleting
-                              ? 'opacity-50 cursor-not-allowed bg-gray-400'
-                              : theme === 'dark'
-                              ? 'bg-red-600 hover:bg-red-700'
-                              : 'bg-red-600 hover:bg-red-700'
-                          } text-white font-semibold`}
-                        >
-                          {isDeleting ? 'Scheduling deletion...' : 'Schedule deletion'}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                  <p className={`mt-2 text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                    Completely remove your account, Actors, tasks, schedules, data, everything. This is sad 😢
-                  </p>
+                          Delete account
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent
+                        className="max-w-[480px] bg-background border border-border"
+                      >
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="text-lg font-bold text-foreground">
+                            Delete account
+                          </AlertDialogTitle>
+                        </AlertDialogHeader>
+
+                        <div className="space-y-3 py-3">
+                          <div className="space-y-2 text-sm text-foreground">
+                            <p>
+                              Do you <span className="font-semibold">really</span> want to{' '}
+                              <span className="font-semibold text-destructive">
+                                delete your account?
+                              </span>
+                            </p>
+
+                            <div className="p-3 rounded-lg border bg-muted/50 border-border">
+                              <p className="font-semibold mb-1 text-sm">Grace Period: 7 days</p>
+                              <p className="text-xs">Your account will be scheduled for deletion. You'll have 7 days to reactivate by simply logging in.</p>
+                            </div>
+
+                            <p className="text-xs text-muted-foreground">
+                              All Actors, Actor tasks, schedules, results, datasets, and API keys will be deleted.
+                            </p>
+                          </div>
+
+
+                          <div className="pt-3 border-t border-border">
+                            <button
+                              onClick={() => setShowFeedbackForm(!showFeedbackForm)}
+                              className="text-xs font-medium mb-2 text-primary hover:text-primary/80"
+                            >
+                              {showFeedbackForm ? '▼' : '▶'} Tell us why you're leaving (optional)
+                            </button>
+
+                            {showFeedbackForm && (
+                              <div className="space-y-2">
+                                <div className="space-y-1.5">
+                                  {[
+                                    { value: 'too_expensive', label: 'Too expensive' },
+                                    { value: 'lack_features', label: 'Lack of features I need' },
+                                    { value: 'found_alternative', label: 'Found a better alternative' },
+                                    { value: 'privacy_concerns', label: 'Privacy concerns' },
+                                    { value: 'other', label: 'Other reason' }
+                                  ].map((reason) => (
+                                    <label key={reason.value} className="flex items-center gap-2 cursor-pointer">
+                                      <input
+                                        type="radio"
+                                        name="feedback_reason"
+                                        value={reason.value}
+                                        checked={deleteFeedbackReason === reason.value}
+                                        onChange={(e) => setDeleteFeedbackReason(e.target.value)}
+                                        className="w-3.5 h-3.5"
+                                      />
+                                      <span className="text-xs text-foreground">
+                                        {reason.label}
+                                      </span>
+                                    </label>
+                                  ))}
+                                </div>
+                                <Textarea
+                                  value={deleteFeedbackText}
+                                  onChange={(e) => setDeleteFeedbackText(e.target.value)}
+                                  placeholder="Additional feedback (optional)"
+                                  className="min-h-[60px] text-xs bg-background border-input text-foreground placeholder:text-muted-foreground"
+                                  maxLength={500}
+                                />
+                              </div>
+                            )}
+                          </div>
+
+
+                          <div className="pt-3 border-t border-border">
+                            <label
+                              htmlFor="delete-password-input"
+                              className="block text-xs font-medium mb-1.5 text-foreground"
+                            >
+                              Enter your password to confirm
+                            </label>
+                            <div className="relative">
+                              <Input
+                                id="delete-password-input"
+                                type={showDeletePassword ? 'text' : 'password'}
+                                value={deletePassword}
+                                onChange={(e) => setDeletePassword(e.target.value)}
+                                placeholder="Your password"
+                                autoComplete="current-password"
+                                data-testid="delete-password-input"
+                                className="w-full text-sm pr-10 bg-secondary border-input text-foreground focus:border-ring focus:ring-ring"
+                              />
+                              <div
+                                onClick={() => setShowDeletePassword(!showDeletePassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-muted-foreground hover:text-foreground"
+                              >
+                                {showDeletePassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              </div>
+                            </div>
+                          </div>
+
+
+                          <div className="pt-3 border-t border-border">
+                            <label
+                              htmlFor="delete-confirm-input"
+                              className="block text-xs font-medium mb-1.5 text-foreground"
+                            >
+                              Type <span className="font-bold select-none" style={{ userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none' }}>{user?.email}</span> to confirm
+                            </label>
+                            <Input
+                              id="delete-confirm-input"
+                              type="text"
+                              value={deleteConfirmText}
+                              onChange={(e) => setDeleteConfirmText(e.target.value)}
+                              placeholder=""
+                              autoComplete="off"
+                              data-testid="delete-confirm-input"
+                              className="w-full text-sm bg-secondary border-input text-foreground focus:border-ring focus:ring-ring"
+                            />
+                          </div>
+                        </div>
+
+                        <AlertDialogFooter className="gap-2">
+                          <AlertDialogCancel
+                            disabled={isDeleting}
+                            className="text-sm py-1.5 bg-muted text-muted-foreground hover:bg-muted/80 border-border"
+                            onClick={() => {
+                              setDeleteConfirmText('');
+                              setDeletePassword('');
+                              setDeleteFeedbackReason('');
+                              setDeleteFeedbackText('');
+                            }}
+                          >
+                            Cancel
+                          </AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={handleDeleteAccount}
+                            disabled={deleteConfirmText !== user?.email || !deletePassword || isDeleting}
+                            data-testid="confirm-delete-btn"
+                            className={`text-sm py-1.5 ${deleteConfirmText !== user?.email || !deletePassword || isDeleting
+                              ? 'opacity-50 cursor-not-allowed bg-muted text-muted-foreground'
+                              : 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                              } font-semibold`}
+                          >
+                            {isDeleting ? 'Scheduling deletion...' : 'Schedule deletion'}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Completely remove your account, Actors, tasks, schedules, data, everything. This is sad 😢
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </TabsContent>
+            </TabsContent>
 
-          {/* Other Tabs - Empty for now */}
-          <TabsContent value="login-privacy" className="mt-4">
-            <div className={`text-center py-12 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-              <p className="text-base">Login & Privacy settings coming soon</p>
-            </div>
-          </TabsContent>
 
-          <TabsContent value="api-integrations" className="mt-0 pt-4">
-            <ApiIntegrations />
-          </TabsContent>
+            <TabsContent value="login-privacy" className="mt-4">
+              <div className="text-center py-12 text-muted-foreground">
+                <p className="text-base">Login & Privacy settings coming soon</p>
+              </div>
+            </TabsContent>
 
-          <TabsContent value="organizations" className="mt-4">
-            <div className={`text-center py-12 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-              <p className="text-base">Organizations settings coming soon</p>
-            </div>
-          </TabsContent>
+            <TabsContent value="api-integrations" className="mt-0 pt-4">
+              <ApiIntegrations />
+            </TabsContent>
 
-          <TabsContent value="notifications" className="mt-4">
-            <div className={`text-center py-12 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-              <p className="text-base">Notifications settings coming soon</p>
-            </div>
-          </TabsContent>
+            <TabsContent value="organizations" className="mt-4">
+              <div className="text-center py-12 text-muted-foreground">
+                <p className="text-base">Organizations settings coming soon</p>
+              </div>
+            </TabsContent>
 
-          <TabsContent value="referrals" className="mt-4">
-            <div className={`text-center py-12 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-              <p className="text-base">Referrals settings coming soon</p>
-            </div>
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="notifications" className="mt-4">
+              <div className="text-center py-12 text-muted-foreground">
+                <p className="text-base">Notifications settings coming soon</p>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="referrals" className="mt-4">
+              <div className="text-center py-12 text-muted-foreground">
+                <p className="text-base">Referrals settings coming soon</p>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+
+        <AlertModal
+          show={showDeleteSuccessAlert}
+          onClose={() => {
+            setShowDeleteSuccessAlert(false);
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+          }}
+          title="Account Deletion Scheduled"
+          message="Your account has been scheduled for deletion. You have 7 days to reactivate by simply logging in."
+          type="success"
+          confirmText="OK"
+        />
+
+
+        <AlertModal
+          show={showAlert}
+          onClose={() => setShowAlert(false)}
+          title={alertConfig.title}
+          message={alertConfig.message}
+          type={alertConfig.type}
+        />
       </div>
-      
-      {/* Delete Success Alert Modal */}
-      <AlertModal
-        show={showDeleteSuccessAlert}
-        onClose={() => {
-          setShowDeleteSuccessAlert(false);
-          localStorage.removeItem('token');
-          window.location.href = '/login';
-        }}
-        title="Account Deletion Scheduled"
-        message="Your account has been scheduled for deletion. You have 7 days to reactivate by simply logging in."
-        type="success"
-        confirmText="OK"
-      />
-      
-      {/* General Alert Modal */}
-      <AlertModal
-        show={showAlert}
-        onClose={() => setShowAlert(false)}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        type={alertConfig.type}
-      />
-    </div>
     </>
   );
 };

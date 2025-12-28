@@ -3,10 +3,10 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { 
-  Copy, 
-  Eye, 
-  EyeOff, 
+import {
+  Copy,
+  Eye,
+  EyeOff,
   Plus,
   HelpCircle,
   ExternalLink,
@@ -20,7 +20,6 @@ import AlertModal from './AlertModal';
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const ApiIntegrations = () => {
-  const { theme } = useTheme();
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -291,9 +290,9 @@ const ApiIntegrations = () => {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <HelpCircle className={`w-4 h-4 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} cursor-help`} />
+          <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
         </TooltipTrigger>
-        <TooltipContent side="top" className={theme === 'dark' ? 'bg-gray-800 text-white' : ''}>
+        <TooltipContent side="top" className="bg-popover text-popover-foreground">
           <p className="text-xs max-w-xs">{tooltip}</p>
         </TooltipContent>
       </Tooltip>
@@ -304,15 +303,15 @@ const ApiIntegrations = () => {
     <div className="space-y-6">
       {/* API tokens Section */}
       <div>
-        <h2 className={`text-xl font-bold mb-1.5 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+        <h2 className="text-xl font-bold mb-1.5 text-foreground">
           API tokens
         </h2>
-        <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} mb-3`}>
+        <p className="text-xs text-muted-foreground mb-3">
           These tokens enable API access to your Scrapi account or organization.{' '}
           <span className="font-semibold">Do not share them with untrusted parties!</span>{' '}
-          <a 
-            href="#" 
-            className={`${theme === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'} inline-flex items-center gap-1`}
+          <a version=""
+            href="#"
+            className="text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
           >
             Learn more <ExternalLink className="w-3 h-3" />
           </a>
@@ -320,41 +319,35 @@ const ApiIntegrations = () => {
 
         {/* User ID */}
         <div className="flex items-center gap-2 mb-4">
-          <span className={`text-xs font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+          <span className="text-xs font-medium text-foreground">
             Scrapi user ID:
           </span>
-          <code className={`text-xs font-mono ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+          <code className="text-xs font-mono text-muted-foreground">
             {userId}
           </code>
           <button
             onClick={() => copyToClipboard(userId, 'userId')}
-            className={`p-1 rounded hover:bg-gray-100 ${theme === 'dark' ? 'hover:bg-gray-800' : ''} transition-colors`}
+            className="p-1 rounded hover:bg-muted transition-colors"
             data-testid="copy-user-id-btn"
           >
             {copiedId ? (
-              <Check className={`w-4 h-4 ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`} />
+              <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
             ) : (
-              <Copy className={`w-4 h-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+              <Copy className="w-4 h-4 text-muted-foreground" />
             )}
           </button>
         </div>
       </div>
 
       {/* Personal API tokens Card */}
-      <div 
-        className={`border rounded-lg ${
-          theme === 'dark' 
-            ? 'border-gray-800 bg-[#1A1B1E]' 
-            : 'border-gray-200 bg-white'
-        }`}
+      <div
+        className="border rounded-lg bg-card border-border"
         data-testid="personal-api-tokens-card"
       >
         {/* Header */}
-        <div className={`flex items-center justify-between px-4 py-3 border-b ${
-          theme === 'dark' ? 'border-gray-800 bg-[#1A1B1E]' : 'border-gray-200'
-        }`}>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card">
           <div className="flex items-center gap-2">
-            <h3 className={`text-base font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+            <h3 className="text-base font-semibold text-foreground">
               Personal API tokens
             </h3>
             <InfoIcon tooltip="Personal tokens are used to authenticate API requests on behalf of your user account." />
@@ -365,11 +358,7 @@ const ApiIntegrations = () => {
             variant="outline"
             disabled={keys.length > 0 && !newKeyName}
             data-testid="create-token-btn"
-            className={`${
-              theme === 'dark' 
-                ? 'border-gray-700 text-gray-300 hover:bg-gray-800' 
-                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-            } ${keys.length > 0 && !newKeyName ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`border-border text-foreground hover:bg-muted ${keys.length > 0 && !newKeyName ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <Plus className="w-4 h-4 mr-1" />
             Create a new token
@@ -380,12 +369,8 @@ const ApiIntegrations = () => {
         <div className="px-4 py-3 space-y-3">
           {/* Warning when user already has a key */}
           {keys.length > 0 && !newKeyName && (
-            <div className={`p-3 rounded-lg border ${
-              theme === 'dark' 
-                ? 'border-yellow-800 bg-yellow-900/20' 
-                : 'border-yellow-200 bg-yellow-50'
-            }`}>
-              <p className={`text-sm ${theme === 'dark' ? 'text-yellow-400' : 'text-yellow-800'}`}>
+            <div className="p-3 rounded-lg border border-yellow-500/30 bg-yellow-500/10">
+              <p className="text-sm text-yellow-600 dark:text-yellow-400">
                 ⚠️ You already have an API token. Delete the existing token below to create a new one.
               </p>
             </div>
@@ -393,12 +378,8 @@ const ApiIntegrations = () => {
 
           {/* Create Token Form */}
           {newKeyName && (
-            <div className={`p-3 rounded-lg border ${
-              theme === 'dark' 
-                ? 'border-gray-700 bg-[#25262B]' 
-                : 'border-gray-200 bg-gray-50'
-            }`}>
-              <label className={`block text-xs font-medium mb-1.5 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>
+            <div className="p-3 rounded-lg border border-border bg-muted/30">
+              <label className="block text-xs font-medium mb-1.5 text-foreground">
                 Token name
               </label>
               <div className="flex gap-2">
@@ -406,7 +387,7 @@ const ApiIntegrations = () => {
                   value={newKeyName}
                   onChange={(e) => setNewKeyName(e.target.value)}
                   placeholder="e.g. Production API"
-                  className={theme === 'dark' ? 'bg-[#1A1B1E] border-gray-700 text-white' : ''}
+                  className="bg-background border-input text-foreground"
                   data-testid="token-name-input"
                 />
                 <Button
@@ -420,7 +401,7 @@ const ApiIntegrations = () => {
                 <Button
                   onClick={() => setNewKeyName('')}
                   variant="ghost"
-                  className={theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : ''}
+                  className="text-muted-foreground hover:text-foreground"
                 >
                   Cancel
                 </Button>
@@ -430,70 +411,57 @@ const ApiIntegrations = () => {
 
           {/* Token List */}
           {loading ? (
-            <div className={`text-center py-6 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+            <div className="text-center py-6 text-muted-foreground">
               Loading tokens...
             </div>
           ) : keys.length === 0 ? (
-            <div className={`text-center py-8 px-4 rounded-lg ${
-              theme === 'dark' 
-                ? 'bg-[#25262B] text-gray-400' 
-                : 'bg-gray-50 text-gray-500'
-            }`}>
+            <div className="text-center py-8 px-4 rounded-lg bg-muted/30 text-muted-foreground">
               <p className="text-sm font-medium">No API tokens yet. Create one to get started.</p>
             </div>
           ) : (
             <div className="space-y-3">
-              <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+              <p className="text-xs text-muted-foreground">
                 Default API token created on sign up.
               </p>
               {keys.map((key) => (
                 <div
                   key={key.id}
-                  className={`relative flex items-center gap-2 p-3 rounded-lg border overflow-hidden ${
-                    theme === 'dark' 
-                      ? 'border-gray-700 bg-[#25262B]' 
-                      : 'border-gray-200 bg-gray-50'
-                  }`}
+                  className="relative flex items-center gap-2 p-3 rounded-lg border overflow-hidden border-border bg-card"
                   data-testid={`token-item-${key.id}`}
                 >
                   {/* Progress bar for active timer - Show if this key has active timer */}
                   {activeKeyId === key.id && timerData && timerData.remaining > 0 && (
                     <div
-                      className={`absolute bottom-0 left-0 h-1 transition-all duration-1000 ease-linear ${
-                        theme === 'dark' ? 'bg-green-500' : 'bg-green-500'
-                      }`}
+                      className="absolute bottom-0 left-0 h-1 transition-all duration-1000 ease-linear bg-green-500"
                       style={{ width: `${(timerData.remaining / 30) * 100}%` }}
                     />
                   )}
-                  
+
                   {/* Token Info */}
                   <div className="flex-1 z-10">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
+                      <span className="text-sm font-medium text-foreground">
                         {key.name}
                       </span>
                       {/* Show timer badge if this key has active timer */}
                       {activeKeyId === key.id && timerData && timerData.remaining > 0 && (
-                        <span className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded font-semibold ${
-                          theme === 'dark' ? 'bg-green-900/40 text-green-400' : 'bg-green-100 text-green-700'
-                        }`}>
+                        <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded font-semibold bg-green-500/10 text-green-600 dark:text-green-400">
                           <Clock className="w-3 h-3" />
                           {timerData.remaining}s
                         </span>
                       )}
                     </div>
-                    <div 
+                    <div
                       className="font-mono text-xs select-none"
                       style={{ userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none' }}
                     >
                       {showKeyIds[key.id] || fullKeyStore[key.id] ? (
-                        <span className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'} ${
-                          fullKeyStore[key.id] ? 'font-semibold' : ''
-                        }`}>
+                        <span className={`text-foreground ${fullKeyStore[key.id] ? 'font-semibold' : ''
+                          }`}>
                           {fullKeyStore[key.id] || key.prefix}
                         </span>
                       ) : (
-                        <span className={theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}>
+                        <span className="text-muted-foreground">
                           {getDisplayKey(key)}
                         </span>
                       )}
@@ -506,9 +474,7 @@ const ApiIntegrations = () => {
                     {!fullKeyStore[key.id] && (
                       <button
                         onClick={() => toggleKeyVisibility(key.id)}
-                        className={`p-2 rounded hover:bg-gray-100 ${
-                          theme === 'dark' ? 'hover:bg-gray-700 text-gray-400' : 'text-gray-500'
-                        } transition-colors`}
+                        className="p-2 rounded hover:bg-muted text-muted-foreground transition-colors"
                         data-testid={`toggle-visibility-${key.id}`}
                       >
                         {showKeyIds[key.id] ? (
@@ -522,9 +488,7 @@ const ApiIntegrations = () => {
                     {/* Copy */}
                     <button
                       onClick={() => copyToClipboard(getCopyKey(key))}
-                      className={`p-2 rounded hover:bg-gray-100 ${
-                        theme === 'dark' ? 'hover:bg-gray-700 text-gray-400' : 'text-gray-500'
-                      } transition-colors`}
+                      className="p-2 rounded hover:bg-muted text-muted-foreground transition-colors"
                       data-testid={`copy-token-${key.id}`}
                     >
                       {copiedKey === getCopyKey(key) ? (
@@ -539,11 +503,7 @@ const ApiIntegrations = () => {
                       onClick={() => handleDeleteKey(key.id)}
                       variant="ghost"
                       size="sm"
-                      className={`${
-                        theme === 'dark' 
-                          ? 'text-red-400 hover:text-red-300 hover:bg-red-900/20' 
-                          : 'text-red-600 hover:text-red-700 hover:bg-red-50'
-                      }`}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
                       data-testid={`delete-token-${key.id}`}
                     >
                       Delete
@@ -557,31 +517,19 @@ const ApiIntegrations = () => {
       </div>
 
       {/* Third-party apps & services Card */}
-      <div 
-        className={`border rounded-lg ${
-          theme === 'dark' 
-            ? 'border-gray-800 bg-[#25262B]' 
-            : 'border-gray-200 bg-gray-50'
-        }`}
+      <div
+        className="border rounded-lg bg-card border-border"
       >
-        <div className={`px-4 py-3 ${
-          theme === 'dark' ? 'bg-[#1A1B1E]' : 'bg-white'
-        } rounded-t-lg border-b ${
-          theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
-        }`}>
-          <h3 className={`text-base font-semibold mb-1.5 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+        <div className="px-4 py-3 bg-card rounded-t-lg border-b border-border">
+          <h3 className="text-base font-semibold mb-1.5 text-foreground">
             Third-party apps & services with access to your account
           </h3>
-          <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+          <p className="text-xs text-muted-foreground">
             These applications are connected to your account and can use API on your behalf.
           </p>
         </div>
         <div className="px-4 py-3">
-          <div className={`text-center py-8 px-4 rounded-lg ${
-            theme === 'dark' 
-              ? 'bg-[#25262B] text-gray-400' 
-              : 'bg-gray-50 text-gray-500'
-          }`}>
+          <div className="text-center py-8 px-4 rounded-lg bg-muted/30 text-muted-foreground">
             <p className="text-sm font-medium">No connected third-party apps</p>
           </div>
         </div>
@@ -589,23 +537,17 @@ const ApiIntegrations = () => {
 
       {/* Connected third-party accounts Section */}
       <div>
-        <h2 className={`text-xl font-bold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+        <h2 className="text-xl font-bold mb-4 text-foreground">
           Connected third-party accounts
         </h2>
 
         {/* Account-level integrations Card */}
-        <div 
-          className={`border rounded-lg mb-4 ${
-            theme === 'dark' 
-              ? 'border-gray-800 bg-[#25262B]' 
-              : 'border-gray-200 bg-gray-50'
-          }`}
+        <div
+          className="border rounded-lg mb-4 bg-card border-border"
         >
-          <div className={`flex items-center justify-between px-4 py-3 border-b ${
-            theme === 'dark' ? 'border-gray-800 bg-[#1A1B1E]' : 'border-gray-200 bg-white'
-          } rounded-t-lg`}>
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card rounded-t-lg">
             <div className="flex items-center gap-2">
-              <h3 className={`text-base font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+              <h3 className="text-base font-semibold text-foreground">
                 Account-level integrations
               </h3>
               <InfoIcon tooltip="Integrations that work across your entire account." />
@@ -613,23 +555,17 @@ const ApiIntegrations = () => {
             <Button
               size="sm"
               variant="outline"
-              className={theme === 'dark' ? 'border-gray-700 text-gray-300 hover:bg-gray-800' : ''}
+              className="border-border text-foreground hover:bg-muted"
             >
               Add account
             </Button>
           </div>
           <div className="px-4 py-3">
-            <div className={`text-center py-8 px-4 rounded-lg ${
-              theme === 'dark' 
-                ? 'bg-[#25262B] text-gray-400' 
-                : 'bg-gray-50 text-gray-500'
-            }`}>
+            <div className="text-center py-8 px-4 rounded-lg bg-muted/30 text-muted-foreground">
               <p className="text-sm font-medium mb-1.5">No integrations</p>
-              <a 
-                href="#" 
-                className={`text-xs inline-flex items-center gap-1 ${
-                  theme === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'
-                }`}
+              <a
+                href="#"
+                className="text-xs inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline"
               >
                 Learn more <ExternalLink className="w-3 h-3" />
               </a>
@@ -638,32 +574,20 @@ const ApiIntegrations = () => {
         </div>
 
         {/* Actor OAuth accounts Card */}
-        <div 
-          className={`border rounded-lg ${
-            theme === 'dark' 
-              ? 'border-gray-800 bg-[#25262B]' 
-              : 'border-gray-200 bg-gray-50'
-          }`}
+        <div
+          className="border rounded-lg bg-card border-border"
         >
-          <div className={`px-4 py-3 border-b ${
-            theme === 'dark' ? 'border-gray-800 bg-[#1A1B1E]' : 'border-gray-200 bg-white'
-          } rounded-t-lg`}>
-            <h3 className={`text-base font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+          <div className="px-4 py-3 border-b border-border bg-card rounded-t-lg">
+            <h3 className="text-base font-semibold text-foreground">
               Actor OAuth accounts
             </h3>
           </div>
           <div className="px-4 py-3">
-            <div className={`text-center py-8 px-4 rounded-lg ${
-              theme === 'dark' 
-                ? 'bg-[#25262B] text-gray-400' 
-                : 'bg-gray-50 text-gray-500'
-            }`}>
+            <div className="text-center py-8 px-4 rounded-lg bg-muted/30 text-muted-foreground">
               <p className="text-sm font-medium mb-1.5">No accounts connected</p>
-              <a 
-                href="#" 
-                className={`text-xs inline-flex items-center gap-1 ${
-                  theme === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'
-                }`}
+              <a
+                href="#"
+                className="text-xs inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline"
               >
                 Learn more <ExternalLink className="w-3 h-3" />
               </a>

@@ -113,7 +113,7 @@ const Sidebar = () => {
         console.error('Failed to load sidebar preference:', error);
       }
     };
-    
+
     loadSidebarPreference();
   }, [user]);
 
@@ -122,7 +122,7 @@ const Sidebar = () => {
     const saveSidebarState = async () => {
       // Save to localStorage immediately
       localStorage.setItem('sidebarCollapsed', isCollapsed.toString());
-      
+
       // Save to backend
       try {
         const token = localStorage.getItem('token');
@@ -137,7 +137,7 @@ const Sidebar = () => {
         console.error('Failed to save sidebar state to backend:', error);
       }
     };
-    
+
     saveSidebarState();
   }, [isCollapsed, user]);
 
@@ -172,9 +172,9 @@ const Sidebar = () => {
   useEffect(() => {
     const handleKeyDown = async (e) => {
       // Don't trigger shortcuts when user is typing in input fields
-      const isTypingInInput = 
-        e.target.tagName === 'INPUT' || 
-        e.target.tagName === 'TEXTAREA' || 
+      const isTypingInInput =
+        e.target.tagName === 'INPUT' ||
+        e.target.tagName === 'TEXTAREA' ||
         e.target.isContentEditable;
 
       // Check for Escape key to close any open modal
@@ -286,12 +286,8 @@ const Sidebar = () => {
         to={item.path}
         onClick={onClick}
         className={`flex items-center space-x-2.5 ${isCollapsed ? 'px-0 py-1.5 justify-center' : 'px-2.5 py-1.5'} rounded-md text-xs font-medium transition-colors ${isActive
-          ? theme === 'dark'
-            ? 'bg-[#2C2D30] text-white'
-            : 'bg-gray-100 text-gray-900'
-          : theme === 'dark'
-            ? 'text-gray-300 hover:bg-gray-800'
-            : 'text-gray-700 hover:bg-gray-50'
+          ? 'bg-accent text-accent-foreground'
+          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
           }`}
       >
         <item.icon className="w-4 h-4 flex-shrink-0" />
@@ -305,25 +301,17 @@ const Sidebar = () => {
         <TooltipTrigger asChild>
           {content}
         </TooltipTrigger>
-        <TooltipContent 
-          side="right" 
-          className={`flex items-center gap-2 ${
-            theme === 'dark' 
-              ? 'bg-gray-800 text-white border-gray-700' 
-              : 'bg-gray-900 text-white border-gray-800'
-          } border shadow-lg`}
+        <TooltipContent
+          side="right"
+          className="flex items-center gap-2"
         >
           <span className="font-medium">{item.label}</span>
           {item.shortcut && (
-            <div className="flex items-center gap-1 ml-2 pl-2 border-l border-gray-600">
+            <div className="flex items-center gap-1 ml-2 pl-2 border-l border-border">
               {item.shortcut.split(' ').map((key, idx) => (
                 <kbd
                   key={idx}
-                  className={`px-1.5 py-0.5 rounded text-xs font-mono ${
-                    theme === 'dark'
-                      ? 'bg-gray-700 text-gray-300'
-                      : 'bg-gray-800 text-gray-200'
-                  }`}
+                  className="px-1.5 py-0.5 rounded text-xs font-mono bg-muted text-muted-foreground"
                 >
                   {key}
                 </kbd>
@@ -339,16 +327,12 @@ const Sidebar = () => {
     <TooltipProvider delayDuration={500} skipDelayDuration={0}>
       <div className="relative h-screen">
         <div
-          className={`flex flex-col h-full transition-all duration-300 ease-in-out ${theme === 'dark'
-            ? 'bg-[#1A1B1E] text-gray-100 border-r border-gray-800'
-            : 'bg-white text-gray-800 border-r border-gray-200'
-            }`}
+          className="flex flex-col h-full transition-all duration-300 ease-in-out bg-background text-foreground border-r border-border"
           style={{ width: isCollapsed ? '60px' : '220px' }}
         >
           {/* Header with Logo, User Info, and Bell Icon */}
           <div
-            className={`px-4 py-2.5 border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
-              }`}
+            className="px-4 py-2.5 border-b border-border"
           >
             {!isCollapsed ? (
               <>
@@ -360,27 +344,20 @@ const Sidebar = () => {
                 {/* Search Bar with Bell Icon */}
                 <div className="flex items-center space-x-2">
                   <div
-                    className={`relative flex-1 cursor-pointer`}
+                    className="relative flex-1 cursor-pointer"
                     onClick={() => setIsSearchModalOpen(true)}
                   >
                     <Search
-                      className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
-                        }`}
+                      className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
                     />
                     <div
-                      className={`w-full pl-8 pr-16 py-1.5 rounded-md text-xs font-medium border transition-colors ${theme === 'dark'
-                        ? 'bg-[#25262B] border-gray-700 text-gray-400'
-                        : 'bg-white border-gray-300 text-gray-500'
-                        }`}
+                      className="w-full pl-8 pr-16 py-1.5 rounded-md text-xs font-medium border border-border bg-muted/50 text-muted-foreground transition-colors"
                     >
                       Search...
                     </div>
                     <div className="absolute right-2 bottom-1">
                       <kbd
-                        className={`px-1.5 py-0.5 rounded text-xs font-mono ${theme === 'dark'
-                          ? 'bg-gray-700 text-gray-300'
-                          : 'bg-gray-100 text-gray-600 border border-gray-300'
-                          }`}
+                        className="px-1.5 py-0.5 rounded text-xs font-mono bg-muted text-muted-foreground"
                       >
                         {shortcutKey}
                       </kbd>
@@ -389,21 +366,13 @@ const Sidebar = () => {
                   <button
                     ref={notificationButtonRef}
                     onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-                    className={`p-1.5 rounded-lg transition-colors flex-shrink-0 relative ${
-                      theme === 'dark'
-                        ? 'hover:bg-gray-800 text-gray-400'
-                        : 'hover:bg-gray-100 text-gray-600'
-                    }`}
+                    className="p-1.5 rounded-lg transition-colors flex-shrink-0 relative hover:bg-muted text-muted-foreground"
                     data-testid="notification-bell-button"
                   >
                     <Bell className="w-4 h-4" />
                     {unreadCount > 0 && (
                       <span
-                        className={`absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center ${
-                          theme === 'dark'
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-blue-600 text-white'
-                        }`}
+                        className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center bg-blue-600 text-white"
                       >
                         {unreadCount > 9 ? '9+' : unreadCount}
                       </span>
@@ -433,41 +402,28 @@ const Sidebar = () => {
                           navigate('/store');
                         }}
                         className={`w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${isStorePage
-                          ? theme === 'dark'
-                            ? 'bg-[#2C2D30] text-white'
-                            : 'bg-gray-100 text-gray-900'
-                          : theme === 'dark'
-                            ? 'text-gray-400 hover:bg-gray-800'
-                            : 'text-gray-600 hover:bg-gray-100'
+                          ? 'bg-accent text-accent-foreground'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                           }`}
                       >
                         <Store className="w-3.5 h-3.5" />
                         <span>Scrapi Store</span>
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent 
-                      side="right" 
-                      className={`flex items-center gap-2 ${
-                        theme === 'dark' 
-                          ? 'bg-gray-800 text-white border-gray-700' 
-                          : 'bg-gray-900 text-white border-gray-800'
-                      } border shadow-lg`}
+                    <TooltipContent
+                      side="right"
+                      className="flex items-center gap-2"
                     >
                       <span className="font-medium">Scrapi Store</span>
-                      <div className="flex items-center gap-1 ml-2 pl-2 border-l border-gray-600">
-                        <kbd className={`px-1.5 py-0.5 rounded text-xs font-mono ${
-                          theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-800 text-gray-200'
-                        }`}>S</kbd>
-                        <kbd className={`px-1.5 py-0.5 rounded text-xs font-mono ${
-                          theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-800 text-gray-200'
-                        }`}>O</kbd>
+                      <div className="flex items-center gap-1 ml-2 pl-2 border-l border-border">
+                        <kbd className="px-1.5 py-0.5 rounded text-xs font-mono bg-muted text-muted-foreground">S</kbd>
+                        <kbd className="px-1.5 py-0.5 rounded text-xs font-mono bg-muted text-muted-foreground">O</kbd>
                       </div>
                     </TooltipContent>
                   </Tooltip>
 
                   {/* Horizontal Divider after Scrapi Store */}
-                  <div className={`my-2 mx-2.5 border-t ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
-                    }`} />
+                  <div className="my-2 mx-2.5 border-t border-border" />
 
                   {/* Store items - always visible */}
                   <div className="mt-0.5 space-y-0.5">
@@ -486,10 +442,7 @@ const Sidebar = () => {
                 <div className="mb-1">
                   <button
                     onClick={() => toggleSection('development')}
-                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${theme === 'dark'
-                      ? 'text-gray-400 hover:bg-gray-800'
-                      : 'text-gray-600 hover:bg-gray-100'
-                      }`}
+                    className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors text-muted-foreground hover:bg-muted hover:text-foreground"
                   >
                     <span>Development</span>
                     {expandedSections.development ? (
@@ -535,40 +488,27 @@ const Sidebar = () => {
                         navigate('/store');
                       }}
                       className={`w-full flex items-center justify-center p-1.5 rounded-md transition-colors ${isStorePage
-                        ? theme === 'dark'
-                          ? 'bg-[#2C2D30] text-white'
-                          : 'bg-gray-100 text-gray-900'
-                        : theme === 'dark'
-                          ? 'text-gray-400 hover:bg-gray-800'
-                          : 'text-gray-600 hover:bg-gray-100'
+                        ? 'bg-accent text-accent-foreground'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                         }`}
                     >
                       <Store className="w-4 h-4" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent 
-                    side="right" 
-                    className={`flex items-center gap-2 ${
-                      theme === 'dark' 
-                        ? 'bg-gray-800 text-white border-gray-700' 
-                        : 'bg-gray-900 text-white border-gray-800'
-                    } border shadow-lg`}
+                  <TooltipContent
+                    side="right"
+                    className="flex items-center gap-2"
                   >
                     <span className="font-medium">Scrapi Store</span>
-                    <div className="flex items-center gap-1 ml-2 pl-2 border-l border-gray-600">
-                      <kbd className={`px-1.5 py-0.5 rounded text-xs font-mono ${
-                        theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-800 text-gray-200'
-                      }`}>S</kbd>
-                      <kbd className={`px-1.5 py-0.5 rounded text-xs font-mono ${
-                        theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-800 text-gray-200'
-                      }`}>O</kbd>
+                    <div className="flex items-center gap-1 ml-2 pl-2 border-l border-border">
+                      <kbd className="px-1.5 py-0.5 rounded text-xs font-mono bg-muted text-muted-foreground">S</kbd>
+                      <kbd className="px-1.5 py-0.5 rounded text-xs font-mono bg-muted text-muted-foreground">O</kbd>
                     </div>
                   </TooltipContent>
                 </Tooltip>
 
                 {/* Divider */}
-                <div className={`my-1.5 mx-2 border-t ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
-                  }`} />
+                <div className="my-1.5 mx-2 border-t border-border" />
 
                 {/* Store items */}
                 {scrapiStoreItems.map((item) => (
@@ -581,8 +521,7 @@ const Sidebar = () => {
                 ))}
 
                 {/* Divider before development */}
-                <div className={`my-1.5 mx-2 border-t ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
-                  }`} />
+                <div className="my-1.5 mx-2 border-t border-border" />
 
                 {/* Development items */}
                 {developmentItems.map((item) => (
@@ -594,8 +533,7 @@ const Sidebar = () => {
                 ))}
 
                 {/* Divider before bottom items */}
-                <div className={`my-1.5 mx-2 border-t ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
-                  }`} />
+                <div className="my-1.5 mx-2 border-t border-border" />
 
                 {/* Bottom items */}
                 {bottomItems.map((item) => (
@@ -611,8 +549,7 @@ const Sidebar = () => {
 
           {/* Bottom Section - RAM Usage & Upgrade */}
           <div
-            className={`px-3.5 py-2.5 border-t ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
-              }`}
+            className="px-3.5 py-2.5 border-t border-border"
           >
             {!isCollapsed ? (
               <>
@@ -620,25 +557,22 @@ const Sidebar = () => {
                 <div className="mb-2.5">
                   <div className="flex justify-between text-xs mb-1">
                     <span
-                      className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}
+                      className="text-muted-foreground"
                     >
                       RAM Usage
                     </span>
                     <span
-                      className={`font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                        }`}
+                      className="font-medium text-foreground"
                     >
                       0 MB / 8 GB
                     </span>
                   </div>
                   <Progress
                     value={0}
-                    className={`h-1.5 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'
-                      }`}
+                    className="h-1.5 bg-muted"
                   />
                   <div
-                    className={`text-xs mt-1 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'
-                      }`}
+                    className="text-xs mt-1 text-muted-foreground"
                   >
                     $0.00 / $5.00
                   </div>
@@ -646,27 +580,22 @@ const Sidebar = () => {
 
                 {/* Upgrade Button */}
                 <button
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${theme === 'dark'
-                    ? 'bg-[#2C2D30] text-gray-200 hover:bg-gray-700 border border-gray-700'
-                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
-                    }`}
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors bg-card text-card-foreground hover:bg-muted border border-border"
                 >
                   <span>Upgrade to Starter</span>
                   <ChevronRight className="w-4 h-4" />
                 </button>
 
                 {/* Scrapi Logo */}
-                <div className={`flex items-center justify-between mt-2.5 pt-2.5 border-t ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
-                  }`}>
+                <div className="flex items-center justify-between mt-2.5 pt-2.5 border-t border-border">
                   <div className="flex items-center space-x-2">
-                    <img 
-                      src="/logo.png" 
-                      alt="Scrapi" 
-                      className={`w-5 h-5 ${theme === 'dark' ? 'brightness-0 invert' : ''}`}
+                    <img
+                      src="/scrapi-logo-small.svg"
+                      alt="Scrapi"
+                      className="w-5 h-5 dark:brightness-0 dark:invert"
                     />
                     <span
-                      className={`text-sm font-semibold ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
-                        }`}
+                      className="text-sm font-semibold text-foreground"
                     >
                       scrapi
                     </span>
@@ -674,10 +603,7 @@ const Sidebar = () => {
                   <div className="flex items-center space-x-1">
                     {/* Round Question Mark Icon */}
                     <button
-                      className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${theme === 'dark'
-                        ? 'hover:bg-gray-800 text-gray-400 border border-gray-700'
-                        : 'hover:bg-gray-100 text-gray-500 border border-gray-300'
-                        }`}
+                      className="w-6 h-6 rounded-full flex items-center justify-center transition-colors hover:bg-muted text-muted-foreground border border-border"
                       title="Help"
                     >
                       <HelpCircle className="w-4 h-4" />
@@ -687,30 +613,19 @@ const Sidebar = () => {
                       <TooltipTrigger asChild>
                         <button
                           onClick={() => setIsCollapsed(true)}
-                          className={`p-1.5 rounded transition-colors ${theme === 'dark'
-                            ? 'hover:bg-gray-800 text-gray-400'
-                            : 'hover:bg-gray-100 text-gray-500'
-                            }`}
+                          className="p-1.5 rounded transition-colors hover:bg-muted text-muted-foreground"
                         >
                           <PanelLeftClose className="w-4 h-4" />
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent 
-                        side="right" 
-                        className={`flex items-center gap-2 ${
-                          theme === 'dark' 
-                            ? 'bg-gray-800 text-white border-gray-700' 
-                            : 'bg-gray-900 text-white border-gray-800'
-                        } border shadow-lg`}
+                      <TooltipContent
+                        side="right"
+                        className="flex items-center gap-2"
                       >
                         <span className="font-medium">Collapse Sidebar</span>
-                        <div className="flex items-center gap-1 ml-2 pl-2 border-l border-gray-600">
-                          <kbd className={`px-1.5 py-0.5 rounded text-xs font-mono ${
-                            theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-800 text-gray-200'
-                          }`}>{isMac ? '⌘' : 'Ctrl'}</kbd>
-                          <kbd className={`px-1.5 py-0.5 rounded text-xs font-mono ${
-                            theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-800 text-gray-200'
-                          }`}>B</kbd>
+                        <div className="flex items-center gap-1 ml-2 pl-2 border-l border-border">
+                          <kbd className="px-1.5 py-0.5 rounded text-xs font-mono bg-muted text-muted-foreground">{isMac ? '⌘' : 'Ctrl'}</kbd>
+                          <kbd className="px-1.5 py-0.5 rounded text-xs font-mono bg-muted text-muted-foreground">B</kbd>
                         </div>
                       </TooltipContent>
                     </Tooltip>
@@ -723,16 +638,12 @@ const Sidebar = () => {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
-                      className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${theme === 'dark'
-                        ? 'hover:bg-gray-800 text-gray-400 border border-gray-700'
-                        : 'hover:bg-gray-100 text-gray-500 border border-gray-300'
-                        }`}
+                      className="w-6 h-6 rounded-full flex items-center justify-center transition-colors hover:bg-muted text-muted-foreground border border-border"
                     >
                       <HelpCircle className="w-4 h-4" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent side="right" className={`${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'
-                    }`}>
+                  <TooltipContent side="right">
                     Help
                   </TooltipContent>
                 </Tooltip>
@@ -741,30 +652,19 @@ const Sidebar = () => {
                   <TooltipTrigger asChild>
                     <button
                       onClick={() => setIsCollapsed(false)}
-                      className={`p-1.5 rounded transition-colors ${theme === 'dark'
-                        ? 'hover:bg-gray-800 text-gray-400'
-                        : 'hover:bg-gray-100 text-gray-500'
-                        }`}
+                      className="p-1.5 rounded transition-colors hover:bg-muted text-muted-foreground"
                     >
                       <PanelLeft className="w-4 h-4" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent 
-                    side="right" 
-                    className={`flex items-center gap-2 ${
-                      theme === 'dark' 
-                        ? 'bg-gray-800 text-white border-gray-700' 
-                        : 'bg-gray-900 text-white border-gray-800'
-                    } border shadow-lg`}
+                  <TooltipContent
+                    side="right"
+                    className="flex items-center gap-2"
                   >
                     <span className="font-medium">Expand Sidebar</span>
-                    <div className="flex items-center gap-1 ml-2 pl-2 border-l border-gray-600">
-                      <kbd className={`px-1.5 py-0.5 rounded text-xs font-mono ${
-                        theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-800 text-gray-200'
-                      }`}>{isMac ? '⌘' : 'Ctrl'}</kbd>
-                      <kbd className={`px-1.5 py-0.5 rounded text-xs font-mono ${
-                        theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-800 text-gray-200'
-                      }`}>B</kbd>
+                    <div className="flex items-center gap-1 ml-2 pl-2 border-l border-border">
+                      <kbd className="px-1.5 py-0.5 rounded text-xs font-mono bg-muted text-muted-foreground">{isMac ? '⌘' : 'Ctrl'}</kbd>
+                      <kbd className="px-1.5 py-0.5 rounded text-xs font-mono bg-muted text-muted-foreground">B</kbd>
                     </div>
                   </TooltipContent>
                 </Tooltip>
@@ -774,21 +674,21 @@ const Sidebar = () => {
         </div>
 
         {/* Global Search Modal */}
-        <GlobalSearch 
-          isOpen={isSearchModalOpen} 
-          onClose={() => setIsSearchModalOpen(false)} 
+        <GlobalSearch
+          isOpen={isSearchModalOpen}
+          onClose={() => setIsSearchModalOpen(false)}
         />
+
+        {/* Notification Dropdown */}
+        <NotificationDropdown
+          isOpen={isNotificationOpen}
+          onClose={() => setIsNotificationOpen(false)}
+          triggerRef={notificationButtonRef}
+        />
+
+        {/* Shortcuts Modal */}
+        <ShortcutsModal />
       </div>
-      
-      {/* Notification Dropdown */}
-      <NotificationDropdown
-        isOpen={isNotificationOpen}
-        onClose={() => setIsNotificationOpen(false)}
-        triggerRef={notificationButtonRef}
-      />
-      
-      {/* Shortcuts Modal */}
-      <ShortcutsModal />
     </TooltipProvider>
   );
 };

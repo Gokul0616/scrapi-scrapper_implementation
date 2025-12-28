@@ -26,11 +26,11 @@ const AccountDeletionPending = ({ deletionInfo, onReactivate }) => {
       await axios.post(`${API_URL}/api/settings/account/reactivate`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       if (onReactivate) {
         onReactivate();
       }
-      
+
       // Redirect to home after reactivation
       navigate('/home');
     } catch (error) {
@@ -67,19 +67,17 @@ const AccountDeletionPending = ({ deletionInfo, onReactivate }) => {
   };
 
   return (
-    <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${theme === 'dark' ? 'bg-black/80' : 'bg-black/50'}`}>
-      <div className={`max-w-lg w-full p-6 rounded-lg shadow-lg ${
-        theme === 'dark' ? 'bg-[#1e1e1e] border border-gray-700' : 'bg-white border border-gray-300'
-      }`}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+      <div className="max-w-lg w-full p-6 rounded-lg shadow-lg bg-popover border border-border">
         <div className="flex items-start gap-3 mb-5">
           <div className="flex-shrink-0">
-            <AlertCircle className={`w-8 h-8 ${theme === 'dark' ? 'text-red-400' : 'text-red-500'}`} />
+            <AlertCircle className="w-8 h-8 text-destructive" />
           </div>
           <div className="flex-1">
-            <h2 className={`text-xl font-semibold mb-1 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+            <h2 className="text-xl font-semibold mb-1 text-foreground">
               Account Deletion Pending
             </h2>
-            <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+            <p className="text-sm text-muted-foreground">
               Deletion requested on{' '}
               <span className="font-medium">
                 {formatDate(deletionInfo.deletion_scheduled_at)}
@@ -88,26 +86,22 @@ const AccountDeletionPending = ({ deletionInfo, onReactivate }) => {
           </div>
         </div>
 
-        <div className={`p-4 rounded-lg mb-4 border ${
-          theme === 'dark' ? 'bg-[#25262B] border-gray-700' : 'bg-gray-50 border-gray-200'
-        }`}>
+        <div className="p-4 rounded-lg mb-4 border bg-muted border-border">
           <div className="text-center">
-            <p className={`text-3xl font-bold mb-1 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+            <p className="text-3xl font-bold mb-1 text-foreground">
               {deletionInfo.days_remaining} {deletionInfo.days_remaining === 1 ? 'day' : 'days'}
             </p>
-            <p className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-600'}`}>
+            <p className="text-xs text-muted-foreground">
               Permanent deletion: {formatDate(deletionInfo.permanent_deletion_at)}
             </p>
           </div>
         </div>
 
-        <div className={`p-4 rounded-lg mb-5 border ${
-          theme === 'dark' ? 'bg-[#25262B] border-gray-700' : 'bg-gray-50 border-gray-200'
-        }`}>
-          <h3 className={`text-sm font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+        <div className="p-4 rounded-lg mb-5 border bg-muted border-border">
+          <h3 className="text-sm font-semibold mb-2 text-foreground">
             What will be deleted:
           </h3>
-          <ul className={`space-y-1.5 text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+          <ul className="space-y-1.5 text-xs text-muted-foreground">
             <li>• All actors and actor tasks</li>
             <li>• All schedules and run history</li>
             <li>• All datasets and saved tasks</li>
@@ -120,7 +114,7 @@ const AccountDeletionPending = ({ deletionInfo, onReactivate }) => {
           <Button
             onClick={handleReactivate}
             disabled={isReactivating}
-            className={`flex-1 font-semibold ${theme === 'dark' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-600 hover:bg-blue-700'} text-white`}
+            className="flex-1 font-semibold bg-blue-600 hover:bg-blue-700 text-white"
             data-testid="reactivate-account-btn"
           >
             {isReactivating ? 'Reactivating...' : 'Reactivate Account'}
@@ -128,18 +122,18 @@ const AccountDeletionPending = ({ deletionInfo, onReactivate }) => {
           <Button
             onClick={handleLogout}
             variant="outline"
-            className={`px-5 ${theme === 'dark' ? 'border-gray-700 text-gray-300 hover:bg-gray-800' : 'border-gray-300 hover:bg-gray-50'}`}
+            className="px-5 border-border hover:bg-muted text-muted-foreground"
             data-testid="logout-btn"
           >
             Logout
           </Button>
         </div>
 
-        <p className={`text-center text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
+        <p className="text-center text-xs text-muted-foreground">
           Reactivating will restore full access to your account
         </p>
       </div>
-      
+
       {/* Alert Modal */}
       <AlertModal
         show={showAlert}

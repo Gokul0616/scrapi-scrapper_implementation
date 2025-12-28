@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import { themeColors } from '../themeColors';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -19,7 +20,7 @@ export const ThemeProvider = ({ children }) => {
     // Check localStorage for saved theme
     const savedTheme = localStorage.getItem('theme');
     const savedPreference = localStorage.getItem('themePreference');
-    
+
     if (savedPreference === 'system' || savedTheme === 'system') {
       // Check system preference
       return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -42,17 +43,17 @@ export const ThemeProvider = ({ children }) => {
           const response = await axios.get(`${API}/settings/preferences`, {
             headers: { Authorization: `Bearer ${token}` }
           });
-          
+
           if (response.data && response.data.theme_preference) {
             const backendTheme = response.data.theme_preference;
             const localPreference = localStorage.getItem('themePreference');
-            
+
             // Only update if backend theme differs from local
             if (backendTheme !== localPreference) {
               // Update without calling setThemePreference to avoid unnecessary API call
               setThemePreferenceState(backendTheme);
               localStorage.setItem('themePreference', backendTheme);
-              
+
               if (backendTheme === 'system') {
                 const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
                 const actualTheme = mediaQuery.matches ? 'dark' : 'light';
@@ -72,7 +73,7 @@ export const ThemeProvider = ({ children }) => {
         }
       }
     };
-    
+
     fetchThemeFromBackend();
   }, [backendThemeLoaded]);
 
@@ -83,17 +84,31 @@ export const ThemeProvider = ({ children }) => {
         loadThemeFromBackend(event.detail.theme);
       }
     };
-    
+
     window.addEventListener('backendThemeLoaded', handleBackendTheme);
     return () => window.removeEventListener('backendThemeLoaded', handleBackendTheme);
   }, [backendThemeLoaded]);
 
+
+
   useEffect(() => {
     // Update document class for CSS
+    const root = document.documentElement;
+
     if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
+      root.classList.add('dark');
+
+      // Apply dark theme colors
+      Object.entries(themeColors.dark).forEach(([key, value]) => {
+        root.style.setProperty(key, value);
+      });
     } else {
-      document.documentElement.classList.remove('dark');
+      root.classList.remove('dark');
+
+      // Apply light theme colors
+      Object.entries(themeColors.light).forEach(([key, value]) => {
+        root.style.setProperty(key, value);
+      });
     }
   }, [theme]);
 
@@ -116,7 +131,7 @@ export const ThemeProvider = ({ children }) => {
   const setThemePreference = async (newPreference) => {
     setThemePreferenceState(newPreference);
     localStorage.setItem('themePreference', newPreference);
-    
+
     // Apply theme based on preference
     let actualTheme;
     if (newPreference === 'system') {
@@ -127,10 +142,10 @@ export const ThemeProvider = ({ children }) => {
       actualTheme = newPreference;
       setThemeState(newPreference);
     }
-    
+
     // Save the actual theme to localStorage as well
     localStorage.setItem('theme', actualTheme);
-    
+
     // Save to backend API
     try {
       const token = localStorage.getItem('token');
@@ -149,14 +164,14 @@ export const ThemeProvider = ({ children }) => {
 
   const loadThemeFromBackend = (backendTheme) => {
     if (!backendTheme || backendThemeLoaded) return;
-    
+
     const localPreference = localStorage.getItem('themePreference');
-    
+
     // If backend theme differs from local, use backend theme
     if (backendTheme !== localPreference) {
       setThemePreference(backendTheme);
     }
-    
+
     setBackendThemeLoaded(true);
   };
 
@@ -166,13 +181,13 @@ export const ThemeProvider = ({ children }) => {
   };
 
   return (
-    <ThemeContext.Provider value={{ 
-      theme, 
-      setTheme, 
-      toggleTheme, 
-      themePreference, 
+    <ThemeContext.Provider value={{
+      theme,
+      setTheme,
+      toggleTheme,
+      themePreference,
       setThemePreference,
-      loadThemeFromBackend 
+      loadThemeFromBackend
     }}>
       {children}
     </ThemeContext.Provider>
