@@ -305,11 +305,11 @@ function Store() {
           <button
             onClick={handleBackToLanding}
             data-testid="back-to-landing-button"
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] font-medium transition-all border ${
-              theme === 'dark'
-                ? 'bg-card border-border text-foreground hover:bg-muted/50'
-                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-            }`}
+            className={`text-[14px] font-medium flex items-center gap-1 transition-colors ${
+                  theme === 'dark' 
+                    ? 'text-blue-400 hover:text-blue-300' 
+                    : 'text-blue-600 hover:text-blue-700'
+                }`}
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             Back to Store
