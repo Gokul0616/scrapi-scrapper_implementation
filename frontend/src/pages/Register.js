@@ -17,7 +17,8 @@ const Register = () => {
     email: '',
     otp: '',
     accountType: '',
-    fullName: '',
+    firstName: '',
+    lastName: '',
     organizationName: '',
     password: '',
     confirmPassword: ''
