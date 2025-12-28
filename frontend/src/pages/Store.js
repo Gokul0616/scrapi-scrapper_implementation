@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Star, Users, ChevronDown } from 'lucide-react';
+import { Search, Star, Users, ChevronDown, ArrowLeft } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { SkeletonGrid } from '../components/SkeletonLoader';
 
