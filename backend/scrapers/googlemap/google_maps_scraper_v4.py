@@ -114,23 +114,11 @@ class GoogleMapsScraperV4(BaseScraper):
         # Reset results for this scrape
         self.results = []
         
-        # Setup proxy configuration if available
-        proxy_config = None
-        if use_proxy:
-            try:
-                # Check if scraper engine has proxy support
-                if hasattr(self.engine, 'proxy_urls') and self.engine.proxy_urls:
-                    proxy_config = ProxyConfiguration(proxy_urls=self.engine.proxy_urls)
-                    logger.info(f"Using proxy configuration with {len(self.engine.proxy_urls)} proxies")
-            except Exception as e:
-                logger.warning(f"Proxy setup failed, continuing without proxy: {e}")
-        
         # Create Crawlee crawler
         crawler = PlaywrightCrawler(
             max_concurrency=max_concurrency,
             max_requests_per_crawl=max_results * 2,  # Rough limit
             headless=True,
-            proxy_configuration=proxy_config,
             # Use Chromium for better compatibility
             browser_type='chromium',
         )
