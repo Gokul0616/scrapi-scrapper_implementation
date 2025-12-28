@@ -393,9 +393,9 @@ class GoogleMapsScraperV4(BaseScraper):
             self.results.append(place_data)
             
             # Update progress
-            context.user_data['places_found'] += 1
+            self.current_config['places_found'] += 1
             if progress_callback:
-                await progress_callback(f"📊 Extracted {context.user_data['places_found']} places")
+                await progress_callback(f"📊 Extracted {self.current_config['places_found']} places")
             
             # Push to Crawlee dataset (for export)
             await context.push_data(place_data)
