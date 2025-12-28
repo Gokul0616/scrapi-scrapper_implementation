@@ -202,7 +202,7 @@ function Store() {
           </div>
 
           {/* Search Bar */}
-          <div className="mb-7 max-w-[640px] mx-auto">
+          <div className="mb-5 max-w-[640px] mx-auto">
             <div className="relative">
               <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 w-[18px] h-[18px] ${
                 theme === 'dark' ? 'text-muted-foreground' : 'text-gray-400'
@@ -223,6 +223,62 @@ function Store() {
                 }`}
               />
             </div>
+          </div>
+
+          {/* Filter Dropdowns */}
+          <div className="mb-7 flex items-center justify-center gap-3 flex-wrap">
+            <CustomDropdown
+              value={selectedCategory}
+              onChange={(val) => setSelectedCategory(val)}
+              options={[
+                { value: 'all', label: 'All categories' },
+                ...categories.filter(c => c.id !== 'all').map(cat => ({
+                  value: cat.id,
+                  label: cat.name
+                }))
+              ]}
+              placeholder="All categories"
+              testId="category-filter-landing"
+            />
+
+            <CustomDropdown
+              value={selectedPricing}
+              onChange={(val) => setSelectedPricing(val)}
+              options={[
+                { value: 'all', label: 'All pricing models' },
+                { value: 'free', label: 'Free' },
+                { value: 'pay_per_result', label: 'Pay per result' },
+                { value: 'pay_per_event', label: 'Pay per event' },
+                { value: 'pay_per_usage', label: 'Pay per usage' },
+                { value: 'rental', label: 'Rental' }
+              ]}
+              placeholder="All pricing models"
+              testId="pricing-filter-landing"
+            />
+
+            <CustomDropdown
+              value={selectedDeveloper}
+              onChange={(val) => setSelectedDeveloper(val)}
+              options={developers.map(dev => ({
+                value: dev.id,
+                label: dev.name
+              }))}
+              placeholder="All developers"
+              testId="developer-filter-landing"
+            />
+
+            <CustomDropdown
+              value={sortBy}
+              onChange={(val) => setSortBy(val)}
+              options={[
+                { value: 'relevant', label: 'Most relevant' },
+                { value: 'rating', label: 'Highest rated' },
+                { value: 'newest', label: 'Newest' },
+                { value: 'name', label: 'Name' }
+              ]}
+              placeholder="Most relevant"
+              testId="sort-filter-landing"
+            />
           </div>
 
           {/* Category Pills */}
