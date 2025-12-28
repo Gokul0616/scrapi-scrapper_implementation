@@ -327,7 +327,13 @@ function Home() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {recentRuns.length > 0 ? (
+                    {loadingRuns ? (
+                      <>
+                        {Array.from({ length: 5 }).map((_, idx) => (
+                          <RunRowSkeleton key={idx} />
+                        ))}
+                      </>
+                    ) : recentRuns.length > 0 ? (
                       recentRuns.map((run) => (
                         <tr
                           key={run.id}
