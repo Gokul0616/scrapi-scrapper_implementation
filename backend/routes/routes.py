@@ -157,14 +157,9 @@ async def register(user_data: UserCreate):
     
     generated_username = generate_unique_username(existing_usernames)
     
-    # Parse full name if provided
-    first_name = None
-    last_name = None
-    if user_data.full_name:
-        parts = user_data.full_name.strip().split(' ', 1)
-        first_name = parts[0]
-        if len(parts) > 1:
-            last_name = parts[1]
+    # Use provided first_name and last_name directly
+    first_name = user_data.first_name
+    last_name = user_data.last_name
 
     # Create user with 'user' role (normal user from scraper website)
     from models import User
