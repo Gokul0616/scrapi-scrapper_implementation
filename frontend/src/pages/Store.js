@@ -1,58 +1,93 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Star, Users, TrendingUp } from 'lucide-react';
+import { Search, Star, Users, ChevronDown } from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
 function Store() {
   const navigate = useNavigate();
+  const { theme } = useTheme();
+  const [view, setView] = useState('landing'); // 'landing' or 'all'
   const [actors, setActors] = useState([]);
-  const [filteredActors, setFilteredActors] = useState([]);
+  const [featuredActors, setFeaturedActors] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [developers, setDevelopers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-
-  const categories = [
-    { id: 'all', name: 'All' },
-    { id: 'social', name: 'Social media' },
-    { id: 'ai', name: 'AI' },
-    { id: 'agents', name: 'Agents' },
-    { id: 'lead', name: 'Lead generation' },
-    { id: 'ecommerce', name: 'E-commerce' },
-    { id: 'seo', name: 'SEO tools' },
-    { id: 'jobs', name: 'Jobs' },
-    { id: 'mcp', name: 'MCP servers' },
-    { id: 'news', name: 'News' },
-    { id: 'realestate', name: 'Real estate' },
-    { id: 'developer', name: 'Developer tools' },
-    { id: 'travel', name: 'Travel' },
-    { id: 'videos', name: 'Videos' },
-    { id: 'automation', name: 'Automation' },
-    { id: 'integrations', name: 'Integrations' },
-    { id: 'opensource', name: 'Open source' },
-    { id: 'other', name: 'Other' }
-  ];
+  const [selectedDeveloper, setSelectedDeveloper] = useState('all');
+  const [selectedPricing, setSelectedPricing] = useState('all');
+  const [sortBy, setSortBy] = useState('relevant');
+  const [totalActors, setTotalActors] = useState(0);
 
   useEffect(() => {
-    fetchActors();
+    fetchInitialData();
   }, []);
 
   useEffect(() => {
-    filterActors();
-  }, [searchQuery, selectedCategory, actors]);
+    if (view === 'all') {
+      fetchAllActors();
+    }
+  }, [view, searchQuery, selectedCategory, selectedDeveloper, sortBy]);
 
-  const fetchActors = async () => {
+  const fetchInitialData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${BACKEND_URL}/api/actors`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      
+      // Fetch categories
+      const categoriesRes = await fetch(`${BACKEND_URL}/api/store/categories`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const categoriesData = await categoriesRes.json();
+      setCategories(categoriesData);
+      
+      // Fetch featured actors for landing
+      const featuredRes = await fetch(`${BACKEND_URL}/api/store/featured?limit=6`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const featuredData = await featuredRes.json();
+      setFeaturedActors(featuredData);
+      
+      // Fetch developers
+      const developersRes = await fetch(`${BACKEND_URL}/api/store/developers`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const developersData = await developersRes.json();
+      setDevelopers([{ id: 'all', name: 'All developers' }, ...developersData]);
+      
+      // Get total count
+      const totalCategory = categoriesData.find(c => c.id === 'all');
+      setTotalActors(totalCategory?.count || 0);
+      
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching initial data:', error);
+      setLoading(false);
+    }
+  };
+
+  const fetchAllActors = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      const params = new URLSearchParams({
+        skip: '0',
+        limit: '50',
+        sort_by: sortBy
+      });
+      
+      if (searchQuery) params.append('search', searchQuery);
+      if (selectedCategory !== 'all') params.append('category', selectedCategory);
+      if (selectedDeveloper !== 'all') params.append('developer', selectedDeveloper);
+      
+      const response = await fetch(`${BACKEND_URL}/api/store/actors?${params}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
-      setActors(data);
-      setFilteredActors(data);
+      setActors(data.actors || []);
+      setTotalActors(data.total || 0);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching actors:', error);
@@ -60,139 +95,347 @@ function Store() {
     }
   };
 
-  const filterActors = () => {
-    let filtered = [...actors];
-
-    // Search filter
-    if (searchQuery) {
-      filtered = filtered.filter(actor =>
-        actor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        actor.description?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // Category filter
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(actor =>
-        actor.category?.toLowerCase().includes(selectedCategory)
-      );
-    }
-
-    setFilteredActors(filtered);
+  const handleViewAll = () => {
+    setView('all');
   };
 
-  const getCategoryCount = (categoryId) => {
-    if (categoryId === 'all') return actors.length;
-    return actors.filter(actor =>
-      actor.category?.toLowerCase().includes(categoryId)
-    ).length;
+  const handleCategoryClick = (categoryId) => {
+    setSelectedCategory(categoryId);
+    if (view === 'landing') {
+      setView('all');
+    }
   };
 
+  const ActorCard = ({ actor }) => (
+    <div
+      onClick={() => navigate(`/actor/${actor.id}`)}
+      className={`border rounded-xl p-5 hover:shadow-lg transition-all cursor-pointer group ${
+        theme === 'dark' 
+          ? 'bg-[#1A1B1E] border-gray-800 hover:border-gray-700' 
+          : 'bg-white border-gray-200 hover:border-gray-400'
+      }`}
+    >
+      {/* Actor Icon and Info */}
+      <div className="flex items-start gap-3 mb-4">
+        <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-2xl flex-shrink-0 ${
+          theme === 'dark' ? 'bg-gray-800' : 'bg-gradient-to-br from-gray-100 to-gray-200'
+        }`}>
+          {actor.icon || '🗺️'}
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className={`font-semibold mb-1 group-hover:text-blue-600 text-base leading-tight ${
+            theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+          }`}>
+            {actor.name}
+          </h3>
+          <p className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
+            {actor.author_name || 'unknown'}
+          </p>
+        </div>
+      </div>
+
+      {/* Description */}
+      <p className={`text-sm mb-4 line-clamp-3 min-h-[3.6rem] leading-relaxed ${
+        theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+      }`}>
+        {actor.description || 'No description available'}
+      </p>
+
+      {/* Stats */}
+      <div className={`flex items-center gap-3 text-xs ${
+        theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+      }`}>
+        <div className="flex items-center gap-1">
+          <Users className="w-3.5 h-3.5" />
+          <span className="font-medium">{actor.runs_count || '0'}</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+          <span className="font-medium">{actor.rating || '4.8'}</span>
+          <span className={theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}>
+            ({actor.reviews_count || '0'})
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Landing View
+  if (view === 'landing') {
+    return (
+      <div className={`min-h-screen transition-colors ${
+        theme === 'dark' ? 'bg-[#0F1014]' : 'bg-gray-50'
+      }`}>
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          
+          {/* Header */}
+          <div className="mb-8 text-center">
+            <h1 className={`text-4xl font-bold mb-3 ${
+              theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+            }`}>
+              Apify Store
+            </h1>
+            <p className={`text-lg ${
+              theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+            }`}>
+              Discover and use ready-made actors for your data extraction needs
+            </p>
+          </div>
+
+          {/* Search Bar */}
+          <div className="mb-6 max-w-2xl mx-auto">
+            <div className="relative">
+              <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 ${
+                theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+              }`} />
+              <input
+                type="text"
+                placeholder="Search for Actors"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  if (e.target.value) setView('all');
+                }}
+                className={`w-full pl-12 pr-4 py-3.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base transition-colors ${
+                  theme === 'dark' 
+                    ? 'bg-[#1A1B1E] border-gray-800 text-gray-100 placeholder-gray-500' 
+                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+                }`}
+              />
+            </div>
+          </div>
+
+          {/* Category Pills */}
+          <div className="mb-8 flex flex-wrap gap-2 justify-center">
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => handleCategoryClick(category.id)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  selectedCategory === category.id
+                    ? theme === 'dark'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-900 text-white'
+                    : theme === 'dark'
+                      ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {category.name}
+              </button>
+            ))}
+          </div>
+
+          {/* All Actors Section */}
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className={`text-2xl font-bold ${
+                theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+              }`}>
+                All Actors
+              </h2>
+              <button 
+                onClick={handleViewAll}
+                className={`text-sm font-medium flex items-center gap-1 transition-colors ${
+                  theme === 'dark' 
+                    ? 'text-gray-400 hover:text-gray-200' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                View all →
+              </button>
+            </div>
+
+            {loading ? (
+              <div className="text-center py-12">
+                <div className={`animate-spin rounded-full h-12 w-12 border-b-2 mx-auto ${
+                  theme === 'dark' ? 'border-blue-500' : 'border-gray-900'
+                }`}></div>
+              </div>
+            ) : featuredActors.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {featuredActors.map((actor) => (
+                  <ActorCard key={actor.id} actor={actor} />
+                ))}
+              </div>
+            ) : (
+              <div className={`text-center py-12 rounded-lg border ${
+                theme === 'dark' 
+                  ? 'bg-gray-900/50 border-gray-800' 
+                  : 'bg-gray-50 border-gray-200'
+              }`}>
+                <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}>
+                  No actors found
+                </p>
+              </div>
+            )}
+          </div>
+
+        </div>
+      </div>
+    );
+  }
+
+  // All Actors View
   return (
-    <div className="min-h-screen bg-white">
+    <div className={`min-h-screen transition-colors ${
+      theme === 'dark' ? 'bg-[#0F1014]' : 'bg-gray-50'
+    }`}>
       <div className="max-w-7xl mx-auto px-6 py-8">
         
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">Apify Store</h1>
-          <p className="text-lg text-gray-600">Discover and use ready-made actors for your data extraction needs</p>
-        </div>
+        {/* Back to landing */}
+        <button
+          onClick={() => setView('landing')}
+          className={`mb-6 text-sm font-medium transition-colors ${
+            theme === 'dark' 
+              ? 'text-gray-400 hover:text-gray-200' 
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          ← Back to Store
+        </button>
 
         {/* Search Bar */}
         <div className="mb-6">
-          <div className="relative max-w-2xl">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <div className="relative">
+            <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 ${
+              theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+            }`} />
             <input
               type="text"
               placeholder="Search for Actors"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent text-base"
+              className={`w-full pl-12 pr-4 py-3.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base transition-colors ${
+                theme === 'dark' 
+                  ? 'bg-[#1A1B1E] border-gray-800 text-gray-100 placeholder-gray-500' 
+                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+              }`}
             />
           </div>
         </div>
 
-        {/* Category Pills */}
-        <div className="mb-8 flex flex-wrap gap-2">
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => setSelectedCategory(category.id)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                selectedCategory === category.id
-                  ? 'bg-gray-900 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {category.name}
-            </button>
-          ))}
-        </div>
+        {/* Filters and Count */}
+        <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-3">
+            {/* Category Filter */}
+            <div className="relative">
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className={`appearance-none pl-4 pr-10 py-2.5 border rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-colors ${
+                  theme === 'dark'
+                    ? 'bg-[#1A1B1E] border-gray-800 text-gray-300'
+                    : 'bg-white border-gray-300 text-gray-700'
+                }`}
+              >
+                <option value="all">All categories</option>
+                {categories.filter(c => c.id !== 'all').map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+              <ChevronDown className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none ${
+                theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+              }`} />
+            </div>
 
+            {/* Pricing Filter */}
+            <div className="relative">
+              <select
+                value={selectedPricing}
+                onChange={(e) => setSelectedPricing(e.target.value)}
+                className={`appearance-none pl-4 pr-10 py-2.5 border rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-colors ${
+                  theme === 'dark'
+                    ? 'bg-[#1A1B1E] border-gray-800 text-gray-300'
+                    : 'bg-white border-gray-300 text-gray-700'
+                }`}
+              >
+                <option value="all">All pricing models</option>
+                <option value="free">Free</option>
+                <option value="paid">Paid</option>
+              </select>
+              <ChevronDown className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none ${
+                theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+              }`} />
+            </div>
 
-        {/* All Actors Section */}
-        <div>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">All Actors</h2>
-            <div className="flex items-center gap-4">
-              <button className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1">
-                View all →
-              </button>
+            {/* Developer Filter */}
+            <div className="relative">
+              <select
+                value={selectedDeveloper}
+                onChange={(e) => setSelectedDeveloper(e.target.value)}
+                className={`appearance-none pl-4 pr-10 py-2.5 border rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-colors ${
+                  theme === 'dark'
+                    ? 'bg-[#1A1B1E] border-gray-800 text-gray-300'
+                    : 'bg-white border-gray-300 text-gray-700'
+                }`}
+              >
+                {developers.map(dev => (
+                  <option key={dev.id} value={dev.id}>{dev.name}</option>
+                ))}
+              </select>
+              <ChevronDown className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none ${
+                theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+              }`} />
+            </div>
+
+            {/* Sort Filter */}
+            <div className="relative">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className={`appearance-none pl-4 pr-10 py-2.5 border rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-colors ${
+                  theme === 'dark'
+                    ? 'bg-[#1A1B1E] border-gray-800 text-gray-300'
+                    : 'bg-white border-gray-300 text-gray-700'
+                }`}
+              >
+                <option value="relevant">Most relevant</option>
+                <option value="rating">Highest rated</option>
+                <option value="newest">Newest</option>
+                <option value="name">Name</option>
+              </select>
+              <ChevronDown className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none ${
+                theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+              }`} />
             </div>
           </div>
 
-          {loading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-            </div>
-          ) : filteredActors.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-5">
-              {filteredActors.map((actor) => (
-                <div
-                  key={actor.id}
-                  onClick={() => navigate(`/actor/${actor.id}`)}
-                  className="border border-gray-200 rounded-xl p-5 hover:border-gray-400 hover:shadow-md transition-all cursor-pointer bg-white group"
-                >
-                  {/* Actor Icon and Info */}
-                  <div className="flex items-start gap-3 mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center text-2xl flex-shrink-0">
-                      {actor.icon || '🗺️'}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-gray-700 text-base leading-tight">
-                        {actor.name}
-                      </h3>
-                      <p className="text-xs text-gray-500">{actor.author || 'compass/crawler-google-places'}</p>
-                    </div>
-                  </div>
-
-                  {/* Description */}
-                  <p className="text-sm text-gray-600 mb-4 line-clamp-3 min-h-[3.6rem] leading-relaxed">
-                    {actor.description || 'Extract data from thousands of Google Maps locations and businesses.'}
-                  </p>
-
-                  {/* Stats */}
-                  <div className="flex items-center gap-3 text-xs text-gray-600">
-                    <div className="flex items-center gap-1">
-                      <Users className="w-3.5 h-3.5" />
-                      <span className="font-medium">{actor.runs_count || '189K'}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-                      <span className="font-medium">{actor.rating || '4.8'}</span>
-                      <span className="text-gray-400">({actor.reviews_count || '337'})</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-              <p className="text-gray-500 mb-2">No actors found</p>
-              <p className="text-sm text-gray-400">Try adjusting your search or filters</p>
-            </div>
-          )}
+          {/* Actor Count */}
+          <div className={`text-sm font-semibold ${
+            theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+          }`}>
+            {totalActors.toLocaleString()} Actors
+          </div>
         </div>
+
+        {/* Actors Grid */}
+        {loading ? (
+          <div className="text-center py-12">
+            <div className={`animate-spin rounded-full h-12 w-12 border-b-2 mx-auto ${
+              theme === 'dark' ? 'border-blue-500' : 'border-gray-900'
+            }`}></div>
+          </div>
+        ) : actors.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {actors.map((actor) => (
+              <ActorCard key={actor.id} actor={actor} />
+            ))}
+          </div>
+        ) : (
+          <div className={`text-center py-12 rounded-lg border ${
+            theme === 'dark' 
+              ? 'bg-gray-900/50 border-gray-800' 
+              : 'bg-gray-50 border-gray-200'
+          }`}>
+            <p className={`mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>
+              No actors found
+            </p>
+            <p className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>
+              Try adjusting your search or filters
+            </p>
+          </div>
+        )}
 
       </div>
     </div>
