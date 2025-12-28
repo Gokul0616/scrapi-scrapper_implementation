@@ -100,6 +100,15 @@ function Store() {
     setView('all');
   };
 
+  const handleBackToLanding = () => {
+    setView('landing');
+    setSearchQuery('');
+    setSelectedCategory('all');
+    setSelectedDeveloper('all');
+    setSelectedPricing('all');
+    setSortBy('relevant');
+  };
+
   const handleCategoryClick = (categoryId) => {
     setSelectedCategory(categoryId);
     if (view === 'landing') {
