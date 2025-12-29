@@ -57,15 +57,15 @@ const MegaMenuDropdown = ({ label, content, position = 'left' }) => {
         />
       </button>
 
-      {/* Mega Menu Dropdown with Apify-style transitions */}
+      {/* Mega Menu Dropdown with bottom-to-top animation */}
       <div
         className={`absolute top-full ${getDropdownPosition()} mt-1 transition-all duration-300 ease-out ${isOpen
           ? 'opacity-100 visible translate-y-0 scale-100'
-          : 'opacity-0 invisible -translate-y-4 scale-95 pointer-events-none'
+          : 'opacity-0 invisible translate-y-4 scale-95 pointer-events-none'
           }`}
         style={{
           zIndex: 9999,
-          transformOrigin: position === 'right' ? 'top right' : position === 'center' ? 'top center' : 'top left'
+          transformOrigin: position === 'right' ? 'bottom right' : position === 'center' ? 'bottom center' : 'bottom left'
         }}
       >
         <div className="bg-white rounded-lg shadow-2xl border border-gray-100 overflow-hidden">
