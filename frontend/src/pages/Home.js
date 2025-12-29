@@ -27,7 +27,7 @@ function Home() {
   const [recentActors, setRecentActors] = useState([]);
   const [suggestedActors, setSuggestedActors] = useState([]);
   const [recentRuns, setRecentRuns] = useState([]);
-  
+
   // Loading states
   const [loadingRecent, setLoadingRecent] = useState(true);
   const [loadingSuggested, setLoadingSuggested] = useState(true);
@@ -83,7 +83,7 @@ function Home() {
       // Fetch recent runs
       try {
         setLoadingRuns(true);
-        const runsRes = await axios.get(`${BACKEND_URL}/api/runs`);
+        const runsRes = await axios.get(`${BACKEND_URL}/api/runs?page=1&limit=5&sort_by=created_at&sort_order=desc`);
 
         const runsData = Array.isArray(runsRes.data?.runs)
           ? runsRes.data.runs

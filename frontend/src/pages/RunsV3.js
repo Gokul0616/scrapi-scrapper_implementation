@@ -1,27 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import AlertModal from '../components/AlertModal';
-import { 
-  CheckCircle2, 
-  XCircle, 
-  Clock,
+import {
   Search,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ExternalLink,
   StopCircle,
-  AlertCircle
+  MoreHorizontal
 } from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
+import AlertModal from '../components/AlertModal';
+import RunsTable from '../components/RunsTable';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const RunsV3 = () => {
   const navigate = useNavigate();
+  const { theme } = useTheme();
+
+  // State
   const [runs, setRuns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -32,35 +30,36 @@ const RunsV3 = () => {
   const [sortBy, setSortBy] = useState('created_at');
   const [sortOrder, setSortOrder] = useState('desc');
   const [goToPageInput, setGoToPageInput] = useState('');
+
+  // Selection & Abort State
   const [selectedRuns, setSelectedRuns] = useState([]);
   const [abortingRuns, setAbortingRuns] = useState(new Set());
-  const [showAbortModal, setShowAbortModal] = useState(false);
-  const [abortModalData, setAbortModalData] = useState(null);
-  
-  // Alert modal states
   const [alertModal, setAlertModal] = useState({ show: false, type: 'info', title: '', message: '', details: [] });
   const [confirmModal, setConfirmModal] = useState({ show: false, type: 'warning', title: '', message: '', onConfirm: null, details: [] });
 
   useEffect(() => {
     fetchRuns();
-    const interval = setInterval(fetchRuns, 5000); // Refresh every 5 seconds
+    const interval = setInterval(fetchRuns, 5000);
     return () => clearInterval(interval);
   }, [page, limit, sortBy, sortOrder, searchQuery]);
 
   const fetchRuns = async () => {
     try {
       const token = localStorage.getItem('token');
+      // Construct query params
+      const params = {
+        page,
+        limit,
+        sort_by: sortBy,
+        sort_order: sortOrder
+      };
+      if (searchQuery) params.search = searchQuery;
+
       const response = await axios.get(`${API}/runs`, {
-        params: {
-          page,
-          limit,
-          search: searchQuery || undefined,
-          sort_by: sortBy,
-          sort_order: sortOrder
-        },
+        params,
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       setRuns(response.data.runs || []);
       setTotalCount(response.data.total || 0);
       setTotalPages(response.data.total_pages || 1);
@@ -71,31 +70,40 @@ const RunsV3 = () => {
     }
   };
 
+  // --- Abort Logic ---
+
   const abortRun = async (runId) => {
-    try {
-      setAbortingRuns(prev => new Set([...prev, runId]));
-      const token = localStorage.getItem('token');
-      await axios.delete(`${API}/runs/${runId}/abort`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      // Refresh the runs list
-      await fetchRuns();
-    } catch (error) {
-      console.error('Failed to abort run:', error);
-      setAlertModal({
-        show: true,
-        type: 'error',
-        title: 'Abort Failed',
-        message: error.response?.data?.detail || 'Failed to abort run'
-      });
-    } finally {
-      setAbortingRuns(prev => {
-        const next = new Set(prev);
-        next.delete(runId);
-        return next;
-      });
-    }
+    // Confirmation wrapper
+    setConfirmModal({
+      show: true,
+      type: 'warning',
+      title: 'Abort Run',
+      message: `Are you sure you want to abort run ${runId}?`,
+      onConfirm: async () => {
+        try {
+          setAbortingRuns(prev => new Set([...prev, runId]));
+          const token = localStorage.getItem('token');
+          await axios.delete(`${API}/runs/${runId}/abort`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          await fetchRuns();
+        } catch (error) {
+          console.error('Failed to abort run:', error);
+          setAlertModal({
+            show: true,
+            type: 'error',
+            title: 'Abort Failed',
+            message: error.response?.data?.detail || 'Failed to abort run'
+          });
+        } finally {
+          setAbortingRuns(prev => {
+            const next = new Set(prev);
+            next.delete(runId);
+            return next;
+          });
+        }
+      }
+    });
   };
 
   const abortMultipleRuns = async (runIds) => {
@@ -105,8 +113,6 @@ const RunsV3 = () => {
       await axios.post(`${API}/runs/abort-multiple`, runIds, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
-      // Refresh the runs list
       await fetchRuns();
       setSelectedRuns([]);
     } catch (error) {
@@ -129,10 +135,10 @@ const RunsV3 = () => {
   };
 
   const abortAllRunningRuns = async () => {
-    const runningAndQueuedRuns = runs.filter(run => 
+    const runningAndQueuedRuns = runs.filter(run =>
       run.status === 'running' || run.status === 'queued'
     );
-    
+
     if (runningAndQueuedRuns.length === 0) {
       setAlertModal({
         show: true,
@@ -143,7 +149,6 @@ const RunsV3 = () => {
       return;
     }
 
-    // Show confirmation modal
     setConfirmModal({
       show: true,
       type: 'warning',
@@ -156,8 +161,6 @@ const RunsV3 = () => {
             params: { status_filter: 'all' },
             headers: { Authorization: `Bearer ${token}` }
           });
-          
-          // Refresh the runs list
           await fetchRuns();
         } catch (error) {
           console.error('Failed to abort all runs:', error);
@@ -172,220 +175,11 @@ const RunsV3 = () => {
     });
   };
 
-  const handleAbortClick = (run, event) => {
-    event.stopPropagation();
-    setAbortModalData(run);
-    setShowAbortModal(true);
-  };
+  // --- Handlers ---
 
-  const confirmAbort = async () => {
-    if (abortModalData) {
-      await abortRun(abortModalData.id);
-      setShowAbortModal(false);
-      setAbortModalData(null);
-    }
-  };
-
-  const toggleRunSelection = (runId) => {
-    setSelectedRuns(prev => {
-      if (prev.includes(runId)) {
-        return prev.filter(id => id !== runId);
-      } else {
-        return [...prev, runId];
-      }
-    });
-  };
-
-  const toggleSelectAll = () => {
-    const abortableRuns = runs.filter(run => 
-      run.status === 'running' || run.status === 'queued'
-    );
-    
-    if (selectedRuns.length === abortableRuns.length) {
-      setSelectedRuns([]);
-    } else {
-      setSelectedRuns(abortableRuns.map(run => run.id));
-    }
-  };
-
-  const abortSelectedRuns = async () => {
-    if (selectedRuns.length === 0) {
-      setAlertModal({
-        show: true,
-        type: 'info',
-        title: 'No Selection',
-        message: 'No runs selected'
-      });
-      return;
-    }
-
-    // Show confirmation modal
-    setConfirmModal({
-      show: true,
-      type: 'warning',
-      title: 'Abort Selected Runs',
-      message: `Are you sure you want to abort ${selectedRuns.length} selected run(s)?`,
-      onConfirm: async () => {
-        await abortMultipleRuns(selectedRuns);
-      }
-    });
-  };
-
-  const getStatusDisplay = (status) => {
-    const statusConfig = {
-      succeeded: {
-        icon: <CheckCircle2 className="w-4 h-4 text-green-600" />,
-        text: 'Succeeded',
-        color: 'text-green-700'
-      },
-      failed: {
-        icon: <XCircle className="w-4 h-4 text-red-600" />,
-        text: 'Failed',
-        color: 'text-red-700'
-      },
-      running: {
-        icon: <Clock className="w-4 h-4 text-blue-600 animate-pulse" />,
-        text: 'Running',
-        color: 'text-blue-700'
-      },
-      queued: {
-        icon: <Clock className="w-4 h-4 text-gray-400" />,
-        text: 'Queued',
-        color: 'text-gray-600'
-      },
-      aborted: {
-        icon: <StopCircle className="w-4 h-4 text-orange-600" />,
-        text: 'Aborted',
-        color: 'text-orange-700'
-      }
-    };
-
-    const config = statusConfig[status] || statusConfig.queued;
-    
-    return (
-      <div className="flex items-center gap-2">
-        {config.icon}
-        <span className={`text-sm font-medium ${config.color}`}>
-          {config.text}
-        </span>
-      </div>
-    );
-  };
-
-  const formatDateTime = (dateString) => {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    return date.toLocaleString('en-US', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
-    });
-  };
-
-  const formatDuration = (seconds) => {
-    if (!seconds) return '-';
-    return `${seconds} s`;
-  };
-
-  const formatUsage = (cost) => {
-    if (!cost || cost === 0) return '-';
-    return `$${cost.toFixed(2)}`;
-  };
-
-  const formatTaskDescription = (run) => {
-    // Detect scraper type and format accordingly
-    const actorName = run.actor_name || '';
-    const input = run.input_data || {};
-    
-    // 1. Amazon Product Scraper
-    if (actorName.toLowerCase().includes('amazon')) {
-      const keywords = input.search_keywords?.join(', ') || 'N/A';
-      const maxResults = input.max_results || '';
-      let desc = `Products: ${keywords}`;
-      if (maxResults) desc += ` (max ${maxResults})`;
-      return desc;
-    }
-    
-    // 2. SEO Metadata Scraper
-    if (actorName.toLowerCase().includes('seo') || input.url) {
-      const url = input.url || 'N/A';
-      return `Analyze: ${url}`;
-    }
-
-    // 3. Google Maps / Generic Search Scraper
-    // Check for common search term fields
-    const searchTerms = input.search_terms?.join(', ') || input.search_queries?.join(', ') || input.keywords?.join(', ');
-    
-    if (searchTerms) {
-      const location = input.location || '';
-      const maxResults = input.max_results || '';
-      
-      let desc = searchTerms;
-      if (location) desc += ` in ${location}`;
-      if (maxResults) desc += ` (max ${maxResults})`;
-      return desc;
-    }
-    
-    // 4. Fallback: Display first meaningful input
-    const keys = Object.keys(input).filter(k => 
-      !['max_results', 'limit', 'proxy', 'extract_reviews', 'extract_images'].includes(k)
-    );
-    
-    if (keys.length > 0) {
-      const firstKey = keys[0];
-      const val = input[firstKey];
-      if (typeof val === 'string' || typeof val === 'number') {
-        return `${firstKey.replace(/_/g, ' ')}: ${val}`;
-      } else if (Array.isArray(val)) {
-        return `${firstKey.replace(/_/g, ' ')}: ${val.join(', ')}`;
-      }
-    }
-
-    return 'N/A';
-  };
-
-  const formatTaskWithWrapping = (text) => {
-    // Split text into chunks of max 50 characters, breaking at spaces if possible
-    const maxLength = 50;
-    const words = text.split(' ');
-    const lines = [];
-    let currentLine = '';
-
-    words.forEach(word => {
-      if ((currentLine + word).length <= maxLength) {
-        currentLine += (currentLine ? ' ' : '') + word;
-      } else {
-        if (currentLine) lines.push(currentLine);
-        // If a single word is longer than maxLength, break it
-        if (word.length > maxLength) {
-          let remainingWord = word;
-          while (remainingWord.length > maxLength) {
-            lines.push(remainingWord.substring(0, maxLength));
-            remainingWord = remainingWord.substring(maxLength);
-          }
-          currentLine = remainingWord;
-        } else {
-          currentLine = word;
-        }
-      }
-    });
-    
-    if (currentLine) lines.push(currentLine);
-    
-    return lines;
-  };
-
-  const handleSort = (field) => {
-    if (sortBy === field) {
-      setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc');
-    } else {
-      setSortBy(field);
-      setSortOrder('desc');
-    }
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
+    setPage(1);
   };
 
   const handleGoToPage = () => {
@@ -396,383 +190,174 @@ const RunsV3 = () => {
     }
   };
 
-  const handleSearch = (e) => {
-    setSearchQuery(e.target.value);
-    setPage(1); // Reset to first page on search
+  const toggleRunSelection = (runId) => {
+    setSelectedRuns(prev => {
+      if (prev.includes(runId)) return prev.filter(id => id !== runId);
+      return [...prev, runId];
+    });
   };
 
-  if (loading) {
-    return (
-      <div className="flex-1 flex items-center justify-center min-h-screen bg-white">
-        <div className="text-center">
-          <div className="w-8 h-8 mx-auto mb-4 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
-          <p className="text-gray-600">Loading runs...</p>
-        </div>
-      </div>
+  const toggleAllRunsSelection = () => {
+    const runningAndQueuedRuns = runs.filter(run =>
+      run.status === 'running' || run.status === 'queued'
     );
-  }
+
+    if (runningAndQueuedRuns.length === 0) return;
+
+    const allSelected = runningAndQueuedRuns.every(run => selectedRuns.includes(run.id));
+
+    if (allSelected) {
+      // Deselect all
+      const idsToRemove = runningAndQueuedRuns.map(r => r.id);
+      setSelectedRuns(prev => prev.filter(id => !idsToRemove.includes(id)));
+    } else {
+      // Select all
+      const idsToAdd = runningAndQueuedRuns.map(r => r.id);
+      setSelectedRuns(prev => {
+        const unique = new Set([...prev, ...idsToAdd]);
+        return Array.from(unique);
+      });
+    }
+  };
+
+  const abortSelectedRuns = async () => {
+    if (selectedRuns.length === 0) return;
+    setConfirmModal({
+      show: true,
+      type: 'warning',
+      title: 'Abort Selected Runs',
+      message: `Are you sure you want to abort ${selectedRuns.length} selected run(s)?`,
+      onConfirm: async () => await abortMultipleRuns(selectedRuns)
+    });
+  };
 
   return (
-    <div className="flex-1 bg-white min-h-screen">
+    <div className="min-h-screen p-8 font-sans transition-colors bg-background text-foreground">
       {/* Header */}
-      <div className="border-b border-gray-200 bg-white">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl font-normal text-gray-900">
-              Runs <span className="text-gray-400">({totalCount})</span>
-            </h1>
-            <div className="flex items-center gap-2">
-              {selectedRuns.length > 0 && (
-                <Button
-                  onClick={abortSelectedRuns}
-                  variant="outline"
-                  size="sm"
-                  className="h-8 px-3 border-orange-300 text-orange-700 text-sm hover:bg-orange-50"
-                >
-                  <StopCircle className="w-4 h-4 mr-1" />
-                  Abort Selected ({selectedRuns.length})
-                </Button>
-              )}
-              {runs.filter(r => r.status === 'running' || r.status === 'queued').length > 0 && (
-                <Button
-                  onClick={abortAllRunningRuns}
-                  variant="outline"
-                  size="sm"
-                  className="h-8 px-3 border-red-300 text-red-700 text-sm hover:bg-red-50"
-                >
-                  <StopCircle className="w-4 h-4 mr-1" />
-                  Abort All
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 px-3 border-gray-300 text-gray-700 text-sm hover:bg-gray-50"
+      <div className="max-w-full mx-auto mb-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <h1 className="text-[22px] font-bold text-foreground">Runs</h1>
+            <span className="text-[22px] text-muted-foreground font-normal">({totalCount})</span>
+          </div>
+
+          <div className="flex gap-3">
+            {(selectedRuns.length > 0) && (
+              <button
+                onClick={abortSelectedRuns}
+                className="px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/30 transition-colors flex items-center gap-2"
               >
-                API
-              </Button>
-            </div>
-          </div>
+                <StopCircle className="w-4 h-4" />
+                Abort Selected ({selectedRuns.length})
+              </button>
+            )}
 
-          {/* Search */}
-          <div className="mb-3">
-            <div className="relative max-w-xs">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                placeholder="Search by run ID"
-                value={searchQuery}
-                onChange={handleSearch}
-                className="pl-9 h-9 border-gray-300 text-sm focus:border-gray-400 focus:ring-0"
-              />
-            </div>
+            {(runs.some(r => r.status === 'running' || r.status === 'queued')) && (
+              <button
+                onClick={abortAllRunningRuns}
+                className="px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/30 transition-colors flex items-center gap-2"
+              >
+                <StopCircle className="w-4 h-4" />
+                Abort All
+              </button>
+            )}
+
+            <button className="px-3 py-1.5 text-sm font-medium text-foreground bg-card border border-border rounded hover:bg-muted transition-colors">
+              API
+            </button>
           </div>
-          
-          <p className="text-sm text-gray-600">
-            {totalCount} recent runs
-          </p>
         </div>
-      </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto">
-        {runs.length === 0 ? (
-          <div className="text-center py-16 text-gray-500">
-            <p className="text-base">No runs found</p>
-            <p className="text-sm text-gray-400 mt-2">
-              {searchQuery ? 'Try a different search term' : 'Start a new scraping run to see it here'}
-            </p>
+        {/* Search Input */}
+        <div className="relative max-w-[320px] mb-2">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-4 w-4 text-muted-foreground" />
           </div>
-        ) : (
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b border-gray-200 bg-white">
-                <th className="px-4 py-3 text-left w-12">
-                  <input
-                    type="checkbox"
-                    checked={selectedRuns.length > 0 && selectedRuns.length === runs.filter(r => r.status === 'running' || r.status === 'queued').length}
-                    onChange={toggleSelectAll}
-                    className="w-4 h-4 rounded border-gray-300"
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide w-32">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide w-64">
-                  Actor
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide min-w-[200px] max-w-[500px]">
-                  Task
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide w-24">
-                  Results
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide w-24">
-                  Usage
-                </th>
-                <th 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide cursor-pointer hover:text-gray-700 w-36"
-                  onClick={() => handleSort('started_at')}
-                >
-                  <div className="flex items-center gap-1">
-                    Started
-                    {sortBy === 'started_at' && (
-                      <ChevronDown className={`w-3 h-3 transition-transform ${sortOrder === 'asc' ? 'rotate-180' : ''}`} />
-                    )}
-                  </div>
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide w-36">
-                  Finished
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide w-24">
-                  Duration
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide w-24">
-                  Build
-                </th>
-                <th 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide cursor-pointer hover:text-gray-700 w-24"
-                  onClick={() => handleSort('origin')}
-                >
-                  <div className="flex items-center gap-1">
-                    Origin
-                    {sortBy === 'origin' && (
-                      <ChevronDown className={`w-3 h-3 transition-transform ${sortOrder === 'asc' ? 'rotate-180' : ''}`} />
-                    )}
-                  </div>
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide w-32">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white">
-              {runs.map((run, index) => (
-                <tr 
-                  key={run.id} 
-                  className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
-                    run.status === 'succeeded' && run.results_count > 0 ? 'cursor-pointer' : ''
-                  }`}
-                  onClick={() => run.status === 'succeeded' && run.results_count > 0 && navigate(`/dataset/${run.id}`)}
-                >
-                  {/* Checkbox - Only for running/queued runs */}
-                  <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
-                    {(run.status === 'running' || run.status === 'queued') && (
-                      <input
-                        type="checkbox"
-                        checked={selectedRuns.includes(run.id)}
-                        onChange={() => toggleRunSelection(run.id)}
-                        className="w-4 h-4 rounded border-gray-300"
-                      />
-                    )}
-                  </td>
+          <input
+            type="text"
+            className="block w-full pl-9 pr-3 py-2 border border-border rounded-md leading-5 bg-card text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors"
+            placeholder="Search by run ID or actor..."
+            value={searchQuery}
+            onChange={handleSearch}
+          />
+        </div>
 
-                  {/* Status - Icon + Text */}
-                  <td className="px-6 py-4">
-                    {getStatusDisplay(run.status)}
-                  </td>
+        <div className="text-sm text-muted-foreground font-medium mb-4">
+          {totalCount} recent runs
+        </div>
 
-                  {/* Actor - Icon + Name */}
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center text-base flex-shrink-0">
-                        📍
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-sm font-medium text-gray-900 truncate">
-                          {run.actor_name}
-                        </div>
-                        <div className="text-xs text-gray-500 truncate">
-                          comp...places @ Pay per event
-                        </div>
-                      </div>
-                    </div>
-                  </td>
+        {/* Global Table Component */}
+        <RunsTable
+          runs={runs}
+          loading={loading}
+          selectedRuns={selectedRuns}
+          toggleRunSelection={toggleRunSelection}
+          toggleAllRunsSelection={toggleAllRunsSelection}
+          abortRun={abortRun}
+          abortingRuns={abortingRuns}
+        />
 
-                  {/* Task - Keywords + Location + Max Results, wrapped */}
-                  <td className="px-6 py-4 min-w-[200px] max-w-[500px]">
-                    <div className="text-sm text-gray-700 break-words">
-                      {formatTaskWithWrapping(formatTaskDescription(run)).map((line, idx) => (
-                        <div key={idx}>{line}</div>
-                      ))}
-                    </div>
-                  </td>
-
-                  {/* Results - Blue number */}
-                  <td className="px-6 py-4">
-                    <span className="text-sm font-medium text-blue-600">
-                      {run.results_count}
-                    </span>
-                  </td>
-
-                  {/* Usage - Dollar amount or dash */}
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-gray-700">
-                      {formatUsage(run.cost)}
-                    </span>
-                  </td>
-
-                  {/* Started - Date on top, time below */}
-                  <td className="px-6 py-4">
-                    {run.started_at ? (
-                      <div>
-                        <div className="text-sm text-gray-900">
-                          {formatDateTime(run.started_at).split(' ')[0]}
-                        </div>
-                        <div className="text-xs text-gray-500 mt-0.5">
-                          {formatDateTime(run.started_at).split(' ')[1]}
-                        </div>
-                      </div>
-                    ) : (
-                      <span className="text-sm text-gray-400">-</span>
-                    )}
-                  </td>
-
-                  {/* Finished - Date on top, time below */}
-                  <td className="px-6 py-4">
-                    {run.finished_at ? (
-                      <div>
-                        <div className="text-sm text-gray-900">
-                          {formatDateTime(run.finished_at).split(' ')[0]}
-                        </div>
-                        <div className="text-xs text-gray-500 mt-0.5">
-                          {formatDateTime(run.finished_at).split(' ')[1]}
-                        </div>
-                      </div>
-                    ) : (
-                      <span className="text-sm text-gray-400">-</span>
-                    )}
-                  </td>
-
-                  {/* Duration - "X s" format */}
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-gray-700">
-                      {formatDuration(run.duration_seconds)}
-                    </span>
-                  </td>
-
-                  {/* Build - Blue link style or dash */}
-                  <td className="px-6 py-4">
-                    {run.build_number ? (
-                      <span className="text-sm text-blue-600 hover:underline cursor-pointer">
-                        {run.build_number}
-                      </span>
-                    ) : (
-                      <span className="text-sm text-gray-400">-</span>
-                    )}
-                  </td>
-
-                  {/* Origin - Web */}
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-gray-700">
-                      {run.origin || 'Web'}
-                    </span>
-                  </td>
-
-                  {/* Actions - Abort button */}
-                  <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
-                    {(run.status === 'running' || run.status === 'queued') && (
-                      <Button
-                        onClick={(e) => handleAbortClick(run, e)}
-                        disabled={abortingRuns.has(run.id)}
-                        size="sm"
-                        variant="outline"
-                        className="h-7 px-2 border-orange-300 text-orange-700 hover:bg-orange-50 text-xs"
-                      >
-                        {abortingRuns.has(run.id) ? (
-                          <>
-                            <Clock className="w-3 h-3 mr-1 animate-spin" />
-                            Aborting...
-                          </>
-                        ) : (
-                          <>
-                            <StopCircle className="w-3 h-3 mr-1" />
-                            Abort
-                          </>
-                        )}
-                      </Button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      {/* Pagination */}
-      {totalPages > 0 && (
-        <div className="border-t border-gray-200 bg-white px-6 py-4">
-          <div className="flex items-center justify-between">
-            {/* Items per page */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Items per page:</span>
+        {/* Pagination */}
+        <div className="mt-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-[13px] text-muted-foreground">Items per page:</span>
+            <div className="relative">
               <select
                 value={limit}
-                onChange={(e) => {
-                  setLimit(parseInt(e.target.value));
-                  setPage(1);
-                }}
-                className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-gray-400"
+                onChange={(e) => setLimit(Number(e.target.value))}
+                className="appearance-none bg-card border border-border text-foreground text-[13px] rounded px-3 py-1 pr-8 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
               >
-                <option value="10">10</option>
-                <option value="20">20</option>
-                <option value="50">50</option>
-                <option value="100">100</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
               </select>
-            </div>
-
-            {/* Page navigation */}
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">Go to page:</span>
-                <Input
-                  type="number"
-                  min="1"
-                  max={totalPages}
-                  value={goToPageInput}
-                  onChange={(e) => setGoToPageInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleGoToPage()}
-                  className="w-16 h-8 text-sm border-gray-300 text-center focus:border-gray-400 focus:ring-0"
-                  placeholder={page.toString()}
-                />
-                <Button
-                  size="sm"
-                  onClick={handleGoToPage}
-                  className="h-8 px-3 bg-white border border-gray-300 text-gray-700 text-sm hover:bg-gray-50"
-                >
-                  Go
-                </Button>
-              </div>
-
-              <div className="flex items-center gap-1">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setPage(Math.max(1, page - 1))}
-                  disabled={page === 1}
-                  className="h-8 w-8 p-0 text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <div className="px-3 py-1 text-sm font-medium text-gray-700">
-                  {page}
-                </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setPage(Math.min(totalPages, page + 1))}
-                  disabled={page === totalPages}
-                  className="h-8 w-8 p-0 text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-muted-foreground">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
               </div>
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Alert Modal (for info/error messages) */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-[13px] text-muted-foreground">Go to page:</span>
+              <input
+                type="text"
+                value={goToPageInput}
+                onChange={(e) => setGoToPageInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleGoToPage()}
+                placeholder={page}
+                className="w-[40px] px-2 py-1 text-[13px] text-center bg-card border border-border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              <button
+                onClick={handleGoToPage}
+                className="px-3 py-1 text-[13px] bg-white dark:bg-zinc-800 border border-border rounded shadow-sm hover:bg-muted transition-colors font-medium text-foreground"
+              >
+                Go
+              </button>
+            </div>
+
+            <div className="flex items-center">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <span className="px-2 text-[13px] font-medium text-foreground">{page}</span>
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
       <AlertModal
         show={alertModal.show}
         onClose={() => setAlertModal({ ...alertModal, show: false })}
@@ -780,10 +365,8 @@ const RunsV3 = () => {
         title={alertModal.title}
         message={alertModal.message}
         details={alertModal.details}
-        confirmText="OK"
       />
 
-      {/* Confirmation Modal (for confirmations) */}
       <AlertModal
         show={confirmModal.show}
         onClose={() => setConfirmModal({ ...confirmModal, show: false })}
@@ -796,29 +379,8 @@ const RunsV3 = () => {
         confirmText="Confirm"
         cancelText="Cancel"
       />
-
-      {/* Abort Confirmation Modal (Custom with details) */}
-      {showAbortModal && abortModalData && (
-        <AlertModal
-          show={showAbortModal}
-          onClose={() => setShowAbortModal(false)}
-          onConfirm={confirmAbort}
-          type="warning"
-          title="Abort Run?"
-          message="Are you sure you want to abort this scraping run? This action cannot be undone."
-          details={[
-            { label: 'Run ID', value: abortModalData.id },
-            { label: 'Task', value: formatTaskDescription(abortModalData) }
-          ]}
-          showCancel={true}
-          confirmText="Abort Run"
-          cancelText="Cancel"
-          confirmButtonClass="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800"
-        />
-      )}
     </div>
   );
 };
 
 export default RunsV3;
-

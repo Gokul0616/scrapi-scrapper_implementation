@@ -2111,9 +2111,12 @@ async def get_runs(
     # Build query
     query = {"user_id": current_user['id']}
     
-    # Add search filter (search by run ID)
+    # Add search filter (search by run ID or actor name)
     if search:
-        query["id"] = {"$regex": search, "$options": "i"}
+        query["$or"] = [
+            {"id": {"$regex": search, "$options": "i"}},
+            {"actor_name": {"$regex": search, "$options": "i"}}
+        ]
     
     # Add status filter
     if status and status != "all":
