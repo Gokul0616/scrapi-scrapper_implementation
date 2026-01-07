@@ -205,13 +205,15 @@ function App() {
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
-          <NotificationProvider>
-            <ModalProvider>
-              <AppRoutes />
-              <Toaster />
-              <ErrorDisplayContainer />
-            </ModalProvider>
-          </NotificationProvider>
+          <WorkspaceProvider>
+            <NotificationProvider>
+              <ModalProvider>
+                <AppRoutes />
+                <Toaster />
+                <ErrorDisplayContainer />
+              </ModalProvider>
+            </NotificationProvider>
+          </WorkspaceProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>
