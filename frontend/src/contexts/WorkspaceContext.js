@@ -16,18 +16,6 @@ export const WorkspaceProvider = ({ children }) => {
   // Load workspace from localStorage or set default
   useEffect(() => {
     if (user) {
-      const savedWorkspace = localStorage.getItem('activeWorkspace');
-      if (savedWorkspace) {
-        try {
-          const parsed = JSON.parse(savedWorkspace);
-          setCurrentWorkspace(parsed);
-        } catch (e) {
-          console.error('Failed to parse saved workspace:', e);
-          setDefaultWorkspace();
-        }
-      } else {
-        setDefaultWorkspace();
-      }
       fetchWorkspaces();
     } else {
       setCurrentWorkspace(null);
