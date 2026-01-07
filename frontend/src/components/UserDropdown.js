@@ -292,14 +292,14 @@ const UserDropdown = ({ isCollapsed = false }) => {
               <div
                 className="font-semibold text-sm leading-tight text-foreground"
               >
-                {getUserDisplayName(user)}
+                {currentWorkspaceName}
               </div>
               <div className="flex items-center space-x-1">
                 <AccountTypeIcon className="w-3 h-3 text-muted-foreground" />
                 <span
                   className="text-xs text-muted-foreground"
                 >
-                  {accountTypeLabel}
+                  {currentWorkspaceRole ? `${currentWorkspaceRole.charAt(0).toUpperCase() + currentWorkspaceRole.slice(1)}` : accountTypeLabel}
                 </span>
               </div>
             </div>
