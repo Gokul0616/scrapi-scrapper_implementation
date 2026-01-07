@@ -77,14 +77,15 @@ export const WorkspaceProvider = ({ children }) => {
     }
   };
 
-  const switchWorkspace = (workspace) => {
+  const switchWorkspace = async (workspace) => {
+    // Update state and localStorage
     setCurrentWorkspace(workspace);
     localStorage.setItem('activeWorkspace', JSON.stringify(workspace));
     
     // Dispatch event to notify components about workspace change
     window.dispatchEvent(new CustomEvent('workspaceChanged', { detail: workspace }));
     
-    // Optionally refresh the page to reload data for new workspace
+    // Reload the page to refresh data for new workspace
     window.location.reload();
   };
 
