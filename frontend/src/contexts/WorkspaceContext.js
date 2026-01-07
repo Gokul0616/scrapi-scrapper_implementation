@@ -43,17 +43,35 @@ export const WorkspaceProvider = ({ children }) => {
       const response = await axios.get(`${API}/organizations/workspaces`);
       setWorkspaces(response.data.workspaces || []);
       
-      // If current workspace is not set, use the one from backend
-      if (!currentWorkspace && response.data.current_workspace) {
-        setCurrentWorkspace(response.data.current_workspace);
-        localStorage.setItem('activeWorkspace', JSON.stringify(response.data.current_workspace));
+      // Check if there's a saved workspace in localStorage
+      const savedWorkspace = localStorage.getItem('activeWorkspace');
+      if (savedWorkspace) {
+        try {
+          const parsed = JSON.parse(savedWorkspace);
+          // Verify the saved workspace still exists in the fetched workspaces
+          const workspaceExists = response.data.workspaces.some(
+            w => w.workspace_id === parsed.workspace_id && w.workspace_type === parsed.workspace_type
+          );
+          
+          if (workspaceExists) {
+            // Use the saved workspace
+            setCurrentWorkspace(parsed);
+          } else {
+            // Saved workspace no longer exists, use default
+            setDefaultWorkspace();
+          }
+        } catch (e) {
+          console.error('Failed to parse saved workspace:', e);
+          setDefaultWorkspace();
+        }
+      } else {
+        // No saved workspace, use default
+        setDefaultWorkspace();
       }
     } catch (error) {
       console.error('Failed to fetch workspaces:', error);
       // Set default personal workspace on error
-      if (!currentWorkspace) {
-        setDefaultWorkspace();
-      }
+      setDefaultWorkspace();
     } finally {
       setLoading(false);
     }
