@@ -46,9 +46,20 @@ const UserDropdown = ({ isCollapsed = false }) => {
     setIsCreateModalOpen(true);
   };
 
-  const handleOrganizationCreated = async () => {
+  const handleOrganizationCreated = async (newOrg) => {
     // Refresh workspaces after creating new organization
     await refreshWorkspaces();
+    
+    // Automatically switch to the newly created organization
+    if (newOrg && newOrg.id) {
+      const newWorkspace = {
+        workspace_type: 'organization',
+        workspace_id: newOrg.id,
+        workspace_name: newOrg.display_name,
+        role: 'owner'
+      };
+      switchWorkspace(newWorkspace);
+    }
   };
 
 
