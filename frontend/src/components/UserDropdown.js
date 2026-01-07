@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useWorkspace } from '../contexts/WorkspaceContext';
 import { ChevronDown, ChevronUp, Check, Plus, LogOut, User, Building2 } from 'lucide-react';
 import { getUserInitials, getProfileColor, getUserDisplayName } from '../utils/userUtils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import CreateOrganizationModal from './CreateOrganizationModal';
 
 const UserDropdown = ({ isCollapsed = false }) => {
   const { theme } = useTheme();
