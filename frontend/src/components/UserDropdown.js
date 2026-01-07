@@ -10,7 +10,7 @@ import CreateOrganizationModal from './CreateOrganizationModal';
 const UserDropdown = ({ isCollapsed = false }) => {
   const { theme } = useTheme();
   const { user, logout } = useAuth();
-  const { workspaces, currentWorkspace, switchWorkspace, refreshWorkspaces } = useWorkspace();
+  const { workspaces, currentWorkspace, switchWorkspace, refreshWorkspaces, loading: workspaceLoading } = useWorkspace();
   const [isOpen, setIsOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -19,7 +19,7 @@ const UserDropdown = ({ isCollapsed = false }) => {
   const userInitials = getUserInitials(user);
   const profileColor = getProfileColor(user?.profile_color, theme);
 
-  // Get current workspace info
+  // Get current workspace info - with loading state handling
   const currentWorkspaceType = currentWorkspace?.workspace_type || 'personal';
   const currentWorkspaceName = currentWorkspace?.workspace_name || (user?.username || 'Personal');
   const currentWorkspaceRole = currentWorkspace?.role;
