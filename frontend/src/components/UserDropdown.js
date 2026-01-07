@@ -10,21 +10,45 @@ import CreateOrganizationModal from './CreateOrganizationModal';
 const UserDropdown = ({ isCollapsed = false }) => {
   const { theme } = useTheme();
   const { user, logout } = useAuth();
+  const { workspaces, currentWorkspace, switchWorkspace, refreshWorkspaces } = useWorkspace();
   const [isOpen, setIsOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const dropdownRef = useRef(null);
   const [profilePictureKey, setProfilePictureKey] = useState(0);
 
   const userInitials = getUserInitials(user);
   const profileColor = getProfileColor(user?.profile_color, theme);
 
+  // Get current workspace info
+  const currentWorkspaceType = currentWorkspace?.workspace_type || 'personal';
+  const currentWorkspaceName = currentWorkspace?.workspace_name || (user?.username || 'Personal');
+  const currentWorkspaceRole = currentWorkspace?.role;
+  
+  const accountTypeLabel = currentWorkspaceType === 'organization' ? 'Organization' : 'Personal';
+  const AccountTypeIcon = currentWorkspaceType === 'organization' ? Building2 : User;
 
-  const accountType = user?.account_type || 'personal';
-  const accountTypeLabel = accountType === 'organization' ? 'Organization' : 'Personal';
-  const AccountTypeIcon = accountType === 'organization' ? Building2 : User;
+  // Separate workspaces into personal and organizations
+  const personalWorkspace = workspaces.find(w => w.workspace_type === 'personal');
+  const organizationWorkspaces = workspaces.filter(w => w.workspace_type === 'organization');
 
   const handleLogout = () => {
     setIsOpen(false);
     logout();
+  };
+
+  const handleWorkspaceSwitch = (workspace) => {
+    switchWorkspace(workspace);
+    setIsOpen(false);
+  };
+
+  const handleCreateOrganization = () => {
+    setIsOpen(false);
+    setIsCreateModalOpen(true);
+  };
+
+  const handleOrganizationCreated = async () => {
+    // Refresh workspaces after creating new organization
+    await refreshWorkspaces();
   };
 
 
