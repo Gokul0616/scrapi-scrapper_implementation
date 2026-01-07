@@ -19,7 +19,7 @@ def set_db(database):
     global db
     db = database
 
-router = APIRouter(prefix="/api/organizations", tags=["organizations"])
+router = APIRouter(prefix="/organizations", tags=["organizations"])
 
 # ============= Helper Functions =============
 
