@@ -52,10 +52,31 @@ const shouldHandleNotFound = (pathname) => {
 };
 
 /**
- * Setup axios response interceptor for 404 handling
+ * Setup axios interceptors for workspace context and 404 handling
  */
 export const setupAxiosInterceptor = (navigate) => {
-  // Response interceptor
+  // Request interceptor to add workspace headers
+  axios.interceptors.request.use(
+    (config) => {
+      // Get active workspace from localStorage
+      const activeWorkspace = localStorage.getItem('activeWorkspace');
+      if (activeWorkspace) {
+        try {
+          const workspace = JSON.parse(activeWorkspace);
+          config.headers['X-Workspace-Type'] = workspace.workspace_type || 'personal';
+          config.headers['X-Workspace-Id'] = workspace.workspace_id || '';
+        } catch (e) {
+          console.error('Failed to parse active workspace:', e);
+        }
+      }
+      return config;
+    },
+    (error) => {
+      return Promise.reject(error);
+    }
+  );
+
+  // Response interceptor for 404 handling
   axios.interceptors.response.use(
     (response) => {
       // Return successful response as-is
