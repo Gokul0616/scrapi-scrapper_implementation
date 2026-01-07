@@ -48,7 +48,7 @@ const CreateOrganizationModal = ({ isOpen, onClose, onSuccess }) => {
     
     setLoading(true);
     try {
-      await createOrganization(formData);
+      const response = await createOrganization(formData);
       
       // Reset form
       setFormData({
@@ -58,7 +58,7 @@ const CreateOrganizationModal = ({ isOpen, onClose, onSuccess }) => {
         billing_email: ''
       });
       
-      onSuccess && onSuccess();
+      onSuccess && onSuccess(response);
       onClose();
     } catch (error) {
       setApiError(error.response?.data?.detail || 'Failed to create organization');
