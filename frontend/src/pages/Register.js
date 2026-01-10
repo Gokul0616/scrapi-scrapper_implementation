@@ -290,9 +290,8 @@ const Register = () => {
           <h2 className="text-[22px] leading-[28px] font-semibold text-gray-900 mb-6">
             {step === 1 && 'Create your account'}
             {step === 2 && 'Enter verification code'}
-            {step === 3 && 'Choose account type'}
-            {step === 4 && 'Complete your profile'}
-            {step === 5 && 'Set your password'}
+            {step === 3 && 'Complete your profile'}
+            {step === 4 && 'Set your password'}
           </h2>
 
           {step === 1 && (
