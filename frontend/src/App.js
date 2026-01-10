@@ -192,6 +192,10 @@ function AppRoutes() {
         <Route path="/docs" element={<ProtectedRoute><DashboardLayout><div className="p-8">Documentation</div></DashboardLayout></ProtectedRoute>} />
         <Route path="/help" element={<ProtectedRoute><DashboardLayout><div className="p-8">Help</div></DashboardLayout></ProtectedRoute>} />
         
+        {/* Organization Routes */}
+        <Route path="/organizations" element={<ProtectedRoute><DashboardLayout><Organizations /></DashboardLayout></ProtectedRoute>} />
+        <Route path="/organizations/:orgId" element={<ProtectedRoute><DashboardLayout><OrganizationDetail /></DashboardLayout></ProtectedRoute>} />
+        
         {/* Explicit Not Found Route */}
         <Route path="/not-found" element={<DashboardLayout><NotFound /></DashboardLayout>} />
         
