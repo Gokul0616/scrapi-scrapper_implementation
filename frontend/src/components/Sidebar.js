@@ -44,7 +44,8 @@ import {
   Palette,
   Plus,
   ExternalLink,
-  Mail
+  Mail,
+  Building2
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
