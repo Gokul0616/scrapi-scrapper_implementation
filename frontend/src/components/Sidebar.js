@@ -275,6 +275,7 @@ const Sidebar = () => {
   const bottomItems = [
     { icon: Network, label: 'Proxy', path: '/proxy', shortcut: 'S P' },
     { icon: HardDrive, label: 'Storage', path: '/storage', shortcut: 'S D' },
+    { icon: Building2, label: 'Organizations', path: '/organizations', shortcut: 'S O' },
     { icon: CreditCard, label: 'Billing', path: '/billing', shortcut: 'S B' },
     { icon: Settings, label: 'Settings', path: '/settings', shortcut: 'S G' }
   ];
