@@ -5,7 +5,7 @@ Example: righteous_planet, cosmic_dragon, brave_thunder
 """
 import random
 
-# List of adjectives
+# Expanded list of adjectives (original + more)
 ADJECTIVES = [
     "brave", "bright", "calm", "clever", "cool", "cosmic", "creative", "daring",
     "elegant", "epic", "fierce", "friendly", "gentle", "golden", "graceful", "happy",
@@ -17,10 +17,16 @@ ADJECTIVES = [
     "vigorous", "vivid", "warm", "wild", "wise", "witty", "worthy", "youthful",
     "zealous", "ancient", "bold", "celestial", "dancing", "eager", "fearless", "glowing",
     "gracious", "heroic", "luminous", "mystic", "nimble", "pristine", "radiant", "restless",
-    "sacred", "savage", "sleek", "steady", "supreme", "tranquil", "ultimate", "wandering"
+    "sacred", "savage", "sleek", "steady", "supreme", "tranquil", "ultimate", "wandering",
+    # ─────────────── added ───────────────
+    "phantom", "neon", "frozen", "shadow", "blazing", "eternal", "silent", "arcane",
+    "feral", "primal", "void", "lunar", "astral", "quantum", "spectral", "chaotic",
+    "divine", "infernal", "ghostly", "velvet", "iron", "crystal", "emerald", "obsidian",
+    "velvet", "stormy", "midnight", "dawn", "dusk", "forgotten", "hidden", "lost",
+    "rebel", "rogue", "electric", "toxic", "venom", "cursed", "blessed"
 ]
 
-# List of nouns
+# Expanded list of nouns (original + more)
 NOUNS = [
     "albatross", "bear", "butterfly", "comet", "cosmos", "dragon", "eagle", "eclipse",
     "falcon", "flame", "forest", "galaxy", "hawk", "horizon", "island", "jaguar",
@@ -36,7 +42,13 @@ NOUNS = [
     "garden", "guardian", "harbor", "ice", "jungle", "kingdom", "legend", "matrix",
     "nexus", "north", "orbit", "paradise", "portal", "prism", "pulse", "realm",
     "sanctuary", "sentinel", "solstice", "soul", "spark", "sphere", "sunrise", "tide",
-    "trail", "trident", "twilight", "vapor", "venture", "vertex", "vision", "voyage"
+    "trail", "trident", "twilight", "vapor", "venture", "vertex", "vision", "voyage",
+    # ─────────────── added ───────────────
+    "wraith", "specter", "mirage", "abyss", "void", "cipher", "oracle", "monolith",
+    "citadel", "bastion", "spire", "ruin", "crypt", "relic", "talisman", "sigil",
+    "rune", "forge", "cauldron", "labyrinth", "mirage", "oasis", "mirage", "zephyr",
+    "tempest", "maelstrom", "leviathan", "kraken", "hydra", "chimera", "golem", "drake",
+    "wyrm", "griffin", "pegasus", "unicorn", "minotaur", "centaur", "harpy", "siren"
 ]
 
 
@@ -58,22 +70,35 @@ def generate_unique_username(existing_usernames: set, max_attempts: int = 100) -
     
     Args:
         existing_usernames: Set of existing usernames to avoid
-        max_attempts: Maximum number of attempts before giving up
+        max_attempts: Maximum number of attempts before giving up.
+                     After max_attempts, we switch to "Ultimate Scalability" mode.
     
     Returns:
         str: Unique generated username
         
     Raises:
-        ValueError: If unable to generate unique username after max_attempts
+        ValueError: Should not raise, will fallback to appending numbers.
     """
+    # 1. Try standard {adjective}_{noun} combinations
     for _ in range(max_attempts):
         username = generate_username()
         if username not in existing_usernames:
             return username
     
-    # If we can't find a unique combination, add a random number
-    username = generate_username()
-    return f"{username}_{random.randint(1, 9999)}"
+    # 2. "Ultimate Scalability" fallback
+    # If standard combinations are exhausted or collided max_attempts times,
+    # append a random number.
+    # We use a large range (1 to 99999) combined with the base name re-roll
+    # to ensure virtually unlimited possibilities (100M+).
+    
+    # Retry with suffix
+    # We loop again to ensure the suffixed one is also unique (though extremely likely)
+    while True:
+        base_username = generate_username()
+        suffix = random.randint(1, 99999) 
+        username = f"{base_username}_{suffix}"
+        if username not in existing_usernames:
+            return username
 
 
 def generate_username_suggestions(count: int = 5) -> list:
