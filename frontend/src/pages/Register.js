@@ -93,7 +93,7 @@ const Register = () => {
       });
 
       if (response.status === 200 && response.data.success) {
-        setStep(3); // Move to account type selection
+        setStep(3); // Move to details step (skip account type selection)
       } else {
         // Display the backend error message
         const errorMessage = response.data.detail || response.data.message || 'Invalid verification code';
