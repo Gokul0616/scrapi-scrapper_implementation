@@ -12,11 +12,11 @@ const API_URL = process.env.REACT_APP_BACKEND_URL || '';
 const Register = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
-  const [step, setStep] = useState(1); // 1: Email, 2: OTP, 3: Account Type, 4: Details, 5: Password
+  const [step, setStep] = useState(1); // 1: Email, 2: OTP, 3: Details, 4: Password
   const [formData, setFormData] = useState({
     email: '',
     otp: '',
-    accountType: '',
+    accountType: 'personal', // Default to personal account
     firstName: '',
     lastName: '',
     organizationName: '',
