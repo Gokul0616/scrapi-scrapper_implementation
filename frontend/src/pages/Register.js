@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Check, ArrowLeft, Eye, EyeOff, AlertCircle, User, Building2 } from 'lucide-react';
+import { Check, ArrowLeft, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import OTPInput from '../components/OTPInput';
 import axios from 'axios';
 
