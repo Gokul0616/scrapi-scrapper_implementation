@@ -435,61 +435,7 @@ const Register = () => {
 
           {step === 3 && (
             <>
-              <p className="text-[13px] text-gray-600 mb-6 text-center">
-                Select the type of account you want to create
-              </p>
-
-              <div className="space-y-3">
-                {/* Personal Account Option */}
-                <button
-                  onClick={() => handleAccountTypeSubmit('personal')}
-                  className="w-full flex items-center p-4 border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all group"
-                >
-                  <div className="w-12 h-12 rounded-full bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center mr-4">
-                    <User className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <div className="text-left flex-1">
-                    <h3 className="text-[15px] font-semibold text-gray-900">Personal Account</h3>
-                    <p className="text-[12px] text-gray-600 mt-0.5">For individual use and personal projects</p>
-                  </div>
-                </button>
-
-                {/* Organization Account Option */}
-                <button
-                  onClick={() => handleAccountTypeSubmit('organization')}
-                  className="w-full flex items-center p-4 border-2 border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all group"
-                >
-                  <div className="w-12 h-12 rounded-full bg-green-100 group-hover:bg-green-200 flex items-center justify-center mr-4">
-                    <Building2 className="w-6 h-6 text-green-600" />
-                  </div>
-                  <div className="text-left flex-1">
-                    <h3 className="text-[15px] font-semibold text-gray-900">Organization Account</h3>
-                    <p className="text-[12px] text-gray-600 mt-0.5">For teams and business use</p>
-                  </div>
-                </button>
-              </div>
-            </>
-          )}
-
-          {step === 4 && (
-            <>
               <form onSubmit={handleDetailsSubmit} className="space-y-4">
-                {formData.accountType === 'organization' && (
-                  <div>
-                    <label htmlFor="organizationName" className="block text-[13px] font-medium text-gray-700 mb-1.5">
-                      Organization Name
-                    </label>
-                    <Input
-                      id="organizationName"
-                      type="text"
-                      placeholder="Enter your organization name"
-                      value={formData.organizationName}
-                      onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })}
-                      className="w-full h-[38px] text-[14px] border-gray-300 rounded-md"
-                    />
-                  </div>
-                )}
-
                 <div>
                   <label htmlFor="firstName" className="block text-[13px] font-medium text-gray-700 mb-1.5">
                     First Name
@@ -548,7 +494,7 @@ const Register = () => {
             </>
           )}
 
-          {step === 5 && (
+          {step === 4 && (
             <>
               <form onSubmit={handlePasswordSubmit} className="space-y-4">
                 <div>
