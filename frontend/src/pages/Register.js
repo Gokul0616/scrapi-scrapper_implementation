@@ -108,7 +108,7 @@ const Register = () => {
 
   const handleAccountTypeSubmit = (type) => {
     setFormData({ ...formData, accountType: type });
-    setStep(4); // Move to details step
+    setStep(4); // Move to password step
   };
 
   const handleDetailsSubmit = async (e) => {
@@ -124,7 +124,7 @@ const Register = () => {
       setLastNameError('Last name is required');
       return;
     }
-    setStep(5); // Move to password step
+    setStep(4); // Move to password step
   };
 
   const handlePasswordSubmit = async (e) => {
