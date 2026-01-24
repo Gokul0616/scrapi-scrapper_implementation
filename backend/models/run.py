@@ -17,6 +17,7 @@ class Run(BaseModel):
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     user_id: str
+    organization_id: Optional[str] = None
     actor_id: str
     actor_name: str
     actor_icon: Optional[str] = None

@@ -72,3 +72,28 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         "username": payload.get("username"),
         "role": payload.get("role", "admin")
     }
+
+security_optional = HTTPBearer(auto_error=False)
+
+async def get_optional_current_user(credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_optional)) -> Optional[dict]:
+    """Dependency to get current user if authenticated, otherwise None."""
+    if not credentials:
+        return None
+        
+    try:
+        token = credentials.credentials
+        payload = decode_token(token)
+        
+        user_id = payload.get("sub")
+        if user_id is None:
+            return None
+        
+        return {
+            "id": user_id, 
+            "username": payload.get("username"),
+            "role": payload.get("role", "admin")
+        }
+    except HTTPException:
+        return None
+    except Exception:
+        return None

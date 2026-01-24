@@ -9,6 +9,7 @@ class Actor(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     api_id: str = Field(default_factory=lambda: f"actor_{uuid.uuid4().hex}")
     user_id: str
+    organization_id: Optional[str] = None  # For organization workspaces
     name: str
     description: str
     icon: str = "🕷️"

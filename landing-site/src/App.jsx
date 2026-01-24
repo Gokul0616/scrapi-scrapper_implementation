@@ -22,12 +22,42 @@ import NotFound from './components/NotFound';
 
 // Main Landing Page Component
 function LandingPage({ onOpenCookieSettings }) {
+  const [featuredActors, setFeaturedActors] = useState(actors); // Initialize with mock data
+
+  useEffect(() => {
+    const fetchActors = async () => {
+      try {
+        const response = await fetch('/api/store/featured?limit=6');
+        if (response.ok) {
+          const data = await response.json();
+          // Map API data to component format
+          const mappedActors = data.map(actor => ({
+            id: actor.id,
+            name: actor.name,
+            slug: actor.id.replace('actor_', 'store/'), // simple slug generation
+            description: actor.description,
+            icon: actor.icon || 'https://cdn.apify.com/actors/default-icon.png', // fallback
+            author: actor.author_name || 'Anonymous',
+            authorAvatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(actor.author_name || 'A')}&background=random`,
+            users: new Intl.NumberFormat('en-US', { notation: "compact", compactDisplay: "short" }).format(actor.runs_count || 0),
+            rating: actor.rating || 5.0,
+          }));
+          setFeaturedActors(mappedActors);
+        }
+      } catch (error) {
+        console.error('Failed to fetch actors:', error);
+      }
+    };
+
+    fetchActors();
+  }, []);
+
   return (
     <div className="min-h-screen bg-white font-sans text-gray-900">
       <Navbar onOpenCookieSettings={onOpenCookieSettings} />
       <main>
         <HeroSection />
-        <ActorCards actors={actors} />
+        <ActorCards actors={featuredActors} />
         <TrustSection logos={companyLogos} />
         <FeaturesSection />
         <IntegrationsSection integrations={integrations} />

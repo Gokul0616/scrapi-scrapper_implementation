@@ -1,7 +1,7 @@
 
 # removed incorrect insertion
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Security, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Security, WebSocket, WebSocketDisconnect, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, APIKeyHeader
 from typing import List, Optional
 from datetime import datetime, timezone, timedelta
@@ -17,7 +17,7 @@ from models import (
 )
 from models.policy import Policy, PolicyCreate, PolicyUpdate
 from models.notification import Notification
-from auth import create_access_token, get_current_user, hash_password, verify_password
+from auth import create_access_token, get_current_user, get_optional_current_user, hash_password, verify_password
 from services import get_proxy_manager, get_task_manager, LeadChatService, EnhancedGlobalChatService
 from scrapers import ScraperEngine, get_scraper_registry
 import logging
@@ -117,6 +117,21 @@ async def get_api_user(credentials: HTTPAuthorizationCredentials = Depends(api_k
         # We need to call the logic of get_current_user but passing credentials
         # auth.get_current_user is a dependency, so it's an async function taking credentials
         return await get_current_user(credentials)
+
+def get_workspace_query(user_id: str, request: Request) -> dict:
+    """
+    Helper to generate workspace-aware MongoDB query.
+    If Personal: returns {"user_id": user_id, "organization_id": None}
+    If Organization: returns {"organization_id": org_id}
+    """
+    workspace_type = getattr(request.state, 'workspace_type', 'personal')
+    workspace_id = getattr(request.state, 'workspace_id', None)
+    
+    if workspace_type == 'organization' and workspace_id:
+        return {"organization_id": workspace_id}
+    else:
+        # Personal workspace: strictly enforce user_id AND no organization_id
+        return {"user_id": user_id, "organization_id": None}
 
 router = APIRouter()
 
@@ -1406,12 +1421,22 @@ async def verify_otp(request: VerifyOTPRequest):
 # NOTE: Specific routes MUST come before parametrized routes to avoid conflicts
 
 @router.get("/actors", response_model=List[Actor])
-async def get_actors(current_user: dict = Depends(get_current_user)):
-    """Get all actors for current user."""
-    actors = await db.actors.find(
-        {"$or": [{"user_id": current_user['id']}, {"is_public": True}]},
-        {"_id": 0}
-    ).to_list(1000)
+async def get_actors(
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all actors for current user in current workspace."""
+    workspace_query = get_workspace_query(current_user['id'], request)
+    
+    # Allow public actors OR actors in current workspace
+    query = {
+        "$or": [
+            workspace_query,
+            {"is_public": True}
+        ]
+    }
+    
+    actors = await db.actors.find(query, {"_id": 0}).to_list(1000)
     
     # Convert datetime strings
     for actor in actors:
@@ -1423,10 +1448,22 @@ async def get_actors(current_user: dict = Depends(get_current_user)):
     return actors
 
 @router.post("/actors", response_model=Actor)
-async def create_actor(actor_data: ActorCreate, current_user: dict = Depends(get_current_user)):
-    """Create a new actor."""
+async def create_actor(
+    actor_data: ActorCreate, 
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a new actor in the current workspace."""
+    workspace_type = getattr(request.state, 'workspace_type', 'personal')
+    workspace_id = getattr(request.state, 'workspace_id', '')
+    
+    organization_id = None
+    if workspace_type == 'organization' and workspace_id:
+        organization_id = workspace_id
+    
     actor = Actor(
         user_id=current_user['id'],
+        organization_id=organization_id,  # Add workspace context
         name=actor_data.name,
         description=actor_data.description,
         icon=actor_data.icon,
@@ -1631,7 +1668,7 @@ async def get_suggested_actors(current_user: dict = Depends(get_current_user), l
 
 # Store endpoints
 @router.get("/store/categories")
-async def get_store_categories(current_user: dict = Depends(get_current_user)):
+async def get_store_categories(current_user: Optional[dict] = Depends(get_optional_current_user)):
     """Get all categories with actor counts for store filtering."""
     try:
         # Get all public actors
@@ -1684,7 +1721,7 @@ async def get_store_categories(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/store/featured")
-async def get_featured_actors(current_user: dict = Depends(get_current_user), limit: int = 6):
+async def get_featured_actors(current_user: Optional[dict] = Depends(get_optional_current_user), limit: int = 6):
     """Get featured actors for store landing page."""
     try:
         actors = await db.actors.find(
@@ -1714,7 +1751,7 @@ async def get_featured_actors(current_user: dict = Depends(get_current_user), li
 
 @router.get("/store/actors")
 async def get_store_actors(
-    current_user: dict = Depends(get_current_user),
+    current_user: Optional[dict] = Depends(get_optional_current_user),
     search: Optional[str] = None,
     category: Optional[str] = None,
     developer: Optional[str] = None,
@@ -1782,7 +1819,7 @@ async def get_store_actors(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/store/developers")
-async def get_store_developers(current_user: dict = Depends(get_current_user)):
+async def get_store_developers(current_user: Optional[dict] = Depends(get_optional_current_user)):
     """Get list of unique developers for filtering."""
     try:
         # Get distinct author names
@@ -1793,11 +1830,18 @@ async def get_store_developers(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/actors/{actor_id}", response_model=Actor)
-async def get_actor(actor_id: str, current_user: dict = Depends(get_current_user)):
-    """Get specific actor."""
+async def get_actor(actor_id: str, current_user: Optional[dict] = Depends(get_optional_current_user)):
+    """Get specific actor. Public access allowed if actor is public."""
     actor = await db.actors.find_one({"id": actor_id}, {"_id": 0})
     if not actor:
         raise HTTPException(status_code=404, detail="Actor not found")
+        
+    # Check access permission
+    is_public = actor.get('is_public', False)
+    is_owner = current_user and current_user['id'] == actor.get('user_id')
+    
+    if not is_public and not is_owner:
+        raise HTTPException(status_code=403, detail="Access denied")
     
     # Convert datetime strings
     if isinstance(actor.get('created_at'), str):
@@ -1922,7 +1966,7 @@ async def track_actor_view(actor_id: str, current_user: dict = Depends(get_curre
         raise HTTPException(status_code=500, detail=str(e))
 
 # ============= Run Routes =============
-async def execute_scraping_job(run_id: str, actor_id: str, user_id: str, input_data: dict):
+async def execute_scraping_job(run_id: str, actor_id: str, user_id: str, input_data: dict, organization_id: Optional[str] = None):
     """Background task to execute scraping."""
 
 
@@ -1982,7 +2026,12 @@ async def execute_scraping_job(run_id: str, actor_id: str, user_id: str, input_d
             
             # Create dataset and store results
             from models import Dataset
-            dataset = Dataset(run_id=run_id, user_id=user_id, item_count=len(results))
+            dataset = Dataset(
+                run_id=run_id,
+                user_id=user_id,
+                organization_id=organization_id,
+                item_count=len(results)
+            )
             dataset_doc = dataset.model_dump()
             dataset_doc['created_at'] = dataset_doc['created_at'].isoformat()
             await db.datasets.insert_one(dataset_doc)
@@ -2036,8 +2085,10 @@ async def execute_scraping_job(run_id: str, actor_id: str, user_id: str, input_d
         )
 
 @router.post("/runs", response_model=Run)
+@router.post("/runs", response_model=Run)
 async def create_run(
     run_data: RunCreate,
+    request: Request,
     current_user: dict = Depends(get_api_user)
 ):
     """Create and start a new scraping run with parallel execution."""
@@ -2066,9 +2117,18 @@ async def create_run(
     
     logger.info(f"   Actor name: {actor['name']}")
     
+    # Get workspace context
+    workspace_type = getattr(request.state, 'workspace_type', 'personal')
+    workspace_id = getattr(request.state, 'workspace_id', '')
+    
+    organization_id = None
+    if workspace_type == 'organization' and workspace_id:
+        organization_id = workspace_id
+        
     # Create run
     run = Run(
         user_id=current_user['id'],
+        organization_id=organization_id,
         actor_id=real_actor_id,
         actor_name=actor['name'],
         actor_icon=actor.get('icon'),
@@ -2089,7 +2149,8 @@ async def create_run(
             run.id,
             real_actor_id,
             current_user['id'],
-            run_data.input_data
+            run_data.input_data,
+            organization_id  # Pass organization_id
         )
     )
     
@@ -2099,6 +2160,7 @@ async def create_run(
 
 @router.get("/runs")
 async def get_runs(
+    request: Request,
     current_user: dict = Depends(get_current_user), 
     page: int = 1,
     limit: int = 20,
@@ -2107,9 +2169,9 @@ async def get_runs(
     sort_by: str = "created_at",
     sort_order: str = "desc"
 ):
-    """Get all runs for current user with pagination."""
+    """Get all runs for current user in current workspace."""
     # Build query
-    query = {"user_id": current_user['id']}
+    query = get_workspace_query(current_user['id'], request)
     
     # Add search filter (search by run ID or actor name)
     if search:
@@ -2155,9 +2217,16 @@ async def get_runs(
     }
 
 @router.get("/runs/{run_id}", response_model=Run)
-async def get_run(run_id: str, current_user: dict = Depends(get_current_user)):
+async def get_run(
+    run_id: str, 
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
     """Get specific run."""
-    run = await db.runs.find_one({"id": run_id, "user_id": current_user['id']}, {"_id": 0})
+    query = get_workspace_query(current_user['id'], request)
+    query['id'] = run_id
+    
+    run = await db.runs.find_one(query, {"_id": 0})
     if not run:
         raise HTTPException(status_code=404, detail="Run not found")
     
@@ -2172,15 +2241,21 @@ async def get_run(run_id: str, current_user: dict = Depends(get_current_user)):
     return run
 
 @router.delete("/runs/{run_id}/abort")
-async def abort_run(run_id: str, current_user: dict = Depends(get_current_user)):
+async def abort_run(
+    run_id: str, 
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
     """Abort a running or queued scraping job."""
     try:
         # Verify run belongs to user and is in abortable state
-        run = await db.runs.find_one({
+        query = get_workspace_query(current_user['id'], request)
+        query.update({
             "id": run_id, 
-            "user_id": current_user['id'], 
             "status": {"$in": ["running", "queued"]}
         })
+        
+        run = await db.runs.find_one(query)
         
         if not run:
             raise HTTPException(
@@ -2223,6 +2298,7 @@ async def abort_run(run_id: str, current_user: dict = Depends(get_current_user))
 @router.post("/runs/abort-multiple")
 async def abort_multiple_runs(
     run_ids: List[str], 
+    request: Request,
     current_user: dict = Depends(get_current_user)
 ):
     """Abort multiple running or queued scraping jobs."""
@@ -2233,14 +2309,18 @@ async def abort_multiple_runs(
             "not_found": []
         }
         
+        workspace_query = get_workspace_query(current_user['id'], request)
+        
         for run_id in run_ids:
             try:
                 # Verify run belongs to user and is in abortable state
-                run = await db.runs.find_one({
+                query = workspace_query.copy()
+                query.update({
                     "id": run_id,
-                    "user_id": current_user['id'],
                     "status": {"$in": ["running", "queued"]}
                 })
+                
+                run = await db.runs.find_one(query)
                 
                 if not run:
                     results["not_found"].append(run_id)
@@ -2288,10 +2368,11 @@ async def abort_multiple_runs(
 
 @router.post("/runs/abort-all")
 async def abort_all_runs(
+    request: Request,
     status_filter: Optional[str] = "running",
     current_user: dict = Depends(get_current_user)
 ):
-    """Abort all running or queued runs for the current user."""
+    """Abort all running or queued runs for the current user in current workspace."""
     try:
         # Validate status filter
         valid_statuses = ["running", "queued", "all"]
@@ -2302,7 +2383,7 @@ async def abort_all_runs(
             )
         
         # Build query based on status filter
-        query = {"user_id": current_user['id']}
+        query = get_workspace_query(current_user['id'], request)
         if status_filter == "all":
             query["status"] = {"$in": ["running", "queued"]}
         else:
@@ -2371,6 +2452,7 @@ async def abort_all_runs(
 @router.get("/datasets/{run_id}/items")
 async def get_dataset_items(
     run_id: str, 
+    request: Request,
     current_user: dict = Depends(get_current_user),
     page: int = 1,
     limit: int = 20,
@@ -2378,7 +2460,10 @@ async def get_dataset_items(
 ):
     """Get dataset items for a run with pagination."""
     # Verify run belongs to user
-    run = await db.runs.find_one({"id": run_id, "user_id": current_user['id']})
+    query = get_workspace_query(current_user['id'], request)
+    query['id'] = run_id
+    
+    run = await db.runs.find_one(query)
     if not run:
         raise HTTPException(status_code=404, detail="Run not found")
     
@@ -2423,7 +2508,12 @@ async def get_dataset_items(
     }
 
 @router.get("/datasets/{run_id}/export")
-async def export_dataset(run_id: str, format: str = "json", current_user: dict = Depends(get_current_user)):
+async def export_dataset(
+    run_id: str, 
+    request: Request,
+    format: str = "json", 
+    current_user: dict = Depends(get_current_user)
+):
     """Export dataset in various formats."""
     from fastapi.responses import StreamingResponse
     import io
@@ -2431,7 +2521,10 @@ async def export_dataset(run_id: str, format: str = "json", current_user: dict =
     import csv
     
     # Verify run belongs to user
-    run = await db.runs.find_one({"id": run_id, "user_id": current_user['id']})
+    query = get_workspace_query(current_user['id'], request)
+    query['id'] = run_id
+    
+    run = await db.runs.find_one(query)
     if not run:
         raise HTTPException(status_code=404, detail="Run not found")
     
@@ -2706,7 +2799,8 @@ async def global_chat(
                             run_id,
                             actor_id,
                             current_user['id'],
-                            input_data
+                            input_data,
+                            None # Global chat runs default to personal for now, or could infer from context if passed
                         )
                     )
                     logger.info(f"✓ Run {run_id} started by AI Agent. Active tasks: {task_manager.get_running_count()}")
@@ -2797,6 +2891,7 @@ async def clear_chat_history(
 @router.post("/schedules", status_code=201)
 async def create_schedule(
     schedule_data: "ScheduleCreate",
+    request: Request,
     current_user: dict = Depends(get_current_user)
 ):
     """Create a new schedule for automatic actor runs."""
@@ -2813,9 +2908,18 @@ async def create_schedule(
         if not actor.get('is_public', False):
             raise HTTPException(status_code=403, detail="Access denied to this actor")
     
+    # Get workspace context
+    workspace_type = getattr(request.state, 'workspace_type', 'personal')
+    workspace_id = getattr(request.state, 'workspace_id', '')
+    
+    organization_id = None
+    if workspace_type == 'organization' and workspace_id:
+        organization_id = workspace_id
+    
     # Create schedule
     schedule = Schedule(
         user_id=current_user['id'],
+        organization_id=organization_id,  # Add workspace context
         actor_id=schedule_data.actor_id,
         actor_name=actor['name'],
         name=schedule_data.name,
@@ -2864,15 +2968,16 @@ async def create_schedule(
 
 @router.get("/schedules")
 async def get_schedules(
+    request: Request,
     current_user: dict = Depends(get_current_user),
     page: int = 1,
     limit: int = 20,
     actor_id: Optional[str] = None,
     is_enabled: Optional[bool] = None
 ):
-    """Get all schedules for the current user with pagination."""
+    """Get all schedules for the current user in current workspace with pagination."""
     # Build query
-    query = {"user_id": current_user['id']}
+    query = get_workspace_query(current_user['id'], request)
     
     if actor_id:
         query["actor_id"] = actor_id
@@ -2917,10 +3022,14 @@ async def get_schedules(
 @router.get("/schedules/{schedule_id}")
 async def get_schedule(
     schedule_id: str,
+    request: Request,
     current_user: dict = Depends(get_current_user)
 ):
     """Get a specific schedule by ID."""
-    schedule = await db.schedules.find_one({"id": schedule_id, "user_id": current_user['id']}, {"_id": 0})
+    query = get_workspace_query(current_user['id'], request)
+    query['id'] = schedule_id
+    
+    schedule = await db.schedules.find_one(query, {"_id": 0})
     
     if not schedule:
         raise HTTPException(status_code=404, detail="Schedule not found")
@@ -2947,6 +3056,7 @@ async def get_schedule(
 async def update_schedule(
     schedule_id: str,
     schedule_update: "ScheduleUpdate",
+    request: Request,
     current_user: dict = Depends(get_current_user)
 ):
     """Update a schedule."""
@@ -2954,7 +3064,10 @@ async def update_schedule(
     from services.scheduler_service import get_scheduler
     
     # Check if schedule exists and belongs to user
-    schedule = await db.schedules.find_one({"id": schedule_id, "user_id": current_user['id']})
+    query = get_workspace_query(current_user['id'], request)
+    query['id'] = schedule_id
+    
+    schedule = await db.schedules.find_one(query)
     if not schedule:
         raise HTTPException(status_code=404, detail="Schedule not found")
     
@@ -3019,13 +3132,17 @@ async def update_schedule(
 @router.delete("/schedules/{schedule_id}")
 async def delete_schedule(
     schedule_id: str,
+    request: Request,
     current_user: dict = Depends(get_current_user)
 ):
     """Delete a schedule."""
     from services.scheduler_service import get_scheduler
     
     # Check if schedule exists and belongs to user
-    schedule = await db.schedules.find_one({"id": schedule_id, "user_id": current_user['id']})
+    query = get_workspace_query(current_user['id'], request)
+    query['id'] = schedule_id
+    
+    schedule = await db.schedules.find_one(query)
     if not schedule:
         raise HTTPException(status_code=404, detail="Schedule not found")
     
@@ -3044,12 +3161,16 @@ async def delete_schedule(
 @router.post("/schedules/{schedule_id}/enable")
 async def enable_schedule(
     schedule_id: str,
+    request: Request,
     current_user: dict = Depends(get_current_user)
 ):
     """Enable a schedule."""
     from services.scheduler_service import get_scheduler
     
-    schedule = await db.schedules.find_one({"id": schedule_id, "user_id": current_user['id']})
+    query = get_workspace_query(current_user['id'], request)
+    query['id'] = schedule_id
+    
+    schedule = await db.schedules.find_one(query)
     if not schedule:
         raise HTTPException(status_code=404, detail="Schedule not found")
     
@@ -3082,12 +3203,16 @@ async def enable_schedule(
 @router.post("/schedules/{schedule_id}/disable")
 async def disable_schedule(
     schedule_id: str,
+    request: Request,
     current_user: dict = Depends(get_current_user)
 ):
     """Disable a schedule."""
     from services.scheduler_service import get_scheduler
     
-    schedule = await db.schedules.find_one({"id": schedule_id, "user_id": current_user['id']})
+    query = get_workspace_query(current_user['id'], request)
+    query['id'] = schedule_id
+    
+    schedule = await db.schedules.find_one(query)
     if not schedule:
         raise HTTPException(status_code=404, detail="Schedule not found")
     
@@ -3148,7 +3273,8 @@ async def run_schedule_now(
             run.id,
             schedule['actor_id'],
             current_user['id'],
-            schedule['input_data']
+            schedule['input_data'],
+            schedule.get('organization_id') # Pass organization_id from schedule
         )
     )
     
