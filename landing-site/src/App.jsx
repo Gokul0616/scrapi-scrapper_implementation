@@ -53,12 +53,12 @@ function LandingPage({ onOpenCookieSettings }) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white font-sans text-gray-900">
+    <div className="min-h-screen bg-white dark:bg-black font-sans text-gray-900 dark:text-gray-100">
       <Navbar onOpenCookieSettings={onOpenCookieSettings} />
       <main>
         <HeroSection />
         <ActorCards actors={featuredActors} />
-        <TrustSection logos={companyLogos} />
+        {/* <TrustSection logos={companyLogos} /> */}
         <FeaturesSection />
         <IntegrationsSection integrations={integrations} />
         <OpenSourceSection templates={codeTemplates} />
@@ -82,6 +82,43 @@ function App() {
     if (savedSettings) {
       setCookieSettings(JSON.parse(savedSettings));
     }
+  }, []);
+
+  // System Theme Listener matching user device
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e) => {
+      if (e.matches) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    };
+
+    // Initial check
+    handleChange(mediaQuery);
+
+    // Listen for changes
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
+  // 'l' key listener for theme toggle
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ignore if user is typing in an input, textarea, or contentEditable element
+      const tagName = e.target.tagName.toUpperCase();
+      const isInput = tagName === 'INPUT' || tagName === 'TEXTAREA' || e.target.isContentEditable;
+
+      if (isInput) return;
+
+      if (e.key.toLowerCase() === 'l') {
+        document.documentElement.classList.toggle('dark');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const handleOpenCookieSettings = () => {
@@ -110,35 +147,37 @@ function App() {
 
   return (
     <Router>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <LandingPage onOpenCookieSettings={handleOpenCookieSettings} />
-          }
+      <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-gray-100 transition-colors duration-200">
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <LandingPage onOpenCookieSettings={handleOpenCookieSettings} />
+            }
+          />
+          {/* Redirect old path to new structure */}
+          <Route path="/cookie-policy" element={<Navigate to="/legal/cookie-policy" replace />} />
+          {/* Docs Landing Page */}
+          <Route path="/docs" element={<DocsLandingPage />} />
+          {/* Dynamic Legal Routes */}
+          <Route path="/legal/:docId" element={<LegalDocument onOpenCookieSettings={handleOpenCookieSettings} />} />
+          {/* 404 Not Found - Catch all routes */}
+          <Route path="*" element={<NotFound onOpenCookieSettings={handleOpenCookieSettings} />} />
+        </Routes>
+
+        {/* Cookie Banner - shows on all pages */}
+        <ConsentPopup
+          onOpenSettings={handleOpenCookieSettings}
+          onAcceptAll={handleAcceptAllCookies}
         />
-        {/* Redirect old path to new structure */}
-        <Route path="/cookie-policy" element={<Navigate to="/legal/cookie-policy" replace />} />
-        {/* Docs Landing Page */}
-        <Route path="/docs" element={<DocsLandingPage />} />
-        {/* Dynamic Legal Routes */}
-        <Route path="/legal/:docId" element={<LegalDocument onOpenCookieSettings={handleOpenCookieSettings} />} />
-        {/* 404 Not Found - Catch all routes */}
-        <Route path="*" element={<NotFound onOpenCookieSettings={handleOpenCookieSettings} />} />
-      </Routes>
 
-      {/* Cookie Banner - shows on all pages */}
-      <ConsentPopup
-        onOpenSettings={handleOpenCookieSettings}
-        onAcceptAll={handleAcceptAllCookies}
-      />
-
-      {/* Cookie Settings Modal */}
-      <CookieSettingsModal
-        isOpen={showCookieSettings}
-        onClose={handleCloseCookieSettings}
-        onSave={handleSaveCookieSettings}
-      />
+        {/* Cookie Settings Modal */}
+        <CookieSettingsModal
+          isOpen={showCookieSettings}
+          onClose={handleCloseCookieSettings}
+          onSave={handleSaveCookieSettings}
+        />
+      </div>
     </Router>
   );
 }

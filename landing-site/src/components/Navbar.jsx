@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, ChevronRight, Menu, X, ArrowLeft, Layers, Zap, Database, Clock, Target, Briefcase, Building2, GraduationCap, Heart, Search, TrendingUp, BarChart3, ShoppingCart, FileText, Code, BookOpen, Rocket, Wrench, DollarSign, HelpCircle, Lightbulb, FileCheck, MessageSquare, Info, Mail, Users, Calendar, Handshake, BriefcaseBusiness } from 'lucide-react';
 
 const ScrapiLogo = () => (
-  <img src="/logo.png" alt="Scrapi Logo" width="32" height="32" />
+  <img src="/logo.png" alt="Scrapi Logo" width="32" height="32" className="dark:brightness-0 dark:invert" />
 );
 
 // Mega Menu Dropdown Component with Position Awareness
@@ -48,7 +48,7 @@ const MegaMenuDropdown = ({ label, content, position = 'left' }) => {
       onMouseLeave={handleMouseLeave}
     >
       <button
-        className="flex items-center gap-1 text-gray-700 hover:text-gray-900 transition-colors text-sm font-medium py-2"
+        className="flex items-center gap-1 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors text-sm font-medium py-2"
         data-testid={`nav-${label.toLowerCase()}-button`}
       >
         {label}
@@ -67,7 +67,7 @@ const MegaMenuDropdown = ({ label, content, position = 'left' }) => {
           zIndex: 9999
         }}
       >
-        <div className="bg-white rounded-lg shadow-2xl border border-gray-100 overflow-hidden">
+        <div className="bg-white dark:bg-black rounded-lg shadow-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
           {content}
         </div>
       </div>
@@ -79,15 +79,15 @@ const MegaMenuDropdown = ({ label, content, position = 'left' }) => {
 const MenuItem = ({ icon: Icon, title, description, href = '#', badge = null }) => (
   <a
     href={href}
-    className="flex items-start gap-3 px-3 py-2.5 hover:bg-gray-50 transition-colors group rounded-md"
+    className="flex items-start gap-3 px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-zinc-900 transition-colors group rounded-md"
     data-testid={`menu-item-${title.toLowerCase().replace(/\s+/g, '-')}`}
   >
-    <div className="flex-shrink-0 w-9 h-9 flex items-center justify-center bg-gray-100 rounded-md group-hover:bg-orange-50 transition-colors">
-      <Icon className="w-4 h-4 text-gray-600 group-hover:text-orange-500 transition-colors" />
+    <div className="flex-shrink-0 w-9 h-9 flex items-center justify-center bg-gray-100 dark:bg-zinc-800 rounded-md group-hover:bg-orange-50 dark:group-hover:bg-orange-900/20 transition-colors">
+      <Icon className="w-4 h-4 text-gray-600 dark:text-gray-400 group-hover:text-orange-500 transition-colors" />
     </div>
     <div className="flex-1 min-w-0">
       <div className="flex items-center gap-2">
-        <h4 className="text-sm font-medium text-gray-900 group-hover:text-orange-500 transition-colors">
+        <h4 className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-orange-500 transition-colors">
           {title}
         </h4>
         {badge && (
@@ -97,7 +97,7 @@ const MenuItem = ({ icon: Icon, title, description, href = '#', badge = null }) 
         )}
       </div>
       {description && (
-        <p className="text-xs text-gray-500 mt-0.5 line-clamp-2 leading-relaxed">
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2 leading-relaxed">
           {description}
         </p>
       )}
@@ -114,14 +114,14 @@ const SectionHeader = ({ title }) => (
 
 // Featured Card Component
 const FeaturedCard = ({ title, description, cta, ctaLink = '#', image }) => (
-  <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-md p-3.5 border border-orange-200">
+  <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-gray-900 dark:to-gray-800 rounded-md p-3.5 border border-orange-200 dark:border-gray-700">
     {image && (
       <div className="mb-2.5 rounded-md overflow-hidden h-28 bg-gradient-to-r from-orange-400 to-orange-600 flex items-center justify-center">
         <Rocket className="w-10 h-10 text-white" />
       </div>
     )}
-    <h4 className="text-sm font-semibold text-gray-900 mb-1">{title}</h4>
-    <p className="text-xs text-gray-600 mb-2.5 leading-relaxed">{description}</p>
+    <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">{title}</h4>
+    <p className="text-xs text-gray-600 dark:text-gray-300 mb-2.5 leading-relaxed">{description}</p>
     <a
       href={ctaLink}
       className="inline-flex items-center text-xs font-semibold text-orange-600 hover:text-orange-700 transition-colors"
@@ -401,14 +401,15 @@ const ResourcesDropdown = () => (
       <div className="col-span-4">
         <div className="h-full flex flex-col">
           <div className="flex-1" />
-          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-md p-3.5 border border-purple-200">
+          <div className="flex-1" />
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-gray-900 dark:to-gray-800 rounded-md p-3.5 border border-purple-200 dark:border-gray-700">
             <div className="mb-2.5 flex items-center justify-center">
               <div className="w-14 h-14 bg-purple-500 rounded-full flex items-center justify-center">
                 <Users className="w-7 h-7 text-white" />
               </div>
             </div>
-            <h4 className="text-sm font-semibold text-gray-900 mb-1 text-center">Join our Discord</h4>
-            <p className="text-xs text-gray-600 mb-2.5 text-center leading-relaxed">Talk to scraping experts</p>
+            <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1 text-center">Join our Discord</h4>
+            <p className="text-xs text-gray-600 dark:text-gray-300 mb-2.5 text-center leading-relaxed">Talk to scraping experts</p>
             <a
               href="#"
               className="w-full inline-flex items-center justify-center text-xs font-semibold text-purple-600 hover:text-purple-700 transition-colors"
@@ -429,16 +430,16 @@ const ResourcesDropdown = () => (
 const MobileMenuItem = ({ icon: Icon, title, onClick, hasSubmenu, badge }) => (
   <button
     onClick={onClick}
-    className="w-full flex items-center justify-between px-6 py-3.5 hover:bg-gray-50 transition-colors text-left border-b border-gray-100"
+    className="w-full flex items-center justify-between px-6 py-3.5 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors text-left border-b border-gray-100 dark:border-gray-800"
     data-testid={`mobile-menu-item-${title.toLowerCase().replace(/\s+/g, '-')}`}
   >
     <div className="flex items-center gap-3">
       {Icon && (
-        <div className="w-9 h-9 flex items-center justify-center bg-gray-100 rounded-md">
-          <Icon className="w-4 h-4 text-gray-600" />
+        <div className="w-9 h-9 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-md">
+          <Icon className="w-4 h-4 text-gray-600 dark:text-gray-400" />
         </div>
       )}
-      <span className="text-base font-medium text-gray-900">{title}</span>
+      <span className="text-base font-medium text-gray-900 dark:text-white">{title}</span>
       {badge && (
         <span className="px-2 py-0.5 text-[10px] font-medium bg-gray-900 text-white rounded">
           {badge}
@@ -457,7 +458,7 @@ const MobileSubmenuItem = ({ icon: Icon, title, description, onClick, href }) =>
       if (!href) e.preventDefault();
       onClick && onClick(e);
     }}
-    className="w-full flex items-start gap-3 px-6 py-3 hover:bg-gray-50 transition-colors text-left border-b border-gray-100"
+    className="w-full flex items-start gap-3 px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors text-left border-b border-gray-100 dark:border-gray-800"
     data-testid={`mobile-submenu-item-${title.toLowerCase().replace(/\s+/g, '-')}`}
   >
     {Icon && (
@@ -466,9 +467,9 @@ const MobileSubmenuItem = ({ icon: Icon, title, description, onClick, href }) =>
       </div>
     )}
     <div className="flex-1">
-      <h4 className="text-sm font-medium text-gray-900">{title}</h4>
+      <h4 className="text-sm font-medium text-gray-900 dark:text-white">{title}</h4>
       {description && (
-        <p className="text-xs text-gray-500 mt-0.5">{description}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{description}</p>
       )}
     </div>
   </a>
@@ -589,16 +590,16 @@ const MobileMenu = ({ isOpen, onClose }) => {
 
       {/* Mobile Menu Panel */}
       <div
-        className={`fixed top-0 right-0 bottom-0 w-full bg-white z-50 transform transition-transform duration-300 ease-out lg:hidden ${isOpen ? 'translate-x-0' : 'translate-x-full'
+        className={`fixed top-0 right-0 bottom-0 w-full bg-white dark:bg-black z-50 transform transition-transform duration-300 ease-out lg:hidden ${isOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
         data-testid="mobile-menu-panel"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 h-16 border-b border-gray-200">
+        <div className="flex items-center justify-between px-6 h-16 border-b border-gray-200 dark:border-gray-800">
           {activeSubmenu ? (
             <button
               onClick={handleBack}
-              className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
+              className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
               data-testid="mobile-menu-back-button"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -607,15 +608,15 @@ const MobileMenu = ({ isOpen, onClose }) => {
           ) : (
             <div className="flex items-center gap-2">
               <ScrapiLogo />
-              <span className="text-xl font-semibold text-gray-900">Scrapi</span>
+              <span className="text-xl font-semibold text-gray-900 dark:text-white">Scrapi</span>
             </div>
           )}
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
             data-testid="mobile-menu-close-button"
           >
-            <X className="w-6 h-6 text-gray-700" />
+            <X className="w-6 h-6 text-gray-700 dark:text-gray-300" />
           </button>
         </div>
 
@@ -623,21 +624,21 @@ const MobileMenu = ({ isOpen, onClose }) => {
         <div className="h-[calc(100vh-64px)] relative overflow-hidden">
           {/* Main Menu View */}
           <div
-            className={`absolute inset-0 bg-white transition-transform duration-300 ease-out overflow-y-auto ${activeSubmenu ? '-translate-x-full' : 'translate-x-0'
+            className={`absolute inset-0 bg-white dark:bg-black transition-transform duration-300 ease-out overflow-y-auto ${activeSubmenu ? '-translate-x-full' : 'translate-x-0'
               }`}
           >
             {/* CTA Buttons */}
-            <div className="px-6 py-4 space-y-2.5 border-b border-gray-200">
+            <div className="px-6 py-4 space-y-2.5 border-b border-gray-200 dark:border-gray-800">
               <a
                 href="#"
-                className="block w-full px-4 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition-colors text-center"
+                className="block w-full px-4 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium rounded-md hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors text-center"
                 data-testid="mobile-menu-get-started-button"
               >
                 Get started
               </a>
               <a
                 href="#"
-                className="block w-full px-4 py-2.5 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 transition-colors text-center"
+                className="block w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-center"
                 data-testid="mobile-menu-login-button"
               >
                 Log in
@@ -676,7 +677,7 @@ const MobileMenu = ({ isOpen, onClose }) => {
 
           {/* Submenu View with sliding animation from right */}
           <div
-            className={`absolute inset-0 bg-white transition-transform duration-300 ease-out overflow-y-auto ${activeSubmenu ? 'translate-x-0' : 'translate-x-full'
+            className={`absolute inset-0 bg-white dark:bg-black transition-transform duration-300 ease-out overflow-y-auto ${activeSubmenu ? 'translate-x-0' : 'translate-x-full'
               }`}
           >
             {submenuContent[activeSubmenu]?.map((item, index) => (
@@ -702,12 +703,12 @@ const Navbar = () => {
 
   return (
     <>
-      <nav className="fixed w-full top-0 z-50 bg-white border-b border-gray-200">
+      <nav className="fixed w-full top-0 z-50 bg-white dark:bg-black border-b border-gray-200 dark:border-gray-800">
         <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between">
           {/* Logo */}
           <a href="/" className="flex items-center gap-2" data-testid="nav-logo">
             <ScrapiLogo />
-            <span className="text-xl font-semibold text-gray-900">Scrapi</span>
+            <span className="text-xl font-semibold text-gray-900 dark:text-white">Scrapi</span>
           </a>
 
           {/* Desktop Nav Links */}
@@ -734,7 +735,7 @@ const Navbar = () => {
             />
             <a
               href="#"
-              className="text-gray-700 hover:text-gray-900 transition-colors text-sm font-medium"
+              className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors text-sm font-medium"
               data-testid="nav-pricing-link"
             >
               Pricing
@@ -745,14 +746,14 @@ const Navbar = () => {
           <div className="flex items-center gap-4">
             <a
               href="#"
-              className="hidden md:inline-block text-gray-700 hover:text-gray-900 transition-colors text-sm font-medium"
+              className="hidden md:inline-block text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors text-sm font-medium"
               data-testid="nav-login-link"
             >
               Log in
             </a>
             <a
               href="#"
-              className="hidden md:inline-block px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition-colors"
+              className="hidden md:inline-block px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium rounded-md hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
               data-testid="nav-get-started-button"
             >
               Get started
@@ -761,10 +762,10 @@ const Navbar = () => {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className="lg:hidden p-2 hover:bg-gray-100 rounded-md transition-colors"
+              className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
               data-testid="mobile-menu-hamburger-button"
             >
-              <Menu className="w-6 h-6 text-gray-700" />
+              <Menu className="w-6 h-6 text-gray-700 dark:text-white" />
             </button>
           </div>
         </div>

@@ -57,13 +57,13 @@ const WorldMapVisual = () => (
       <ellipse cx="400" cy="200" rx="350" ry="170" fill="none" stroke="#94a3b8" strokeWidth="1" strokeDasharray="4" />
       {/* Proxy nodes - dots around the map */}
       {
-        [ { x: 150, y: 120 }, { x: 200, y: 180 }, { x: 280, y: 140 }, { x: 320, y: 200 },
+        [{ x: 150, y: 120 }, { x: 200, y: 180 }, { x: 280, y: 140 }, { x: 320, y: 200 },
         { x: 400, y: 100 }, { x: 450, y: 150 }, { x: 500, y: 180 }, { x: 550, y: 120 },
         { x: 600, y: 200 }, { x: 650, y: 140 }, { x: 350, y: 280 }, { x: 450, y: 260 },
         { x: 550, y: 300 }, { x: 250, y: 250 }, { x: 380, y: 180 }, { x: 480, y: 220 },
-      ].map((dot, i) => (
-        <circle key={i} cx={dot.x} cy={dot.y} r="6" fill="#2BC56B" opacity={0.6 + Math.random() * 0.4} />
-      ))}
+        ].map((dot, i) => (
+          <circle key={i} cx={dot.x} cy={dot.y} r="6" fill="#2BC56B" opacity={0.6 + Math.random() * 0.4} />
+        ))}
       {/* Connection lines */}
       <path d="M150,120 Q275,50 400,100" fill="none" stroke="#2BC56B" strokeWidth="1" opacity="0.3" />
       <path d="M400,100 Q525,50 650,140" fill="none" stroke="#2BC56B" strokeWidth="1" opacity="0.3" />
@@ -81,7 +81,7 @@ const WorldMapVisual = () => (
             Residential
           </span>
         </div>
-        <p className="text-gray-500 text-sm">195+ Countries Covered</p>
+        <p className="text-gray-500 dark:text-gray-400 text-sm">195+ Countries Covered</p>
       </div>
     </div>
   </div>
@@ -91,9 +91,9 @@ const WorldMapVisual = () => (
 const MonitoringVisual = () => (
   <div className="flex flex-col md:flex-row gap-4 h-full">
     {/* Chart area */}
-    <div className="flex-1 bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+    <div className="flex-1 bg-white dark:bg-gray-900 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-800">
       <div className="flex items-center justify-between mb-4">
-        <span className="text-sm font-medium text-gray-700">Success Rate</span>
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Success Rate</span>
         <span className="text-xs text-green-600 font-medium">↑ 99.2%</span>
       </div>
       <svg viewBox="0 0 200 80" className="w-full h-20">
@@ -117,20 +117,20 @@ const MonitoringVisual = () => (
       </svg>
     </div>
     {/* Alert panel */}
-    <div className="w-full md:w-56 bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+    <div className="w-full md:w-56 bg-white dark:bg-gray-900 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-800">
       <div className="flex items-center gap-2 mb-3">
-        <AlertCircle className="w-4 h-4 text-gray-600" />
-        <span className="text-sm font-medium text-gray-700">Create alert</span>
+        <AlertCircle className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Create alert</span>
       </div>
       <div className="space-y-2 mb-3">
-        <div className="text-xs text-gray-500">Selected scrapers</div>
+        <div className="text-xs text-gray-500 dark:text-gray-400">Selected scrapers</div>
         <div className="flex flex-wrap gap-1">
           <span className="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded">Google Maps</span>
           <span className="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded">Amazon</span>
         </div>
       </div>
       <div className="space-y-2 mb-3">
-        <div className="text-xs text-gray-500">Trigger</div>
+        <div className="text-xs text-gray-500 dark:text-gray-400">Trigger</div>
         <div className="flex gap-1">
           <span className="px-2 py-0.5 bg-red-50 text-red-600 text-xs rounded flex items-center gap-1">
             Failed <span className="text-red-400">×</span>
@@ -140,33 +140,33 @@ const MonitoringVisual = () => (
           </span>
         </div>
       </div>
-      <div className="text-xs text-gray-500">Notification</div>
+      <div className="text-xs text-gray-500 dark:text-gray-400">Notification</div>
     </div>
   </div>
 );
 
 // Data Processing Visual
 const DataProcessingVisual = () => (
-  <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 h-full">
+  <div className="bg-white dark:bg-gray-900 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-800 h-full">
     <div className="flex items-center justify-between mb-4">
-      <span className="text-sm font-medium text-gray-700">Dataset</span>
+      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Dataset</span>
     </div>
-    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg mb-4">
-      <Database className="w-5 h-5 text-gray-600" />
+    <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg mb-4">
+      <Database className="w-5 h-5 text-gray-600 dark:text-gray-400" />
       <div className="flex-1">
         <div className="flex items-center gap-2">
-          <span className="font-medium text-gray-800 text-sm">Amazon Products</span>
-          <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full flex items-center gap-1">
+          <span className="font-medium text-gray-800 dark:text-gray-200 text-sm">Amazon Products</span>
+          <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs rounded-full flex items-center gap-1">
             <Check className="w-3 h-3" /> Success
           </span>
         </div>
-        <span className="text-xs text-gray-500">Results: 12,485</span>
+        <span className="text-xs text-gray-500 dark:text-gray-400">Results: 12,485</span>
       </div>
     </div>
     <div className="space-y-3">
-      <div className="text-sm text-gray-600">Export format</div>
+      <div className="text-sm text-gray-600 dark:text-gray-400">Export format</div>
       <div className="relative">
-        <select className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm appearance-none bg-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+        <select className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm appearance-none bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
           <option>Select format</option>
           <option>JSON</option>
           <option>CSV</option>
@@ -175,10 +175,10 @@ const DataProcessingVisual = () => (
         <Download className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
       </div>
       <div className="grid grid-cols-2 gap-2 pt-2">
-        <button className="flex items-center justify-center gap-2 px-3 py-2 border border-gray-200 rounded-lg text-xs text-gray-600 hover:bg-gray-50">
+        <button className="flex items-center justify-center gap-2 px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
           <span>CSV</span>
         </button>
-        <button className="flex items-center justify-center gap-2 px-3 py-2 border border-gray-200 rounded-lg text-xs text-gray-600 hover:bg-gray-50">
+        <button className="flex items-center justify-center gap-2 px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
           <span>Excel</span>
         </button>
       </div>
@@ -189,16 +189,16 @@ const DataProcessingVisual = () => (
 // Deployment Icons
 const DeploymentIcons = () => (
   <div className="flex justify-center gap-4 mb-4">
-    <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-gray-200 flex items-center justify-center">
-      <Github className="w-5 h-5 text-gray-700" />
+    <div className="w-10 h-10 rounded-full bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700 flex items-center justify-center">
+      <Github className="w-5 h-5 text-gray-700 dark:text-gray-300" />
     </div>
-    <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-gray-200 flex items-center justify-center">
+    <div className="w-10 h-10 rounded-full bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700 flex items-center justify-center">
       <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#E24329">
-        <path d="M12 22l-9-7 1.3-4L6 4l3 7h6l3-7 1.7 7L21 15l-9 7z"/>
+        <path d="M12 22l-9-7 1.3-4L6 4l3 7h6l3-7 1.7 7L21 15l-9 7z" />
       </svg>
     </div>
-    <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-gray-200 flex items-center justify-center">
-      <Terminal className="w-5 h-5 text-gray-700" />
+    <div className="w-10 h-10 rounded-full bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700 flex items-center justify-center">
+      <Terminal className="w-5 h-5 text-gray-700 dark:text-gray-300" />
     </div>
   </div>
 );
@@ -224,7 +224,7 @@ const OpenSourceSection = ({ templates }) => {
   };
 
   const getContent = () => {
-    switch(activeTab) {
+    switch (activeTab) {
       case 'open-source':
         return {
           title: 'We love open source',
@@ -324,7 +324,7 @@ const OpenSourceSection = ({ templates }) => {
           </div>
         );
       }
-      
+
       if (content.codeType === 'deployment') {
         return (
           <div>
@@ -343,12 +343,12 @@ const OpenSourceSection = ({ templates }) => {
                   {deploymentOutput.split('\n').map((line, i) => (
                     <div key={i} className={
                       line.startsWith('>') ? 'text-green-400' :
-                      line.startsWith('Success') ? 'text-green-400' :
-                      line.startsWith('Info') ? 'text-blue-400' :
-                      line.startsWith('Run') ? 'text-yellow-400' :
-                      line.startsWith('ACTOR') ? 'text-gray-400' :
-                      line.includes('->') ? 'text-cyan-400' :
-                      'text-gray-300'
+                        line.startsWith('Success') ? 'text-green-400' :
+                          line.startsWith('Info') ? 'text-blue-400' :
+                            line.startsWith('Run') ? 'text-yellow-400' :
+                              line.startsWith('ACTOR') ? 'text-gray-400' :
+                                line.includes('->') ? 'text-cyan-400' :
+                                  'text-gray-300'
                     }>{line}</div>
                   ))}
                 </pre>
@@ -363,23 +363,21 @@ const OpenSourceSection = ({ templates }) => {
         <div className="bg-[#1B1D1F] rounded-xl overflow-hidden shadow-lg">
           {/* Code Tabs */}
           <div className="flex border-b border-gray-700">
-            <button 
+            <button
               onClick={() => setActiveCodeTab('javascript')}
-              className={`px-4 py-3 text-sm font-medium transition-colors ${
-                activeCodeTab === 'javascript' 
-                  ? 'text-white bg-gray-800' 
-                  : 'text-gray-400 hover:text-gray-200'
-              }`}
+              className={`px-4 py-3 text-sm font-medium transition-colors ${activeCodeTab === 'javascript'
+                ? 'text-white bg-gray-800'
+                : 'text-gray-400 hover:text-gray-200'
+                }`}
             >
               JavaScript
             </button>
-            <button 
+            <button
               onClick={() => setActiveCodeTab('python')}
-              className={`px-4 py-3 text-sm font-medium transition-colors ${
-                activeCodeTab === 'python' 
-                  ? 'text-white bg-gray-800' 
-                  : 'text-gray-400 hover:text-gray-200'
-              }`}
+              className={`px-4 py-3 text-sm font-medium transition-colors ${activeCodeTab === 'python'
+                ? 'text-white bg-gray-800'
+                : 'text-gray-400 hover:text-gray-200'
+                }`}
             >
               Python
             </button>
@@ -393,7 +391,7 @@ const OpenSourceSection = ({ templates }) => {
               </button>
             </div>
           </div>
-          
+
           {/* Code */}
           <div className="p-4 md:p-6 overflow-x-auto scrollbar-hide">
             <pre className="text-xs md:text-sm leading-relaxed">
@@ -414,7 +412,7 @@ const OpenSourceSection = ({ templates }) => {
     // Non-code visuals
     if (content.visual === 'map') {
       return (
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden min-h-[350px]">
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-black rounded-xl overflow-hidden min-h-[350px]">
           <WorldMapVisual />
         </div>
       );
@@ -422,7 +420,7 @@ const OpenSourceSection = ({ templates }) => {
 
     if (content.visual === 'monitoring') {
       return (
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 min-h-[350px]">
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-black rounded-xl p-6 min-h-[350px]">
           <MonitoringVisual />
         </div>
       );
@@ -430,7 +428,7 @@ const OpenSourceSection = ({ templates }) => {
 
     if (content.visual === 'data') {
       return (
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 min-h-[350px]">
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-black rounded-xl p-6 min-h-[350px]">
           <DataProcessingVisual />
         </div>
       );
@@ -440,17 +438,17 @@ const OpenSourceSection = ({ templates }) => {
   };
 
   return (
-    <section className="py-12 md:py-16 px-4 md:px-6 bg-white overflow-hidden" data-testid="open-source-section">
+    <section className="py-12 md:py-16 px-4 md:px-6 bg-white dark:bg-black overflow-hidden" data-testid="open-source-section">
       <div className="max-w-[1400px] mx-auto">
-        <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-8 md:mb-12 text-center px-2 tracking-tight">
+        <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-8 md:mb-12 text-center px-2 tracking-tight">
           Build and deploy reliable scrapers
         </h2>
-        
+
         {/* Tab Navigation - Pill Style like Apify */}
         <div className="mb-8 md:mb-12 relative">
           {/* Gradient fade indicators for mobile scroll */}
           <div className="block md:hidden absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none z-10"></div>
-          
+
           <div className="overflow-x-auto scrollbar-hide w-full md:overflow-visible -mx-4 px-4 md:mx-0 md:px-0">
             <div className="flex md:flex-wrap gap-2 md:gap-3 min-w-max md:min-w-0 md:justify-center pb-2 md:pb-0">
               {tabs.map((tab) => (
@@ -458,11 +456,10 @@ const OpenSourceSection = ({ templates }) => {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   data-testid={`tab-${tab.id}`}
-                  className={`px-4 py-2 text-sm font-medium transition-all duration-200 whitespace-nowrap rounded-full flex-shrink-0 ${
-                    activeTab === tab.id
-                      ? 'bg-white text-gray-900 shadow-sm ring-1 ring-gray-200'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900'
-                  }`}
+                  className={`px-4 py-2 text-sm font-medium transition-all duration-200 whitespace-nowrap rounded-full flex-shrink-0 ${activeTab === tab.id
+                    ? 'bg-white text-gray-900 shadow-sm ring-1 ring-gray-200'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900'
+                    }`}
                 >
                   {tab.label}
                 </button>
@@ -470,43 +467,43 @@ const OpenSourceSection = ({ templates }) => {
             </div>
           </div>
         </div>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 lg:gap-12 items-start">
           {/* Left - Text Content */}
           <div className="lg:pt-8 px-2 md:px-0">
-            <h3 className="text-lg md:text-xl lg:text-2xl xl:text-3xl font-normal text-gray-900 mb-3 md:mb-4" style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', fontWeight: 400, letterSpacing: '-0.01em' }}>{content.title}</h3>
-            <p className="text-gray-600 mb-4 md:mb-6 lg:mb-8 leading-relaxed text-sm md:text-base lg:text-lg">
+            <h3 className="text-lg md:text-xl lg:text-2xl xl:text-3xl font-normal text-gray-900 dark:text-white mb-3 md:mb-4" style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', fontWeight: 400, letterSpacing: '-0.01em' }}>{content.title}</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4 md:mb-6 lg:mb-8 leading-relaxed text-sm md:text-base lg:text-lg">
               {content.description}
             </p>
-            
+
             {activeTab === 'open-source' && (
               <>
                 {/* Crawlee badge */}
                 <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-4 md:mb-6">
-                  <div className="flex items-center gap-2 px-2.5 md:px-3 py-1.5 md:py-2 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex items-center gap-2 px-2.5 md:px-3 py-1.5 md:py-2 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
                     <svg className="w-5 h-5 md:w-6 md:h-6" viewBox="0 0 24 24">
-                      <path fill="#2BC56B" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                      <path fill="#2BC56B" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
                     </svg>
                     <span className="font-semibold text-gray-800 text-sm md:text-base">crawlee</span>
                   </div>
-                  <a href="https://github.com/apify/crawlee" target="_blank" rel="noopener noreferrer" 
-                     className="flex items-center gap-1.5 md:gap-2 px-2.5 md:px-3 py-1.5 md:py-2 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors">
+                  <a href="https://github.com/apify/crawlee" target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 md:gap-2 px-2.5 md:px-3 py-1.5 md:py-2 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors">
                     <Github className="w-3.5 h-3.5 md:w-4 md:h-4" />
                     <span className="text-xs md:text-sm text-gray-600">Star</span>
                   </a>
                   <span className="text-xs md:text-sm font-medium text-gray-700">20,804</span>
                 </div>
-                
+
                 {/* Template Icons */}
                 <div className="flex flex-wrap gap-2 md:gap-3">
                   {templates?.map((template, idx) => (
-                    <a 
+                    <a
                       key={idx}
                       href="#"
-                      className="flex items-center gap-1.5 md:gap-2 px-2.5 md:px-3 py-1.5 md:py-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200"
+                      className="flex items-center gap-1.5 md:gap-2 px-2.5 md:px-3 py-1.5 md:py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                     >
                       <img src={template.icon} alt={template.name} className="w-4 h-4 md:w-5 md:h-5" />
-                      <span className="text-xs md:text-sm text-gray-700">{template.name}</span>
+                      <span className="text-xs md:text-sm text-gray-700 dark:text-gray-300">{template.name}</span>
                     </a>
                   ))}
                 </div>
@@ -514,16 +511,16 @@ const OpenSourceSection = ({ templates }) => {
             )}
 
             {activeTab !== 'open-source' && (
-              <a 
+              <a
                 href="#"
-                className="inline-block px-5 md:px-6 py-2 md:py-2.5 border border-gray-300 text-gray-700 text-sm md:text-base font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                className="inline-block px-5 md:px-6 py-2 md:py-2.5 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
                 data-testid={`learn-more-${activeTab}`}
               >
                 Learn more
               </a>
             )}
           </div>
-          
+
           {/* Right - Visual Content */}
           <div className="w-full overflow-hidden px-2 md:px-0">
             {renderVisual()}

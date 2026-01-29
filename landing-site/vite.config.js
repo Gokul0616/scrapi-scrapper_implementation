@@ -10,14 +10,15 @@ export default defineConfig({
     allowedHosts: [
       'admin-host-setup.preview.emergentagent.com',
       'localhost',
-      '.emergentagent.com'
+      '.emergentagent.com',
+      "https://normal-runner-7.preview.emergentagent.com/"
     ],
     hmr: {
       clientPort: 443,
     },
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: "https://normal-runner-7.preview.emergentagent.com/",
         changeOrigin: true,
         secure: false,
       },

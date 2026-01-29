@@ -145,7 +145,7 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
         const parts = text.split(new RegExp(`(${query})`, 'gi'));
         return parts.map((part, index) =>
             part.toLowerCase() === query.toLowerCase() ? (
-                <span key={index} className="text-blue-600 font-semibold bg-blue-100">{part}</span>
+                <span key={index} className="text-blue-600 dark:text-blue-400 font-semibold bg-blue-100 dark:bg-blue-900/30">{part}</span>
             ) : (
                 part
             )
@@ -170,19 +170,19 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
     const selectedResult = flatResults[selectedIndex];
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] px-4 backdrop-blur-sm bg-gray-900/30">
+        <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] px-4 backdrop-blur-sm bg-gray-900/30 dark:bg-black/50">
             <div
                 ref={modalRef}
-                className="w-full max-w-5xl bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden flex flex-col max-h-[75vh] animate-in fade-in zoom-in-95 duration-200"
+                className="w-full max-w-5xl bg-white dark:bg-zinc-900 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col max-h-[75vh] animate-in fade-in zoom-in-95 duration-200"
             >
                 {/* Search Header */}
-                <div className="flex items-center gap-3 px-5 py-3 border-b border-gray-200 bg-white">
+                <div className="flex items-center gap-3 px-5 py-3 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-zinc-900">
                     <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
                     <input
                         ref={inputRef}
                         type="search"
                         placeholder="Search Scrapi Docs..."
-                        className="flex-1 text-base bg-transparent border-none outline-none placeholder:text-gray-400 text-gray-900"
+                        className="flex-1 text-base bg-transparent border-none outline-none placeholder:text-gray-400 text-gray-900 dark:text-white"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                     />
@@ -197,7 +197,7 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
                 {/* Results Container */}
                 <div className="flex-1 overflow-hidden flex">
                     {/* Left Side - Results List */}
-                    <div className="flex-1 overflow-y-auto border-r border-gray-200">
+                    <div className="flex-1 overflow-y-auto border-r border-gray-200 dark:border-gray-800">
                         {loading ? (
                             <div className="flex items-center justify-center py-16 text-gray-400 gap-2">
                                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -208,13 +208,13 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
                                 {recentSearches.length > 0 ? (
                                     <div className="w-full">
                                         <div className="flex items-center justify-between mb-4">
-                                            <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
                                                 <Clock className="w-4 h-4" />
                                                 Recent Searches
                                             </h3>
                                             <button
                                                 onClick={clearSearches}
-                                                className="text-xs text-gray-500 hover:text-gray-700 underline"
+                                                className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 underline"
                                             >
                                                 Clear all
                                             </button>
@@ -224,10 +224,10 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
                                                 <button
                                                     key={idx}
                                                     onClick={() => setQuery(search)}
-                                                    className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-left group"
+                                                    className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-left group"
                                                 >
                                                     <Clock className="w-4 h-4 text-gray-400" />
-                                                    <span className="flex-1 text-sm text-gray-700">{search}</span>
+                                                    <span className="flex-1 text-sm text-gray-700 dark:text-gray-300">{search}</span>
                                                     <Search className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100" />
                                                 </button>
                                             ))}
@@ -259,17 +259,17 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
                                                         ref={(el) => (resultRefs.current[globalIndex] = el)}
                                                         onClick={() => handleSelect(result.url)}
                                                         onMouseEnter={() => setSelectedIndex(globalIndex)}
-                                                        className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-all border-b border-gray-100 ${isSelected
-                                                            ? 'bg-blue-50 border-l-4 border-l-blue-600'
-                                                            : 'hover:bg-gray-50 border-l-4 border-l-transparent'
+                                                        className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-all border-b border-gray-100 dark:border-gray-800 ${isSelected
+                                                            ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-blue-600'
+                                                            : 'hover:bg-gray-50 dark:hover:bg-zinc-800 border-l-4 border-l-transparent'
                                                             }`}
                                                     >
-                                                        <div className={`mt-0.5 p-1.5 rounded transition-colors ${isSelected ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+                                                        <div className={`mt-0.5 p-1.5 rounded transition-colors ${isSelected ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400' : 'bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-400'
                                                             }`}>
                                                             {getResultIcon(result.type)}
                                                         </div>
                                                         <div className="flex-1 min-w-0">
-                                                            <div className={`text-sm mb-1 ${isSelected ? 'font-semibold text-gray-900' : 'font-medium text-gray-800'
+                                                            <div className={`text-sm mb-1 ${isSelected ? 'font-semibold text-gray-900 dark:text-white' : 'font-medium text-gray-800 dark:text-gray-200'
                                                                 }`}>
                                                                 {highlightText(result.title, query)}
                                                             </div>
@@ -289,7 +289,7 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
                                                             )}
                                                         </div>
                                                         {isSelected && (
-                                                            <div className="mt-1 text-blue-600">
+                                                            <div className="mt-1 text-blue-600 dark:text-blue-400">
                                                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                                                 </svg>
@@ -307,7 +307,7 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
                                 <p className="text-sm mb-2">No results found for "{query}"</p>
                                 <button
                                     onClick={() => setQuery('')}
-                                    className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                                    className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium"
                                 >
                                     Clear search
                                 </button>
@@ -316,25 +316,25 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
                     </div>
 
                     {/* Right Side - Preview Pane */}
-                    <div className="hidden lg:block w-[400px] bg-gray-50 overflow-y-auto">
+                    <div className="hidden lg:block w-[400px] bg-gray-50 dark:bg-black/40 overflow-y-auto">
                         {selectedResult ? (
                             <div className="p-6">
-                                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                                     {selectedResult.title}
                                 </h3>
                                 <div className="text-xs text-gray-500 mb-4">
                                     {selectedResult.breadcrumb && selectedResult.breadcrumb.join(' › ')}
                                 </div>
                                 {selectedResult.description && (
-                                    <div className="text-sm text-gray-700 leading-relaxed mb-4">
+                                    <div className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
                                         {selectedResult.description}
                                     </div>
                                 )}
                                 {selectedResult.subtitle && (
-                                    <p className="text-sm text-gray-600 mb-4">{selectedResult.subtitle}</p>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{selectedResult.subtitle}</p>
                                 )}
                                 {selectedResult.content && (
-                                    <div className="text-sm text-gray-700 leading-relaxed space-y-2">
+                                    <div className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed space-y-2">
                                         {selectedResult.content.split('\n').slice(0, 5).map((line, i) => (
                                             <p key={i}>{line}</p>
                                         ))}
@@ -350,18 +350,18 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
                 </div>
 
                 {/* Footer */}
-                <div className="bg-gray-50 px-4 py-2.5 text-xs text-gray-500 border-t border-gray-200 flex items-center justify-center gap-6">
+                <div className="bg-gray-50 dark:bg-zinc-900 px-4 py-2.5 text-xs text-gray-500 border-t border-gray-200 dark:border-gray-800 flex items-center justify-center gap-6">
                     <span className="flex items-center gap-1.5">
-                        <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-xs font-mono shadow-sm">↵</kbd>
+                        <kbd className="px-1.5 py-0.5 bg-white dark:bg-zinc-800 border border-gray-300 dark:border-gray-700 rounded text-xs font-mono shadow-sm">↵</kbd>
                         <span>to select</span>
                     </span>
                     <span className="flex items-center gap-1.5">
-                        <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-xs font-mono shadow-sm">↑</kbd>
-                        <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-xs font-mono shadow-sm">↓</kbd>
+                        <kbd className="px-1.5 py-0.5 bg-white dark:bg-zinc-800 border border-gray-300 dark:border-gray-700 rounded text-xs font-mono shadow-sm">↑</kbd>
+                        <kbd className="px-1.5 py-0.5 bg-white dark:bg-zinc-800 border border-gray-300 dark:border-gray-700 rounded text-xs font-mono shadow-sm">↓</kbd>
                         <span>to navigate</span>
                     </span>
                     <span className="flex items-center gap-1.5">
-                        <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-xs font-mono shadow-sm">esc</kbd>
+                        <kbd className="px-1.5 py-0.5 bg-white dark:bg-zinc-800 border border-gray-300 dark:border-gray-700 rounded text-xs font-mono shadow-sm">esc</kbd>
                         <span>to close</span>
                     </span>
                 </div>

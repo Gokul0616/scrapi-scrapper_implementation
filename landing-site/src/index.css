@@ -21,6 +21,12 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #000000;
+  }
+}
+
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;

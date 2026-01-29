@@ -10,17 +10,17 @@ import DocsNavbar from './docs/DocsNavbar';
 const ContentSkeleton = () => (
   <div className="flex-1 max-w-3xl space-y-8 pt-24 animate-pulse">
     <div className="space-y-4">
-      <div className="h-10 bg-gray-200 rounded w-3/4"></div>
-      <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+      <div className="h-10 bg-gray-200 dark:bg-zinc-800 rounded w-3/4"></div>
+      <div className="h-4 bg-gray-200 dark:bg-zinc-800 rounded w-1/4"></div>
     </div>
 
     {[1, 2, 3].map((i) => (
       <div key={i} className="space-y-4">
-        <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+        <div className="h-6 bg-gray-200 dark:bg-zinc-800 rounded w-1/3"></div>
         <div className="space-y-2">
-          <div className="h-4 bg-gray-100 rounded w-full"></div>
-          <div className="h-4 bg-gray-100 rounded w-full"></div>
-          <div className="h-4 bg-gray-100 rounded w-5/6"></div>
+          <div className="h-4 bg-gray-100 dark:bg-zinc-900 rounded w-full"></div>
+          <div className="h-4 bg-gray-100 dark:bg-zinc-900 rounded w-full"></div>
+          <div className="h-4 bg-gray-100 dark:bg-zinc-900 rounded w-5/6"></div>
         </div>
       </div>
     ))}
@@ -33,18 +33,18 @@ const LeftSidebarSkeleton = () => (
     <div className="sticky top-28 space-y-8 animate-pulse">
       {[1, 2].map((groupIdx) => (
         <div key={groupIdx}>
-          <div className="h-4 bg-gray-200 rounded w-2/3 mb-4"></div>
-          <div className="space-y-1 border-l border-gray-100 ml-1">
+          <div className="h-4 bg-gray-200 dark:bg-zinc-800 rounded w-2/3 mb-4"></div>
+          <div className="space-y-1 border-l border-gray-100 dark:border-gray-800 ml-1">
             {[1, 2, 3, 4].map((itemIdx) => (
               <div key={itemIdx} className="pl-4 py-1.5">
-                <div className="h-3 bg-gray-100 rounded w-full"></div>
+                <div className="h-3 bg-gray-100 dark:bg-zinc-900 rounded w-full"></div>
               </div>
             ))}
           </div>
         </div>
       ))}
-      <div className="pt-6 border-t border-gray-100">
-        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+      <div className="pt-6 border-t border-gray-100 dark:border-gray-800">
+        <div className="h-4 bg-gray-200 dark:bg-zinc-800 rounded w-3/4"></div>
       </div>
     </div>
   </aside>
@@ -53,10 +53,10 @@ const LeftSidebarSkeleton = () => (
 // Right Sidebar Skeleton
 const RightSidebarSkeleton = () => (
   <div className="hidden lg:block w-56 flex-shrink-0 space-y-4 mt-28 animate-pulse">
-    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+    <div className="h-4 bg-gray-200 dark:bg-zinc-800 rounded w-1/2"></div>
     <div className="space-y-2">
       {[1, 2, 3, 4, 5].map((i) => (
-        <div key={i} className="h-4 bg-gray-100 rounded w-3/4"></div>
+        <div key={i} className="h-4 bg-gray-100 dark:bg-zinc-900 rounded w-3/4"></div>
       ))}
     </div>
   </div>
@@ -70,6 +70,23 @@ const LegalDocument = ({ onOpenCookieSettings }) => {
   const [loading, setLoading] = useState(true);
   const [sidebarLinks, setSidebarLinks] = useState([]);
   const [sidebarLoading, setSidebarLoading] = useState(true);
+
+  // Helper to format date
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (e) {
+      return dateString;
+    }
+  };
 
   // Default to terms if no docId provided
   const currentDoc = docId || 'terms-of-service';
@@ -136,45 +153,75 @@ const LegalDocument = ({ onOpenCookieSettings }) => {
         if (response.ok) {
           const result = await response.json();
           setData(result);
-          
+
           // Update document title dynamically
           if (result.title) {
             document.title = `Scrapi - ${result.title}`;
           }
-          
+
+          // Set first section as active by default
           // Set first section as active by default
           if (result.sections && result.sections.length > 0) {
             setActiveSection(result.sections[0].id);
           }
         } else if (response.status === 404) {
-          // Redirect to 404 page if document not found
-          navigate('/404');
-        } else {
-          // Handle other errors
-          console.error("Failed to fetch document");
           navigate('/404');
         }
       } catch (error) {
         console.error('Failed to fetch legal document:', error);
-        navigate('/404');
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-    
-    // Cleanup: reset title on unmount
-    return () => {
-      document.title = 'Scrapi: The Web Scraping Platform';
-    };
   }, [currentDoc, navigate]);
 
-  const scrollToSection = (sectionId) => {
-    setActiveSection(sectionId);
-    const element = document.getElementById(sectionId);
+  // Handle scroll spy using scroll event listener (more reliable for this layout)
+  useEffect(() => {
+    if (loading || !data) return;
+
+    const handleScroll = () => {
+      const sections = document.querySelectorAll('section[id], div[id]');
+      let currentActiveId = null;
+
+      // Offset for sticky header
+      const scrollPosition = window.scrollY + 150;
+
+      sections.forEach((section) => {
+        const sectionTop = section.offsetTop;
+        const sectionHeight = section.offsetHeight;
+
+        if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+          currentActiveId = section.getAttribute('id');
+        }
+      });
+
+      if (currentActiveId) {
+        setActiveSection(currentActiveId);
+      } else if (window.scrollY < 100 && data.sections.length > 0) {
+        // Default to first section when at the very top
+        setActiveSection(data.sections[0].id);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    // Trigger once on mount/update to set initial state correct
+    handleScroll();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [loading, data]);
+
+  const scrollToSection = (id) => {
+    setActiveSection(id);
+    const element = document.getElementById(id);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.scrollTo({
+        top: element.offsetTop - 120, // Offset for sticky header
+        behavior: 'smooth'
+      });
     }
   };
 
@@ -182,41 +229,33 @@ const LegalDocument = ({ onOpenCookieSettings }) => {
     if (!data) return null;
 
     return (
-      <article className="prose prose-gray max-w-none pt-24 pb-24" data-testid="legal-content">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">{data.title}</h1>
-        <p className="text-gray-500 mb-8">Last Updated: {data.last_updated}</p>
+      <article className="prose prose-gray dark:prose-invert max-w-none pt-10 pb-16" data-testid="legal-content">
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">{data.title}</h1>
+        <p className="text-gray-500 dark:text-gray-400 mb-6 text-sm">Last Updated: {data.updated_at ? formatDate(data.updated_at) : data.last_updated}</p>
 
-        <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg mb-8 text-sm text-blue-800 flex gap-3">
-          <Info className="w-5 h-5 flex-shrink-0 text-blue-600" />
-          <div>
-            This document is part of our commitment to transparency. If you have any questions,
-            please contact our Legal Team at legal@scrapi.com.
-          </div>
-        </div>
-
-        <p className="text-gray-700 leading-relaxed text-lg mb-12">
+        <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-base md:text-lg mb-8">
           {data.intro}
         </p>
 
         {data.sections.map((section) => (
-          <section key={section.id} id={section.id} className="mb-12 scroll-mt-28">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 group flex items-center gap-2">
+          <section key={section.id} id={section.id} className="mb-10 scroll-mt-28">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-3 group flex items-center gap-2">
               {section.title}
-              <a href={`#${section.id}`} className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-gray-600 transition-opacity">#</a>
+              <a href={`#${section.id}`} className="opacity-0 group-hover:opacity-100 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-opacity">#</a>
             </h2>
 
             {section.content && (
-              <p className="text-gray-700 leading-relaxed mb-6">
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
                 {section.content}
               </p>
             )}
 
             {section.subsections && (
-              <div className="space-y-8 mt-6">
+              <div className="space-y-6 mt-4">
                 {section.subsections.map((sub) => (
                   <div key={sub.id} id={sub.id} className="scroll-mt-28">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-3">{sub.title}</h3>
-                    <p className="text-gray-700 leading-relaxed">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{sub.title}</h3>
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
                       {sub.content}
                     </p>
                   </div>
@@ -225,22 +264,22 @@ const LegalDocument = ({ onOpenCookieSettings }) => {
             )}
 
             {section.table && section.table.length > 0 && (
-              <div className="mt-6 overflow-x-auto border border-gray-200 rounded-lg shadow-sm scrollbar-thin">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+              <div className="mt-6 overflow-x-auto border border-gray-200 dark:border-gray-800 rounded-lg shadow-sm scrollbar-thin">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
+                  <thead className="bg-gray-50 dark:bg-zinc-900">
                     <tr>
                       {Object.keys(section.table[0]).map((key) => (
-                        <th key={key} scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        <th key={key} scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           {key.charAt(0).toUpperCase() + key.slice(1)}
                         </th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white dark:bg-black divide-y divide-gray-200 dark:divide-gray-800">
                     {section.table.map((row, idx) => (
-                      <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                      <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-zinc-900 transition-colors">
                         {Object.values(row).map((val, vIdx) => (
-                          <td key={vIdx} className="px-4 py-1 text-sm text-gray-600 max-w-[300px] break-words whitespace-normal">
+                          <td key={vIdx} className="px-4 py-1 text-sm text-gray-600 dark:text-gray-300 max-w-[300px] break-words whitespace-normal">
                             {val}
                           </td>
                         ))}
@@ -272,31 +311,31 @@ const LegalDocument = ({ onOpenCookieSettings }) => {
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans text-gray-900">
+    <div className="min-h-screen bg-white dark:bg-black font-sans text-gray-900 dark:text-gray-100">
       <DocsNavbar />
 
       <main className="min-h-screen">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-12">
+          <div className="flex gap-2">
             {/* Left Sidebar - Navigation */}
             {sidebarLoading ? (
               <LeftSidebarSkeleton />
             ) : (
               <aside className={`hidden lg:block w-64 flex-shrink-0 transition-all duration-300`}>
-                <div className="sticky top-28 space-y-8">
+                <div className="sticky top-28 space-y-8 pb-10">
                   {sidebarLinks.map((group, idx) => (
                     <div key={idx}>
-                      <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">
+                      <h4 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wide mb-4">
                         {group.title}
                       </h4>
-                      <ul className="space-y-1 border-l border-gray-100 ml-1">
+                      <ul className="space-y-1 border-l border-gray-100 dark:border-gray-800 ml-1">
                         {group.items.map((item, itemIdx) => (
                           <li key={itemIdx}>
                             <Link
                               to={`/legal/${item.id}`}
                               className={`block pl-4 py-1.5 text-sm border-l -ml-px transition-colors ${currentDoc === item.id
-                                ? 'border-blue-600 text-blue-600 font-medium'
-                                : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                                ? 'border-blue-600 text-blue-600 dark:text-blue-400 font-medium'
+                                : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-300 dark:hover:border-gray-600'
                                 }`}
                             >
                               {item.label}
@@ -307,10 +346,10 @@ const LegalDocument = ({ onOpenCookieSettings }) => {
                     </div>
                   ))}
 
-                  <div className="pt-6 border-t border-gray-100">
+                  <div className="pt-6 border-t border-gray-100 dark:border-gray-800">
                     <button
                       onClick={onOpenCookieSettings}
-                      className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                      className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                       data-testid="sidebar-cookie-settings"
                     >
                       <Settings className="w-4 h-4" />
@@ -335,8 +374,8 @@ const LegalDocument = ({ onOpenCookieSettings }) => {
 
                 {/* Right Sidebar - Table of Contents */}
                 <aside className="hidden lg:block w-56 flex-shrink-0">
-                  <div className="sticky top-28">
-                    <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                  <div className="sticky top-28 pb-10">
+                    <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
                       On this page
                     </h4>
                     <nav>
@@ -346,8 +385,8 @@ const LegalDocument = ({ onOpenCookieSettings }) => {
                             <button
                               onClick={() => scrollToSection(item.id)}
                               className={`block w-full text-left py-1 text-sm transition-colors ${activeSection === item.id
-                                ? 'text-blue-600 font-medium'
-                                : 'text-gray-600 hover:text-gray-900'
+                                ? 'text-blue-600 dark:text-blue-400 font-medium'
+                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                                 }`}
                             >
                               {item.title}

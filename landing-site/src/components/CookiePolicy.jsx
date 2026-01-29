@@ -98,27 +98,27 @@ const CookiePolicy = ({ onOpenCookieSettings }) => {
         <h1 className="text-4xl font-bold text-gray-900 mb-2">Cookie Policy</h1>
         <p className="text-gray-500 mb-8">Last Updated: {data.last_updated}</p>
 
-        <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg mb-8 text-sm text-blue-800 flex gap-3">
-          <Info className="w-5 h-5 flex-shrink-0 text-blue-600" />
+        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg mb-8 text-sm text-blue-800 dark:text-blue-300 flex gap-3">
+          <Info className="w-5 h-5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
           <div>
             This policy is part of our commitment to transparency. If you have any questions,
             please contact our Data Protection Officer at privacy@scrapi.com.
           </div>
         </div>
 
-        <p className="text-gray-700 leading-relaxed text-lg mb-12">
+        <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-lg mb-12">
           {data.intro}
         </p>
 
         {data.sections.map((section) => (
           <section key={section.id} id={section.id} className="mb-12 scroll-mt-28">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 group flex items-center gap-2">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 group flex items-center gap-2">
               {section.title}
               <a href={`#${section.id}`} className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-gray-600 transition-opacity">#</a>
             </h2>
 
             {section.content && (
-              <p className="text-gray-700 leading-relaxed mb-6">
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
                 {section.content}
               </p>
             )}
@@ -127,8 +127,8 @@ const CookiePolicy = ({ onOpenCookieSettings }) => {
               <div className="space-y-8 mt-6">
                 {section.subsections.map((sub) => (
                   <div key={sub.id} id={sub.id} className="scroll-mt-28">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-3">{sub.title}</h3>
-                    <p className="text-gray-700 leading-relaxed">
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">{sub.title}</h3>
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
                       {sub.content}
                     </p>
                   </div>
@@ -137,30 +137,30 @@ const CookiePolicy = ({ onOpenCookieSettings }) => {
             )}
 
             {section.table && (
-              <div className="mt-6 overflow-hidden border border-gray-200 rounded-lg shadow-sm">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+              <div className="mt-6 overflow-hidden border border-gray-200 dark:border-gray-800 rounded-lg shadow-sm">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
+                  <thead className="bg-gray-50 dark:bg-gray-900">
                     <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Cookie Name</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Type</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Expiration</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Description</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cookie Name</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Expiration</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white dark:bg-black divide-y divide-gray-200 dark:divide-gray-800">
                     {section.table.map((row, idx) => (
-                      <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{row.name}</td>
+                      <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{row.name}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${row.type.toLowerCase().includes('necessary') ? 'bg-green-100 text-green-800' :
-                              row.type.toLowerCase().includes('performance') ? 'bg-blue-100 text-blue-800' :
-                                'bg-gray-100 text-gray-800'
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${row.type.toLowerCase().includes('necessary') ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400' :
+                            row.type.toLowerCase().includes('performance') ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400' :
+                              'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300'
                             }`}>
                             {row.type}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.expiration}</td>
-                        <td className="px-6 py-4 text-sm text-gray-500">{row.description}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{row.expiration}</td>
+                        <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{row.description}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -189,7 +189,7 @@ const CookiePolicy = ({ onOpenCookieSettings }) => {
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans text-gray-900">
+    <div className="min-h-screen bg-white dark:bg-black font-sans text-gray-900 dark:text-white">
       <DocsNavbar />
 
       <main className="pt-24 pb-24">
@@ -203,7 +203,7 @@ const CookiePolicy = ({ onOpenCookieSettings }) => {
                 <div className="sticky top-28 space-y-8">
                   {sidebarLinks.map((group, idx) => (
                     <div key={idx}>
-                      <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">
+                      <h4 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wide mb-4">
                         {group.title}
                       </h4>
                       <ul className="space-y-1 border-l border-gray-100 ml-1">
@@ -212,8 +212,8 @@ const CookiePolicy = ({ onOpenCookieSettings }) => {
                             <a
                               href={item === 'Cookie Policy' ? '#' : '#'}
                               className={`block pl-4 py-1.5 text-sm border-l -ml-px transition-colors ${item === 'Cookie Policy'
-                                  ? 'border-blue-600 text-blue-600 font-medium'
-                                  : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                                ? 'border-blue-600 text-blue-600 dark:text-blue-400 font-medium'
+                                : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-300 dark:hover:border-gray-700'
                                 }`}
                             >
                               {item}
@@ -227,7 +227,7 @@ const CookiePolicy = ({ onOpenCookieSettings }) => {
                   <div className="pt-6 border-t border-gray-100">
                     <button
                       onClick={onOpenCookieSettings}
-                      className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                      className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                       data-testid="sidebar-cookie-settings"
                     >
                       <Settings className="w-4 h-4" />
@@ -255,8 +255,8 @@ const CookiePolicy = ({ onOpenCookieSettings }) => {
                           <button
                             onClick={() => scrollToSection(item.id)}
                             className={`block w-full text-left py-1 text-sm transition-colors ${activeSection === item.id
-                                ? 'text-blue-600 font-medium'
-                                : 'text-gray-600 hover:text-gray-900'
+                              ? 'text-blue-600 dark:text-blue-400 font-medium'
+                              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                               }`}
                           >
                             {item.title}

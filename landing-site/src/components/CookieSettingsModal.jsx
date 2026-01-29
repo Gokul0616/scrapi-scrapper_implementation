@@ -86,7 +86,7 @@ const CookieSettingsModal = ({ isOpen, onClose, onSave }) => {
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-lg mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden animate-fade-in-up">
+      <div className="relative w-full max-w-lg mx-4 bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl overflow-hidden animate-fade-in-up">
         {/* Close button */}
         <button
           data-testid="cookie-settings-close"
@@ -101,17 +101,17 @@ const CookieSettingsModal = ({ isOpen, onClose, onSave }) => {
         <div className="p-4 sm:p-6 pb-0">
           {/* Logo */}
           <div className="flex items-center gap-2 mb-5">
-            <img src="/logo.png" alt="Scrapi" className="w-8 h-8 object-contain" />
-            <span className="text-xl font-bold text-gray-900">Scrapi</span>
+            <img src="/logo.png" alt="Scrapi" className="w-8 h-8 object-contain dark:brightness-0 dark:invert" />
+            <span className="text-xl font-bold text-gray-900 dark:text-white">Scrapi</span>
           </div>
 
           {/* Description */}
-          <p className="text-sm text-gray-600 leading-relaxed mb-4">
+          <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-4">
             Cookies enable us to store your preferences and give you a personalized website experience. We also use cookies for analytics and targeted marketing. We respect your right to privacy, so you can choose not to allow some types of cookies. Click on the category headings to learn more and change your settings.{' '}
             <a
               href="/cookie-policy"
               data-testid="cookie-settings-policy-link"
-              className="text-blue-600 hover:text-blue-700 hover:underline font-medium"
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline font-medium"
             >
               Read our cookie policy
             </a>
@@ -120,17 +120,17 @@ const CookieSettingsModal = ({ isOpen, onClose, onSave }) => {
 
         {/* Cookie Categories */}
         <div className="px-4 sm:px-6">
-          <h4 className="text-sm font-semibold text-gray-900 mb-3">Manage Consent Preferences</h4>
+          <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Manage Consent Preferences</h4>
 
-          <div className="border border-gray-200 rounded-lg overflow-hidden">
+          <div className="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
             {cookieCategories.map((category, index) => (
               <div
                 key={category.key}
-                className={`${index > 0 ? 'border-t border-gray-200' : ''}`}
+                className={`${index > 0 ? 'border-t border-gray-200 dark:border-gray-800' : ''}`}
               >
                 {/* Category Header */}
                 <div
-                  className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                  className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                   onClick={() => toggleCategory(category.key)}
                   data-testid={`cookie-category-${category.key}`}
                 >
@@ -139,7 +139,7 @@ const CookieSettingsModal = ({ isOpen, onClose, onSave }) => {
                       size={16}
                       className={`text-gray-400 transition-transform ${expandedCategory === category.key ? 'rotate-90' : ''}`}
                     />
-                    <span className="text-sm font-medium text-gray-800">{category.title}</span>
+                    <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{category.title}</span>
                   </div>
 
                   {category.alwaysActive ? (
@@ -151,7 +151,7 @@ const CookieSettingsModal = ({ isOpen, onClose, onSave }) => {
                         handleToggle(category.key);
                       }}
                       data-testid={`cookie-toggle-${category.key}`}
-                      className={`relative w-11 h-6 rounded-full transition-colors ${settings[category.key] ? 'bg-blue-600' : 'bg-gray-300'
+                      className={`relative w-11 h-6 rounded-full transition-colors ${settings[category.key] ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
                         }`}
                     >
                       <div
@@ -169,7 +169,7 @@ const CookieSettingsModal = ({ isOpen, onClose, onSave }) => {
                 >
                   <div className="overflow-hidden">
                     <div className="px-4 pb-4 pl-11">
-                      <p className="text-sm text-gray-600 leading-relaxed">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
                         {category.description}
                       </p>
                     </div>
@@ -185,14 +185,14 @@ const CookieSettingsModal = ({ isOpen, onClose, onSave }) => {
           <button
             data-testid="cookie-reject-all"
             onClick={handleRejectAll}
-            className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all"
+            className="px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-black border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-400 transition-all"
           >
             Reject all
           </button>
           <button
             data-testid="cookie-confirm-choices"
             onClick={handleConfirm}
-            className="px-5 py-2.5 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-all"
+            className="px-5 py-2.5 text-sm font-medium text-white dark:text-gray-900 bg-gray-900 dark:bg-white rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-all"
           >
             Confirm my Choices
           </button>
