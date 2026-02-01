@@ -1,7 +1,7 @@
 
 # Routes package
 from fastapi import APIRouter
-from backend.database import set_globals
+from database import set_globals
 
 # Import sub-routers
 from .auth import router as auth_router
