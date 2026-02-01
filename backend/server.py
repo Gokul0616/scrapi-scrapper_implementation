@@ -46,11 +46,13 @@ api_router = APIRouter(prefix="/api")
 from routes import router as api_routes, set_db, search_router, set_search_db, settings_router, set_settings_db
 from routes.organization_routes import router as organization_router, set_db as set_org_db
 from routes.notification_routes import router as notification_router, set_notification_db
+from routes.routes_legacy import set_db as set_legacy_db
 set_db(db)
 set_search_db(db)
 set_settings_db(db)
 set_org_db(db)
 set_notification_db(db)
+set_legacy_db(db)
 
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
