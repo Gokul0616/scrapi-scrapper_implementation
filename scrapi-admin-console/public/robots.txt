@@ -5,4 +5,4 @@ User-agent: *
 Disallow: /
 
 # Sitemap (for reference, even though indexing is disabled)
-Sitemap: https://code-analyzer-222.preview.emergentagent.com/sitemap.xml
+Sitemap: https://req-install-debug.preview.emergentagent.com/sitemap.xml
