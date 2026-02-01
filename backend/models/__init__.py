@@ -47,6 +47,8 @@ __all__ = [
     'ApiKey', 'ApiKeyCreate', 'ApiKeyDisplay',
     # Category models
     'Category', 'CategoryCreate', 'CategoryUpdate',
+    # Policy models
+    'Policy', 'PolicyCreate', 'PolicyUpdate',
     # Organization models
     'Organization', 'OrganizationCreate', 'OrganizationUpdate', 'OrganizationResponse',
     'OrganizationMembership', 'MembershipInvite', 'MembershipUpdate', 'MemberResponse',
