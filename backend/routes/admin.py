@@ -1,6 +1,6 @@
 
-from fastapi import APIRouter, Depends, HTTPException, Optional
-from typing import List
+from fastapi import APIRouter, Depends, HTTPException
+from typing import List, Optional
 from datetime import datetime, timezone, timedelta
 
 from database import get_db, get_proxy_manager, get_task_manager
