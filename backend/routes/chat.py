@@ -1,5 +1,6 @@
 
-from fastapi import APIRouter, Depends, HTTPException, Optional
+from fastapi import APIRouter, Depends, HTTPException
+from typing import Optional
 from datetime import datetime, timezone
 import logging
 
