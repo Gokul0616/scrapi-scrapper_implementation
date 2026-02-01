@@ -11,14 +11,14 @@ export default defineConfig({
       'admin-host-setup.preview.emergentagent.com',
       'localhost',
       '.emergentagent.com',
-      "https://req-install-debug.preview.emergentagent.com/"
+      "https://signup-script-1.preview.emergentagent.com/"
     ],
     hmr: {
       clientPort: 443,
     },
     proxy: {
       '/api': {
-        target: "https://req-install-debug.preview.emergentagent.com/",
+        target: "https://signup-script-1.preview.emergentagent.com/",
         changeOrigin: true,
         secure: false,
       },
