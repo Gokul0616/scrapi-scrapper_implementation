@@ -30,6 +30,7 @@ router.include_router(runs_router, tags=["Runs"])
 router.include_router(schedules_router, tags=["Schedules"])
 router.include_router(chat_router, tags=["Chat"])
 router.include_router(email_validation_router)
+router.include_router(legacy_router, tags=["Legacy"])
 
 
 def set_db(db):
