@@ -13,6 +13,7 @@ from .otp import OTP, SendOTPRequest, VerifyOTPRequest, OTPResponse
 from .audit import AuditLog
 from .api_key import ApiKey, ApiKeyCreate, ApiKeyDisplay
 from .category import Category, CategoryCreate, CategoryUpdate
+from .policy import Policy, PolicyCreate, PolicyUpdate
 from .organization import (
     Organization, OrganizationCreate, OrganizationUpdate, OrganizationResponse,
     OrganizationMembership, MembershipInvite, MembershipUpdate, MemberResponse,
