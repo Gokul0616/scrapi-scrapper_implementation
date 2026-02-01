@@ -27,6 +27,8 @@ async def register(user_data: UserCreate):
     from utils.username_generator import generate_unique_username
     
     db = get_db()
+    db = get_db()
+
     if db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
 
@@ -117,6 +119,8 @@ async def register(user_data: UserCreate):
 @router.post("/auth/login", response_model=dict)
 async def login(credentials: UserLogin):
     """Login user with username or email."""
+    db = get_db()
+
     if db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
 
@@ -213,6 +217,8 @@ async def login(credentials: UserLogin):
 @router.post("/auth/admin/register", response_model=dict)
 async def admin_register(user_data: AdminUserCreate):
     """Register a new admin user for admin console."""
+    db = get_db()
+
     if db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
 
@@ -277,6 +283,8 @@ async def admin_register(user_data: AdminUserCreate):
 @router.post("/auth/admin/login", response_model=dict)
 async def admin_login(credentials: AdminUserLogin):
     """Login admin user with username or email."""
+    db = get_db()
+
     if db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
 
@@ -329,6 +337,8 @@ async def admin_select_role(role_data: dict, current_user: dict = Depends(get_cu
     """Select role for admin user (owner or admin) - only for first-time setup."""
     role = role_data.get('role')
     
+    db = get_db()
+
     if db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
 
@@ -376,6 +386,8 @@ async def admin_select_role(role_data: dict, current_user: dict = Depends(get_cu
 @router.get("/auth/admin/me", response_model=AdminUserResponse)
 async def get_admin_me(current_user: dict = Depends(get_current_user)):
     """Get current admin user info."""
+    db = get_db()
+
     if db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
 
