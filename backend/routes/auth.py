@@ -27,8 +27,6 @@ async def register(user_data: UserCreate):
     from utils.username_generator import generate_unique_username
     
     db = get_db()
-    db = get_db()
-
     if db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
 
