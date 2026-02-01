@@ -3,9 +3,9 @@ from fastapi import APIRouter, Depends, HTTPException, Optional
 from typing import List
 from datetime import datetime, timezone, timedelta
 
-from backend.database import get_db, get_proxy_manager, get_task_manager
-from backend.routes.dependencies import get_api_user, check_owner_role, check_admin_or_owner_role
-from backend.routes.utils import parse_datetime_safe
+from database import get_db, get_proxy_manager, get_task_manager
+from routes.dependencies import get_api_user, check_owner_role, check_admin_or_owner_role
+from routes.utils import parse_datetime_safe
 from auth import get_current_user, get_optional_current_user
 from models import (
     Policy, PolicyCreate, PolicyUpdate,

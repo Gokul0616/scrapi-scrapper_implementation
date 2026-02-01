@@ -3,8 +3,8 @@ from fastapi import APIRouter, Depends, HTTPException, Optional
 from datetime import datetime, timezone
 import logging
 
-from backend.database import get_db, get_task_manager
-from backend.routes.runs import execute_scraping_job
+from database import get_db, get_task_manager
+from routes.runs import execute_scraping_job
 from auth import get_current_user
 from models import (
     LeadChatRequest, LeadChatMessage

@@ -4,8 +4,8 @@ from typing import List, Optional
 from datetime import datetime, timezone
 import logging
 
-from backend.database import get_db
-from backend.routes.utils import get_workspace_query, parse_datetime_safe
+from database import get_db
+from routes.utils import get_workspace_query, parse_datetime_safe
 from auth import get_current_user, get_optional_current_user
 from models import (
     Actor, ActorCreate, ActorUpdate, ActorView

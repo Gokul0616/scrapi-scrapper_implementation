@@ -4,9 +4,9 @@ from typing import List, Optional
 from datetime import datetime, timezone
 import logging
 
-from backend.database import get_db, get_proxy_manager, get_task_manager
-from backend.routes.utils import get_workspace_query, parse_datetime_safe
-from backend.routes.runs import execute_scraping_job
+from database import get_db, get_proxy_manager, get_task_manager
+from routes.utils import get_workspace_query, parse_datetime_safe
+from routes.runs import execute_scraping_job
 from auth import get_current_user
 from models import (
     Schedule, ScheduleCreate, ScheduleUpdate, Run

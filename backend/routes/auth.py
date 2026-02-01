@@ -4,8 +4,8 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from typing import Optional
 from datetime import datetime, timezone
 
-from backend.database import db
-from backend.routes.utils import parse_datetime_safe, generate_random_profile_color
+from database import db
+from routes.utils import parse_datetime_safe, generate_random_profile_color
 from models import (
     UserCreate, UserLogin, UserResponse, 
     AdminUserCreate, AdminUserLogin, AdminUserResponse

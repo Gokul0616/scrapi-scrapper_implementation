@@ -4,7 +4,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from datetime import datetime, timezone
 import hashlib
 
-from backend.database import get_db
+from database import get_db
 from auth import get_current_user
 
 api_key_security = HTTPBearer()
