@@ -11,6 +11,7 @@ from .runs import router as runs_router
 from .schedules import router as schedules_router
 from .chat import router as chat_router
 from .email_validation_routes import router as email_validation_router
+from .routes_legacy import router as legacy_router
 
 # Import legacy routers (if they still exist and are needed)
 from .search_routes import router as search_router, set_search_db
