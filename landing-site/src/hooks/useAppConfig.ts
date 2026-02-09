@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
-import appConfig from '../utils/appConfig';
+import appConfig from '../utils/appConfig.ts';
+import { UserPreferences, FavoritePage } from '../types';
 
 /**
  * Hook to use app configuration in React components
  * @param {string} path - Path to config value (e.g., 'app.features.search')
  * @returns {[value, setValue]} - Current value and setter function
  */
-export const useAppConfig = (path) => {
+export const useAppConfig = (path: string): [any, (newValue: any) => void] => {
     const [value, setValue] = useState(appConfig.get(path));
 
     useEffect(() => {
@@ -17,7 +18,7 @@ export const useAppConfig = (path) => {
         return unsubscribe;
     }, [path]);
 
-    const setConfigValue = (newValue) => {
+    const setConfigValue = (newValue: any) => {
         appConfig.set(path, newValue);
     };
 
@@ -29,7 +30,7 @@ export const useAppConfig = (path) => {
  * @param {string} key - Preference key
  * @returns {[value, setValue]} - Current value and setter function
  */
-export const usePreference = (key) => {
+export const usePreference = (key: keyof UserPreferences): [any, (newValue: any) => void] => {
     const [value, setValue] = useState(appConfig.getPreference(key));
 
     useEffect(() => {
@@ -40,7 +41,7 @@ export const usePreference = (key) => {
         return unsubscribe;
     }, [key]);
 
-    const setPreferenceValue = (newValue) => {
+    const setPreferenceValue = (newValue: any) => {
         appConfig.setPreference(key, newValue);
     };
 
@@ -52,8 +53,8 @@ export const usePreference = (key) => {
  * @param {string} featureName - Name of the feature
  * @returns {boolean} - Whether the feature is enabled
  */
-export const useFeature = (featureName) => {
-    const [enabled, setEnabled] = useAppConfig(`app.features.${featureName}`);
+export const useFeature = (featureName: string): boolean => {
+    const [enabled] = useAppConfig(`app.features.${featureName}`);
     return enabled;
 };
 
@@ -62,7 +63,7 @@ export const useFeature = (featureName) => {
  * @returns {object} - Recent searches and utility functions
  */
 export const useRecentSearches = () => {
-    const [searches, setSearches] = useState(appConfig.getRecentSearches());
+    const [searches, setSearches] = useState<string[]>(appConfig.getRecentSearches());
 
     useEffect(() => {
         const unsubscribe = appConfig.subscribe(() => {
@@ -74,7 +75,7 @@ export const useRecentSearches = () => {
 
     return {
         searches,
-        addSearch: (query) => appConfig.addRecentSearch(query),
+        addSearch: (query: string) => appConfig.addRecentSearch(query),
         clearSearches: () => appConfig.clearRecentSearches(),
     };
 };
@@ -84,7 +85,7 @@ export const useRecentSearches = () => {
  * @returns {object} - Favorites and utility functions
  */
 export const useFavorites = () => {
-    const [favorites, setFavorites] = useState(appConfig.getFavorites());
+    const [favorites, setFavorites] = useState<FavoritePage[]>(appConfig.getFavorites());
 
     useEffect(() => {
         const unsubscribe = appConfig.subscribe(() => {
@@ -96,9 +97,9 @@ export const useFavorites = () => {
 
     return {
         favorites,
-        addFavorite: (page) => appConfig.addFavorite(page),
-        removeFavorite: (url) => appConfig.removeFavorite(url),
-        isFavorite: (url) => favorites.some(f => f.url === url),
+        addFavorite: (page: Omit<FavoritePage, 'addedAt'>) => appConfig.addFavorite(page),
+        removeFavorite: (url: string) => appConfig.removeFavorite(url),
+        isFavorite: (url: string) => favorites.some(f => f.url === url),
     };
 };
 

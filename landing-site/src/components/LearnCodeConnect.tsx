@@ -1,0 +1,76 @@
+import React from 'react';
+import { ArrowRight } from 'lucide-react';
+
+interface Card {
+    title: string;
+    image: string;
+    heading: string;
+    description: string;
+    link: string;
+    href: string;
+}
+
+const LearnCodeConnect: React.FC = () => {
+    const cards: Card[] = [
+        {
+            title: 'Learn.',
+            image: 'https://apify.com/_next/image?url=%2Fimg%2Fhomepage%2Facademy.webp&w=640&q=75',
+            heading: 'Documentation',
+            description: 'Comprehensive guides for beginners and experts. Learn about web scraping with our detailed documentation.',
+            link: 'View docs',
+            href: '#',
+        },
+        {
+            title: 'Code.',
+            image: 'https://apify.com/_next/image?url=%2Fimg%2Fhomepage%2Ftemplates.webp&w=640&q=75',
+            heading: 'API Reference',
+            description: 'Python and JavaScript examples to quick-start your web scraping integration with Scrapi.',
+            link: 'View API',
+            href: '#',
+        },
+        {
+            title: 'Connect.',
+            image: 'https://apify.com/_next/image?url=%2Fimg%2Fhomepage%2Fdiscord.webp&w=640&q=75',
+            heading: 'Get Support',
+            description: 'Need help? Our support team is here to assist you with any questions or issues.',
+            link: 'Contact us',
+            href: '#',
+        },
+    ];
+
+    return (
+        <section className="py-16 px-6 bg-gray-50 dark:bg-black">
+            <div className="max-w-[1400px] mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {cards.map((card, idx) => (
+                        <div key={idx} className="flex flex-col">
+                            <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">{card.title}</h3>
+                            <a
+                                href={card.href}
+                                className="block bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden hover:shadow-lg dark:hover:bg-zinc-900 dark:hover:border-gray-700 transition-shadow group flex-1"
+                            >
+                                <div className="aspect-video overflow-hidden bg-gray-100">
+                                    <img
+                                        src={card.image}
+                                        alt={card.heading}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                    />
+                                </div>
+                                <div className="p-6">
+                                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{card.heading}</h4>
+                                    <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed mb-4">{card.description}</p>
+                                    <span className="inline-flex items-center gap-1 text-gray-900 dark:text-white font-medium text-sm group-hover:gap-2 transition-all">
+                                        {card.link}
+                                        <ArrowRight className="w-4 h-4" />
+                                    </span>
+                                </div>
+                            </a>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </section>
+    );
+};
+
+export default LearnCodeConnect;

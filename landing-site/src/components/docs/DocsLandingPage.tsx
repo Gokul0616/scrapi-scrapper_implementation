@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
-import DocsNavbar from './DocsNavbar';
+import DocsNavigation from './DocsNavigation';
 import DocsFooter from './DocsFooter';
-import { Search, GraduationCap, Layout, Code, Shield, Cloud, Terminal, ArrowRight, Bot, Users, Globe, Play } from 'lucide-react';
+import { GraduationCap, Layout, Code, Shield, Cloud, Terminal, ArrowRight, Bot, Users, Globe } from 'lucide-react';
 
-const DocsLandingPage = () => {
+const DocsLandingPage: React.FC = () => {
     // Set document title on mount
     useEffect(() => {
         document.title = 'Scrapi Documentation';
@@ -15,7 +15,7 @@ const DocsLandingPage = () => {
 
     return (
         <div className="min-h-screen bg-white dark:bg-black font-sans text-gray-900 dark:text-gray-100">
-            <DocsNavbar />
+            <DocsNavigation />
 
             <main>
                 {/* Hero Section */}
@@ -289,7 +289,14 @@ const DocsLandingPage = () => {
 };
 
 // Subcomponents
-const Card = ({ icon, title, desc, href }) => (
+interface CardProps {
+    icon: React.ReactNode;
+    title: string;
+    desc: string;
+    href: string;
+}
+
+const Card: React.FC<CardProps> = ({ icon, title, desc, href }) => (
     <a href={href} className="block p-4 rounded-lg bg-gray-50 dark:bg-zinc-900 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors group">
         <div className="mb-3">{icon}</div>
         <h4 className="font-semibold text-gray-900 dark:text-white mb-1 group-hover:text-blue-700 dark:group-hover:text-blue-400">{title}</h4>
@@ -297,14 +304,25 @@ const Card = ({ icon, title, desc, href }) => (
     </a>
 );
 
-const LinkCard = ({ title, href }) => (
+interface LinkCardProps {
+    title: string;
+    href: string;
+}
+
+const LinkCard: React.FC<LinkCardProps> = ({ title, href }) => (
     <a href={href} className="flex items-center justify-between p-5 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-sm transition-all bg-white dark:bg-black group">
         <span className="font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">{title}</span>
         <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
     </a>
 )
 
-const FeatureCard = ({ icon, title, desc }) => (
+interface FeatureCardProps {
+    icon: React.ReactNode;
+    title: string;
+    desc: string;
+}
+
+const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, desc }) => (
     <div className="p-6 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-sm transition-all bg-white dark:bg-black group cursor-pointer">
         <div className="mb-4">{icon}</div>
         <h3 className="font-semibold text-gray-900 dark:text-white text-lg mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400">{title}</h3>
@@ -312,7 +330,13 @@ const FeatureCard = ({ icon, title, desc }) => (
     </div>
 );
 
-const TemplateCard = ({ lang, title, desc }) => (
+interface TemplateCardProps {
+    lang: 'js' | 'ts' | 'py';
+    title: string;
+    desc: string;
+}
+
+const TemplateCard: React.FC<TemplateCardProps> = ({ lang, title, desc }) => (
     <div className="p-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-black">
         <div className="flex gap-2 mb-4">
             {/* Tech Icons Placeholder */}

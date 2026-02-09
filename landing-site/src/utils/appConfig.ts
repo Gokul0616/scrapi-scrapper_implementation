@@ -1,3 +1,5 @@
+import { AppConfig, UserPreferences, FavoritePage } from '../types';
+
 /**
  * Scrapi App Configuration Manager
  * Handles app settings, user preferences, and feature flags stored in localStorage
@@ -7,7 +9,7 @@ const APP_CONFIG_KEY = 'scrapi_app_config';
 const USER_PREFERENCES_KEY = 'scrapi_user_preferences';
 
 // Default configuration
-const defaultConfig = {
+const defaultConfig: AppConfig = {
     app: {
         name: 'Scrapi',
         version: '1.0.0',
@@ -43,7 +45,7 @@ const defaultConfig = {
 };
 
 // Default user preferences
-const defaultPreferences = {
+const defaultPreferences: UserPreferences = {
     cookieConsent: null,
     cookieSettings: null,
     lastVisit: null,
@@ -51,7 +53,13 @@ const defaultPreferences = {
     viewedDocuments: [],
 };
 
+type ListenerCallback = (config: AppConfig, preferences: UserPreferences) => void;
+
 class AppConfigManager {
+    private config: AppConfig;
+    private preferences: UserPreferences;
+    private listeners: ListenerCallback[];
+
     constructor() {
         this.config = this.loadConfig();
         this.preferences = this.loadPreferences();
@@ -59,7 +67,7 @@ class AppConfigManager {
     }
 
     // Load configuration from localStorage
-    loadConfig() {
+    private loadConfig(): AppConfig {
         try {
             const stored = localStorage.getItem(APP_CONFIG_KEY);
             if (stored) {
@@ -72,7 +80,7 @@ class AppConfigManager {
     }
 
     // Save configuration to localStorage
-    saveConfig() {
+    private saveConfig(): void {
         try {
             this.config.metadata.lastUpdated = new Date().toISOString();
             localStorage.setItem(APP_CONFIG_KEY, JSON.stringify(this.config));
@@ -83,7 +91,7 @@ class AppConfigManager {
     }
 
     // Load user preferences from localStorage
-    loadPreferences() {
+    private loadPreferences(): UserPreferences {
         try {
             const stored = localStorage.getItem(USER_PREFERENCES_KEY);
             if (stored) {
@@ -96,7 +104,7 @@ class AppConfigManager {
     }
 
     // Save user preferences to localStorage
-    savePreferences() {
+    private savePreferences(): void {
         try {
             localStorage.setItem(USER_PREFERENCES_KEY, JSON.stringify(this.preferences));
             this.notifyListeners();
@@ -106,42 +114,45 @@ class AppConfigManager {
     }
 
     // Get entire config
-    getConfig() {
+    public getConfig(): AppConfig {
         return this.config;
     }
 
     // Get specific config value
-    get(path) {
-        return path.split('.').reduce((obj, key) => obj?.[key], this.config);
+    public get(path: string): any {
+        return path.split('.').reduce((obj: any, key: string) => obj?.[key], this.config);
     }
 
     // Set specific config value
-    set(path, value) {
+    public set(path: string, value: any): void {
         const keys = path.split('.');
         const lastKey = keys.pop();
-        const target = keys.reduce((obj, key) => {
+        if (!lastKey) return;
+
+        const target = keys.reduce((obj: any, key: string) => {
             if (!obj[key]) obj[key] = {};
             return obj[key];
         }, this.config);
+
         target[lastKey] = value;
         this.saveConfig();
     }
 
     // Get user preference
-    getPreference(key) {
+    public getPreference(key: keyof UserPreferences): any {
         return this.preferences[key];
     }
 
     // Set user preference
-    setPreference(key, value) {
+    public setPreference(key: keyof UserPreferences, value: any): void {
         this.preferences[key] = value;
         this.savePreferences();
     }
 
     // Track recent search
-    addRecentSearch(query) {
+    public addRecentSearch(query: string): void {
         if (!this.config.search.searchHistory) return;
-        
+
         const searches = this.config.search.recentSearches || [];
         // Remove if already exists
         const filtered = searches.filter(s => s !== query);
@@ -153,18 +164,18 @@ class AppConfigManager {
     }
 
     // Get recent searches
-    getRecentSearches() {
+    public getRecentSearches(): string[] {
         return this.config.search.recentSearches || [];
     }
 
     // Clear recent searches
-    clearRecentSearches() {
+    public clearRecentSearches(): void {
         this.config.search.recentSearches = [];
         this.saveConfig();
     }
 
     // Add favorite page
-    addFavorite(page) {
+    public addFavorite(page: Omit<FavoritePage, 'addedAt'>): void {
         const favorites = this.preferences.favoritePages || [];
         if (!favorites.find(f => f.url === page.url)) {
             favorites.push({
@@ -177,22 +188,22 @@ class AppConfigManager {
     }
 
     // Remove favorite page
-    removeFavorite(url) {
+    public removeFavorite(url: string): void {
         const favorites = this.preferences.favoritePages || [];
         this.preferences.favoritePages = favorites.filter(f => f.url !== url);
         this.savePreferences();
     }
 
     // Get favorites
-    getFavorites() {
+    public getFavorites(): FavoritePage[] {
         return this.preferences.favoritePages || [];
     }
 
     // Track viewed document
-    trackViewedDocument(docId) {
+    public trackViewedDocument(docId: string): void {
         const viewed = this.preferences.viewedDocuments || [];
         const existing = viewed.findIndex(v => v.id === docId);
-        
+
         if (existing >= 0) {
             viewed[existing].lastViewed = new Date().toISOString();
             viewed[existing].viewCount = (viewed[existing].viewCount || 0) + 1;
@@ -204,13 +215,13 @@ class AppConfigManager {
                 viewCount: 1,
             });
         }
-        
+
         this.preferences.viewedDocuments = viewed;
         this.savePreferences();
     }
 
     // Increment session count
-    incrementSession() {
+    public incrementSession(): void {
         this.config.metadata.sessionCount = (this.config.metadata.sessionCount || 0) + 1;
         this.preferences.lastVisit = new Date().toISOString();
         this.saveConfig();
@@ -218,7 +229,7 @@ class AppConfigManager {
     }
 
     // Enable/disable feature
-    toggleFeature(featureName, enabled) {
+    public toggleFeature(featureName: string, enabled: boolean): void {
         if (this.config.app.features[featureName] !== undefined) {
             this.config.app.features[featureName] = enabled;
             this.saveConfig();
@@ -226,19 +237,19 @@ class AppConfigManager {
     }
 
     // Check if feature is enabled
-    isFeatureEnabled(featureName) {
+    public isFeatureEnabled(featureName: string): boolean {
         return this.config.app.features[featureName] === true;
     }
 
     // Set theme
-    setTheme(theme) {
+    public setTheme(theme: 'light' | 'dark' | 'system'): void {
         this.config.user.theme = theme;
         this.saveConfig();
         this.applyTheme(theme);
     }
 
     // Apply theme to document
-    applyTheme(theme) {
+    public applyTheme(theme: string): void {
         if (theme === 'dark') {
             document.documentElement.classList.add('dark');
         } else if (theme === 'light') {
@@ -255,7 +266,7 @@ class AppConfigManager {
     }
 
     // Subscribe to config changes
-    subscribe(callback) {
+    public subscribe(callback: ListenerCallback): () => void {
         this.listeners.push(callback);
         return () => {
             this.listeners = this.listeners.filter(l => l !== callback);
@@ -263,12 +274,12 @@ class AppConfigManager {
     }
 
     // Notify all listeners of changes
-    notifyListeners() {
+    private notifyListeners(): void {
         this.listeners.forEach(callback => callback(this.config, this.preferences));
     }
 
     // Reset to defaults
-    reset() {
+    public reset(): void {
         localStorage.removeItem(APP_CONFIG_KEY);
         localStorage.removeItem(USER_PREFERENCES_KEY);
         this.config = defaultConfig;
@@ -277,7 +288,7 @@ class AppConfigManager {
     }
 
     // Export configuration
-    export() {
+    public export(): object {
         return {
             config: this.config,
             preferences: this.preferences,
@@ -286,7 +297,7 @@ class AppConfigManager {
     }
 
     // Import configuration
-    import(data) {
+    public import(data: any): boolean {
         try {
             if (data.config) {
                 this.config = { ...defaultConfig, ...data.config };

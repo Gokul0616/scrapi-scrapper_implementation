@@ -1,8 +1,15 @@
 import React, { useState } from 'react';
-import { Search, ChevronDown, Menu, X, ArrowLeft, ChevronRight } from 'lucide-react';
+import { Search, Menu, X, ChevronRight } from 'lucide-react';
 import DocsSearchModal from './DocsSearchModal';
 
-const MobileMenuItem = ({ title, href = "#", onClick, hasSubmenu }) => (
+interface MobileMenuItemProps {
+    title: string;
+    href?: string;
+    onClick?: () => void;
+    hasSubmenu?: boolean;
+}
+
+const MobileMenuItem: React.FC<MobileMenuItemProps> = ({ title, href = "#", onClick, hasSubmenu }) => (
     <a
         href={href}
         onClick={onClick}
@@ -22,12 +29,12 @@ const NAV_LINKS = [
     { title: 'Open source', href: '#' },
 ];
 
-const DocsNavbar = () => {
+const DocsNavigation: React.FC = () => {
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     React.useEffect(() => {
-        const handleKeyDown = (e) => {
+        const handleKeyDown = (e: KeyboardEvent) => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
                 e.preventDefault();
                 setIsSearchOpen(true);
@@ -108,17 +115,6 @@ const DocsNavbar = () => {
                                 {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                             </button>
                         </div>
-
-                        {/* Mobile Menu Button */}
-                        {/* <div className="lg:hidden flex items-center gap-4">
-                            <a href="#" className="text-gray-900 font-medium text-sm">Sign in</a>
-                            <button
-                                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                                className="p-2 text-gray-900 hover:bg-gray-100 rounded-md"
-                            >
-                                <Menu className="w-6 h-6" />
-                            </button>
-                        </div> */}
                     </div>
                 </div>
             </nav>
@@ -185,4 +181,4 @@ const DocsNavbar = () => {
     );
 };
 
-export default DocsNavbar;
+export default DocsNavigation;

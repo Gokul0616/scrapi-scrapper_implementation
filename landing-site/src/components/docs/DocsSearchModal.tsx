@@ -1,16 +1,32 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, FileText, Scale, Loader2, Command, Hash, Book, Clock, X } from 'lucide-react';
+import { Search, FileText, Scale, Loader2, Command, Hash, Book, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useRecentSearches } from '../../hooks/useAppConfig';
 
-const DocsSearchModal = ({ isOpen, onClose }) => {
+interface DocsSearchModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+}
+
+interface SearchResult {
+    url: string;
+    title: string;
+    description?: string;
+    content?: string;
+    category?: string;
+    type?: string;
+    breadcrumb?: string[];
+    subtitle?: string;
+}
+
+const DocsSearchModal: React.FC<DocsSearchModalProps> = ({ isOpen, onClose }) => {
     const [query, setQuery] = useState('');
-    const [results, setResults] = useState([]);
+    const [results, setResults] = useState<SearchResult[]>([]);
     const [loading, setLoading] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(0);
-    const inputRef = useRef(null);
-    const modalRef = useRef(null);
-    const resultRefs = useRef([]);
+    const inputRef = useRef<HTMLInputElement>(null);
+    const modalRef = useRef<HTMLDivElement>(null);
+    const resultRefs = useRef<(HTMLButtonElement | null)[]>([]);
     const navigate = useNavigate();
     const { searches: recentSearches, addSearch, clearSearches } = useRecentSearches();
 
@@ -30,7 +46,7 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
     }, [isOpen]);
 
     // Group results by category
-    const groupedResults = results.reduce((acc, result) => {
+    const groupedResults = results.reduce<Record<string, SearchResult[]>>((acc, result) => {
         const category = result.category || 'Other';
         if (!acc[category]) {
             acc[category] = [];
@@ -44,7 +60,7 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
 
     // Handle keyboard navigation
     useEffect(() => {
-        const handleKeyDown = (event) => {
+        const handleKeyDown = (event: KeyboardEvent) => {
             if (!isOpen) return;
 
             if (event.key === 'Escape') {
@@ -70,8 +86,8 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
             }
         };
 
-        const handleClickOutside = (event) => {
-            if (modalRef.current && !modalRef.current.contains(event.target)) {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
                 onClose();
             }
         };
@@ -90,7 +106,7 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
     // Scroll selected item into view with better positioning
     useEffect(() => {
         if (resultRefs.current[selectedIndex]) {
-            resultRefs.current[selectedIndex].scrollIntoView({
+            resultRefs.current[selectedIndex]?.scrollIntoView({
                 behavior: 'smooth',
                 block: 'center',
                 inline: 'nearest',
@@ -127,7 +143,7 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
         return () => clearTimeout(delayDebounceFn);
     }, [query]);
 
-    const handleSelect = (url) => {
+    const handleSelect = (url: string) => {
         // Save search query to recent searches
         if (query.trim()) {
             addSearch(query.trim());
@@ -140,7 +156,7 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
         }
     };
 
-    const highlightText = (text, query) => {
+    const highlightText = (text: string, query: string) => {
         if (!query) return text;
         const parts = text.split(new RegExp(`(${query})`, 'gi'));
         return parts.map((part, index) =>
@@ -152,7 +168,7 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
         );
     };
 
-    const getResultIcon = (type) => {
+    const getResultIcon = (type?: string) => {
         switch (type) {
             case 'legal':
                 return <Scale className="w-4 h-4" />;
@@ -256,7 +272,7 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
                                                 return (
                                                     <button
                                                         key={globalIndex}
-                                                        ref={(el) => (resultRefs.current[globalIndex] = el)}
+                                                        ref={(el) => { resultRefs.current[globalIndex] = el; }}
                                                         onClick={() => handleSelect(result.url)}
                                                         onMouseEnter={() => setSelectedIndex(globalIndex)}
                                                         className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-all border-b border-gray-100 dark:border-gray-800 ${isSelected
@@ -277,10 +293,10 @@ const DocsSearchModal = ({ isOpen, onClose }) => {
                                                                 <div className="text-xs text-gray-500 flex items-center gap-1 flex-wrap">
                                                                     {result.breadcrumb.map((crumb, i) => (
                                                                         <React.Fragment key={i}>
-                                                                            <span className={i === result.breadcrumb.length - 1 ? 'text-blue-600 font-medium' : ''}>
+                                                                            <span className={i === (result.breadcrumb?.length || 0) - 1 ? 'text-blue-600 font-medium' : ''}>
                                                                                 {crumb}
                                                                             </span>
-                                                                            {i < result.breadcrumb.length - 1 && (
+                                                                            {i < (result.breadcrumb?.length || 0) - 1 && (
                                                                                 <span className="text-gray-400">›</span>
                                                                             )}
                                                                         </React.Fragment>
