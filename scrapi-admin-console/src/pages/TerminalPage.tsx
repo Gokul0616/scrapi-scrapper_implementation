@@ -5,7 +5,12 @@ import 'xterm/css/xterm.css';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-const BACKEND_WS_URL = (import.meta.env.VITE_BACKEND_URL || '').replace(/^http/, 'ws');
+// Construct WebSocket URL based on current location
+const getWebSocketURL = () => {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host;
+    return `${protocol}//${host}`;
+};
 
 export const TerminalPage: React.FC = () => {
     const terminalRef = useRef<HTMLDivElement>(null);
