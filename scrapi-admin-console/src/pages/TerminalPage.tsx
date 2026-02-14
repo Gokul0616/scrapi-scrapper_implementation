@@ -17,6 +17,7 @@ export const TerminalPage: React.FC = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
     const [connected, setConnected] = useState(false);
+    const [connectionError, setConnectionError] = useState<string>('');
 
     // Check permissions
     useEffect(() => {
@@ -31,6 +32,7 @@ export const TerminalPage: React.FC = () => {
         if (!terminalRef.current || !user) return;
 
         let isCleaningUp = false;
+        let reconnectTimeout: NodeJS.Timeout;
 
         // Initialize xterm.js
         const term = new Terminal({
@@ -69,14 +71,26 @@ export const TerminalPage: React.FC = () => {
         // Use setTimeout to ensure terminal is fully mounted before fitting
         setTimeout(() => {
             if (!isCleaningUp) {
-                fitAddon.fit();
+                try {
+                    fitAddon.fit();
+                } catch (error) {
+                    console.error('Error fitting terminal:', error);
+                }
             }
         }, 100);
 
         // Connect to WebSocket
         const token = localStorage.getItem('scrapi_admin_token');
+        if (!token) {
+            setConnectionError('No authentication token found');
+            term.write('\r\n\x1b[31mError: No authentication token\x1b[0m\r\n');
+            return;
+        }
+
         const clientId = Math.random().toString(36).substring(7);
         const wsUrl = `${getWebSocketURL()}/api/terminal/ws/${clientId}?token=${token}`;
+        
+        console.log('Connecting to WebSocket:', wsUrl);
         const ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
@@ -84,40 +98,60 @@ export const TerminalPage: React.FC = () => {
                 ws.close();
                 return;
             }
+            console.log('WebSocket connected successfully');
             setConnected(true);
-            term.write('\r\n\x1b[32mConnected to backend terminal\x1b[0m\r\n');
+            setConnectionError('');
+            term.write('\r\n\x1b[32mConnected to backend terminal\x1b[0m\r\n\r\n');
 
             // Send resize event
-            const { cols, rows } = term;
-            if (ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ type: 'resize', cols, rows }));
+            try {
+                const { cols, rows } = term;
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ type: 'resize', cols, rows }));
+                }
+            } catch (error) {
+                console.error('Error sending resize:', error);
             }
         };
 
         ws.onmessage = (event) => {
             if (!isCleaningUp) {
-                term.write(event.data);
+                try {
+                    term.write(event.data);
+                } catch (error) {
+                    console.error('Error writing to terminal:', error);
+                }
             }
         };
 
-        ws.onclose = () => {
+        ws.onclose = (event) => {
             if (!isCleaningUp) {
+                console.log('WebSocket closed:', event.code, event.reason);
                 setConnected(false);
                 term.write('\r\n\x1b[31mDisconnected from backend\x1b[0m\r\n');
+                
+                if (event.code !== 1000) { // Not a normal closure
+                    setConnectionError(`Connection closed: ${event.reason || 'Unknown reason'}`);
+                }
             }
         };
 
         ws.onerror = (error) => {
             if (!isCleaningUp) {
                 console.error('WebSocket error:', error);
-                term.write('\r\n\x1b[31mConnection error\x1b[0m\r\n');
+                setConnectionError('Connection error - check console for details');
+                term.write('\r\n\x1b[31mConnection error - Please check your network\x1b[0m\r\n');
             }
         };
 
         // Handle terminal input
         const onDataHandler = (data: string) => {
             if (ws.readyState === WebSocket.OPEN && !isCleaningUp) {
-                ws.send(data);
+                try {
+                    ws.send(data);
+                } catch (error) {
+                    console.error('Error sending data:', error);
+                }
             }
         };
         term.onData(onDataHandler);
@@ -125,10 +159,14 @@ export const TerminalPage: React.FC = () => {
         // Handle resize
         const handleResize = () => {
             if (!isCleaningUp) {
-                fitAddon.fit();
-                const { cols, rows } = term;
-                if (ws.readyState === WebSocket.OPEN) {
-                    ws.send(JSON.stringify({ type: 'resize', cols, rows }));
+                try {
+                    fitAddon.fit();
+                    const { cols, rows } = term;
+                    if (ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify({ type: 'resize', cols, rows }));
+                    }
+                } catch (error) {
+                    console.error('Error during resize:', error);
                 }
             }
         };
@@ -138,12 +176,17 @@ export const TerminalPage: React.FC = () => {
         return () => {
             isCleaningUp = true;
             window.removeEventListener('resize', handleResize);
+            if (reconnectTimeout) clearTimeout(reconnectTimeout);
             if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
-                ws.close();
+                ws.close(1000, 'Component unmounting');
             }
-            term.dispose();
+            try {
+                term.dispose();
+            } catch (error) {
+                console.error('Error disposing terminal:', error);
+            }
         };
-    }, [user]);
+    }, [user, navigate]);
 
     return (
         <div className="h-[calc(100vh-100px)] bg-[#1a1b26] rounded-lg p-2 overflow-hidden flex flex-col shadow-xl">
