@@ -1,32 +1,88 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, ShieldOff, Terminal } from 'lucide-react';
+import { Shield, ShieldOff, Terminal, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { User } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useAlert } from '../context/AlertContext';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
 
+// Table Skeleton Component
+const TableSkeleton = () => (
+    <div className="space-y-6 animate-pulse">
+        <div className="flex justify-between items-center mb-4">
+            <div className="h-8 w-48 bg-gray-200 rounded"></div>
+        </div>
+        
+        <div className="bg-white shadow-sm rounded border border-aws-border overflow-hidden">
+            {/* Table Header */}
+            <div className="bg-gray-50 px-6 py-3 border-b border-aws-border flex gap-4">
+                {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="h-4 bg-gray-200 rounded flex-1"></div>
+                ))}
+            </div>
+
+            {/* Rows */}
+            <div className="divide-y divide-aws-border">
+                {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="px-6 py-4 flex gap-4 items-center">
+                        <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
+                        <div className="flex-1 space-y-2">
+                            <div className="h-4 w-32 bg-gray-200 rounded"></div>
+                            <div className="h-3 w-48 bg-gray-100 rounded"></div>
+                        </div>
+                        <div className="h-6 w-20 bg-gray-200 rounded-full"></div>
+                        <div className="h-6 w-24 bg-gray-200 rounded-full"></div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    </div>
+);
+
 export const TeamPage: React.FC = () => {
     const { user: currentUser } = useAuth();
     const { showAlert } = useAlert();
     const [teamMembers, setTeamMembers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
+    
+    // Pagination State
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalMembers, setTotalMembers] = useState(0);
+    const limit = 20;
 
     useEffect(() => {
         fetchTeam();
-    }, []);
+    }, [page]);
 
     const fetchTeam = async () => {
+        setLoading(true);
         try {
             const token = localStorage.getItem('scrapi_admin_token');
-            const response = await fetch(`${BACKEND_URL}/api/admin/team`, {
+            const queryParams = new URLSearchParams({
+                page: page.toString(),
+                limit: limit.toString(),
+            });
+
+            const response = await fetch(`${BACKEND_URL}/api/admin/team?${queryParams}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
             if (!response.ok) throw new Error('Failed to fetch team');
 
             const data = await response.json();
-            setTeamMembers(data);
+            
+            // Handle new paginated response format
+            if (data.members) {
+                setTeamMembers(data.members);
+                setTotalPages(data.total_pages || 1);
+                setTotalMembers(data.total || data.members.length);
+            } else {
+                // Fallback for old format
+                setTeamMembers(Array.isArray(data) ? data : []);
+                setTotalMembers(Array.isArray(data) ? data.length : 0);
+                setTotalPages(1);
+            }
         } catch (error) {
             console.error(error);
             showAlert('Failed to load team members', 'error');
