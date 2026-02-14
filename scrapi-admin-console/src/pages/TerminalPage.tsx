@@ -68,7 +68,8 @@ export const TerminalPage: React.FC = () => {
         // Connect to WebSocket
         const token = localStorage.getItem('scrapi_admin_token');
         const clientId = Math.random().toString(36).substring(7);
-        const ws = new WebSocket(`${BACKEND_WS_URL}/api/terminal/ws/${clientId}?token=${token}`);
+        const wsUrl = `${getWebSocketURL()}/api/terminal/ws/${clientId}?token=${token}`;
+        const ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
             setConnected(true);
