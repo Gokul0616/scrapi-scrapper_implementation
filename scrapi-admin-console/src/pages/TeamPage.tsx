@@ -127,69 +127,109 @@ export const TeamPage: React.FC = () => {
         }
     };
 
-    if (loading) return <div className="p-6">Loading...</div>;
+    if (loading && teamMembers.length === 0) return <TableSkeleton />;
 
     return (
         <div className="space-y-6">
             <h1 className="text-2xl font-bold text-aws-text">Team Management</h1>
 
             <div className="bg-white shadow-sm rounded border border-aws-border overflow-hidden">
-                <table className="min-w-full divide-y divide-aws-border">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-bold text-aws-text-secondary uppercase">User</th>
-                            <th className="px-6 py-3 text-left text-xs font-bold text-aws-text-secondary uppercase">Role</th>
-                            <th className="px-6 py-3 text-left text-xs font-bold text-aws-text-secondary uppercase">Terminal Access</th>
-                            <th className="px-6 py-3 text-left text-xs font-bold text-aws-text-secondary uppercase">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-aws-border">
-                        {teamMembers.map((member) => (
-                            <tr key={member.id} className="hover:bg-blue-50">
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="flex items-center">
-                                        <div className="h-8 w-8 rounded-full bg-aws-nav flex items-center justify-center text-white font-bold text-xs mr-3">
-                                            {member.username.charAt(0).toUpperCase()}
-                                        </div>
-                                        <div>
-                                            <div className="text-sm font-medium text-aws-text">{member.username}</div>
-                                            <div className="text-xs text-gray-500">{member.email}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${member.role === 'owner' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-                                        }`}>
-                                        {member.role}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    {member.role === 'owner' ? (
-                                        <span className="text-xs text-gray-400">Full Access</span>
-                                    ) : (
-                                        <button
-                                            onClick={() => toggleTerminalAccess(member)}
-                                            className={`flex items-center space-x-1 px-3 py-1 rounded text-xs font-medium transition-colors ${(member.permissions || []).includes('terminal_access')
-                                                    ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                                }`}
-                                        >
-                                            <Terminal size={14} />
-                                            <span>{(member.permissions || []).includes('terminal_access') ? 'Enabled' : 'Disabled'}</span>
-                                        </button>
-                                    )}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    {member.is_active ? (
-                                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
-                                    ) : (
-                                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Suspended</span>
-                                    )}
-                                </td>
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-aws-border">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-bold text-aws-text-secondary uppercase">User</th>
+                                <th className="px-6 py-3 text-left text-xs font-bold text-aws-text-secondary uppercase">Role</th>
+                                <th className="px-6 py-3 text-left text-xs font-bold text-aws-text-secondary uppercase">Terminal Access</th>
+                                <th className="px-6 py-3 text-left text-xs font-bold text-aws-text-secondary uppercase">Status</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-aws-border">
+                            {teamMembers.map((member) => (
+                                <tr key={member.id} className="hover:bg-blue-50 transition-colors">
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="flex items-center">
+                                            <div className="h-8 w-8 rounded-full bg-aws-nav flex items-center justify-center text-white font-bold text-xs mr-3">
+                                                {member.username.charAt(0).toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <div className="text-sm font-medium text-aws-text">{member.username}</div>
+                                                <div className="text-xs text-gray-500">{member.email}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${member.role === 'owner' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                                            }`}>
+                                            {member.role}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        {member.role === 'owner' ? (
+                                            <span className="text-xs text-gray-400">Full Access</span>
+                                        ) : (
+                                            <button
+                                                onClick={() => toggleTerminalAccess(member)}
+                                                className={`flex items-center space-x-1 px-3 py-1 rounded text-xs font-medium transition-colors ${(member.permissions || []).includes('terminal_access')
+                                                        ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                    }`}
+                                            >
+                                                <Terminal size={14} />
+                                                <span>{(member.permissions || []).includes('terminal_access') ? 'Enabled' : 'Disabled'}</span>
+                                            </button>
+                                        )}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        {member.is_active ? (
+                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
+                                        ) : (
+                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Suspended</span>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                            {teamMembers.length === 0 && (
+                                <tr>
+                                    <td colSpan={4} className="px-6 py-4 text-center text-gray-500">
+                                        No team members found
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                    <div className="bg-white px-4 py-3 border-t border-aws-border sm:px-6">
+                        <div className="flex items-center justify-between">
+                            <div className="text-sm text-aws-text-secondary">
+                                Showing <span className="font-medium">{(page - 1) * limit + 1}</span> to <span className="font-medium">{Math.min(page * limit, totalMembers)}</span> of <span className="font-medium">{totalMembers}</span> results
+                            </div>
+                            <div className="flex-1 flex justify-end space-x-3">
+                                <button 
+                                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                                    disabled={page === 1}
+                                    className={`relative inline-flex items-center px-4 py-1.5 border border-gray-300 text-sm font-medium rounded-sm bg-white 
+                                        ${page === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-aws-text hover:bg-gray-50 transition-colors'}`}
+                                >
+                                    <ChevronLeft className="h-4 w-4 mr-1" />
+                                    Previous
+                                </button>
+                                <button 
+                                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={page === totalPages}
+                                    className={`relative inline-flex items-center px-4 py-1.5 border border-gray-300 text-sm font-medium rounded-sm bg-white
+                                        ${page === totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-aws-text hover:bg-gray-50 transition-colors'}`}
+                                >
+                                    Next
+                                    <ChevronRight className="h-4 w-4 ml-1" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
