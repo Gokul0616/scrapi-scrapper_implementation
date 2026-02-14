@@ -46,6 +46,8 @@ api_router = APIRouter(prefix="/api")
 from routes import router as api_routes, set_db, search_router, set_search_db, settings_router, set_settings_db
 from routes.organization_routes import router as organization_router, set_db as set_org_db
 from routes.notification_routes import router as notification_router, set_notification_db
+from routes.terminal_routes import router as terminal_router
+from routes.admin_users_routes import router as admin_users_router
 from routes.routes_legacy import set_db as set_legacy_db
 set_db(db)
 set_search_db(db)
@@ -65,6 +67,8 @@ api_router.include_router(search_router)
 api_router.include_router(settings_router)
 api_router.include_router(organization_router)
 api_router.include_router(notification_router)
+api_router.include_router(terminal_router)
+api_router.include_router(admin_users_router)
 
 # Include the router in the main app
 app.include_router(api_router)

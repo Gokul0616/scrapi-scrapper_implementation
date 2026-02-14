@@ -12,6 +12,7 @@ export interface User {
     created_at: string;
     last_login_at?: string;
     organization_name?: string;
+    permissions?: string[];
 }
 
 export interface Run {

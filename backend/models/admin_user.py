@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime, timezone
 import uuid
 
@@ -9,6 +9,7 @@ class AdminUserCreate(BaseModel):
     password: str
     organization_name: Optional[str] = None
     role: Optional[str] = None  # owner or admin - only used during role selection
+    permissions: List[str] = []
 
 class AdminUserLogin(BaseModel):
     username: str
@@ -24,6 +25,7 @@ class AdminUser(BaseModel):
     organization_name: Optional[str] = None
     plan: str = "Free"
     role: str = "admin"  # owner or admin - default is admin
+    permissions: List[str] = []
     is_active: bool = True
     last_login_at: Optional[datetime] = None
     last_path: Optional[str] = None  # Store last visited path for redirect after login
@@ -36,6 +38,7 @@ class AdminUserResponse(BaseModel):
     organization_name: Optional[str] = None
     plan: str
     role: str = "admin"
+    permissions: List[str] = []
     is_active: bool = True
     created_at: str
     last_login_at: Optional[str] = None

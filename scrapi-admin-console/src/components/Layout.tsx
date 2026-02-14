@@ -13,6 +13,8 @@ import {
     Search,
     ChevronDown,
     X,
+    Shield,
+    Terminal as TerminalIcon,
     FileText,
     ScrollText,
     BookOpen
@@ -41,9 +43,61 @@ export const Layout: React.FC = () => {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+    // Sidebar items configuration
+    const items = [
+        { icon: LayoutDashboard, label: 'Dashboard', to: '/dashboard' },
+        { label: 'Management', type: 'header' },
+        { icon: Users, label: 'Users', to: '/users' },
+        { icon: Bot, label: 'Actors', to: '/actors' },
+        { icon: PlaySquare, label: 'Runs', to: '/runs' },
+        { icon: FileText, label: 'Audit Logs', to: '/audit-logs' },
+    ];
+
+    // Add restricted items
+    if (user?.role === 'owner') {
+        items.push({ icon: Shield, label: 'Team', to: '/team' });
+    }
+
+    if (user?.role === 'owner' || (user?.permissions || []).includes('terminal_access')) {
+        items.push({ icon: TerminalIcon, label: 'Terminal', to: '/terminal' });
+    }
+
+    // Continue with other items
+    items.push(
+        { label: 'Content', type: 'header' },
+        { icon: ScrollText, label: 'Policies', to: '/policies' },
+        { label: 'Configuration', type: 'header' },
+        { icon: BookOpen, label: 'API Docs', to: '/documentation' },
+        { icon: Settings, label: 'Settings', to: '/settings' }
+    );
+
+    const renderSidebarContent = (collapsed: boolean) => (
+        <nav className="flex-1 py-4 overflow-y-auto">
+            {items.map((item, index) => {
+                if (item.type === 'header') {
+                    return (
+                        <div key={index} className={clsx("px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4 mb-1", collapsed && "hidden")}>
+                            {item.label}
+                        </div>
+                    );
+                }
+                return (
+                    <SidebarItem
+                        key={item.to}
+                        icon={item.icon}
+                        label={item.label!}
+                        to={item.to!}
+                        active={location.pathname.startsWith(item.to!)}
+                        collapsed={collapsed}
+                    />
+                );
+            })}
+        </nav>
+    );
+
     return (
         <div className="flex flex-col h-screen bg-aws-light">
-            {/* Top Navigation Bar - AWS Style */}
+            {/* Top Navigation Bar */}
             <header className="bg-aws-nav text-white h-14 flex items-center justify-between px-4 shadow-md z-50 flex-shrink-0">
                 <div className="flex items-center">
                     <button
@@ -91,7 +145,6 @@ export const Layout: React.FC = () => {
                         </div>
                         <ChevronDown size={16} className="text-gray-400" />
 
-                        {/* User Dropdown Menu */}
                         <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden group-hover:block">
                             <button
                                 onClick={logout}
@@ -105,7 +158,7 @@ export const Layout: React.FC = () => {
             </header>
 
             <div className="flex flex-1 overflow-hidden">
-                {/* Sidebar */}
+                {/* Desktop Sidebar */}
                 <aside
                     className={clsx(
                         "bg-aws-nav text-white flex-shrink-0 transition-all duration-300 ease-in-out flex flex-col",
@@ -113,73 +166,7 @@ export const Layout: React.FC = () => {
                         "hidden lg:flex"
                     )}
                 >
-                    <nav className="flex-1 py-4 overflow-y-auto">
-                        <SidebarItem
-                            icon={LayoutDashboard}
-                            label="Dashboard"
-                            to="/"
-                            active={location.pathname === '/'}
-                            collapsed={!sidebarOpen}
-                        />
-                        <div className={clsx("px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4 mb-1", !sidebarOpen && "hidden")}>
-                            Management
-                        </div>
-                        <SidebarItem
-                            icon={Users}
-                            label="Users"
-                            to="/users"
-                            active={location.pathname.startsWith('/users')}
-                            collapsed={!sidebarOpen}
-                        />
-                        <SidebarItem
-                            icon={Bot}
-                            label="Actors"
-                            to="/actors"
-                            active={location.pathname.startsWith('/actors')}
-                            collapsed={!sidebarOpen}
-                        />
-                        <SidebarItem
-                            icon={PlaySquare}
-                            label="Runs"
-                            to="/runs"
-                            active={location.pathname.startsWith('/runs')}
-                            collapsed={!sidebarOpen}
-                        />
-                        <SidebarItem
-                            icon={FileText}
-                            label="Audit Logs"
-                            to="/audit-logs"
-                            active={location.pathname.startsWith('/audit-logs')}
-                            collapsed={!sidebarOpen}
-                        />
-                        <div className={clsx("px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4 mb-1", !sidebarOpen && "hidden")}>
-                            Content
-                        </div>
-                        <SidebarItem
-                            icon={ScrollText}
-                            label="Policies"
-                            to="/policies"
-                            active={location.pathname.startsWith('/policies')}
-                            collapsed={!sidebarOpen}
-                        />
-                        <div className={clsx("px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4 mb-1", !sidebarOpen && "hidden")}>
-                            Configuration
-                        </div>
-                        <SidebarItem
-                            icon={BookOpen}
-                            label="API Docs"
-                            to="/documentation"
-                            active={location.pathname.startsWith('/documentation')}
-                            collapsed={!sidebarOpen}
-                        />
-                        <SidebarItem
-                            icon={Settings}
-                            label="Settings"
-                            to="/settings"
-                            active={location.pathname.startsWith('/settings')}
-                            collapsed={!sidebarOpen}
-                        />
-                    </nav>
+                    {renderSidebarContent(!sidebarOpen)}
 
                     <div className="p-4 border-t border-gray-700">
                         <button
@@ -207,25 +194,9 @@ export const Layout: React.FC = () => {
                                     <X size={24} />
                                 </button>
                             </div>
-                            <nav className="flex-1 py-4 overflow-y-auto">
-                                <SidebarItem icon={LayoutDashboard} label="Dashboard" to="/" active={location.pathname === '/'} collapsed={false} />
-                                <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4 mb-1">
-                                    Management
-                                </div>
-                                <SidebarItem icon={Users} label="Users" to="/users" active={location.pathname.startsWith('/users')} collapsed={false} />
-                                <SidebarItem icon={Bot} label="Actors" to="/actors" active={location.pathname.startsWith('/actors')} collapsed={false} />
-                                <SidebarItem icon={PlaySquare} label="Runs" to="/runs" active={location.pathname.startsWith('/runs')} collapsed={false} />
-                                <SidebarItem icon={FileText} label="Audit Logs" to="/audit-logs" active={location.pathname.startsWith('/audit-logs')} collapsed={false} />
-                                <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4 mb-1">
-                                    Content
-                                </div>
-                                <SidebarItem icon={ScrollText} label="Policies" to="/policies" active={location.pathname.startsWith('/policies')} collapsed={false} />
-                                <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4 mb-1">
-                                    Configuration
-                                </div>
-                                <SidebarItem icon={BookOpen} label="API Docs" to="/documentation" active={location.pathname.startsWith('/documentation')} collapsed={false} />
-                                <SidebarItem icon={Settings} label="Settings" to="/settings" active={location.pathname.startsWith('/settings')} collapsed={false} />
-                            </nav>
+
+                            {renderSidebarContent(false)}
+
                             <div className="p-4 border-t border-gray-700">
                                 <button onClick={logout} className="flex items-center text-gray-300 hover:text-white w-full">
                                     <LogOut size={20} className="mr-3" />

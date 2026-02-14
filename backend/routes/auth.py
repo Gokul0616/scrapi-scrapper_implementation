@@ -244,12 +244,19 @@ async def admin_register(user_data: AdminUserCreate):
     
     # Create admin user
     from models import AdminUser
+    
+    # Default permissions: owner gets terminal_access by default
+    initial_permissions = []
+    if role == "owner":
+        initial_permissions = ["terminal_access"]
+        
     admin_user = AdminUser(
         username=user_data.username,
         email=user_data.email,
         hashed_password=hash_password(user_data.password),
         organization_name=user_data.organization_name,
-        role=role if role else "admin"  # Temp role until selection
+        role=role if role else "admin",  # Temp role until selection
+        permissions=initial_permissions
     )
     
     doc = admin_user.model_dump()
@@ -272,6 +279,7 @@ async def admin_register(user_data: AdminUserCreate):
             organization_name=admin_user.organization_name,
             plan=admin_user.plan,
             role=admin_user.role,
+            permissions=admin_user.permissions,
             is_active=admin_user.is_active,
             created_at=admin_user.created_at.isoformat(),
             last_login_at=admin_user.last_login_at.isoformat() if admin_user.last_login_at else None
@@ -324,6 +332,7 @@ async def admin_login(credentials: AdminUserLogin):
             organization_name=user_doc.get('organization_name'),
             plan=user_doc.get('plan', 'Free'),
             role=user_doc.get('role', 'admin'),
+            permissions=user_doc.get('permissions', []),
             is_active=user_doc.get('is_active', True),
             created_at=user_doc.get('created_at', datetime.now(timezone.utc).isoformat()),
             last_login_at=user_doc.get('last_login_at')
@@ -349,10 +358,15 @@ async def admin_select_role(role_data: dict, current_user: dict = Depends(get_cu
         if existing_owner and existing_owner['id'] != current_user['id']:
             raise HTTPException(status_code=400, detail="Owner already exists")
     
+    # Grant terminal access to owner by default if selected
+    update_data = {"role": role}
+    if role == 'owner':
+         update_data["permissions"] = ["terminal_access"]
+         
     # Update admin user role
     await db.admin_users.update_one(
         {"id": current_user['id']},
-        {"$set": {"role": role}}
+        {"$set": update_data}
     )
     
     # Get updated user
@@ -375,6 +389,7 @@ async def admin_select_role(role_data: dict, current_user: dict = Depends(get_cu
             organization_name=user_doc.get('organization_name'),
             plan=user_doc.get('plan', 'Free'),
             role=role,
+            permissions=user_doc.get('permissions', []),
             is_active=user_doc.get('is_active', True),
             created_at=user_doc.get('created_at', datetime.now(timezone.utc).isoformat()),
             last_login_at=user_doc.get('last_login_at')
@@ -400,6 +415,7 @@ async def get_admin_me(current_user: dict = Depends(get_current_user)):
         organization_name=user_doc.get('organization_name'),
         plan=user_doc.get('plan', 'Free'),
         role=user_doc.get('role', 'admin'),
+        permissions=user_doc.get('permissions', []),
         is_active=user_doc.get('is_active', True),
         created_at=user_doc.get('created_at', datetime.now(timezone.utc).isoformat()),
         last_login_at=user_doc.get('last_login_at')
