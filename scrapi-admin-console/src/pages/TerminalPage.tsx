@@ -30,6 +30,8 @@ export const TerminalPage: React.FC = () => {
     useEffect(() => {
         if (!terminalRef.current || !user) return;
 
+        let isCleaningUp = false;
+
         // Initialize xterm.js
         const term = new Terminal({
             cursorBlink: true,
@@ -63,7 +65,13 @@ export const TerminalPage: React.FC = () => {
         term.loadAddon(fitAddon);
 
         term.open(terminalRef.current);
-        fitAddon.fit();
+        
+        // Use setTimeout to ensure terminal is fully mounted before fitting
+        setTimeout(() => {
+            if (!isCleaningUp) {
+                fitAddon.fit();
+            }
+        }, 100);
 
         // Connect to WebSocket
         const token = localStorage.getItem('scrapi_admin_token');
@@ -72,52 +80,70 @@ export const TerminalPage: React.FC = () => {
         const ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
+            if (isCleaningUp) {
+                ws.close();
+                return;
+            }
             setConnected(true);
             term.write('\r\n\x1b[32mConnected to backend terminal\x1b[0m\r\n');
 
             // Send resize event
-            const { cols, rows } = term;
-            ws.send(JSON.stringify({ type: 'resize', cols, rows }));
-        };
-
-        ws.onmessage = (event) => {
-            term.write(event.data);
-        };
-
-        ws.onclose = () => {
-            setConnected(false);
-            term.write('\r\n\x1b[31mDisconnected from backend\x1b[0m\r\n');
-        };
-
-        ws.onerror = (error) => {
-            console.error('WebSocket error:', error);
-            term.write('\r\n\x1b[31mConnection error\x1b[0m\r\n');
-        };
-
-        // Handle terminal input
-        term.onData((data) => {
-            if (ws.readyState === WebSocket.OPEN) {
-                ws.send(data);
-            }
-        });
-
-        // Handle resize
-        const handleResize = () => {
-            fitAddon.fit();
             const { cols, rows } = term;
             if (ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({ type: 'resize', cols, rows }));
             }
         };
 
+        ws.onmessage = (event) => {
+            if (!isCleaningUp) {
+                term.write(event.data);
+            }
+        };
+
+        ws.onclose = () => {
+            if (!isCleaningUp) {
+                setConnected(false);
+                term.write('\r\n\x1b[31mDisconnected from backend\x1b[0m\r\n');
+            }
+        };
+
+        ws.onerror = (error) => {
+            if (!isCleaningUp) {
+                console.error('WebSocket error:', error);
+                term.write('\r\n\x1b[31mConnection error\x1b[0m\r\n');
+            }
+        };
+
+        // Handle terminal input
+        const onDataHandler = (data: string) => {
+            if (ws.readyState === WebSocket.OPEN && !isCleaningUp) {
+                ws.send(data);
+            }
+        };
+        term.onData(onDataHandler);
+
+        // Handle resize
+        const handleResize = () => {
+            if (!isCleaningUp) {
+                fitAddon.fit();
+                const { cols, rows } = term;
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ type: 'resize', cols, rows }));
+                }
+            }
+        };
+
         window.addEventListener('resize', handleResize);
 
         return () => {
+            isCleaningUp = true;
             window.removeEventListener('resize', handleResize);
-            ws.close();
+            if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+                ws.close();
+            }
             term.dispose();
         };
-    }, []);
+    }, [user]);
 
     return (
         <div className="h-[calc(100vh-100px)] bg-[#1a1b26] rounded-lg p-2 overflow-hidden flex flex-col shadow-xl">
