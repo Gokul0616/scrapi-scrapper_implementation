@@ -112,7 +112,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str, token: str):
         # So we must fetch user from DB here to be safe.
         from database import get_db
         db = get_db()
-        if not db:
+        if db is None:
              await websocket.close(code=4000)
              return
 
