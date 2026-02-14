@@ -192,16 +192,21 @@ export const TerminalPage: React.FC = () => {
         <div className="h-[calc(100vh-100px)] bg-[#1a1b26] rounded-lg p-2 overflow-hidden flex flex-col shadow-xl">
             <div className="flex justify-between items-center mb-2 px-2">
                 <div className="flex items-center space-x-2">
-                    <div className={`w-3 h-3 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                    <div className={`w-3 h-3 rounded-full ${connected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
                     <span className="text-gray-400 text-xs font-mono">
-                        {connected ? 'CONNECTED' : 'DISCONNECTED'}
+                        {connected ? 'CONNECTED' : connectionError || 'DISCONNECTED'}
                     </span>
                 </div>
                 <div className="text-gray-500 text-xs text-right">
                     Only authorized personnel • Monitor access logged
                 </div>
             </div>
-            <div ref={terminalRef} className="flex-1 w-full h-full" />
+            {connectionError && !connected && (
+                <div className="bg-red-900/30 border border-red-500/50 text-red-300 px-3 py-2 mb-2 rounded text-xs">
+                    <strong>Connection Error:</strong> {connectionError}
+                </div>
+            )}
+            <div ref={terminalRef} className="flex-1 w-full h-full" data-testid="terminal-container" />
         </div>
     );
 };
