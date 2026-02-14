@@ -187,7 +187,6 @@ const App: React.FC = () => {
                     onClose={handleCloseCookieSettings}
                     onSave={handleSaveCookieSettings}
                 />
-                <LoadingScreen />
             </div>
         </Router>
     );
