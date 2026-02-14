@@ -136,19 +136,27 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str, token: str):
     await manager.connect(websocket, client_id)
     
     # Create PTY
-    # SHELL env usually /bin/bash or /bin/zsh or /bin/sh
-    shell = os.environ.get('SHELL', 'sh')
+    # Use absolute path to shell
+    shell = os.environ.get('SHELL', '/bin/bash')
+    if not os.path.exists(shell):
+        shell = '/bin/sh'  # Fallback to sh
+    
+    logger.info(f"Starting terminal with shell: {shell}")
     
     try:
         pid, fd = pty.fork()
     except OSError as e:
         logger.error(f"PTY fork failed: {e}")
-        await websocket.close()
+        await websocket.close(code=1011, reason=f"PTY fork failed: {str(e)}")
         return
 
     if pid == 0:
         # Child process
-        os.execv(shell, [shell])
+        try:
+            os.execv(shell, [shell])
+        except Exception as e:
+            logger.error(f"Failed to exec shell: {e}")
+            exit(1)
     else:
         # Parent process
         manager.fd_map[client_id] = fd
