@@ -10,8 +10,10 @@ export default defineConfig({
     allowedHosts: [
       'admin-host-setup.preview.emergentagent.com',
       'visual-crawler-2.preview.emergentagent.com',
+      'admin-backend-verify.cluster-0.preview.emergentcf.cloud',
       'localhost',
-      '.emergentagent.com'
+      '.emergentagent.com',
+      '.emergentcf.cloud'
     ],
     hmr: {
       clientPort: 443,
