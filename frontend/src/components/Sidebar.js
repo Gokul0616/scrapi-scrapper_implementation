@@ -259,6 +259,10 @@ const Sidebar = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [navigate, toggleTheme, isSearchModalOpen, openModal, closeModal]);
 
+  // Determine billing label based on workspace type
+  const isOrganization = currentWorkspace?.workspace_type === 'organization';
+  const billingLabel = isOrganization ? 'Organization billing' : 'Billing';
+
   // Menu structure
   const scrapiStoreItems = [
     { icon: Home, label: 'Home', path: '/home', shortcut: 'S H' },
@@ -278,8 +282,7 @@ const Sidebar = () => {
   const bottomItems = [
     { icon: Network, label: 'Proxy', path: '/proxy', shortcut: 'S P' },
     { icon: HardDrive, label: 'Storage', path: '/storage', shortcut: 'S D' },
-    { icon: Building2, label: 'Organizations', path: '/organizations', shortcut: 'S W' },
-    { icon: CreditCard, label: 'Billing', path: '/billing', shortcut: 'S B' },
+    { icon: CreditCard, label: billingLabel, path: '/billing', shortcut: 'S B' },
     { icon: Settings, label: 'Settings', path: '/settings', shortcut: 'S G' }
   ];
 
