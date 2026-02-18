@@ -132,23 +132,23 @@ const Billing = () => {
   );
 
   const renderHistoricalUsage = () => (
-    <div className="text-center py-16">
+    <div className="text-center py-12">
       <p className="text-muted-foreground">Historical usage data will be displayed here</p>
-      <p className="text-sm text-muted-foreground mt-2">Track your past billing cycles and usage patterns</p>
+      <p className="text-sm text-muted-foreground mt-1">Track your past billing cycles and usage patterns</p>
     </div>
   );
 
   const renderSubscription = () => (
-    <div className="space-y-6">
-      <div className="rounded-lg border border-border bg-card p-6">
-        <h3 className="text-lg font-semibold mb-4 text-foreground">Current Plan</h3>
+    <div className="space-y-4">
+      <div className="rounded-lg border border-border bg-card p-4">
+        <h3 className="text-base font-semibold mb-3 text-foreground">Current Plan</h3>
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-2xl font-bold text-foreground">Free Plan</p>
-            <p className="text-sm text-muted-foreground mt-1">$0.00 / month</p>
-            <p className="text-sm text-muted-foreground mt-1">$5.00 platform credits included</p>
+            <p className="text-xl font-bold text-foreground">Free Plan</p>
+            <p className="text-sm text-muted-foreground mt-0.5">$0.00 / month</p>
+            <p className="text-sm text-muted-foreground mt-0.5">$5.00 platform credits included</p>
           </div>
-          <button className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+          <button className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">
             Upgrade Plan
           </button>
         </div>
@@ -157,33 +157,33 @@ const Billing = () => {
   );
 
   const renderPricing = () => (
-    <div className="text-center py-16">
+    <div className="text-center py-12">
       <p className="text-muted-foreground">Pricing information and plan comparison</p>
-      <p className="text-sm text-muted-foreground mt-2">Compare different plans and features</p>
+      <p className="text-sm text-muted-foreground mt-1">Compare different plans and features</p>
     </div>
   );
 
   const renderInvoices = () => (
-    <div className="text-center py-16">
+    <div className="text-center py-12">
       <p className="text-muted-foreground">No invoices available</p>
-      <p className="text-sm text-muted-foreground mt-2">Your billing invoices will appear here</p>
+      <p className="text-sm text-muted-foreground mt-1">Your billing invoices will appear here</p>
     </div>
   );
 
   const renderLimits = () => (
-    <div className="space-y-6">
-      <div className="rounded-lg border border-border bg-card p-6">
-        <h3 className="text-lg font-semibold mb-4 text-foreground">Usage Limits</h3>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between py-3 border-b border-border">
+    <div className="space-y-4">
+      <div className="rounded-lg border border-border bg-card p-4">
+        <h3 className="text-base font-semibold mb-3 text-foreground">Usage Limits</h3>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between py-2 border-b border-border">
             <span className="text-sm text-foreground">Platform credits per month</span>
             <span className="text-sm font-semibold text-foreground">$5.00</span>
           </div>
-          <div className="flex items-center justify-between py-3 border-b border-border">
+          <div className="flex items-center justify-between py-2 border-b border-border">
             <span className="text-sm text-foreground">Concurrent Actor runs</span>
             <span className="text-sm font-semibold text-foreground">1</span>
           </div>
-          <div className="flex items-center justify-between py-3">
+          <div className="flex items-center justify-between py-2">
             <span className="text-sm text-foreground">Maximum RAM per Actor</span>
             <span className="text-sm font-semibold text-foreground">2 GB</span>
           </div>
