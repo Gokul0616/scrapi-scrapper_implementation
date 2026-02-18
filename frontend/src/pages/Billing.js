@@ -212,11 +212,11 @@ const Billing = () => {
   };
 
   return (
-    <div className="min-h-screen p-8 bg-background text-foreground">
-      <div className="max-w-[1400px] mx-auto">
+    <div className="flex-1 min-h-screen bg-background">
+      <div className="max-w-4xl mx-auto px-6 py-6">
         {/* Header with Title and Action Buttons */}
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-[28px] font-normal text-foreground">{pageTitle}</h1>
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold text-foreground">{pageTitle}</h1>
           <div className="flex items-center gap-3">
             <button className="px-4 py-2 border border-border rounded-lg text-sm font-medium hover:bg-muted transition-colors text-foreground bg-card">
               API
@@ -228,21 +228,21 @@ const Billing = () => {
         </div>
 
         {/* Tabs */}
-        <div className="border-b border-border mb-6">
-          <div className="flex gap-8">
+        <div className="border-b border-border mb-4">
+          <div className="flex gap-6">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`pb-3 text-sm font-medium transition-colors relative ${
+                className={`pb-2.5 text-sm font-medium transition-colors relative ${
                   activeTab === tab.id
-                    ? 'text-blue-600 dark:text-blue-400'
+                    ? 'text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {tab.label}
                 {activeTab === tab.id && (
-                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-600 dark:bg-blue-400" />
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-500" />
                 )}
               </button>
             ))}
@@ -250,7 +250,7 @@ const Billing = () => {
         </div>
 
         {/* Tab Content */}
-        <div className="mt-6">
+        <div>
           {renderTabContent()}
         </div>
       </div>
