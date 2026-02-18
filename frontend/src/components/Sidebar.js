@@ -246,8 +246,7 @@ const Sidebar = () => {
             'P': '/proxy',
             'D': '/storage',
             'B': '/billing',
-            'G': '/settings',
-            'W': '/organizations'
+            'G': '/settings'
           };
           if (key && shortcuts[key]) {
             navigate(shortcuts[key]);
