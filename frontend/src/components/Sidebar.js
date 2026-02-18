@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useModal } from '../contexts/ModalContext';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useWorkspace } from '../contexts/WorkspaceContext';
 import { Progress } from './ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import ShortcutsModal from './ShortcutsModal';
