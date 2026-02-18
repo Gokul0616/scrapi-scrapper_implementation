@@ -57,6 +57,7 @@ const Sidebar = () => {
   const { theme, toggleTheme } = useTheme();
   const { openModal, closeModal, isModalOpen, currentModal } = useModal();
   const { unreadCount } = useNotifications();
+  const { currentWorkspace } = useWorkspace();
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(() => {
