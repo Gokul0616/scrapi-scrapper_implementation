@@ -187,13 +187,9 @@ function AppRoutes() {
         <Route path="/storage" element={<ProtectedRoute><DashboardLayout><div className="p-8">Storage</div></DashboardLayout></ProtectedRoute>} />
         <Route path="/proxy" element={<ProtectedRoute><DashboardLayout><div className="p-8">Proxy</div></DashboardLayout></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><DashboardLayout><Settings /></DashboardLayout></ProtectedRoute>} />
-        <Route path="/billing" element={<ProtectedRoute><DashboardLayout><div className="p-8">Billing</div></DashboardLayout></ProtectedRoute>} />
+        <Route path="/billing" element={<ProtectedRoute><DashboardLayout><Billing /></DashboardLayout></ProtectedRoute>} />
         <Route path="/docs" element={<ProtectedRoute><DashboardLayout><div className="p-8">Documentation</div></DashboardLayout></ProtectedRoute>} />
         <Route path="/help" element={<ProtectedRoute><DashboardLayout><div className="p-8">Help</div></DashboardLayout></ProtectedRoute>} />
-        
-        {/* Organization Routes */}
-        <Route path="/organizations" element={<ProtectedRoute><DashboardLayout><Organizations /></DashboardLayout></ProtectedRoute>} />
-        <Route path="/organizations/:orgId" element={<ProtectedRoute><DashboardLayout><OrganizationDetail /></DashboardLayout></ProtectedRoute>} />
         
         {/* Explicit Not Found Route */}
         <Route path="/not-found" element={<DashboardLayout><NotFound /></DashboardLayout>} />
