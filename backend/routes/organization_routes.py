@@ -131,7 +131,7 @@ async def create_organization(
     # Check if name already exists
     existing = await db.organizations.find_one({"name": org_data.name})
     if existing:
-        raise HTTPException(status_code=400, detail="Organization name already exists")
+        raise HTTPException(status_code=400, detail="Organization username already exists")
     
     # Check ownership limit (5 organizations per user)
     owned_count = await count_owned_organizations(current_user['id'])
