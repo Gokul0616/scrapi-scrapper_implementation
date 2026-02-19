@@ -436,58 +436,31 @@ const UserDropdown = ({ isCollapsed = false }) => {
             </div>
 
             {/* Workspaces List */}
-            {(personalWorkspace || organizationWorkspaces.length > 0) && (
-              <div className="border-b border-border py-1">
-                <div className="flex items-center justify-between space-x-1.5 mb-1 mt-2 px-1">
-                  <div className="flex items-center space-x-1.5">
-                    {/* Show contextual icon and label based on current workspace */}
-                    {currentWorkspaceType === 'personal' ? (
-                      <>
-                        <Building2 className="w-3 h-3 text-muted-foreground" />
-                        <div className="text-xs tracking-wider text-muted-foreground">
-                          Organizations
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <User className="w-3 h-3 text-muted-foreground" />
-                        <div className="text-xs tracking-wider text-muted-foreground">
-                          Switch Account
-                        </div>
-                      </>
+            {currentWorkspaceType === 'personal' ? (
+              // When in Personal Account - Show Organizations section
+              (personalWorkspace || organizationWorkspaces.length > 0) && (
+                <div className="border-b border-border py-1">
+                  <div className="flex items-center justify-between space-x-1.5 mb-1 mt-2 px-1">
+                    <div className="flex items-center space-x-1.5">
+                      <Building2 className="w-3 h-3 text-muted-foreground" />
+                      <div className="text-xs tracking-wider text-muted-foreground">
+                        Organizations
+                      </div>
+                    </div>
+                    {hasOrganizations && (
+                      <button
+                        onClick={handleManageOrganizations}
+                        className="text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded hover:bg-muted"
+                        title="Manage Organizations"
+                        data-testid="manage-organizations-btn"
+                      >
+                        <Pencil className="w-3 h-3" />
+                      </button>
                     )}
                   </div>
-                  {/* Only show pencil icon when in personal account and has organizations */}
-                  {hasOrganizations && currentWorkspaceType === 'personal' && (
-                    <button
-                      onClick={handleManageOrganizations}
-                      className="text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded hover:bg-muted"
-                      title="Manage Organizations"
-                      data-testid="manage-organizations-btn"
-                    >
-                      <Pencil className="w-3 h-3" />
-                    </button>
-                  )}
-                </div>
 
-                {/* Personal Workspace */}
-                {personalWorkspace && currentWorkspace?.workspace_type !== 'personal' && (
-                  <button
-                    onClick={() => handleWorkspaceSwitch(personalWorkspace)}
-                    style={{ fontSize: '13px' }}
-                    className="w-full flex items-center space-x-2.5 rounded-md text-xs transition-colors m-1 px-1 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-                  >
-                    <User className="w-3 h-3" />
-                    <span className="flex-1 text-left">{personalWorkspace.workspace_name}</span>
-                  </button>
-                )}
-
-                {/* Organization Workspaces */}
-                {organizationWorkspaces.map((workspace) => {
-                  const isActive = currentWorkspace?.workspace_id === workspace.workspace_id;
-                  if (isActive) return null; // Don't show active workspace in switch list
-
-                  return (
+                  {/* Organization Workspaces */}
+                  {organizationWorkspaces.map((workspace) => (
                     <button
                       key={workspace.workspace_id}
                       onClick={() => handleWorkspaceSwitch(workspace)}
@@ -504,9 +477,79 @@ const UserDropdown = ({ isCollapsed = false }) => {
                         )}
                       </div>
                     </button>
-                  );
-                })}
-              </div>
+                  ))}
+                </div>
+              )
+            ) : (
+              // When in Organization Account - Show two separate sections
+              <>
+                {/* Switch Account Section - Personal Account */}
+                {personalWorkspace && (
+                  <div className="border-b border-border py-1">
+                    <div className="flex items-center space-x-1.5 mb-1 mt-2 px-1">
+                      <User className="w-3 h-3 text-muted-foreground" />
+                      <div className="text-xs tracking-wider text-muted-foreground">
+                        Switch Account
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleWorkspaceSwitch(personalWorkspace)}
+                      style={{ fontSize: '13px' }}
+                      className="w-full flex items-center space-x-2.5 rounded-md text-xs transition-colors m-1 px-1 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    >
+                      <User className="w-3 h-3" />
+                      <span className="flex-1 text-left">{personalWorkspace.workspace_name}</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Organizations Section - Other Organizations */}
+                {organizationWorkspaces.filter(w => w.workspace_id !== currentWorkspace?.workspace_id).length > 0 && (
+                  <div className="border-b border-border py-1">
+                    <div className="flex items-center justify-between space-x-1.5 mb-1 mt-2 px-1">
+                      <div className="flex items-center space-x-1.5">
+                        <Building2 className="w-3 h-3 text-muted-foreground" />
+                        <div className="text-xs tracking-wider text-muted-foreground">
+                          Organizations
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleManageOrganizations}
+                        className="text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded hover:bg-muted"
+                        title="Manage Organizations"
+                        data-testid="manage-organizations-btn"
+                      >
+                        <Pencil className="w-3 h-3" />
+                      </button>
+                    </div>
+
+                    {/* Other Organization Workspaces */}
+                    {organizationWorkspaces.map((workspace) => {
+                      const isActive = currentWorkspace?.workspace_id === workspace.workspace_id;
+                      if (isActive) return null; // Don't show active workspace
+
+                      return (
+                        <button
+                          key={workspace.workspace_id}
+                          onClick={() => handleWorkspaceSwitch(workspace)}
+                          style={{ fontSize: '13px' }}
+                          className="w-full flex items-center space-x-2.5 rounded-md text-xs transition-colors m-1 px-1 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                        >
+                          <Building2 className="w-3 h-3" />
+                          <div className="flex-1 text-left min-w-0">
+                            <div className="truncate">{workspace.workspace_name}</div>
+                            {workspace.role && (
+                              <div className="text-xs text-muted-foreground">
+                                {workspace.role.charAt(0).toUpperCase() + workspace.role.slice(1)}
+                              </div>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
             )}
 
             {/* Create Organization - Only show if no organizations created yet */}
