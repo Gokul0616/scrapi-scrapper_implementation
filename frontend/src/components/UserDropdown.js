@@ -457,7 +457,8 @@ const UserDropdown = ({ isCollapsed = false }) => {
                       </>
                     )}
                   </div>
-                  {hasOrganizations && (
+                  {/* Only show pencil icon when in personal account and has organizations */}
+                  {hasOrganizations && currentWorkspaceType === 'personal' && (
                     <button
                       onClick={handleManageOrganizations}
                       className="text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded hover:bg-muted"
