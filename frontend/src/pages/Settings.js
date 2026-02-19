@@ -24,6 +24,7 @@ const Settings = () => {
   const { user, updateUser } = useAuth();
   const { openModal } = useModal();
   const { workspaces, refreshWorkspaces } = useWorkspace();
+  const [searchParams] = useSearchParams();
   const fileInputRef = useRef(null);
   const tabRefs = useRef({});
   const tabsListRef = useRef(null);
@@ -55,8 +56,8 @@ Here are some ideas to get you started:
   const [localThemePreference, setLocalThemePreference] = useState('light');
   const [markdownPreview, setMarkdownPreview] = useState(false);
 
-
-  const [activeTab, setActiveTab] = useState('account');
+  // Read tab from URL query parameter, default to 'account'
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'account');
   const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 });
 
 
