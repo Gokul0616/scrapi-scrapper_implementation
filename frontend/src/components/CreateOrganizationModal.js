@@ -152,8 +152,13 @@ const CreateOrganizationModal = () => {
               <TooltipProvider delayDuration={300}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <HelpCircle className={`w-3.5 h-3.5 cursor-help ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
-                      }`} />
+                    <button
+                      type="button"
+                      className="inline-flex items-center focus:outline-none"
+                    >
+                      <HelpCircle className={`w-3.5 h-3.5 cursor-help ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+                        }`} />
+                    </button>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="max-w-xs">
                     <p className="text-xs">Organization username must be unique across the platform</p>
