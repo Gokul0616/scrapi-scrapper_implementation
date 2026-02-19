@@ -73,7 +73,14 @@ const CreateOrganizationModal = () => {
       onSuccess && onSuccess(response);
       closeModal();
     } catch (error) {
-      setApiError(error.response?.data?.detail || 'Failed to create organization');
+      let errorMessage = error.response?.data?.detail || 'Failed to create organization';
+      
+      // Replace backend error message for better clarity
+      if (errorMessage === 'Organization name already exists') {
+        errorMessage = 'Organization username already exists';
+      }
+      
+      setApiError(errorMessage);
     } finally {
       setLoading(false);
     }
