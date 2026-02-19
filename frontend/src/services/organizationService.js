@@ -17,6 +17,11 @@ export const createOrganization = async (data) => {
   return response.data;
 };
 
+export const convertToOrganization = async (data) => {
+  const response = await axios.post(`${API}/organizations/convert`, data);
+  return response.data;
+};
+
 export const getOrganizations = async () => {
   const response = await axios.get(`${API}/organizations`);
   return response.data;

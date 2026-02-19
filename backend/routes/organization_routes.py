@@ -9,6 +9,7 @@ from models.organization import (
 from auth import get_current_user
 import logging
 import re
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -168,6 +169,107 @@ async def create_organization(
     membership_doc = membership.model_dump()
     membership_doc['joined_at'] = membership_doc['joined_at'].isoformat()
     await db.organization_memberships.insert_one(membership_doc)
+    
+    return OrganizationResponse(
+        id=organization.id,
+        name=organization.name,
+        display_name=organization.display_name,
+        description=organization.description,
+        owner_id=organization.owner_id,
+        plan=organization.plan,
+        is_active=organization.is_active,
+        member_count=1,
+        billing_email=organization.billing_email,
+        created_at=doc['created_at'],
+        updated_at=doc['updated_at'],
+        user_role="owner"
+    )
+
+@router.post("/convert", response_model=OrganizationResponse)
+async def convert_to_organization(
+    current_user: dict = Depends(get_current_user)
+):
+    """Convert personal account to an organization. Moves all personal resources to the new organization."""
+    # Check if user is a member of any other organizations
+    memberships = await db.organization_memberships.count_documents({
+        "user_id": current_user['id'],
+        "is_active": True
+    })
+    
+    if memberships > 0:
+        raise HTTPException(
+            status_code=400,
+            detail="You cannot convert your account to an organization while you are a member of other organizations. Please leave other organizations first."
+        )
+
+    # Get user details
+    user_doc = await db.users.find_one({"id": current_user['id']})
+    if not user_doc:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    username = user_doc['username']
+    
+    # Generate organization name from username
+    org_name = re.sub(r'[^a-z0-9-]', '-', username.lower()).strip('-')
+    if not org_name or len(org_name) < 3:
+        org_name = f"org_{uuid.uuid4().hex[:8]}"
+        
+    # Check if name exists, append suffix if needed
+    base_name = org_name
+    counter = 1
+    while await db.organizations.find_one({"name": org_name}):
+        org_name = f"{base_name}-{counter}"
+        counter += 1
+        
+    # Create organization
+    organization = Organization(
+        name=org_name,
+        display_name=username,  # Use username as display name
+        description=f"Converted from personal account of {username}",
+        owner_id=current_user['id'],
+        billing_email=user_doc.get('email')
+    )
+    
+    doc = organization.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    doc['updated_at'] = doc['updated_at'].isoformat()
+    await db.organizations.insert_one(doc)
+    
+    # Create owner membership
+    membership = OrganizationMembership(
+        organization_id=organization.id,
+        user_id=current_user['id'],
+        role="owner"
+    )
+    
+    membership_doc = membership.model_dump()
+    membership_doc['joined_at'] = membership_doc['joined_at'].isoformat()
+    await db.organization_memberships.insert_one(membership_doc)
+    
+    # Migrate resources
+    # Actors
+    await db.actors.update_many(
+        {"user_id": current_user['id'], "organization_id": None},
+        {"$set": {"organization_id": organization.id}}
+    )
+    
+    # Runs
+    await db.runs.update_many(
+        {"user_id": current_user['id'], "organization_id": None},
+        {"$set": {"organization_id": organization.id}}
+    )
+    
+    # Datasets
+    await db.datasets.update_many(
+        {"user_id": current_user['id'], "organization_id": None},
+        {"$set": {"organization_id": organization.id}}
+    )
+    
+    # Schedules
+    await db.schedules.update_many(
+        {"user_id": current_user['id'], "organization_id": None},
+        {"$set": {"organization_id": organization.id}}
+    )
     
     return OrganizationResponse(
         id=organization.id,

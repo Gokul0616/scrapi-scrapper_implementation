@@ -9,8 +9,10 @@ import {
   Loader,
   Users,
   Star,
-  Info
+  Info,
+  Building2
 } from 'lucide-react';
+import { useWorkspace } from '../contexts/WorkspaceContext';
 import { useAuth } from '../contexts/AuthContext';
 import { getProfileColor, getUserInitials, getUserDisplayName } from '../utils/userUtils';
 import { useTheme } from '../contexts/ThemeContext';
@@ -21,6 +23,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001'
 function Home() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { currentWorkspace } = useWorkspace();
   const { theme } = useTheme();
 
   const [activeTab, setActiveTab] = useState('recent');
@@ -148,15 +151,22 @@ function Home() {
 
           <div className="flex gap-4 items-center">
             <div
-              className="w-[45px] h-[45px] rounded-full flex items-center justify-center text-white text-[18px] font-medium shrink-0 shadow-sm"
-              style={{ background: user?.profile_color }}
+              className={`w-[45px] h-[45px] rounded-full flex items-center justify-center text-white text-[18px] font-medium shrink-0 shadow-sm ${currentWorkspace?.workspace_type === 'organization' ? 'bg-blue-600' : ''
+                }`}
+              style={{ background: currentWorkspace?.workspace_type === 'organization' ? undefined : user?.profile_color }}
             >
-              {userInitials || 'G'}
+              {currentWorkspace?.workspace_type === 'organization' ? (
+                <Building2 className="w-6 h-6" />
+              ) : (
+                userInitials || 'G'
+              )}
             </div>
             <div className="pt-0.5">
               <div className="flex items-center gap-2.5 mb-0.5">
                 <h1 className="text-[18px] font-bold tracking-tight text-foreground">
-                  {user?.full_name || `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || user?.username || 'User'}
+                  {currentWorkspace?.workspace_type === 'organization'
+                    ? currentWorkspace.workspace_name
+                    : (user?.full_name || `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || user?.username || 'User')}
                 </h1>
                 <span className="px-1.5 py-[1px] bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400 text-[10px] font-bold uppercase tracking-wide rounded-sm border border-orange-200 dark:border-orange-900/30">
                   Free plan
@@ -164,10 +174,16 @@ function Home() {
               </div>
               <div className="text-[14px] flex items-center gap-2 text-muted-foreground">
                 <span className="font-mono px-1.5 py-0.5 rounded text-[13px] bg-muted text-muted-foreground">
-                  {user?.username || 'username'}
+                  {currentWorkspace?.workspace_type === 'organization'
+                    ? (currentWorkspace.role || 'Member')
+                    : (user?.username || 'username')}
                 </span>
-                <span>·</span>
-                <span className="font-normal">{user?.email || 'user@example.com'}</span>
+                {currentWorkspace?.workspace_type !== 'organization' && (
+                  <>
+                    <span>·</span>
+                    <span className="font-normal">{user?.email || 'user@example.com'}</span>
+                  </>
+                )}
               </div>
             </div>
           </div>

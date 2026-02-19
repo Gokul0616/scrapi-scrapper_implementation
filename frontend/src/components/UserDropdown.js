@@ -1,18 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useWorkspace } from '../contexts/WorkspaceContext';
-import { ChevronDown, ChevronUp, Check, Plus, LogOut, User, Building2 } from 'lucide-react';
+import { useModal } from '../contexts/ModalContext';
+import { ChevronDown, ChevronUp, Check, Plus, LogOut, User, Building2, Pencil } from 'lucide-react';
 import { getUserInitials, getProfileColor, getUserDisplayName } from '../utils/userUtils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
-import CreateOrganizationModal from './CreateOrganizationModal';
 
 const UserDropdown = ({ isCollapsed = false }) => {
   const { theme } = useTheme();
   const { user, logout } = useAuth();
   const { workspaces, currentWorkspace, switchWorkspace, refreshWorkspaces, loading: workspaceLoading } = useWorkspace();
+  const { openModal } = useModal();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const dropdownRef = useRef(null);
   const [profilePictureKey, setProfilePictureKey] = useState(0);
 
@@ -23,13 +25,14 @@ const UserDropdown = ({ isCollapsed = false }) => {
   const currentWorkspaceType = currentWorkspace?.workspace_type || 'personal';
   const currentWorkspaceName = currentWorkspace?.workspace_name || (user?.username || 'Personal');
   const currentWorkspaceRole = currentWorkspace?.role;
-  
+
   const accountTypeLabel = currentWorkspaceType === 'organization' ? 'Organization' : 'Personal';
   const AccountTypeIcon = currentWorkspaceType === 'organization' ? Building2 : User;
 
   // Separate workspaces into personal and organizations
   const personalWorkspace = workspaces.find(w => w.workspace_type === 'personal');
   const organizationWorkspaces = workspaces.filter(w => w.workspace_type === 'organization');
+  const hasOrganizations = organizationWorkspaces.length > 0;
 
   const handleLogout = () => {
     setIsOpen(false);
@@ -43,13 +46,15 @@ const UserDropdown = ({ isCollapsed = false }) => {
 
   const handleCreateOrganization = () => {
     setIsOpen(false);
-    setIsCreateModalOpen(true);
+    openModal('create-organization', {
+      onSuccess: handleOrganizationCreated
+    });
   };
 
   const handleOrganizationCreated = async (newOrg) => {
     // Refresh workspaces after creating new organization
     await refreshWorkspaces();
-    
+
     // Automatically switch to the newly created organization
     if (newOrg && newOrg.id) {
       const newWorkspace = {
@@ -62,6 +67,11 @@ const UserDropdown = ({ isCollapsed = false }) => {
     }
   };
 
+  const handleManageOrganizations = (e) => {
+    e.stopPropagation();
+    setIsOpen(false);
+    navigate('/settings?tab=organizations');
+  };
 
   useEffect(() => {
     const handleProfilePictureUpdate = (event) => {
@@ -153,8 +163,14 @@ const UserDropdown = ({ isCollapsed = false }) => {
                 <div className="border-b border-border">
                   <div className="flex items-center space-x-1.5 mb-1">
                     <AccountTypeIcon className="w-3 h-3 text-muted-foreground" />
-                    <div className="text-xs tracking-wider text-muted-foreground">
+                    <div className="text-xs tracking-wider text-muted-foreground flex items-center gap-1">
                       {accountTypeLabel}
+                      {currentWorkspaceType === 'organization' && (
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${theme === 'dark' ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-700'
+                          }`}>
+                          Free plan
+                        </span>
+                      )}
                     </div>
                   </div>
                   <button
@@ -193,13 +209,24 @@ const UserDropdown = ({ isCollapsed = false }) => {
                 {/* Workspaces List */}
                 {(personalWorkspace || organizationWorkspaces.length > 0) && (
                   <div className="border-b border-border py-1">
-                    <div className="flex items-center space-x-1.5 mb-1 mt-2">
-                      <Building2 className="w-3 h-3 text-muted-foreground" />
-                      <div className="text-xs tracking-wider text-muted-foreground">
-                        Switch Workspace
+                    <div className="flex items-center justify-between space-x-1.5 mb-1 mt-2 px-1">
+                      <div className="flex items-center space-x-1.5">
+                        <Building2 className="w-3 h-3 text-muted-foreground" />
+                        <div className="text-xs tracking-wider text-muted-foreground">
+                          Organizations
+                        </div>
                       </div>
+                      {hasOrganizations && (
+                        <button
+                          onClick={handleManageOrganizations}
+                          className="text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded hover:bg-muted"
+                          title="Manage Organizations"
+                        >
+                          <Pencil className="w-3 h-3" />
+                        </button>
+                      )}
                     </div>
-                    
+
                     {/* Personal Workspace */}
                     {personalWorkspace && currentWorkspace?.workspace_type !== 'personal' && (
                       <button
@@ -211,12 +238,12 @@ const UserDropdown = ({ isCollapsed = false }) => {
                         <span className="flex-1 text-left">{personalWorkspace.workspace_name}</span>
                       </button>
                     )}
-                    
+
                     {/* Organization Workspaces */}
                     {organizationWorkspaces.map((workspace) => {
                       const isActive = currentWorkspace?.workspace_id === workspace.workspace_id;
                       if (isActive) return null; // Don't show active workspace in switch list
-                      
+
                       return (
                         <button
                           key={workspace.workspace_id}
@@ -239,17 +266,19 @@ const UserDropdown = ({ isCollapsed = false }) => {
                   </div>
                 )}
 
-                {/* Create Organization */}
-                <div className="border-b border-border">
-                  <button
-                    onClick={handleCreateOrganization}
-                    style={{ fontSize: '13px' }}
-                    className="w-full flex items-center space-x-2.5 rounded-md text-xs transition-colors m-1 px-1 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-                  >
-                    <Plus className="w-3 h-3" />
-                    <span>Create organization</span>
-                  </button>
-                </div>
+                {/* Create Organization - Only show if no organizations created yet */}
+                {!hasOrganizations && (
+                  <div className="border-b border-border">
+                    <button
+                      onClick={handleCreateOrganization}
+                      style={{ fontSize: '13px' }}
+                      className="w-full flex items-center space-x-2.5 rounded-md text-xs transition-colors m-1 px-1 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>Create organization</span>
+                    </button>
+                  </div>
+                )}
 
 
                 <div className="border-b border-border">
@@ -349,8 +378,14 @@ const UserDropdown = ({ isCollapsed = false }) => {
             <div className="border-b border-border">
               <div className="flex items-center space-x-1.5 mb-1">
                 <AccountTypeIcon className="w-3 h-3 text-muted-foreground" />
-                <div className="text-xs tracking-wider text-muted-foreground">
+                <div className="text-xs tracking-wider text-muted-foreground flex items-center gap-1">
                   {accountTypeLabel}
+                  {currentWorkspaceType === 'organization' && (
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${theme === 'dark' ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-700'
+                      }`}>
+                      Free plan
+                    </span>
+                  )}
                 </div>
               </div>
               <button
@@ -389,13 +424,24 @@ const UserDropdown = ({ isCollapsed = false }) => {
             {/* Workspaces List */}
             {(personalWorkspace || organizationWorkspaces.length > 0) && (
               <div className="border-b border-border py-1">
-                <div className="flex items-center space-x-1.5 mb-1 mt-2">
-                  <Building2 className="w-3 h-3 text-muted-foreground" />
-                  <div className="text-xs tracking-wider text-muted-foreground">
-                    Switch Workspace
+                <div className="flex items-center justify-between space-x-1.5 mb-1 mt-2 px-1">
+                  <div className="flex items-center space-x-1.5">
+                    <Building2 className="w-3 h-3 text-muted-foreground" />
+                    <div className="text-xs tracking-wider text-muted-foreground">
+                      Organizations
+                    </div>
                   </div>
+                  {hasOrganizations && (
+                    <button
+                      onClick={handleManageOrganizations}
+                      className="text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded hover:bg-muted"
+                      title="Manage Organizations"
+                    >
+                      <Pencil className="w-3 h-3" />
+                    </button>
+                  )}
                 </div>
-                
+
                 {/* Personal Workspace */}
                 {personalWorkspace && currentWorkspace?.workspace_type !== 'personal' && (
                   <button
@@ -407,12 +453,12 @@ const UserDropdown = ({ isCollapsed = false }) => {
                     <span className="flex-1 text-left">{personalWorkspace.workspace_name}</span>
                   </button>
                 )}
-                
+
                 {/* Organization Workspaces */}
                 {organizationWorkspaces.map((workspace) => {
                   const isActive = currentWorkspace?.workspace_id === workspace.workspace_id;
                   if (isActive) return null; // Don't show active workspace in switch list
-                  
+
                   return (
                     <button
                       key={workspace.workspace_id}
@@ -435,17 +481,19 @@ const UserDropdown = ({ isCollapsed = false }) => {
               </div>
             )}
 
-            {/* Create Organization */}
-            <div className="border-b border-border">
-              <button
-                onClick={handleCreateOrganization}
-                style={{ fontSize: '13px' }}
-                className="w-full flex items-center space-x-2.5 rounded-md text-xs transition-colors m-1 px-1 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-              >
-                <Plus className="w-3 h-3" />
-                <span>Create organization</span>
-              </button>
-            </div>
+            {/* Create Organization - Only show if no organizations created yet */}
+            {!hasOrganizations && (
+              <div className="border-b border-border">
+                <button
+                  onClick={handleCreateOrganization}
+                  style={{ fontSize: '13px' }}
+                  className="w-full flex items-center space-x-2.5 rounded-md text-xs transition-colors m-1 px-1 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>Create organization</span>
+                </button>
+              </div>
+            )}
 
 
             <div className="border-b border-border">
@@ -461,13 +509,6 @@ const UserDropdown = ({ isCollapsed = false }) => {
           </div>
         </>
       )}
-      
-      {/* Create Organization Modal */}
-      <CreateOrganizationModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={handleOrganizationCreated}
-      />
     </>
   );
 };

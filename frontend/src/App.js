@@ -8,6 +8,7 @@ import { NotificationProvider } from './contexts/NotificationContext';
 import { WorkspaceProvider } from './contexts/WorkspaceContext';
 import { Toaster } from './components/ui/toaster';
 import { ErrorDisplayContainer } from './components/ErrorDisplay';
+import GlobalModals from './components/GlobalModals';
 import { setupAxiosInterceptor } from './utils/axiosInterceptor';
 import Sidebar from './components/Sidebar';
 import Login from './pages/Login';
@@ -190,10 +191,10 @@ function AppRoutes() {
         <Route path="/billing" element={<ProtectedRoute><DashboardLayout><Billing /></DashboardLayout></ProtectedRoute>} />
         <Route path="/docs" element={<ProtectedRoute><DashboardLayout><div className="p-8">Documentation</div></DashboardLayout></ProtectedRoute>} />
         <Route path="/help" element={<ProtectedRoute><DashboardLayout><div className="p-8">Help</div></DashboardLayout></ProtectedRoute>} />
-        
+
         {/* Explicit Not Found Route */}
         <Route path="/not-found" element={<DashboardLayout><NotFound /></DashboardLayout>} />
-        
+
         {/* 404 Catch-all Route - Must be last */}
         <Route path="*" element={<DashboardLayout><NotFound /></DashboardLayout>} />
       </Routes>
@@ -210,6 +211,7 @@ function App() {
             <NotificationProvider>
               <ModalProvider>
                 <AppRoutes />
+                <GlobalModals />
                 <Toaster />
                 <ErrorDisplayContainer />
               </ModalProvider>
