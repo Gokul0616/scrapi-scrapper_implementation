@@ -439,16 +439,29 @@ const UserDropdown = ({ isCollapsed = false }) => {
               <div className="border-b border-border py-1">
                 <div className="flex items-center justify-between space-x-1.5 mb-1 mt-2 px-1">
                   <div className="flex items-center space-x-1.5">
-                    <Building2 className="w-3 h-3 text-muted-foreground" />
-                    <div className="text-xs tracking-wider text-muted-foreground">
-                      Organizations
-                    </div>
+                    {/* Show contextual icon and label based on current workspace */}
+                    {currentWorkspaceType === 'personal' ? (
+                      <>
+                        <Building2 className="w-3 h-3 text-muted-foreground" />
+                        <div className="text-xs tracking-wider text-muted-foreground">
+                          Organizations
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <User className="w-3 h-3 text-muted-foreground" />
+                        <div className="text-xs tracking-wider text-muted-foreground">
+                          Switch Account
+                        </div>
+                      </>
+                    )}
                   </div>
                   {hasOrganizations && (
                     <button
                       onClick={handleManageOrganizations}
                       className="text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded hover:bg-muted"
                       title="Manage Organizations"
+                      data-testid="manage-organizations-btn"
                     >
                       <Pencil className="w-3 h-3" />
                     </button>
