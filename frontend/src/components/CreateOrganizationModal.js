@@ -129,7 +129,7 @@ const CreateOrganizationModal = () => {
                 value={formData.display_name}
                 onChange={handleChange}
                 className={`w-full px-3 py-2 rounded-md border text-sm ${theme === 'dark'
-                  ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-500 focus:border-blue-500'
+                  ? 'bg-gray-950 border-gray-700 text-white placeholder-gray-500 focus:border-blue-500'
                   : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-blue-500'
                   } ${errors.display_name ? 'border-red-500' : ''} focus:ring-1 focus:ring-blue-500 outline-none transition-colors`}
               />
