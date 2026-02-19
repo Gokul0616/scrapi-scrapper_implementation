@@ -204,9 +204,9 @@ const CreateOrganizationModal = () => {
             type="button"
             onClick={closeModal}
             disabled={loading}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${theme === 'dark'
-              ? 'bg-transparent text-gray-300 hover:bg-gray-800'
-              : 'bg-white text-gray-700 hover:bg-gray-100 border border-transparent hover:border-gray-200'
+            className={`px-4 py-2 rounded-md text-sm font-medium border transition-colors ${theme === 'dark'
+              ? 'border-gray-700 text-gray-300 hover:bg-gray-800'
+              : 'border-gray-300 text-gray-700 hover:bg-gray-50'
               }`}
           >
             Cancel
