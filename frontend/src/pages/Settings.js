@@ -148,6 +148,14 @@ Here are some ideas to get you started:
     setLocalThemePreference(themePreference);
   }, [themePreference]);
 
+  // Handle tab parameter from URL
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
+
 
   useEffect(() => {
 
