@@ -159,11 +159,11 @@ const CreateOrganizationModal = () => {
               <TooltipProvider delayDuration={300}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <HelpCircle className={`w-3.5 h-3.5 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+                    <HelpCircle className={`w-3.5 h-3.5 cursor-help ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
                       }`} />
                   </TooltipTrigger>
-                  <TooltipContent side="top">
-                    Unique identifier for your organization URL
+                  <TooltipContent side="top" className="max-w-xs">
+                    <p className="text-xs">Organization username must be unique across the platform</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
