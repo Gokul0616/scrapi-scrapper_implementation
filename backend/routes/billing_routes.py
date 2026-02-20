@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
-from middleware.auth import get_current_user
+from auth.auth import get_current_user
 from middleware.workspace import get_workspace_context
 from services.billing_service import billing_service
 from pydantic import BaseModel
