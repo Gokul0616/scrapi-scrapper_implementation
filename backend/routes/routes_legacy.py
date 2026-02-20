@@ -2066,6 +2066,10 @@ async def execute_scraping_job(run_id: str, actor_id: str, user_id: str, input_d
             # Update actor runs count
             await db.actors.update_one({"id": actor_id}, {"$inc": {"runs_count": 1}})
             
+            # Record billing usage for this run
+            from services.billing_service import billing_service
+            await billing_service.record_run_usage(run_id)
+            
             logger.info(f"Run {run_id} completed successfully with {len(results)} results")
         
         finally:
