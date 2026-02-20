@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useModal } from '../contexts/ModalContext';
+import { useMessage } from '../contexts/MessageContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Check, ArrowLeft, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import OTPInput from '../components/OTPInput';
+import CustomValidationTooltip from '../components/CustomValidationTooltip';
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || '';
@@ -12,6 +15,8 @@ const API_URL = process.env.REACT_APP_BACKEND_URL || '';
 const Register = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
+  const { openModal } = useModal();
+  const { showMessage } = useMessage();
   const [step, setStep] = useState(1); // 1: Email, 2: OTP, 3: Details, 4: Password
   const [formData, setFormData] = useState({
     email: '',
@@ -34,32 +39,40 @@ const Register = () => {
   const [passwordError, setPasswordError] = useState('');
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [showValidationTooltip, setShowValidationTooltip] = useState(false);
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
     setEmailError('');
+    setShowValidationTooltip(false);
+
+    if (!formData.email.trim()) {
+      setShowValidationTooltip(true);
+      return;
+    }
+
     setIsCheckingEmail(true);
-    
+
     try {
       // Check if email already exists
       const checkResponse = await axios.get(`${API_URL}/api/users/check-email?email=${encodeURIComponent(formData.email)}`);
-      
+
       if (checkResponse.data.exists) {
         setEmailError('Email already registered. Please login instead.');
         setIsCheckingEmail(false);
         return;
       }
-      
+
       // Send OTP via backend
       const response = await axios.post(`${API_URL}/api/auth/send-otp`, {
-        email: formData.email, 
+        email: formData.email,
         purpose: 'register'
       });
 
       // OTP sent successfully, show success message and move to OTP step
       setOtpSuccessMessage('OTP sent successfully to your email');
       setStep(2);
-      
+
     } catch (error) {
       // Check if error has a response with data
       if (error.response && error.response.data) {
@@ -78,7 +91,7 @@ const Register = () => {
     setIsLoading(true);
     setOtpError('');
     setOtpSuccessMessage('');
-    
+
     try {
       // Use axios instead of fetch to avoid rrweb monitoring conflicts and properly handle errors
       const response = await axios.post(`${API_URL}/api/auth/verify-otp`, {
@@ -115,7 +128,7 @@ const Register = () => {
     e.preventDefault();
     setFirstNameError('');
     setLastNameError('');
-    
+
     if (!formData.firstName.trim()) {
       setFirstNameError('First name is required');
       return;
@@ -131,12 +144,12 @@ const Register = () => {
     e.preventDefault();
     setPasswordError('');
     setConfirmPasswordError('');
-    
+
     if (formData.password.length < 8) {
       setPasswordError('Password must be at least 8 characters');
       return;
     }
-    
+
     if (formData.password !== formData.confirmPassword) {
       setConfirmPasswordError('Passwords do not match');
       return;
@@ -146,26 +159,26 @@ const Register = () => {
 
     // Use email as username for registration, include account_type
     const result = await register(
-      formData.email, 
-      formData.email, 
-      formData.password, 
+      formData.email,
+      formData.email,
+      formData.password,
       formData.firstName,
       formData.lastName,
       formData.organizationName,
       formData.accountType
     );
-    
+
     if (result.success) {
       navigate('/home');
     } else {
       setPasswordError(result.error || 'Registration failed');
     }
-    
+
     setIsLoading(false);
   };
 
   const handleOAuthSignup = (provider) => {
-    // OAuth integration coming soon - no notification needed
+    showMessage(`${provider} signup is coming soon!`, 'success');
   };
 
   const handleBack = () => {
@@ -180,10 +193,10 @@ const Register = () => {
     setOtpSuccessMessage('');
     // Clear the OTP input
     setFormData({ ...formData, otp: '' });
-    
+
     try {
       const response = await axios.post(`${API_URL}/api/auth/send-otp`, {
-        email: formData.email, 
+        email: formData.email,
         purpose: 'register'
       });
 
@@ -216,7 +229,7 @@ const Register = () => {
           <div className="flex items-center justify-center flex-1">
             <div className="max-w-md">
               <h1 className="text-[28px] leading-[34px] font-semibold text-gray-900 mb-7">
-                Powerful web scraping made simple
+                Build scalable scraping infrastructure
               </h1>
 
               <div className="space-y-5">
@@ -226,9 +239,9 @@ const Register = () => {
                     <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
                   </div>
                   <div>
-                    <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Pre-built scrapers ready to use</p>
+                    <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Ready-to-use web scrapers</p>
                     <p className="text-[13px] leading-[19px] text-gray-600">
-                      Extract data from Google Maps, Amazon, and more with our Playwright-based scrapers.
+                      Extract data from Google Maps, Instagram, Twitter, and more with zero code using our Store.
                     </p>
                   </div>
                 </div>
@@ -239,9 +252,9 @@ const Register = () => {
                     <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
                   </div>
                   <div>
-                    <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Schedule & automate scraping</p>
+                    <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Run your own code</p>
                     <p className="text-[13px] leading-[19px] text-gray-600">
-                      Set up cron-based schedules to run your scrapers automatically and monitor results.
+                      Build custom scrapers using Playwright, Puppeteer, or Cheerio on our serverless cloud platform.
                     </p>
                   </div>
                 </div>
@@ -252,9 +265,9 @@ const Register = () => {
                     <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
                   </div>
                   <div>
-                    <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Export & manage datasets</p>
+                    <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Never get blocked</p>
                     <p className="text-[13px] leading-[19px] text-gray-600">
-                      Download your scraped data in JSON or CSV format with proxy rotation support.
+                      Built-in residential and datacenter proxies with intelligent rotation and browser fingerprinting.
                     </p>
                   </div>
                 </div>
@@ -304,10 +317,10 @@ const Register = () => {
                   className="w-full flex items-center justify-center space-x-2.5 px-4 py-2.5 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-gray-700 font-medium text-[14px]"
                 >
                   <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                   </svg>
                   <span>Continue with Google</span>
                 </button>
@@ -335,23 +348,29 @@ const Register = () => {
               </div>
 
               {/* Email Form */}
-              <form onSubmit={handleEmailSubmit} className="space-y-4">
+              <form onSubmit={handleEmailSubmit} className="space-y-4" noValidate>
                 <div>
                   <label htmlFor="email" className="block text-[13px] font-medium text-gray-700 mb-1.5">
                     Email
                   </label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={formData.email}
-                    onChange={(e) => {
-                      setFormData({ ...formData, email: e.target.value });
-                      setEmailError('');
-                    }}
-                    required
-                    className={`w-full h-[38px] text-[14px] rounded-md ${emailError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
-                  />
+                  <CustomValidationTooltip
+                    show={showValidationTooltip}
+                    message="Please fill out this field."
+                    onClose={() => setShowValidationTooltip(false)}
+                  >
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="Enter your email"
+                      value={formData.email}
+                      onChange={(e) => {
+                        setFormData({ ...formData, email: e.target.value });
+                        setEmailError('');
+                        setShowValidationTooltip(false);
+                      }}
+                      className={`w-full h-[38px] text-[14px] rounded-md ${emailError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
+                    />
+                  </CustomValidationTooltip>
                   {emailError && (
                     <p className="mt-1.5 text-[12px] text-red-600 flex items-center">
                       <AlertCircle className="w-3.5 h-3.5 mr-1" />

@@ -26,6 +26,8 @@ class Run(BaseModel):
     started_at: Optional[datetime] = None
     finished_at: Optional[datetime] = None
     duration_seconds: Optional[int] = None
+    ram_mb: int = 1024
+    compute_units_used: float = 0.0
     results_count: int = 0
     dataset_id: Optional[str] = None
     error_message: Optional[str] = None

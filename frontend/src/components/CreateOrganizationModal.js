@@ -4,7 +4,7 @@ import { useModal } from '../contexts/ModalContext';
 import { createOrganization } from '../services/organizationService';
 import { Building2, AlertCircle, HelpCircle, User, X } from 'lucide-react';
 import GlobalModal from './GlobalModal';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import CustomTooltip from './CustomTooltip';
 
 const CreateOrganizationModal = () => {
   const { theme } = useTheme();
@@ -105,127 +105,113 @@ const CreateOrganizationModal = () => {
       showCloseButton={true}
       closeOnBackdropClick={!loading}
     >
-      <TooltipProvider delayDuration={0}>
-        <form onSubmit={handleSubmit} className="p-6">
-          {apiError && (
-            <div className={`mb-4 p-3 rounded-lg flex items-start space-x-2 ${theme === 'dark' ? 'bg-red-900/20 border border-red-800' : 'bg-red-50 border border-red-200'
+      <form onSubmit={handleSubmit} className="p-6">
+        {apiError && (
+          <div className={`mb-4 p-3 rounded-lg flex items-start space-x-2 ${theme === 'dark' ? 'bg-red-900/20 border border-red-800' : 'bg-red-50 border border-red-200'
+            }`}>
+            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-red-500">{apiError}</p>
+          </div>
+        )}
+
+        <div className="space-y-5">
+          {/* Organization Name */}
+          <div>
+            <label className={`block text-sm font-medium mb-1.5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
               }`}>
-              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-500">{apiError}</p>
-            </div>
-          )}
-
-          <div className="space-y-5">
-            {/* Organization Name */}
-            <div>
-              <label className={`block text-sm font-medium mb-1.5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                Organization name
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  name="display_name"
-                  value={formData.display_name}
-                  onChange={handleChange}
-                  className={`w-full px-3 py-2 rounded-md border text-sm ${theme === 'dark'
-                    ? 'bg-gray-950 border-gray-700 text-white placeholder-gray-500 focus:border-blue-500'
-                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-blue-500'
-                    } ${errors.display_name ? 'border-red-500' : ''} focus:ring-1 focus:ring-blue-500 outline-none transition-colors`}
-                />
-                <div className="absolute right-3 top-2.5">
-                  <User className={`w-4 h-4 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} />
-                </div>
-              </div>
-              {errors.display_name && (
-                <p className="text-xs text-red-500 mt-1">{errors.display_name}</p>
-              )}
-            </div>
-
-            {/* Organization Username */}
-            <div>
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <label className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                  }`}>
-                  Organization username
-                </label>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      className="inline-flex items-center justify-center rounded-full focus:outline-none cursor-help hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors p-0.5"
-                    >
-                      <HelpCircle className={`w-3.5 h-3.5 pointer-events-none ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent 
-                    side="top" 
-                    className="z-[9999] bg-gray-900 text-white px-2 py-1 rounded text-xs shadow-lg border border-gray-700"
-                  >
-                    <p>Organization username must be unique across the platform</p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
+              Organization name
+            </label>
+            <div className="relative">
               <input
                 type="text"
-                name="name"
-                value={formData.name}
+                name="display_name"
+                value={formData.display_name}
                 onChange={handleChange}
                 className={`w-full px-3 py-2 rounded-md border text-sm ${theme === 'dark'
                   ? 'bg-gray-950 border-gray-700 text-white placeholder-gray-500 focus:border-blue-500'
                   : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-blue-500'
-                  } ${errors.name ? 'border-red-500' : ''} focus:ring-1 focus:ring-blue-500 outline-none transition-colors`}
+                  } ${errors.display_name ? 'border-red-500' : ''} focus:ring-1 focus:ring-blue-500 outline-none transition-colors`}
               />
-              {errors.name && (
-                <p className="text-xs text-red-500 mt-1">{errors.name}</p>
-              )}
+              <div className="absolute right-3 top-2.5">
+                <User className={`w-4 h-4 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} />
+              </div>
             </div>
+            {errors.display_name && (
+              <p className="text-xs text-red-500 mt-1">{errors.display_name}</p>
+            )}
+          </div>
 
-            {/* Billing Email */}
-            <div>
-              <label className={`block text-sm font-medium mb-1.5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                Organization email <span className="text-gray-500 font-normal">(optional)</span>
+          {/* Organization Username */}
+          <div>
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <label className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                Organization username
               </label>
-              <input
-                type="email"
-                name="billing_email"
-                value={formData.billing_email}
-                onChange={handleChange}
-                className={`w-full px-3 py-2 rounded-md border text-sm ${theme === 'dark'
-                  ? 'bg-gray-950 border-gray-700 text-white placeholder-gray-500 focus:border-blue-500'
-                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-blue-500'
-                  } ${errors.billing_email ? 'border-red-500' : ''} focus:ring-1 focus:ring-blue-500 outline-none transition-colors`}
-              />
-              {errors.billing_email && (
-                <p className="text-xs text-red-500 mt-1">{errors.billing_email}</p>
-              )}
+              <CustomTooltip content="Organization username must be unique across the platform">
+                <div className="inline-flex items-center justify-center rounded-full cursor-help hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors p-0.5">
+                  <HelpCircle className={`w-3.5 h-3.5 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} />
+                </div>
+              </CustomTooltip>
             </div>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className={`w-full px-3 py-2 rounded-md border text-sm ${theme === 'dark'
+                ? 'bg-gray-950 border-gray-700 text-white placeholder-gray-500 focus:border-blue-500'
+                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-blue-500'
+                } ${errors.name ? 'border-red-500' : ''} focus:ring-1 focus:ring-blue-500 outline-none transition-colors`}
+            />
+            {errors.name && (
+              <p className="text-xs text-red-500 mt-1">{errors.name}</p>
+            )}
           </div>
 
-          {/* Footer */}
-          <div className="flex justify-end space-x-3 mt-8">
-            <button
-              type="button"
-              onClick={closeModal}
-              disabled={loading}
-              className={`px-4 py-2 rounded-md text-sm font-medium border transition-colors ${theme === 'dark'
-                ? 'border-gray-700 text-gray-300 hover:bg-gray-800'
-                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                }`}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-4 py-2 rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
-            >
-              {loading ? 'Creating...' : 'Create'}
-            </button>
+          {/* Billing Email */}
+          <div>
+            <label className={`block text-sm font-medium mb-1.5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+              Organization email <span className="text-gray-500 font-normal">(optional)</span>
+            </label>
+            <input
+              type="email"
+              name="billing_email"
+              value={formData.billing_email}
+              onChange={handleChange}
+              className={`w-full px-3 py-2 rounded-md border text-sm ${theme === 'dark'
+                ? 'bg-gray-950 border-gray-700 text-white placeholder-gray-500 focus:border-blue-500'
+                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-blue-500'
+                } ${errors.billing_email ? 'border-red-500' : ''} focus:ring-1 focus:ring-blue-500 outline-none transition-colors`}
+            />
+            {errors.billing_email && (
+              <p className="text-xs text-red-500 mt-1">{errors.billing_email}</p>
+            )}
           </div>
-        </form>
-      </TooltipProvider>
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-end space-x-3 mt-8">
+          <button
+            type="button"
+            onClick={closeModal}
+            disabled={loading}
+            className={`px-4 py-2 rounded-md text-sm font-medium border transition-colors ${theme === 'dark'
+              ? 'border-gray-700 text-gray-300 hover:bg-gray-800'
+              : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-4 py-2 rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+          >
+            {loading ? 'Creating...' : 'Create'}
+          </button>
+        </div>
+      </form>
     </GlobalModal>
   );
 };

@@ -13,6 +13,9 @@ class Organization(BaseModel):
     description: Optional[str] = None
     owner_id: str  # User ID of the owner
     plan: str = "Free"  # Billing plan for this organization
+    subscription_id: Optional[str] = None
+    stripe_customer_id: Optional[str] = None
+    platform_credits: float = 5.0
     is_active: bool = True
     settings: dict = Field(default_factory=dict)  # Organization-wide settings
     billing_email: Optional[str] = None

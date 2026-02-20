@@ -24,6 +24,9 @@ class User(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     plan: str = "Free"
+    subscription_id: Optional[str] = None
+    stripe_customer_id: Optional[str] = None
+    platform_credits: float = 5.0
     role: str = "user"  # Normal user from scraper website - default is user
     is_active: bool = True
     account_status: str = "active"  # "active", "pending_deletion", "deleted"

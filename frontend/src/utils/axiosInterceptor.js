@@ -46,7 +46,7 @@ const shouldHandleNotFound = (pathname) => {
   if (STATIC_ROUTES.includes(pathname)) {
     return false;
   }
-  
+
   // Only handle if it's a dynamic route
   return isDynamicRoute(pathname);
 };
@@ -54,7 +54,7 @@ const shouldHandleNotFound = (pathname) => {
 /**
  * Setup axios interceptors for workspace context and 404 handling
  */
-export const setupAxiosInterceptor = (navigate) => {
+export const setupAxiosInterceptor = (navigate, showMessage) => {
   // Request interceptor to add workspace headers
   axios.interceptors.request.use(
     (config) => {
@@ -86,15 +86,33 @@ export const setupAxiosInterceptor = (navigate) => {
       // Check if it's a 404 error
       if (error.response && error.response.status === 404) {
         const currentPath = window.location.pathname;
-        
+
         // Only redirect to not-found for dynamic routes with IDs
         if (shouldHandleNotFound(currentPath)) {
           console.log('404 detected on dynamic route, navigating to not-found page');
           navigate('/not-found');
+          return Promise.reject(error);
         }
       }
-      
-      // Always reject the error so components can handle it if needed
+
+      if (showMessage) {
+        let errorText = 'An unexpected error occurred';
+        if (error.response) {
+          if (error.response.data && error.response.data.detail) {
+            errorText = error.response.data.detail;
+          } else if (error.response.data && error.response.data.message) {
+            errorText = error.response.data.message;
+          } else if (error.response.status === 404) {
+            errorText = 'API endpoint not found (404)';
+          } else {
+            errorText = `Server error (${error.response.status})`;
+          }
+        } else if (error.message) {
+          errorText = error.message;
+        }
+        showMessage(errorText, 'error');
+      }
+
       return Promise.reject(error);
     }
   );

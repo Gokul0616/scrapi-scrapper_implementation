@@ -6,6 +6,7 @@ import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { ModalProvider } from './contexts/ModalContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { WorkspaceProvider } from './contexts/WorkspaceContext';
+import { MessageProvider, useMessage } from './contexts/MessageContext';
 import { Toaster } from './components/ui/toaster';
 import { ErrorDisplayContainer } from './components/ErrorDisplay';
 import GlobalModals from './components/GlobalModals';
@@ -31,6 +32,7 @@ import GlobalChat from './components/GlobalChat';
 import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
 import Billing from './pages/Billing';
+import CreateOrganizationModal from './components/CreateOrganizationModal';
 
 // Component to handle root redirect based on last path
 const RootRedirect = () => {
@@ -44,10 +46,11 @@ const RouteTracker = () => {
   const location = useLocation();
   const { updateLastPath, user } = useAuth();
   const navigate = useNavigate();
+  const { showMessage } = useMessage();
 
   // Setup axios interceptor once
   useEffect(() => {
-    setupAxiosInterceptor(navigate);
+    setupAxiosInterceptor(navigate, showMessage);
   }, [navigate]);
 
   useEffect(() => {
@@ -206,18 +209,20 @@ function App() {
   return (
     <BrowserRouter>
       <ThemeProvider>
-        <AuthProvider>
-          <WorkspaceProvider>
-            <NotificationProvider>
-              <ModalProvider>
-                <AppRoutes />
-                <GlobalModals />
-                <Toaster />
-                <ErrorDisplayContainer />
-              </ModalProvider>
-            </NotificationProvider>
-          </WorkspaceProvider>
-        </AuthProvider>
+        <MessageProvider>
+          <AuthProvider>
+            <WorkspaceProvider>
+              <NotificationProvider>
+                <ModalProvider>
+                  <AppRoutes />
+                  <GlobalModals />
+                  <Toaster />
+                  <ErrorDisplayContainer />
+                </ModalProvider>
+              </NotificationProvider>
+            </WorkspaceProvider>
+          </AuthProvider>
+        </MessageProvider>
       </ThemeProvider>
     </BrowserRouter>
   );

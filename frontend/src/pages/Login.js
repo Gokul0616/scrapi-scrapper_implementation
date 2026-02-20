@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useModal } from '../contexts/ModalContext';
+import { useMessage } from '../contexts/MessageContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Check, ArrowLeft, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import OTPInput from '../components/OTPInput';
+import CustomValidationTooltip from '../components/CustomValidationTooltip';
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || '';
@@ -12,7 +15,9 @@ const API_URL = process.env.REACT_APP_BACKEND_URL || '';
 const Login = () => {
   const navigate = useNavigate();
   const { login, setUser, setToken, lastPath } = useAuth();
-  const [step, setStep] = useState(1); // 1: Email, 2: Password, 3: Send OTP Screen, 4: OTP Input, 5: Reactivation
+  const { openModal } = useModal();
+  const { showMessage } = useMessage();
+  const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     email: '',
     otp: '',
@@ -30,10 +35,17 @@ const Login = () => {
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [deletionInfo, setDeletionInfo] = useState(null);
   const [isReactivating, setIsReactivating] = useState(false);
+  const [showValidationTooltip, setShowValidationTooltip] = useState(false);
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
     setEmailError('');
+    setShowValidationTooltip(false);
+
+    if (!formData.email.trim()) {
+      setShowValidationTooltip(true);
+      return;
+    }
 
     // Check if email exists
     setIsCheckingEmail(true);
@@ -89,7 +101,7 @@ const Login = () => {
       await axios.post(`${API_URL}/api/settings/account/reactivate`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       // Redirect to home after reactivation
       navigate('/home');
     } catch (error) {
@@ -242,7 +254,7 @@ const Login = () => {
   };
 
   const handleOAuthLogin = (provider) => {
-    // OAuth integration coming soon - no notification needed
+    showMessage(`${provider} login is coming soon!`, 'success');
   };
 
   const handleBack = () => {
@@ -299,9 +311,9 @@ const Login = () => {
                         <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
                       </div>
                       <div>
-                        <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Access your scrapers and data</p>
+                        <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Manage your Actors</p>
                         <p className="text-[13px] leading-[19px] text-gray-600">
-                          Continue managing your Google Maps, Amazon, and custom scraping projects.
+                          Access your serverless cloud programs, custom scraping scripts, and scheduled tasks.
                         </p>
                       </div>
                     </div>
@@ -312,9 +324,9 @@ const Login = () => {
                         <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
                       </div>
                       <div>
-                        <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Monitor scheduled runs</p>
+                        <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Access your Datasets</p>
                         <p className="text-[13px] leading-[19px] text-gray-600">
-                          Track your automated scraping schedules and view real-time run status.
+                          Download your extracted data in JSON, CSV, Excel, XML, or HTML table formats.
                         </p>
                       </div>
                     </div>
@@ -325,9 +337,9 @@ const Login = () => {
                         <Check className="w-[18px] h-[18px] text-green-600 stroke-[2.5]" />
                       </div>
                       <div>
-                        <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">AI-powered assistance</p>
+                        <p className="text-[15px] leading-[22px] text-gray-900 font-medium mb-0.5">Monitor Integrations & Webhooks</p>
                         <p className="text-[13px] leading-[19px] text-gray-600">
-                          Get instant help with our AI chat assistant for lead generation and scraping advice.
+                          Track your automated pipelines connected to Zapier, Make, Slack, and custom webhooks.
                         </p>
                       </div>
                     </div>
@@ -478,23 +490,29 @@ const Login = () => {
               </div>
 
               {/* Email Form */}
-              <form onSubmit={handleEmailSubmit} className="space-y-4">
+              <form onSubmit={handleEmailSubmit} className="space-y-4" noValidate>
                 <div>
                   <label htmlFor="email" className="block text-[13px] font-medium text-gray-700 mb-1.5">
                     Email
                   </label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={formData.email}
-                    onChange={(e) => {
-                      setFormData({ ...formData, email: e.target.value });
-                      setEmailError('');
-                    }}
-                    required
-                    className={`w-full h-[38px] text-[14px] rounded-md ${emailError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
-                  />
+                  <CustomValidationTooltip
+                    show={showValidationTooltip}
+                    message="Please fill out this field."
+                    onClose={() => setShowValidationTooltip(false)}
+                  >
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="Enter your email"
+                      value={formData.email}
+                      onChange={(e) => {
+                        setFormData({ ...formData, email: e.target.value });
+                        setEmailError('');
+                        setShowValidationTooltip(false);
+                      }}
+                      className={`w-full h-[38px] text-[14px] rounded-md ${emailError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
+                    />
+                  </CustomValidationTooltip>
                   {emailError && (
                     <p className="mt-1.5 text-[12px] text-red-600 flex items-center">
                       <AlertCircle className="w-3.5 h-3.5 mr-1" />
@@ -839,7 +857,7 @@ const Login = () => {
                     'Reactivate My Account'
                   )}
                 </Button>
-                
+
                 <Button
                   onClick={handleLogout}
                   variant="outline"

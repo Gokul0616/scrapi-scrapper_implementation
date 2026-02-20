@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useWorkspace } from '../contexts/WorkspaceContext';
-import { ExternalLink, ChevronRight } from 'lucide-react';
+import { ExternalLink, ChevronRight, Loader2 } from 'lucide-react';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 const Billing = () => {
   const { theme } = useTheme();
@@ -10,27 +14,46 @@ const Billing = () => {
 
   // Determine if we're in organization mode
   const isOrganization = currentWorkspace?.workspace_type === 'organization';
+  const isOwner = !isOrganization || currentWorkspace?.role === 'owner';
   const pageTitle = isOrganization ? 'Organization billing' : 'Billing';
 
-  // Mock data - in production this would come from API
-  const billingData = {
-    totalUsage: 0.00,
-    billingPeriod: {
-      start: 'Feb 10, 2026',
-      end: 'Mar 9, 2026',
-      type: 'Monthly'
-    },
-    planConsumption: {
-      freeUsed: 0.00,
-      freeTotal: 5.00,
-      freeRemaining: 5.00
-    },
-    services: [
-      { name: 'Actors', color: 'bg-emerald-500', amount: 0.00, icon: '●' },
-      { name: 'Data transfer', color: 'bg-purple-500', amount: 0.00, icon: '●' },
-      { name: 'Proxy', color: 'bg-orange-500', amount: 0.00, icon: '●' },
-      { name: 'Storage', color: 'bg-blue-500', amount: 0.00, icon: '●' }
-    ]
+  const [billingData, setBillingData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchBillingData = async () => {
+      try {
+        setIsLoading(true);
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${API}/billing/summary`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setBillingData(response.data);
+      } catch (err) {
+        console.error('Error fetching billing data:', err);
+        setError('Failed to load billing information');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    if (currentWorkspace) {
+      fetchBillingData();
+    }
+  }, [currentWorkspace]);
+
+  const handleUpgrade = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/billing/checkout`, { plan_type: 'Starter' }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.data.url) {
+        window.location.href = response.data.url;
+      }
+    } catch (err) {
+      console.error('Error redirecting to checkout:', err);
+    }
   };
 
   const tabs = [
@@ -70,11 +93,11 @@ const Billing = () => {
       {/* Plan Consumption */}
       <div className="rounded-lg border border-border bg-card p-4">
         <h3 className="text-base font-semibold mb-3 text-foreground">Plan consumption</h3>
-        
+
         {/* Progress Bar */}
         <div className="mb-2.5">
           <div className="h-6 bg-muted rounded-full overflow-hidden relative">
-            <div 
+            <div
               className="h-full bg-blue-500 transition-all duration-300"
               style={{ width: `${(billingData.planConsumption.freeUsed / billingData.planConsumption.freeTotal) * 100}%` }}
             ></div>
@@ -101,7 +124,7 @@ const Billing = () => {
       {/* Platform Usage Breakdown */}
       <div className="rounded-lg border border-border bg-card p-4">
         <h3 className="text-base font-semibold mb-3 text-foreground">Platform usage breakdown by services</h3>
-        
+
         {/* Visual Bar */}
         <div className="h-6 bg-blue-400 rounded-lg mb-4 overflow-hidden">
           {/* This would be dynamically split based on actual usage */}
@@ -112,9 +135,8 @@ const Billing = () => {
           {billingData.services.map((service, index) => (
             <div
               key={service.name}
-              className={`flex items-center justify-between px-3 py-2.5 hover:bg-muted/50 transition-colors ${
-                index !== billingData.services.length - 1 ? 'border-b border-border' : ''
-              }`}
+              className={`flex items-center justify-between px-3 py-2.5 hover:bg-muted/50 transition-colors ${index !== billingData.services.length - 1 ? 'border-b border-border' : ''
+                }`}
             >
               <div className="flex items-center gap-2.5">
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
@@ -148,9 +170,11 @@ const Billing = () => {
             <p className="text-sm text-muted-foreground mt-0.5">$0.00 / month</p>
             <p className="text-sm text-muted-foreground mt-0.5">$5.00 platform credits included</p>
           </div>
-          <button className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">
-            Upgrade Plan
-          </button>
+          {isOwner && (
+            <button onClick={handleUpgrade} className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">
+              Upgrade Plan
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -213,47 +237,61 @@ const Billing = () => {
 
   return (
     <div className="flex-1 min-h-screen bg-background">
-      <div className=" px-6 py-6">
-        {/* Header with Title and Action Buttons */}
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-foreground">{pageTitle}</h1>
-          <div className="flex items-center gap-3">
-            <button className="px-4 py-2 border border-border rounded-lg text-sm font-medium hover:bg-muted transition-colors text-foreground bg-card">
-              API
-            </button>
-            <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">
-              Upgrade
-            </button>
+      {isLoading ? (
+        <div className="flex items-center justify-center h-full pt-20">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center justify-center h-full pt-20 text-center">
+          <div className="bg-red-500/10 text-red-500 rounded-lg p-6 max-w-md">
+            <p className="font-medium text-lg mb-2">Error</p>
+            <p className="text-sm opacity-90">{error}</p>
           </div>
         </div>
+      ) : (
+        <div className=" px-6 py-6">
+          {/* Header with Title and Action Buttons */}
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-2xl font-bold text-foreground">{pageTitle}</h1>
+            <div className="flex items-center gap-3">
+              <button className="px-4 py-2 border border-border rounded-lg text-sm font-medium hover:bg-muted transition-colors text-foreground bg-card">
+                API
+              </button>
+              {isOwner && (
+                <button onClick={handleUpgrade} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">
+                  Upgrade
+                </button>
+              )}
+            </div>
+          </div>
 
-        {/* Tabs */}
-        <div className="border-b border-border mb-4">
-          <div className="flex gap-6">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`pb-2.5 text-sm font-medium transition-colors relative ${
-                  activeTab === tab.id
+          {/* Tabs */}
+          <div className="border-b border-border mb-4">
+            <div className="flex gap-6">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`pb-2.5 text-sm font-medium transition-colors relative ${activeTab === tab.id
                     ? 'text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {tab.label}
-                {activeTab === tab.id && (
-                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-500" />
-                )}
-              </button>
-            ))}
+                    }`}
+                >
+                  {tab.label}
+                  {activeTab === tab.id && (
+                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-500" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Tab Content */}
+          <div>
+            {renderTabContent()}
           </div>
         </div>
-
-        {/* Tab Content */}
-        <div>
-          {renderTabContent()}
-        </div>
-      </div>
+      )}
     </div>
   );
 };
