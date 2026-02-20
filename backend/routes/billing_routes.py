@@ -4,7 +4,7 @@ from middleware.workspace import get_workspace_context
 from services.billing_service import billing_service
 from pydantic import BaseModel
 
-router = APIRouter(prefix="/api/billing", tags=["billing"])
+router = APIRouter(prefix="/billing", tags=["billing"])
 
 class CheckoutRequest(BaseModel):
     plan_type: str
