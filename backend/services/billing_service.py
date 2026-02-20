@@ -81,6 +81,7 @@ class BillingService:
 
     async def record_run_usage(self, run_id: str):
         """Update a run with exact CU cost to deduct from their plan after finishing"""
+        db = get_db()
         run = await db.runs.find_one({"id": run_id})
         if not run:
             return
