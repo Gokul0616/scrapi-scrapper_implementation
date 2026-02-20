@@ -11,14 +11,14 @@ export default defineConfig({
             'admin-host-setup.preview.emergentagent.com',
             'localhost',
             '.emergentagent.com',
-            "https://script-executor-13.preview.emergentagent.com/"
+            "https://bash-launcher.preview.emergentagent.com/"
         ],
         hmr: {
             clientPort: 443,
         },
         proxy: {
             '/api': {
-                target: "https://script-executor-13.preview.emergentagent.com/",
+                target: "https://bash-launcher.preview.emergentagent.com/",
                 changeOrigin: true,
                 secure: false,
             },
