@@ -93,6 +93,7 @@ class BillingService:
         cost = cu_used * 0.50  # Let's say 1 CU = $0.50
         
         # update run
+        db = get_db()
         await db.runs.update_one({"id": run_id}, {"$set": {"compute_units_used": cu_used, "cost": cost}})
 
     async def create_checkout_session(self, workspace_id: str, workspace_type: str, plan_type: str):
