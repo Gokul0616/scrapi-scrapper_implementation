@@ -32,10 +32,11 @@ class BillingService:
         end_of_month = now.replace(month=now.month % 12 + 1, day=1, hour=0, minute=0, second=0, microsecond=0) if now.month < 12 else now.replace(year=now.year + 1, month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
         
         # Aggregate usage from runs in this period
+        # Note: created_at is stored as ISO string in DB, so we need to compare strings
         db = get_db()
         runsCursor = db.runs.find({
             "user_id" if workspace_type == "personal" else "organization_id": workspace_id,
-            "created_at": {"$gte": start_of_month}
+            "created_at": {"$gte": start_of_month.isoformat()}
         })
         
         compute_units_used = 0.0
