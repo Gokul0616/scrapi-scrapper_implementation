@@ -1,13 +1,14 @@
 import os
 import stripe
 from datetime import datetime, timezone
-from database import db
+from database import get_db
 
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "sk_test_fake_key")
 
 class BillingService:
     async def get_billing_summary(self, workspace_id: str, workspace_type: str):
         """Generates the billing payload expected by the frontend Billing.js"""
+        db = get_db()
         # Retrieve the user or organization
         if workspace_type == "organization":
             workspace = await db.organizations.find_one({"id": workspace_id})
