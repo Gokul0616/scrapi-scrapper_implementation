@@ -9,16 +9,12 @@ class BillingService:
     async def get_billing_summary(self, workspace_id: str, workspace_type: str):
         """Generates the billing payload expected by the frontend Billing.js"""
         db = get_db()
-        print(f"[BILLING DEBUG] db object: {db}, type: {type(db)}")
-        print(f"[BILLING DEBUG] Looking for workspace_id: {workspace_id}, type: {workspace_type}")
         
         # Retrieve the user or organization
         if workspace_type == "organization":
             workspace = await db.organizations.find_one({"id": workspace_id})
         else:
             workspace = await db.users.find_one({"id": workspace_id})
-        
-        print(f"[BILLING DEBUG] workspace query result: {workspace}")
         
         if not workspace:
             raise ValueError("Workspace not found")
