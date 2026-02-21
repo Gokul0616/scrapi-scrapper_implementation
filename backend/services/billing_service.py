@@ -70,6 +70,95 @@ class BillingService:
             "plan_name": plan_name
         }
 
+    async def get_historical_usage(self, workspace_id: str, workspace_type: str, month: int, year: int):
+        """Generates historical usage data for the specified month and year"""
+        db = get_db()
+        
+        # Calculate start and end of the specified month
+        try:
+            start_date = datetime(year, month, 1, tzinfo=timezone.utc)
+            if month == 12:
+                end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+            else:
+                end_date = datetime(year, month + 1, 1, tzinfo=timezone.utc)
+        except ValueError:
+            raise ValueError("Invalid month or year")
+            
+        # Retrieve runs within the period
+        runsCursor = db.runs.find({
+            "user_id" if workspace_type == "personal" else "organization_id": workspace_id,
+            "created_at": {"$gte": start_date.isoformat(), "$lt": end_date.isoformat()}
+        })
+        
+        daily_usage = {}
+        actor_usage = {}
+        
+        # Pre-fill daily_usage with all days of the month to 0
+        current_date = start_date
+        while current_date < end_date:
+            day_str = current_date.strftime("%Y-%m-%d")
+            daily_usage[day_str] = {
+                "date": day_str,
+                "Actor compute units": 0.0,
+                # Other services could be added here if we had data for them
+                # "Proxy SERPs": 0.0,
+            }
+            if current_date.month == 12 and current_date.day == 31:
+                break
+            # Add one day
+            try:
+                current_date = current_date.replace(day=current_date.day + 1)
+            except ValueError:
+                if current_date.month == 12:
+                    current_date = current_date.replace(year=current_date.year + 1, month=1, day=1)
+                else:
+                    current_date = current_date.replace(month=current_date.month + 1, day=1)
+
+        total_cost = 0.0
+
+        async for run in runsCursor:
+            # Parse created_at string back to datetime to get the day
+            created_at_str = run.get("created_at")
+            if not created_at_str:
+                continue
+                
+            try:
+                # Handle possible missing timezone info or different formats
+                if created_at_str.endswith('Z'):
+                    created_at_str = created_at_str[:-1] + '+00:00'
+                run_date = datetime.fromisoformat(created_at_str)
+                day_str = run_date.strftime("%Y-%m-%d")
+            except Exception:
+                # Fallback if unparseable
+                continue
+                
+            cost = run.get("cost", 0.0)
+            
+            if day_str in daily_usage:
+                daily_usage[day_str]["Actor compute units"] += cost
+                total_cost += cost
+            
+            # Aggregate by actor
+            actor_name = run.get("actor_name", "Unknown Actor")
+            if actor_name not in actor_usage:
+                actor_usage[actor_name] = {
+                    "actor_name": actor_name,
+                    "actor_id": run.get("actor_id"),
+                    "actor_icon": run.get("actor_icon"),
+                    "total_usage": 0.0
+                }
+            actor_usage[actor_name]["total_usage"] += cost
+            
+        return {
+            "daily_usage": list(daily_usage.values()),
+            "actor_usage": list(actor_usage.values()),
+            "total_cost": total_cost,
+            "period": {
+                "month": month,
+                "year": year
+            }
+        }
+
     def calculate_compute_units(self, duration_seconds: int, ram_mb: int) -> float:
         """
         Calculates compute units based on Apify formula:

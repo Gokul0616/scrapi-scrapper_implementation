@@ -3,6 +3,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useWorkspace } from '../contexts/WorkspaceContext';
 import { ExternalLink, ChevronRight, Loader2 } from 'lucide-react';
 import axios from 'axios';
+import HistoricalUsageView from '../components/HistoricalUsageView';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -154,10 +155,7 @@ const Billing = () => {
   );
 
   const renderHistoricalUsage = () => (
-    <div className="text-center py-12">
-      <p className="text-muted-foreground">Historical usage data will be displayed here</p>
-      <p className="text-sm text-muted-foreground mt-1">Track your past billing cycles and usage patterns</p>
-    </div>
+    <HistoricalUsageView currentWorkspace={currentWorkspace} />
   );
 
   const renderSubscription = () => (

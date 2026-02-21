@@ -23,6 +23,27 @@ async def get_summary(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/historical")
+async def get_historical(
+    month: int,
+    year: int,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    try:
+        workspace = get_workspace_context(request)
+        historical_data = await billing_service.get_historical_usage(
+            workspace['workspace_id'], 
+            workspace['workspace_type'],
+            month,
+            year
+        )
+        return historical_data
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.post("/checkout")
 async def create_checkout(
     req: CheckoutRequest,
