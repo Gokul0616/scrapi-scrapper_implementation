@@ -87,6 +87,10 @@ const ProtectedRoute = ({ children }) => {
 const DashboardLayout = ({ children }) => {
   const { theme } = useTheme();
 
+  useEffect(() => {
+    document.title = 'Scrapi Console';
+  }, []);
+
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
