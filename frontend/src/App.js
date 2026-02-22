@@ -10,6 +10,7 @@ import { MessageProvider, useMessage } from './contexts/MessageContext';
 import { Toaster } from './components/ui/toaster';
 import { ErrorDisplayContainer } from './components/ErrorDisplay';
 import GlobalModals from './components/GlobalModals';
+import LoadingScreen from './components/LoadingScreen';
 import { setupAxiosInterceptor } from './utils/axiosInterceptor';
 import Sidebar from './components/Sidebar';
 import Login from './pages/Login';
@@ -68,11 +69,8 @@ const ProtectedRoute = ({ children }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <img src="/logo.png" alt="Scrapi Logo" className="w-16 h-16 mx-auto mb-4" />
-          <p className="text-gray-600">Loading...</p>
-        </div>
+      <div className="min-h-screen flex flex-col bg-white dark:bg-[#0F1014]">
+        <LoadingScreen text='Loading...!' />
       </div>
     );
   }

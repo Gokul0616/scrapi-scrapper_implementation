@@ -6,6 +6,7 @@ import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
 import { Search, Download, ArrowLeft } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
+import LoadingScreen from '../components/LoadingScreen';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -82,11 +83,8 @@ const Dataset = () => {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <img src="/logo.png" alt="Scrapi Logo" className="w-16 h-16 mx-auto mb-4" />
-          <p className="text-gray-600">Loading dataset...</p>
-        </div>
+      <div className="flex-1 flex flex-col bg-white">
+        <LoadingScreen text="Loading dataset..." />
       </div>
     );
   }

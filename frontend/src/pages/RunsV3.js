@@ -57,7 +57,8 @@ const RunsV3 = () => {
 
       const response = await axios.get(`${API}/runs`, {
         params,
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        hideErrorToast: true
       });
 
       setRuns(response.data.runs || []);

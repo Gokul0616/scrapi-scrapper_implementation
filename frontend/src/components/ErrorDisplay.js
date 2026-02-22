@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { X, AlertCircle, XCircle, AlertTriangle, Info } from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
 
 /**
  * Unique animated error display component
@@ -8,6 +9,7 @@ import { X, AlertCircle, XCircle, AlertTriangle, Info } from 'lucide-react';
 const ErrorDisplay = ({ message, type = 'error', onClose, duration = 5000, title }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
+  const { theme } = useTheme();
 
   useEffect(() => {
     // Trigger entrance animation
@@ -46,45 +48,46 @@ const ErrorDisplay = ({ message, type = 'error', onClose, duration = 5000, title
   };
 
   const getColors = () => {
+    const isDark = theme === 'dark';
     switch (type) {
       case 'error':
         return {
-          bg: 'bg-red-50',
-          border: 'border-red-200',
+          bg: isDark ? 'bg-gray-950' : 'bg-red-50',
+          border: isDark ? 'border-gray-700' : 'border-red-200',
           icon: 'text-red-500',
-          text: 'text-red-900',
+          text: isDark ? 'text-white' : 'text-red-900',
           progressBar: 'bg-red-500'
         };
       case 'warning':
         return {
-          bg: 'bg-yellow-50',
-          border: 'border-yellow-200',
+          bg: isDark ? 'bg-gray-950' : 'bg-yellow-50',
+          border: isDark ? 'border-gray-700' : 'border-yellow-200',
           icon: 'text-yellow-500',
-          text: 'text-yellow-900',
+          text: isDark ? 'text-white' : 'text-yellow-900',
           progressBar: 'bg-yellow-500'
         };
       case 'info':
         return {
-          bg: 'bg-blue-50',
-          border: 'border-blue-200',
+          bg: isDark ? 'bg-gray-950' : 'bg-blue-50',
+          border: isDark ? 'border-gray-700' : 'border-blue-200',
           icon: 'text-blue-500',
-          text: 'text-blue-900',
+          text: isDark ? 'text-white' : 'text-blue-900',
           progressBar: 'bg-blue-500'
         };
       case 'success':
         return {
-          bg: 'bg-green-50',
-          border: 'border-green-200',
+          bg: isDark ? 'bg-gray-950' : 'bg-green-50',
+          border: isDark ? 'border-gray-700' : 'border-green-200',
           icon: 'text-green-500',
-          text: 'text-green-900',
+          text: isDark ? 'text-white' : 'text-green-900',
           progressBar: 'bg-green-500'
         };
       default:
         return {
-          bg: 'bg-gray-50',
-          border: 'border-gray-200',
-          icon: 'text-gray-500',
-          text: 'text-gray-900',
+          bg: isDark ? 'bg-gray-950' : 'bg-gray-50',
+          border: isDark ? 'border-gray-700' : 'border-gray-200',
+          icon: isDark ? 'text-gray-400' : 'text-gray-500',
+          text: isDark ? 'text-white' : 'text-gray-900',
           progressBar: 'bg-gray-500'
         };
     }
@@ -106,10 +109,9 @@ const ErrorDisplay = ({ message, type = 'error', onClose, duration = 5000, title
     >
       <div
         className={`
-          ${colors.bg} ${colors.border}
+          ${theme === 'dark' ? 'bg-gray-950 border-gray-800' : `${colors.bg} ${colors.border}`}
           border-l-4 rounded-lg shadow-lg
           overflow-hidden
-          backdrop-blur-sm
           animate-bounce-in
         `}
       >
@@ -118,7 +120,7 @@ const ErrorDisplay = ({ message, type = 'error', onClose, duration = 5000, title
             <div className={`${colors.icon} flex-shrink-0 mt-0.5`}>
               {getIcon()}
             </div>
-            
+
             <div className="flex-1 min-w-0">
               {title && (
                 <h3 className={`text-sm font-semibold ${colors.text} mb-1`}>
@@ -194,7 +196,7 @@ export const ErrorDisplayContainer = () => {
     const handleError = (event) => {
       const { message, type, title, duration } = event.detail;
       const id = Date.now() + Math.random();
-      
+
       setErrors((prev) => [...prev, { id, message, type, title, duration }]);
     };
 

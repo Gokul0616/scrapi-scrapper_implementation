@@ -85,10 +85,14 @@ class BillingService:
             raise ValueError("Invalid month or year")
             
         # Retrieve runs within the period
-        runsCursor = db.runs.find({
+        query = {
             "user_id" if workspace_type == "personal" else "organization_id": workspace_id,
             "created_at": {"$gte": start_date.isoformat(), "$lt": end_date.isoformat()}
-        })
+        }
+        print(f"DEBUG Billing Query: {query}")
+        runsCursor = db.runs.find(query)
+        match_count = await db.runs.count_documents(query)
+        print(f"DEBUG Billing Match Count: {match_count}")
         
         daily_usage = {}
         actor_usage = {}

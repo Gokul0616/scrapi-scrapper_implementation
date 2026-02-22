@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { 
-  Search, Star, ChevronDown, ChevronUp, Play, 
+import {
+  Search, Star, ChevronDown, ChevronUp, Play,
   ArrowUpDown, Filter, MapPin
 } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
+import LoadingScreen from '../components/LoadingScreen';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -114,7 +115,7 @@ const ActorsV2 = () => {
       queued: { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200', icon: '⋯' },
       aborted: { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200', icon: '!' }
     };
-    
+
     const config = statusConfig[status] || statusConfig.queued;
     return (
       <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium border ${config.bg} ${config.text} ${config.border}`}>
@@ -137,8 +138,8 @@ const ActorsV2 = () => {
     if (sortColumn !== column) {
       return <ArrowUpDown className="w-4 h-4 text-gray-400" />;
     }
-    return sortDirection === 'asc' ? 
-      <ChevronUp className="w-4 h-4 text-gray-700" /> : 
+    return sortDirection === 'asc' ?
+      <ChevronUp className="w-4 h-4 text-gray-700" /> :
       <ChevronDown className="w-4 h-4 text-gray-700" />;
   };
 
@@ -146,17 +147,17 @@ const ActorsV2 = () => {
   let filteredActors = actors.filter(actor => {
     // Search filter
     const matchesSearch = actor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         actor.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    
+      actor.description?.toLowerCase().includes(searchQuery.toLowerCase());
+
     // Status filter
     const matchesStatus = filterStatus === 'all' || actor.last_run_status === filterStatus;
-    
+
     // Bookmarked filter
     const matchesBookmarked = !filterBookmarked || actor.is_starred;
-    
+
     // For issues tab, only show failed actors
     const matchesTab = activeTab === 'recent' || (activeTab === 'issues' && actor.last_run_status === 'failed');
-    
+
     return matchesSearch && matchesStatus && matchesBookmarked && matchesTab;
   });
 
@@ -164,27 +165,27 @@ const ActorsV2 = () => {
   filteredActors = [...filteredActors].sort((a, b) => {
     let aVal = a[sortColumn];
     let bVal = b[sortColumn];
-    
+
     if (sortColumn === 'name') {
       aVal = a.name || '';
       bVal = b.name || '';
       return sortDirection === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
     }
-    
+
     if (sortColumn === 'total_runs') {
       return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
     }
-    
+
     if (sortColumn === 'last_run_started') {
       aVal = aVal ? new Date(aVal) : new Date(0);
       bVal = bVal ? new Date(bVal) : new Date(0);
       return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
     }
-    
+
     if (sortColumn === 'last_run_duration') {
       return sortDirection === 'asc' ? (aVal || 0) - (bVal || 0) : (bVal || 0) - (aVal || 0);
     }
-    
+
     return 0;
   });
 
@@ -197,11 +198,8 @@ const ActorsV2 = () => {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-white">
-        <div className="text-center">
-          <img src="/logo.png" alt="Scrapi Logo" className="w-16 h-16 mx-auto mb-4" />
-          <p className="text-gray-600">Loading actors...</p>
-        </div>
+      <div className="flex-1 flex flex-col bg-white">
+        <LoadingScreen text="Loading actors..." />
       </div>
     );
   }
@@ -244,21 +242,19 @@ const ActorsV2 = () => {
           <div className="flex items-center space-x-6 border-b border-gray-200">
             <button
               onClick={() => setActiveTab('recent')}
-              className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === 'recent'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+              className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${activeTab === 'recent'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
             >
               Recently Viewed
             </button>
             <button
               onClick={() => setActiveTab('issues')}
-              className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === 'issues'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+              className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${activeTab === 'issues'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
             >
               Issues
             </button>
@@ -432,11 +428,10 @@ const ActorsV2 = () => {
                         className="ml-2"
                       >
                         <Star
-                          className={`w-4 h-4 ${
-                            actor.is_starred
-                              ? 'fill-yellow-400 text-yellow-400'
-                              : 'text-gray-300 hover:text-gray-400'
-                          }`}
+                          className={`w-4 h-4 ${actor.is_starred
+                            ? 'fill-yellow-400 text-yellow-400'
+                            : 'text-gray-300 hover:text-gray-400'
+                            }`}
                         />
                       </button>
                     </div>

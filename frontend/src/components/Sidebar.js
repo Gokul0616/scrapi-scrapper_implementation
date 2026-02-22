@@ -596,7 +596,7 @@ const Sidebar = () => {
                 <div className="flex items-center justify-between mt-2.5 pt-2.5 border-t border-border">
                   <div className="flex items-center space-x-2">
                     <img
-                      src="/scrapi-logo-small.svg"
+                      src="/logo.png"
                       alt="Scrapi"
                       className="w-5 h-5 dark:brightness-0 dark:invert"
                     />

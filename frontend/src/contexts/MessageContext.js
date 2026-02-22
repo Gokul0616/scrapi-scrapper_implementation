@@ -50,7 +50,7 @@ export const MessageProvider = ({ children }) => {
                     <div
                         key={msg.id}
                         className={`pointer-events-auto flex items-center justify-between min-w-[300px] max-w-sm px-4 py-3 rounded-lg shadow-lg border animate-in fade-in slide-in-from-top-5 duration-300 ${theme === 'dark'
-                            ? 'bg-gray-800 border-gray-700 text-white'
+                            ? 'bg-gray-950 border-gray-700 text-white'
                             : 'bg-white border-gray-200 text-gray-900'
                             }`}
                     >

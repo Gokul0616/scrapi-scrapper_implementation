@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Badge } from '../components/ui/badge';
 import { Search, Play, Star, Clock } from 'lucide-react';
+import LoadingScreen from '../components/LoadingScreen';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -52,7 +52,7 @@ const Actors = () => {
     const actor = actors.find(a => a.id === actorId);
     try {
       const token = localStorage.getItem('token');
-      await axios.patch(`${API}/actors/${actorId}`, 
+      await axios.patch(`${API}/actors/${actorId}`,
         { is_starred: !actor.is_starred },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -66,11 +66,8 @@ const Actors = () => {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <img src="/logo.png" alt="Scrapi Logo" className="w-16 h-16 mx-auto mb-4" />
-          <p className="text-gray-600">Loading actors...</p>
-        </div>
+      <div className="flex-1 flex flex-col bg-white">
+        <LoadingScreen text="Loading actors..." />
       </div>
     );
   }
@@ -97,11 +94,10 @@ const Actors = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`py-4 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === tab.id
+              className={`py-4 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
                   ? 'border-blue-600 text-blue-600'
                   : 'border-transparent text-gray-600 hover:text-gray-900'
-              }`}
+                }`}
             >
               {tab.label}
             </button>
@@ -157,9 +153,8 @@ const Actors = () => {
                       className="text-gray-400 hover:text-yellow-500 transition-colors"
                     >
                       <Star
-                        className={`w-4 h-4 ${
-                          actor.is_starred ? 'fill-yellow-500 text-yellow-500' : ''
-                        }`}
+                        className={`w-4 h-4 ${actor.is_starred ? 'fill-yellow-500 text-yellow-500' : ''
+                          }`}
                       />
                     </button>
                   </td>

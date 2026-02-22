@@ -93,7 +93,7 @@ const CustomTooltip = ({ content, children }) => {
                     style={{ top: position.top, left: position.left, position: 'fixed' }}
                     className={`w-[max-content] max-w-[220px] p-2 text-xs rounded shadow-lg z-[9999] font-normal text-center pointer-events-none transition-opacity duration-200
             ${theme === 'dark'
-                            ? 'bg-gray-800 text-white border border-gray-700'
+                            ? 'bg-gray-950 text-white border border-gray-700'
                             : 'bg-white text-gray-900 border border-gray-200 shadow-md'}`}
                 >
                     {content}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
-import { 
-  Clock, Plus, Play, Pause, Trash2, Edit, Calendar, 
+import {
+  Clock, Plus, Play, Pause, Trash2, Edit, Calendar,
   Activity, CheckCircle, XCircle, AlertCircle, Copy, Download, Filter, Search, HelpCircle, X, Info
 } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
@@ -22,7 +22,7 @@ const Schedules = () => {
   const [filterStatus, setFilterStatus] = useState('all'); // all, active, paused
   const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
-  
+
   // Alert Modal State
   const [confirmModal, setConfirmModal] = useState({
     show: false,
@@ -81,20 +81,15 @@ const Schedules = () => {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
+
       toast({
         title: "Success",
         description: `Schedule ${isEnabled ? 'disabled' : 'enabled'} successfully`
       });
-      
+
       fetchSchedules();
     } catch (error) {
       console.error('Error toggling schedule:', error);
-      toast({
-        title: "Error",
-        description: "Failed to toggle schedule",
-        variant: "destructive"
-      });
     }
   };
 
@@ -111,20 +106,15 @@ const Schedules = () => {
           await axios.delete(`${API_URL}/api/schedules/${scheduleId}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
-          
+
           toast({
             title: "Success",
             description: "Schedule deleted successfully"
           });
-          
+
           fetchSchedules();
         } catch (error) {
           console.error('Error deleting schedule:', error);
-          toast({
-            title: "Error",
-            description: "Failed to delete schedule",
-            variant: "destructive"
-          });
         }
       }
     });
@@ -138,18 +128,13 @@ const Schedules = () => {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
+
       toast({
         title: "Success",
         description: `Run started: ${response.data.run_id}`
       });
     } catch (error) {
       console.error('Error running schedule:', error);
-      toast({
-        title: "Error",
-        description: "Failed to start run",
-        variant: "destructive"
-      });
     }
   };
 
@@ -165,30 +150,25 @@ const Schedules = () => {
         input_data: schedule.input_data,
         is_enabled: false // Start cloned schedules as disabled
       };
-      
+
       await axios.post(`${API_URL}/api/schedules`, clonedData, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       toast({
         title: "Success",
         description: "Schedule cloned successfully"
       });
-      
+
       fetchSchedules();
     } catch (error) {
       console.error('Error cloning schedule:', error);
-      toast({
-        title: "Error",
-        description: "Failed to clone schedule",
-        variant: "destructive"
-      });
     }
   };
 
   const handleBulkDelete = () => {
     if (selectedSchedules.length === 0) return;
-    
+
     setConfirmModal({
       show: true,
       title: 'Delete Schedules',
@@ -199,27 +179,22 @@ const Schedules = () => {
         try {
           const token = localStorage.getItem('token');
           await Promise.all(
-            selectedSchedules.map(id => 
+            selectedSchedules.map(id =>
               axios.delete(`${API_URL}/api/schedules/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
               })
             )
           );
-          
+
           toast({
             title: "Success",
             description: `${selectedSchedules.length} schedule(s) deleted successfully`
           });
-          
+
           setSelectedSchedules([]);
           fetchSchedules();
         } catch (error) {
           console.error('Error deleting schedules:', error);
-          toast({
-            title: "Error",
-            description: "Failed to delete some schedules",
-            variant: "destructive"
-          });
         }
       }
     });
@@ -231,9 +206,9 @@ const Schedules = () => {
     try {
       const token = localStorage.getItem('token');
       const endpoint = enable ? 'enable' : 'disable';
-      
+
       await Promise.all(
-        selectedSchedules.map(id => 
+        selectedSchedules.map(id =>
           axios.post(
             `${API_URL}/api/schedules/${id}/${endpoint}`,
             {},
@@ -241,21 +216,16 @@ const Schedules = () => {
           )
         )
       );
-      
+
       toast({
         title: "Success",
         description: `${selectedSchedules.length} schedule(s) ${enable ? 'enabled' : 'disabled'} successfully`
       });
-      
+
       setSelectedSchedules([]);
       fetchSchedules();
     } catch (error) {
       console.error('Error toggling schedules:', error);
-      toast({
-        title: "Error",
-        description: "Failed to toggle some schedules",
-        variant: "destructive"
-      });
     }
   };
 
@@ -286,8 +256,8 @@ const Schedules = () => {
   };
 
   const toggleSelectSchedule = (scheduleId) => {
-    setSelectedSchedules(prev => 
-      prev.includes(scheduleId) 
+    setSelectedSchedules(prev =>
+      prev.includes(scheduleId)
         ? prev.filter(id => id !== scheduleId)
         : [...prev, scheduleId]
     );
@@ -315,7 +285,7 @@ const Schedules = () => {
     // Apply search query
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(s => 
+      filtered = filtered.filter(s =>
         s.name.toLowerCase().includes(query) ||
         s.actor_name.toLowerCase().includes(query) ||
         s.description?.toLowerCase().includes(query)
@@ -330,13 +300,13 @@ const Schedules = () => {
     const date = new Date(nextRun);
     const now = new Date();
     const diff = date - now;
-    
+
     if (diff < 0) return 'Overdue';
-    
+
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
-    
+
     if (days > 0) return `in ${days}d ${hours % 24}h`;
     if (hours > 0) return `in ${hours}h ${minutes % 60}m`;
     return `in ${minutes}m`;
@@ -446,7 +416,7 @@ const Schedules = () => {
             <Calendar className="text-black" size={32} />
           </div>
         </div>
-        
+
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-300">
           <div className="flex items-center justify-between">
             <div>
@@ -458,7 +428,7 @@ const Schedules = () => {
             <Activity className="text-black" size={32} />
           </div>
         </div>
-        
+
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-300">
           <div className="flex items-center justify-between">
             <div>
@@ -470,7 +440,7 @@ const Schedules = () => {
             <Pause className="text-gray-700" size={32} />
           </div>
         </div>
-        
+
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-300">
           <div className="flex items-center justify-between">
             <div>
@@ -574,21 +544,19 @@ const Schedules = () => {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        schedule.is_enabled 
-                          ? 'bg-black text-white' 
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${schedule.is_enabled
+                          ? 'bg-black text-white'
                           : 'bg-gray-200 text-gray-800'
-                      }`}>
+                        }`}>
                         {schedule.is_enabled ? <CheckCircle size={12} /> : <Pause size={12} />}
                         {schedule.is_enabled ? 'Active' : 'Paused'}
                       </span>
                       {schedule.last_status && (
                         <div className="mt-1">
-                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs ${
-                            schedule.last_status === 'success' 
-                              ? 'bg-gray-800 text-white' 
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs ${schedule.last_status === 'success'
+                              ? 'bg-gray-800 text-white'
                               : 'bg-gray-300 text-black'
-                          }`}>
+                            }`}>
                             {schedule.last_status === 'success' ? <CheckCircle size={10} /> : <XCircle size={10} />}
                             Last: {schedule.last_status}
                           </span>
@@ -609,11 +577,10 @@ const Schedules = () => {
                         </button>
                         <button
                           onClick={() => handleToggleSchedule(schedule.id, schedule.is_enabled)}
-                          className={`p-1 rounded border border-gray-300 ${
-                            schedule.is_enabled 
-                              ? 'text-gray-600 hover:text-black hover:bg-gray-100' 
+                          className={`p-1 rounded border border-gray-300 ${schedule.is_enabled
+                              ? 'text-gray-600 hover:text-black hover:bg-gray-100'
                               : 'text-black hover:text-gray-700 hover:bg-gray-100'
-                          }`}
+                            }`}
                           title={schedule.is_enabled ? 'Pause' : 'Activate'}
                         >
                           {schedule.is_enabled ? <Pause size={16} /> : <Play size={16} />}
@@ -714,7 +681,7 @@ const Schedules = () => {
 // Dynamic Input Field Component
 const DynamicInputField = ({ fieldKey, schema, value, onChange, required }) => {
   const [arrayInput, setArrayInput] = useState('');
-  
+
   // Get field properties
   const fieldType = schema.type || 'string';
   const fieldTitle = schema.title || schema.description || fieldKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -726,7 +693,7 @@ const DynamicInputField = ({ fieldKey, schema, value, onChange, required }) => {
   // Handle array type (like search_terms)
   if (fieldType === 'array') {
     const currentArray = Array.isArray(value) ? value : [];
-    
+
     return (
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -930,12 +897,12 @@ const ScheduleModal = ({ isEdit, schedule, actors, onClose, onSuccess }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const url = isEdit 
-        ? `${API_URL}/api/schedules/${schedule.id}` 
+      const url = isEdit
+        ? `${API_URL}/api/schedules/${schedule.id}`
         : `${API_URL}/api/schedules`;
-      
+
       const method = isEdit ? 'patch' : 'post';
-      
+
       await axios[method](url, formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -948,11 +915,6 @@ const ScheduleModal = ({ isEdit, schedule, actors, onClose, onSuccess }) => {
       onSuccess();
     } catch (error) {
       console.error('Error saving schedule:', error);
-      toast({
-        title: "Error",
-        description: error.response?.data?.detail || `Failed to ${isEdit ? 'update' : 'create'} schedule`,
-        variant: "destructive"
-      });
     } finally {
       setLoading(false);
     }
@@ -965,12 +927,12 @@ const ScheduleModal = ({ isEdit, schedule, actors, onClose, onSuccess }) => {
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
       onClick={handleBackdropClick}
       data-testid="schedule-modal-backdrop"
     >
-      <div 
+      <div
         className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
         data-testid="schedule-modal-container"
@@ -1125,7 +1087,7 @@ const ScheduleModal = ({ isEdit, schedule, actors, onClose, onSuccess }) => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Input Configuration
             </label>
-            
+
             {selectedActor && selectedActor.input_schema ? (
               <div className="space-y-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
                 {(() => {
@@ -1139,7 +1101,7 @@ const ScheduleModal = ({ isEdit, schedule, actors, onClose, onSuccess }) => {
                     if (!schema.properties && ['type', 'required', 'properties', '$schema'].includes(key)) {
                       return null;
                     }
-                    
+
                     // Ensure we have a valid schema object for the field
                     if (typeof fieldSchema !== 'object' || fieldSchema === null) return null;
 

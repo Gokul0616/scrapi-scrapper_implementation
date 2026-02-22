@@ -158,50 +158,55 @@ Here are some ideas to get you started:
 
 
   useEffect(() => {
+    const wsUrl = API_URL ? API_URL.replace(/^http/, 'ws') + '/api/settings/ws/check-username' : null;
 
-    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${wsProtocol}//${window.location.host}/api/settings/ws/check-username`;
+    const connectWs = () => {
+      if (!wsUrl) return;
 
-    const connectWebSocket = () => {
       try {
         const ws = new WebSocket(wsUrl);
+        wsRef.current = ws;
 
         ws.onopen = () => {
+          console.log('Username validation WebSocket connected');
         };
 
         ws.onmessage = (event) => {
-          const data = JSON.parse(event.data);
-          setUsernameValidation({
-            checking: false,
-            valid: data.valid || false,
-            available: data.available || false,
-            message: data.message || ''
-          });
+          try {
+            const data = JSON.parse(event.data);
+            setUsernameValidation({
+              checking: false,
+              valid: data.valid || false,
+              available: data.available || false,
+              message: data.message || ''
+            });
+          } catch (err) {
+            console.error('Failed to parse WS message:', err);
+          }
         };
 
         ws.onerror = (error) => {
-          console.error('WebSocket error:', error);
-          setUsernameValidation(prev => ({
-            ...prev,
-            checking: false
-          }));
+          console.error('Username validation WebSocket error:', error);
         };
 
         ws.onclose = () => {
+          console.log('Username validation WebSocket closed');
+          // Reconnect after 3 seconds if not unmounted
+          setTimeout(() => {
+            if (wsRef.current === ws) connectWs();
+          }, 3000);
         };
-
-        wsRef.current = ws;
-      } catch (error) {
-        console.error('Failed to create WebSocket:', error);
+      } catch (err) {
+        console.error('Failed to create WebSocket:', err);
       }
     };
 
-    connectWebSocket();
-
+    connectWs();
 
     return () => {
       if (wsRef.current) {
         wsRef.current.close();
+        wsRef.current = null;
       }
       if (usernameTimeoutRef.current) {
         clearTimeout(usernameTimeoutRef.current);
@@ -209,16 +214,13 @@ Here are some ideas to get you started:
     };
   }, []);
 
-
   const handleUsernameChange = (e) => {
     const newUsername = e.target.value;
     setUsername(newUsername);
 
-
     if (usernameTimeoutRef.current) {
       clearTimeout(usernameTimeoutRef.current);
     }
-
 
     if (newUsername === originalUsername) {
       setUsernameValidation({
@@ -230,7 +232,6 @@ Here are some ideas to get you started:
       return;
     }
 
-
     if (!newUsername.trim()) {
       setUsernameValidation({
         checking: false,
@@ -241,14 +242,12 @@ Here are some ideas to get you started:
       return;
     }
 
-
     setUsernameValidation({
       checking: true,
       valid: false,
       available: false,
       message: 'Checking...'
     });
-
 
     usernameTimeoutRef.current = setTimeout(() => {
       if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
@@ -257,11 +256,13 @@ Here are some ideas to get you started:
           user_id: user?.id
         }));
       } else {
+        // Fallback or retry if WS is not open
+        console.warn('WebSocket is not open. Unable to check username.');
         setUsernameValidation({
           checking: false,
           valid: false,
           available: false,
-          message: 'Connection error. Please try again.'
+          message: 'Connection issue. Please wait or refresh.'
         });
       }
     }, 500);

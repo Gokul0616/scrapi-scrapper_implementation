@@ -86,7 +86,7 @@ webpackConfig.devServer = (devServerConfig) => {
   devServerConfig.client = devServerConfig.client || {};
   devServerConfig.client.overlay = false;
   devServerConfig.client.webSocketURL = {
-    protocol: 'wss',
+    protocol: process.env.WDS_SOCKET_PROTOCOL || 'wss',
     hostname: process.env.WDS_SOCKET_HOST || 'visual-crawler-2.preview.emergentagent.com',
     port: process.env.WDS_SOCKET_PORT || 443,
     pathname: '/ws'

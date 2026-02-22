@@ -27,7 +27,8 @@ const RunsV2 = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/runs`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        hideErrorToast: true
       });
       setRuns(response.data);
     } catch (error) {
@@ -88,7 +89,7 @@ const RunsV2 = () => {
 
   const filteredRuns = runs.filter(run => {
     const matchesSearch = run.actor_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         run.id.toLowerCase().includes(searchQuery.toLowerCase());
+      run.id.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || run.status === statusFilter;
     return matchesSearch && matchesStatus;
   });

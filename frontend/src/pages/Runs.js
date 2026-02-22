@@ -5,6 +5,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
 import { Search, Play, Download, Clock, CheckCircle, XCircle, Loader } from 'lucide-react';
+import LoadingScreen from '../components/LoadingScreen';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -26,7 +27,8 @@ const Runs = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/runs`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        hideErrorToast: true
       });
       setRuns(response.data);
     } catch (error) {
@@ -87,11 +89,8 @@ const Runs = () => {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <img src="/logo.png" alt="Scrapi Logo" className="w-16 h-16 mx-auto mb-4" />
-          <p className="text-gray-600">Loading runs...</p>
-        </div>
+      <div className="flex-1 flex flex-col bg-white">
+        <LoadingScreen text="Loading runs..." />
       </div>
     );
   }

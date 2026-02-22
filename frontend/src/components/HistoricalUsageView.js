@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
-import {
-    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
-} from 'recharts';
+import CustomBarChart from './CustomBarChart';
+import CustomDropdown from './CustomDropdown';
+import CustomTooltip from './CustomTooltip';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -18,6 +19,7 @@ const COLORS = [
 ];
 
 const HistoricalUsageView = ({ currentWorkspace }) => {
+    const { user } = useAuth();
     const [data, setData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -29,6 +31,10 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
 
     const [timeAgg, setTimeAgg] = useState('Daily'); // 'Daily' | 'Monthly'
     const [viewType, setViewType] = useState('Absolute'); // 'Absolute' | 'Cumulative'
+
+    const creationDate = useMemo(() => {
+        return user?.created_at ? new Date(user.created_at) : new Date(2025, 0, 1);
+    }, [user]);
 
     const fetchHistoricalData = async (month, year) => {
         try {
@@ -55,6 +61,11 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
     }, [currentWorkspace, selectedMonth, selectedYear]);
 
     const handlePrevMonth = () => {
+        // Prevent navigating past the account creation month/year
+        if (selectedYear === creationDate.getFullYear() && selectedMonth === (creationDate.getMonth() + 1)) {
+            return;
+        }
+
         let m = selectedMonth - 1;
         let y = selectedYear;
         if (m < 1) {
@@ -66,6 +77,11 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
     };
 
     const handleNextMonth = () => {
+        // Prevent navigating past the current actual month/year
+        if (selectedYear === currentDate.getFullYear() && selectedMonth === (currentDate.getMonth() + 1)) {
+            return;
+        }
+
         let m = selectedMonth + 1;
         let y = selectedYear;
         if (m > 12) {
@@ -83,19 +99,56 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
         setSelectedMonth(parseInt(m));
     };
 
+    const keysPressed = useRef(new Set());
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            keysPressed.current.add(e.key.toLowerCase());
+
+            const isZHeld = keysPressed.current.has('z');
+
+            if (isZHeld && e.key === 'ArrowLeft') {
+                const prevBtn = document.getElementById('prev-month-btn');
+                if (prevBtn && !prevBtn.disabled) prevBtn.click();
+            } else if (isZHeld && e.key === 'ArrowRight') {
+                const nextBtn = document.getElementById('next-month-btn');
+                if (nextBtn && !nextBtn.disabled) nextBtn.click();
+            }
+        };
+
+        const handleKeyUp = (e) => {
+            keysPressed.current.delete(e.key.toLowerCase());
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keyup', handleKeyUp);
+        };
+    }, []);
+
     const monthOptions = useMemo(() => {
         const opts = [];
         const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-        for (let i = 0; i < 24; i++) { // Generate past 24 months
+        for (let i = 0; i < 24; i++) {
             const y = date.getFullYear();
             const m = date.getMonth() + 1;
+
+            // Stop generating options before the account was created
+            if (y < creationDate.getFullYear() || (y === creationDate.getFullYear() && m < (creationDate.getMonth() + 1))) {
+                break;
+            }
+
             const label = date.toLocaleString('default', { month: 'long', year: 'numeric' });
             const value = `${y}-${m.toString().padStart(2, '0')}`;
             opts.push({ label, value });
             date.setMonth(date.getMonth() - 1);
         }
         return opts;
-    }, []);
+    }, [creationDate]);
 
     const chartData = useMemo(() => {
         if (!data || !data.daily_usage) return [];
@@ -136,16 +189,16 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
             {/* Controls Container */}
             <div className="flex flex-col sm:flex-row justify-between items-center bg-card rounded-t-lg border-t border-l border-r border-border p-4 gap-4">
                 {/* Left Side: Time Aggregation Tab */}
-                <div className="flex items-center bg-muted rounded-md border border-border p-1">
+                <div className="flex items-center bg-muted rounded-md border border-border p-0.5">
                     <button
                         onClick={() => setTimeAgg('Daily')}
-                        className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${timeAgg === 'Daily' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                        className={`px-3.5 py-1 text-sm font-medium rounded-md transition-colors ${timeAgg === 'Daily' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                     >
                         Daily
                     </button>
                     <button
                         onClick={() => setTimeAgg('Monthly')}
-                        className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${timeAgg === 'Monthly' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                        className={`px-3.5 py-1 text-sm font-medium rounded-md transition-colors ${timeAgg === 'Monthly' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                     >
                         Monthly
                     </button>
@@ -155,34 +208,45 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
                 <div className="flex items-center gap-4">
                     <div className="flex items-center justify-end">
                         <div className="flex items-center">
-                            <button onClick={handlePrevMonth} className="p-1 border border-border border-r-0 rounded-l-md hover:bg-muted text-foreground bg-card">
-                                <ChevronLeft className="w-5 h-5" />
-                            </button>
-                            <button onClick={handleNextMonth} className="p-1 border border-border border-r-0 hover:bg-muted text-foreground bg-card">
-                                <ChevronRight className="w-5 h-5" />
-                            </button>
-                            <select
-                                value={`${selectedYear}-${selectedMonth.toString().padStart(2, '0')}`}
-                                onChange={handleMonthChange}
-                                className="pl-3 pr-8 py-1.5 text-sm font-medium border border-border rounded-r-md bg-card focus:outline-none appearance-none cursor-pointer"
-                                style={{ backgroundPosition: 'right 0.5rem center' }}
-                            >
-                                {monthOptions.map(opt => (
-                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                ))}
-                            </select>
+                            <CustomTooltip content="Previous Month (z + ←)">
+                                <button
+                                    id="prev-month-btn"
+                                    onClick={handlePrevMonth}
+                                    className={`p-1 border border-border border-r-0 rounded-l-md text-foreground m-0.5 bg-card ${selectedYear === creationDate.getFullYear() && selectedMonth === (creationDate.getMonth() + 1) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted'}`}
+                                    disabled={selectedYear === creationDate.getFullYear() && selectedMonth === (creationDate.getMonth() + 1)}
+                                >
+                                    <ChevronLeft className="w-5 h-5" />
+                                </button>
+                            </CustomTooltip>
+                            <CustomTooltip content="Next Month (z + →)">
+                                <button
+                                    id="next-month-btn"
+                                    onClick={handleNextMonth}
+                                    className={`p-1 border border-border border-r-0 text-foreground m-0.5 bg-card ${selectedYear === currentDate.getFullYear() && selectedMonth === (currentDate.getMonth() + 1) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted'}`}
+                                    disabled={selectedYear === currentDate.getFullYear() && selectedMonth === (currentDate.getMonth() + 1)}
+                                >
+                                    <ChevronRight className="w-5 h-5" />
+                                </button>
+                            </CustomTooltip>
+                            <div className="ml-3 flex h-9">
+                                <CustomDropdown
+                                    value={`${selectedYear}-${selectedMonth.toString().padStart(2, '0')}`}
+                                    onChange={handleMonthChange}
+                                    options={monthOptions}
+                                />
+                            </div>
                         </div>
                     </div>
-                    <div className="hidden sm:flex items-center bg-muted rounded-md border border-border p-1">
+                    <div className="hidden sm:flex items-center bg-muted rounded-md border border-border p-0.5">
                         <button
                             onClick={() => setViewType('Absolute')}
-                            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${viewType === 'Absolute' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                            className={`px-3.5 py-1 text-sm font-medium rounded-md transition-colors ${viewType === 'Absolute' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                         >
                             Absolute
                         </button>
                         <button
                             onClick={() => setViewType('Cumulative')}
-                            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${viewType === 'Cumulative' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                            className={`px-3.5 py-1 text-sm font-medium rounded-md transition-colors ${viewType === 'Cumulative' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                         >
                             Cumulative
                         </button>
@@ -213,84 +277,36 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
                         <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
                     </div>
                 ) : error ? (
-                    <div className="flex items-center justify-center h-full min-h-[400px] text-red-500">
+                    <div className="flex items-center justify-center h-full min-h-[400px] text-destructive bg-destructive/10 rounded-lg max-w-sm mx-auto my-auto p-4 border border-destructive/20 font-medium">
                         {error}
                     </div>
                 ) : (
                     <div className="h-[400px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart
-                                data={chartData}
-                                margin={{ top: 20, right: 30, left: 0, bottom: 50 }}
-                            >
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" />
-                                <XAxis
-                                    dataKey="date"
-                                    tickFormatter={(val) => {
-                                        if (timeAgg === 'Monthly') return val.split('-').slice(0, 2).join('-');
-                                        return val;
-                                    }}
-                                    tick={{ fontSize: 12, fill: '#9CA3AF' }}
-                                    tickMargin={10}
-                                    angle={-45}
-                                    textAnchor="end"
-                                />
-                                <YAxis
-                                    tickFormatter={(value) => `$${value.toFixed(2)}`}
-                                    tick={{ fontSize: 12, fill: '#9CA3AF' }}
-                                    axisLine={false}
-                                    tickLine={false}
-                                />
-                                <Tooltip
-                                    formatter={(value, name) => [`$${value.toFixed(2)}`, name]}
-                                    contentStyle={{ backgroundColor: '#1F2937', borderColor: '#374151', color: '#fff' }}
-                                    itemStyle={{ color: '#fff' }}
-                                />
-                                <Legend
-                                    layout="vertical"
-                                    verticalAlign="middle"
-                                    align="right"
-                                    wrapperStyle={{ paddingLeft: '20px', fontSize: '13px' }}
-                                />
-                                <Bar
-                                    dataKey="Actor compute units"
-                                    stackId="a"
-                                    fill={COLORS[0]}
-                                    style={{ fill: `url(#stripePattern)` }}
-                                />
-                                <defs>
-                                    <pattern id="stripePattern" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
-                                        <rect width="4" height="8" fill={COLORS[4]} />
-                                        <rect x="4" width="4" height="8" fill="#fff" fillOpacity="0.2" />
-                                    </pattern>
-                                </defs>
-                            </BarChart>
-                        </ResponsiveContainer>
+                        <CustomBarChart data={chartData} timeAgg={timeAgg} viewType={viewType} />
                     </div>
                 )}
             </div>
 
             {/* Actors Usage Table */}
             {!isLoading && !error && data && data.actor_usage.length > 0 && (
-                <div className="border border-border rounded-lg bg-card overflow-hidden mt-6">
-                    <div className="px-5 py-4 border-b border-border flex items-center gap-2">
-                        <h3 className="font-semibold text-lg text-foreground">Usage by Actors</h3>
-                        <span className="text-muted-foreground w-4 h-4 rounded-full border border-current inline-flex items-center justify-center text-[10px]">?</span>
+                <div className="border border-border rounded-lg bg-card overflow-hidden mt-4">
+                    <div className="px-3 py-2 border-b border-border flex items-center gap-2">
+                        <h3 className="font-semibold text-[14px] text-foreground">Usage by Actors</h3>
                     </div>
                     <div className="w-full">
                         <table className="w-full text-left">
                             <thead>
-                                <tr className="border-b border-border bg-muted/50 text-sm text-foreground">
-                                    <th className="px-5 py-3 font-medium text-foreground">Actor</th>
-                                    <th className="px-5 py-3 font-medium text-right text-foreground">Total usage</th>
+                                <tr className="border-b border-border bg-muted/50 text-[12px] text-foreground">
+                                    <th className="px-3 py-1.5 font-medium text-foreground">Actor</th>
+                                    <th className="px-3 py-1.5 font-medium text-right text-foreground">Total usage</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {data.actor_usage.map((actor, i) => (
                                     <tr key={i} className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors">
-                                        <td className="px-5 py-3">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded shrink-0 flex items-center justify-center text-xl bg-white relative">
+                                        <td className="px-3 py-2">
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="w-6 h-6 rounded shrink-0 flex items-center justify-center text-sm bg-white relative">
                                                     {actor.actor_icon ? (
                                                         <img src={actor.actor_icon} alt={actor.actor_name} className="w-full h-full object-cover rounded" />
                                                     ) : (
@@ -298,12 +314,12 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
                                                     )}
                                                 </div>
                                                 <div>
-                                                    <div className="font-medium text-foreground">{actor.actor_name}</div>
-                                                    <div className="text-xs text-muted-foreground hidden sm:block">compass/{actor.actor_id.toLowerCase()}</div>
+                                                    <div className="font-medium text-[13px] text-foreground">{actor.actor_name}</div>
+                                                    <div className="text-[10px] text-muted-foreground hidden sm:block">compass/{actor.actor_id.toLowerCase()}</div>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-5 py-3 text-right font-medium text-foreground text-sm">
+                                        <td className="px-3 py-2 text-right font-medium text-foreground text-[13px]">
                                             ${actor.total_usage.toFixed(2)}
                                         </td>
                                     </tr>

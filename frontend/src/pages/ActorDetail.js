@@ -7,7 +7,9 @@ import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { toast } from '../hooks/use-toast';
+import { Terminal } from 'lucide-react';
+import { useToast } from '../hooks/use-toast';
+import LoadingScreen from '../components/LoadingScreen';
 import { Play, Settings, Clock, Database, Info, Copy } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -75,13 +77,13 @@ const ActorDetail = () => {
       setActor(response.data);
     } catch (error) {
       console.error('Failed to fetch actor:', error);
-      
+
       // If actor not found (404), navigate to not-found page
       if (error.response && error.response.status === 404) {
         navigate('/not-found');
         return;
       }
-      
+
       toast({
         title: 'Error',
         description: 'Failed to load actor details',
@@ -152,11 +154,6 @@ const ActorDetail = () => {
         response: error.response?.data,
         status: error.response?.status
       });
-      toast({
-        title: 'Failed to start run',
-        description: error.response?.data?.detail || 'An error occurred',
-        variant: 'destructive'
-      });
     } finally {
       setSubmitting(false);
     }
@@ -214,11 +211,6 @@ const ActorDetail = () => {
         message: error.message,
         response: error.response?.data,
         status: error.response?.status
-      });
-      toast({
-        title: 'Failed to start run',
-        description: error.response?.data?.detail || 'An error occurred',
-        variant: 'destructive'
       });
     } finally {
       setSubmitting(false);
@@ -392,11 +384,8 @@ const ActorDetail = () => {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <img src="/logo.png" alt="Scrapi Logo" className="w-16 h-16 mx-auto mb-4" />
-          <p className="text-gray-600">Loading actor...</p>
-        </div>
+      <div className="flex-1 flex flex-col bg-white">
+        <LoadingScreen text="Loading actor..." />
       </div>
     );
   }

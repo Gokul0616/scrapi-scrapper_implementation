@@ -95,7 +95,14 @@ export const setupAxiosInterceptor = (navigate, showMessage) => {
         }
       }
 
-      if (showMessage) {
+      // Determine if we should show the error toast.
+      // Default behavior: Mutating requests (POST, PUT, DELETE, PATCH) show toasts. GET requests handle errors inline unless explicit.
+      const config = error.config || {};
+      const method = (config.method || '').toLowerCase();
+      const isMutatingRequest = ['post', 'put', 'patch', 'delete'].includes(method);
+      const shouldHideToast = config.hideErrorToast !== undefined ? config.hideErrorToast : !isMutatingRequest;
+
+      if (showMessage && !shouldHideToast) {
         let errorText = 'An unexpected error occurred';
         if (error.response) {
           if (error.response.data && error.response.data.detail) {

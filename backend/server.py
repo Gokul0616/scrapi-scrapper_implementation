@@ -7,6 +7,21 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
+
+# --- Mock Playwright to run backend without it ---
+import sys
+from unittest.mock import MagicMock
+class DummyType: pass
+sys.modules['playwright'] = MagicMock()
+playwright_async = MagicMock()
+playwright_async.Page = DummyType
+playwright_async.Browser = DummyType
+playwright_async.BrowserContext = DummyType
+playwright_async.TimeoutError = Exception
+sys.modules['playwright.async_api'] = playwright_async
+sys.modules['playwright_stealth'] = MagicMock()
+# -----------------------------------------------
+
 from models import Actor
 
 

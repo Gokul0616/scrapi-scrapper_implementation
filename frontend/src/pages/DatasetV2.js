@@ -7,6 +7,7 @@ import Hls from 'hls.js';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
+import LoadingScreen from '../components/LoadingScreen'; // Added this import
 import { Search, Download, ArrowLeft, MessageSquare, X, Send, Mail, Phone, CheckCircle2, FileText, MapPin, ExternalLink, Settings, Eye, Table as TableIcon, MoreHorizontal, Star, ChevronLeft, ChevronRight, Play } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
 
@@ -40,13 +41,13 @@ const CustomVideoPlayer = ({ videoUrl, isHLS }) => {
           lowLatencyMode: true,
           backBufferLength: 90
         });
-        
+
         hls.loadSource(videoUrl);
         hls.attachMedia(video);
-        
+
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
         });
-        
+
         hls.on(Hls.Events.ERROR, (event, data) => {
           console.error('[HLS PLAYER] Error:', data);
           if (data.fatal) {
@@ -63,7 +64,7 @@ const CustomVideoPlayer = ({ videoUrl, isHLS }) => {
             }
           }
         });
-        
+
         hlsRef.current = hls;
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = videoUrl;
@@ -175,7 +176,7 @@ const CustomVideoPlayer = ({ videoUrl, isHLS }) => {
   };
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className="relative w-full h-full bg-black group"
       onMouseMove={resetControlsTimeout}
@@ -200,23 +201,22 @@ const CustomVideoPlayer = ({ videoUrl, isHLS }) => {
 
       {/* Custom Controls */}
       <div
-        className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 transition-opacity duration-300 ${
-          showControls ? 'opacity-100' : 'opacity-0'
-        }`}
+        className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'
+          }`}
       >
         {/* Progress Bar */}
         <div className="mb-3">
-          <div 
+          <div
             className="relative h-1 bg-gray-600 rounded-full cursor-pointer hover:h-2 transition-all"
             onClick={handleSeek}
           >
             {/* Buffered */}
-            <div 
+            <div
               className="absolute h-full bg-gray-500 rounded-full"
               style={{ width: `${buffered}%` }}
             />
             {/* Current Progress */}
-            <div 
+            <div
               className="absolute h-full bg-red-600 rounded-full"
               style={{ width: `${(currentTime / duration) * 100}%` }}
             />
@@ -232,11 +232,11 @@ const CustomVideoPlayer = ({ videoUrl, isHLS }) => {
           >
             {isPlaying ? (
               <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
               </svg>
             ) : (
               <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z"/>
+                <path d="M8 5v14l11-7z" />
               </svg>
             )}
           </button>
@@ -251,11 +251,11 @@ const CustomVideoPlayer = ({ videoUrl, isHLS }) => {
             <button onClick={toggleMute} className="hover:text-red-500 transition-colors">
               {isMuted || volume === 0 ? (
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+                  <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
                 </svg>
               ) : (
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+                  <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z" />
                 </svg>
               )}
             </button>
@@ -280,11 +280,11 @@ const CustomVideoPlayer = ({ videoUrl, isHLS }) => {
           >
             {isFullscreen ? (
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
+                <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z" />
               </svg>
             ) : (
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+                <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
               </svg>
             )}
           </button>
@@ -303,17 +303,17 @@ const JsonPreview = ({ data, label, color = "blue" }) => {
     orange: "text-orange-600 bg-orange-50 border-orange-100 hover:bg-orange-100",
     gray: "text-gray-600 bg-gray-50 border-gray-100 hover:bg-gray-100",
   };
-  
+
   return (
-     <div className="group relative inline-block max-w-full">
-        <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded border cursor-pointer transition-colors ${colorClasses[color] || colorClasses.blue}`}>
-           <span className="font-mono text-[10px] opacity-70 flex-shrink-0">{'{ }'}</span>
-           <span className="truncate max-w-[150px] font-medium">{label || 'View Data'}</span>
-        </div>
-        <div className="hidden group-hover:block absolute left-0 top-full mt-1 z-50 w-80 bg-slate-900 text-slate-50 p-3 rounded-lg shadow-xl text-xs font-mono overflow-auto max-h-80 border border-slate-700">
-           <pre className="whitespace-pre-wrap break-all">{JSON.stringify(data, null, 2)}</pre>
-        </div>
-     </div>
+    <div className="group relative inline-block max-w-full">
+      <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded border cursor-pointer transition-colors ${colorClasses[color] || colorClasses.blue}`}>
+        <span className="font-mono text-[10px] opacity-70 flex-shrink-0">{'{ }'}</span>
+        <span className="truncate max-w-[150px] font-medium">{label || 'View Data'}</span>
+      </div>
+      <div className="hidden group-hover:block absolute left-0 top-full mt-1 z-50 w-80 bg-slate-900 text-slate-50 p-3 rounded-lg shadow-xl text-xs font-mono overflow-auto max-h-80 border border-slate-700">
+        <pre className="whitespace-pre-wrap break-all">{JSON.stringify(data, null, 2)}</pre>
+      </div>
+    </div>
   );
 };
 
@@ -345,12 +345,12 @@ const DatasetV2 = () => {
   const [visibleColumns, setVisibleColumns] = useState({});
   const [allColumns, setAllColumns] = useState([]);
   const [showColumnSettings, setShowColumnSettings] = useState(false);
-  
+
   // Detect all available columns from data
   useEffect(() => {
     if (items.length > 0) {
       const detectedColumns = new Set();
-      
+
       // Scan first 10 items to detect all possible fields
       items.slice(0, 10).forEach(item => {
         if (item.data) {
@@ -359,10 +359,10 @@ const DatasetV2 = () => {
           });
         }
       });
-      
+
       const columnsArray = Array.from(detectedColumns).sort();
       setAllColumns(columnsArray);
-      
+
       // Initialize visible columns (all visible by default)
       if (Object.keys(visibleColumns).length === 0) {
         const initialVisibility = { number: true, actions: true };
@@ -394,7 +394,7 @@ const DatasetV2 = () => {
       setRunDetails(response.data);
     } catch (error) {
       console.error('Failed to fetch run details:', error);
-      
+
       // If run not found (404), navigate to not-found page
       if (error.response && error.response.status === 404) {
         navigate('/not-found');
@@ -418,13 +418,13 @@ const DatasetV2 = () => {
       setTotalPages(response.data.total_pages || 1);
     } catch (error) {
       console.error('Failed to fetch dataset:', error);
-      
+
       // If dataset not found (404), navigate to not-found page
       if (error.response && error.response.status === 404) {
         navigate('/not-found');
         return;
       }
-      
+
       toast({
         title: 'Error',
         description: 'Failed to load dataset',
@@ -485,12 +485,6 @@ const DatasetV2 = () => {
       }]);
     } catch (error) {
       console.error('Failed to send message:', error);
-      const errorMessage = error.response?.data?.detail || error.message || 'Failed to get AI response';
-      toast({
-        title: 'Error',
-        description: errorMessage,
-        variant: 'destructive'
-      });
     } finally {
       setChatLoading(false);
     }
@@ -542,7 +536,7 @@ const DatasetV2 = () => {
 
   const generateTemplate = async (channel) => {
     if (!selectedLead) return;
-    
+
     setChatLoading(true);
     try {
       const token = localStorage.getItem('token');
@@ -564,12 +558,6 @@ const DatasetV2 = () => {
       }]);
     } catch (error) {
       console.error('Template generation error:', error);
-      const errorMessage = error.response?.data?.detail || error.message || 'Failed to generate template';
-      toast({
-        title: 'Error',
-        description: errorMessage,
-        variant: 'destructive'
-      });
     } finally {
       setChatLoading(false);
     }
@@ -578,39 +566,39 @@ const DatasetV2 = () => {
   const openLinksModal = (item, event) => {
     event.stopPropagation();
     const buttonRect = event.currentTarget.getBoundingClientRect();
-    
+
     // Estimate popup dimensions
     const popupWidth = 320;
     const popupHeight = 400; // max height
-    
+
     // Get viewport dimensions
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
-    
+
     // Calculate position with smart placement
     let x = buttonRect.left;
     let y = buttonRect.bottom + 5;
-    
+
     // Check if popup goes off bottom - if yes, open above button
     if (y + popupHeight > viewportHeight - 10) {
       y = buttonRect.top - popupHeight - 5; // Open above button
-      
+
       // If still goes off top, position at top of viewport
       if (y < 10) {
         y = 10;
       }
     }
-    
+
     // Check if popup goes off right edge - if yes, align to right
     if (x + popupWidth > viewportWidth - 10) {
       x = buttonRect.right - popupWidth; // Align to right edge of button
-      
+
       // If still goes off left, position at left of viewport
       if (x < 10) {
         x = 10;
       }
     }
-    
+
     setLinksModalPosition({ x, y });
     setSelectedLinksItem(item);
     setShowLinksModal(true);
@@ -660,28 +648,28 @@ const DatasetV2 = () => {
   const getAllMedia = (product) => {
     if (!product) return [];
     const media = [];
-    
+
     // Add all images
     if (product.images && Array.isArray(product.images)) {
       product.images.forEach(img => {
         media.push({ type: 'image', url: img });
       });
     }
-    
+
     // Add all videos
     if (product.videos && Array.isArray(product.videos)) {
       product.videos.forEach(video => {
         media.push({ type: 'video', url: video });
       });
     }
-    
+
     return media;
   };
 
   const nextImage = () => {
     if (selectedProduct) {
       const allMedia = getAllMedia(selectedProduct);
-      setCurrentImageIndex((prev) => 
+      setCurrentImageIndex((prev) =>
         prev < allMedia.length - 1 ? prev + 1 : 0
       );
     }
@@ -690,7 +678,7 @@ const DatasetV2 = () => {
   const previousImage = () => {
     if (selectedProduct) {
       const allMedia = getAllMedia(selectedProduct);
-      setCurrentImageIndex((prev) => 
+      setCurrentImageIndex((prev) =>
         prev > 0 ? prev - 1 : allMedia.length - 1
       );
     }
@@ -711,41 +699,41 @@ const DatasetV2 = () => {
   // Get social media icon component
   const getSocialIcon = (platform) => {
     const platformLower = platform.toLowerCase();
-    
+
     if (platformLower.includes('facebook')) {
       return (
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
         </svg>
       );
     } else if (platformLower.includes('instagram')) {
       return (
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
         </svg>
       );
     } else if (platformLower.includes('twitter') || platformLower.includes('x.com')) {
       return (
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
         </svg>
       );
     } else if (platformLower.includes('linkedin')) {
       return (
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
         </svg>
       );
     } else if (platformLower.includes('youtube')) {
       return (
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
         </svg>
       );
     } else if (platformLower.includes('tiktok')) {
       return (
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
+          <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
         </svg>
       );
     } else {
@@ -757,11 +745,11 @@ const DatasetV2 = () => {
   const renderSocialMediaIcons = (socialMedia, item, event) => {
     const links = getSocialMediaLinks(socialMedia);
     if (links.length === 0) return '-';
-    
+
     const maxVisible = 6;
     const visibleLinks = links.slice(0, maxVisible);
     const hasMore = links.length > maxVisible;
-    
+
     return (
       <div className="flex items-center gap-1 flex-wrap">
         {visibleLinks.map((link, idx) => {
@@ -774,16 +762,16 @@ const DatasetV2 = () => {
             youtube: 'text-red-600 hover:text-red-700',
             tiktok: 'text-black hover:text-gray-800'
           };
-          
+
           const platformLower = link.platform.toLowerCase();
           let colorClass = 'text-gray-600 hover:text-gray-800';
-          
+
           Object.keys(platformColors).forEach(key => {
             if (platformLower.includes(key)) {
               colorClass = platformColors[key];
             }
           });
-          
+
           return (
             <a
               key={idx}
@@ -825,7 +813,7 @@ const DatasetV2 = () => {
   const isSeoScraper = () => {
     return runDetails?.actor_name?.toLowerCase().includes('seo') || false;
   };
-  
+
   // Helper function to format column names
   const formatColumnName = (key) => {
     // Convert camelCase or snake_case to Title Case
@@ -835,222 +823,219 @@ const DatasetV2 = () => {
       .replace(/^./, str => str.toUpperCase())
       .trim();
   };
-  
+
   // Helper function to render cell value dynamically
   const renderCellValue = (value, key, item) => {
     // Handle null or undefined
     if (value === null || value === undefined) return '-';
-    
+
     // 1. Handle Special Keys (Priority over type checks)
-    
+
     // SEO Scraper: JSON-LD (Can be array or object)
     if (key === 'json_ld') {
-        const schemas = Array.isArray(value) ? value : [value];
-        if (schemas.length === 0) return <span className="text-gray-400">None</span>;
-        
-        // Extract types
-        const types = schemas.map(s => {
-            if (typeof s === 'string') return 'Schema'; // Handle string JSON-LD
-            return s['@type'] || 'Schema';
-        }).filter(Boolean).join(', ');
-        
-        return (
-            <div className="text-xs">
-                <div className="font-semibold text-green-600">{schemas.length} Schemas</div>
-                <div className="text-gray-500 truncate max-w-[200px] mb-1" title={types}>{types}</div>
-                <JsonPreview data={value} label="View JSON-LD" color="green" />
-            </div>
-        );
+      const schemas = Array.isArray(value) ? value : [value];
+      if (schemas.length === 0) return <span className="text-gray-400">None</span>;
+
+      // Extract types
+      const types = schemas.map(s => {
+        if (typeof s === 'string') return 'Schema'; // Handle string JSON-LD
+        return s['@type'] || 'Schema';
+      }).filter(Boolean).join(', ');
+
+      return (
+        <div className="text-xs">
+          <div className="font-semibold text-green-600">{schemas.length} Schemas</div>
+          <div className="text-gray-500 truncate max-w-[200px] mb-1" title={types}>{types}</div>
+          <JsonPreview data={value} label="View JSON-LD" color="green" />
+        </div>
+      );
     }
 
     // SEO Scraper: Headings
     if (key === 'headings' && typeof value === 'object') {
-        const h1 = value.h1 ? value.h1.length : 0;
-        const h2 = value.h2 ? value.h2.length : 0;
-        const h3 = value.h3 ? value.h3.length : 0;
-        const total = Object.values(value).reduce((acc, curr) => acc + (Array.isArray(curr) ? curr.length : 0), 0);
-        return (
-          <div className="text-xs">
-            <div className="font-semibold">{total} Headings</div>
-            <div className="text-gray-500 mb-1">H1: {h1}, H2: {h2}, H3: {h3}</div>
-            <JsonPreview data={value} label="View Headings" color="purple" />
-          </div>
-        );
+      const h1 = value.h1 ? value.h1.length : 0;
+      const h2 = value.h2 ? value.h2.length : 0;
+      const h3 = value.h3 ? value.h3.length : 0;
+      const total = Object.values(value).reduce((acc, curr) => acc + (Array.isArray(curr) ? curr.length : 0), 0);
+      return (
+        <div className="text-xs">
+          <div className="font-semibold">{total} Headings</div>
+          <div className="text-gray-500 mb-1">H1: {h1}, H2: {h2}, H3: {h3}</div>
+          <JsonPreview data={value} label="View Headings" color="purple" />
+        </div>
+      );
     }
-    
+
     // SEO Scraper: Images (Object with stats)
     if (key === 'images' && !Array.isArray(value) && typeof value === 'object') {
-        return (
-          <div className="text-xs">
-            <div className="font-semibold">{value.total_images || 0} Images</div>
-            <div className="text-gray-500 mb-1">{value.images_with_alt || 0} with alt</div>
-            {value.sample_images && value.sample_images.length > 0 && (
-              <div className="flex gap-1 mb-2">
-                {value.sample_images.slice(0, 3).map((img, idx) => (
-                  <img 
-                    key={idx} 
-                    src={img.src} 
-                    alt={img.alt} 
-                    title={img.title || img.alt}
-                    className="w-6 h-6 rounded object-cover border border-gray-200" 
-                    onError={(e) => { e.target.style.display = 'none'; }}
-                  />
-                ))}
-              </div>
-            )}
-            <JsonPreview data={value} label="Details" color="blue" />
-          </div>
-        );
+      return (
+        <div className="text-xs">
+          <div className="font-semibold">{value.total_images || 0} Images</div>
+          <div className="text-gray-500 mb-1">{value.images_with_alt || 0} with alt</div>
+          {value.sample_images && value.sample_images.length > 0 && (
+            <div className="flex gap-1 mb-2">
+              {value.sample_images.slice(0, 3).map((img, idx) => (
+                <img
+                  key={idx}
+                  src={img.src}
+                  alt={img.alt}
+                  title={img.title || img.alt}
+                  className="w-6 h-6 rounded object-cover border border-gray-200"
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
+              ))}
+            </div>
+          )}
+          <JsonPreview data={value} label="Details" color="blue" />
+        </div>
+      );
     }
-    
+
     // Generic Images Array (Amazon/Maps)
     if (key === 'images' && Array.isArray(value)) {
-         if (value.length === 0) return '-';
-         
-         // Only render as image gallery if items are strings (URLs)
-         if (typeof value[0] === 'string') {
-             return (
-              <div className="flex gap-1">
-                {value.slice(0, 3).map((img, idx) => (
-                  <img key={idx} src={img} alt="" className="w-8 h-8 rounded object-cover" />
-                ))}
-                {value.length > 3 && <span className="text-xs text-gray-500">+{value.length - 3}</span>}
-              </div>
-            );
-         }
-         // If images are objects but not SEO-formatted (fall through to generic array handler)
+      if (value.length === 0) return '-';
+
+      // Only render as image gallery if items are strings (URLs)
+      if (typeof value[0] === 'string') {
+        return (
+          <div className="flex gap-1">
+            {value.slice(0, 3).map((img, idx) => (
+              <img key={idx} src={img} alt="" className="w-8 h-8 rounded object-cover" />
+            ))}
+            {value.length > 3 && <span className="text-xs text-gray-500">+{value.length - 3}</span>}
+          </div>
+        );
+      }
+      // If images are objects but not SEO-formatted (fall through to generic array handler)
     }
 
     // SEO Scraper: Links
     if (key === 'links' && typeof value === 'object' && !Array.isArray(value)) {
-        return (
-          <div className="text-xs">
-            <div className="font-semibold">{value.total_links || 0} Links</div>
-            <div className="text-gray-500 mb-1">
-              <span className="text-blue-600">{value.internal_links} Int</span> / 
-              <span className="text-orange-600"> {value.external_links} Ext</span>
-            </div>
-            <JsonPreview data={value} label="View Links" color="orange" />
+      return (
+        <div className="text-xs">
+          <div className="font-semibold">{value.total_links || 0} Links</div>
+          <div className="text-gray-500 mb-1">
+            <span className="text-blue-600">{value.internal_links} Int</span> /
+            <span className="text-orange-600"> {value.external_links} Ext</span>
           </div>
-        );
+          <JsonPreview data={value} label="View Links" color="orange" />
+        </div>
+      );
     }
 
     // SEO Scraper: Open Graph & Twitter Card
     if ((key === 'open_graph' || key === 'twitter_card') && typeof value === 'object') {
-        const count = Object.keys(value).length;
-        if (count === 0) return <span className="text-gray-400">None</span>;
-        
-        return (
-          <div className="text-xs">
-            <div className="font-semibold text-blue-600">{count} Tags</div>
-            <div className="mb-1">
-               <JsonPreview data={value} label={`View ${key === 'open_graph' ? 'OG' : 'Twitter'} Tags`} color="blue" />
-            </div>
-          </div>
-        );
-    }
-    
-    // SEO Scraper: Icons
-    if (key === 'icons' && typeof value === 'object') {
-        return (
-           <div className="flex items-center gap-2">
-             {value.favicon ? (
-                 <img src={value.favicon} className="w-6 h-6 rounded border bg-gray-50" alt="Favicon" onError={(e) => e.target.style.display = 'none'} />
-             ) : <span className="text-xs text-gray-400">No favicon</span>}
-             <JsonPreview data={value} label="All Icons" color="gray" />
-           </div>
-        );
-    }
-    
-    // 2. Handle Arrays (Generic)
-    if (Array.isArray(value)) {
-      if (value.length === 0) return '-';
-      
-      // Check if array contains objects - This fixes the [object Object] issue
-      const hasObjects = value.some(v => typeof v === 'object' && v !== null);
-      if (hasObjects) {
-          return (
-             <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-gray-600">{value.length} items</span>
-                <JsonPreview data={value} label="View List" color="gray" />
-             </div>
-          );
-      }
-      
+      const count = Object.keys(value).length;
+      if (count === 0) return <span className="text-gray-400">None</span>;
+
       return (
-        <div className="max-w-xs truncate text-xs" title={value.join(', ')}>
-            {value.join(', ')}
+        <div className="text-xs">
+          <div className="font-semibold text-blue-600">{count} Tags</div>
+          <div className="mb-1">
+            <JsonPreview data={value} label={`View ${key === 'open_graph' ? 'OG' : 'Twitter'} Tags`} color="blue" />
+          </div>
         </div>
       );
     }
-    
+
+    // SEO Scraper: Icons
+    if (key === 'icons' && typeof value === 'object') {
+      return (
+        <div className="flex items-center gap-2">
+          {value.favicon ? (
+            <img src={value.favicon} className="w-6 h-6 rounded border bg-gray-50" alt="Favicon" onError={(e) => e.target.style.display = 'none'} />
+          ) : <span className="text-xs text-gray-400">No favicon</span>}
+          <JsonPreview data={value} label="All Icons" color="gray" />
+        </div>
+      );
+    }
+
+    // 2. Handle Arrays (Generic)
+    if (Array.isArray(value)) {
+      if (value.length === 0) return '-';
+
+      // Check if array contains objects - This fixes the [object Object] issue
+      const hasObjects = value.some(v => typeof v === 'object' && v !== null);
+      if (hasObjects) {
+        return (
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-gray-600">{value.length} items</span>
+            <JsonPreview data={value} label="View List" color="gray" />
+          </div>
+        );
+      }
+
+      return (
+        <div className="max-w-xs truncate text-xs" title={value.join(', ')}>
+          {value.join(', ')}
+        </div>
+      );
+    }
+
     // 3. Handle Objects (Generic)
     if (typeof value === 'object') {
       if (key === 'socialMedia') return null; // Handled specially in table
-      
+
       // Use JsonPreview for any other object
       return <JsonPreview data={value} label={formatColumnName(key)} color="gray" />;
     }
-    
+
     // 4. Handle URLs
     if (typeof value === 'string' && (value.startsWith('http://') || value.startsWith('https://'))) {
       if (value.match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
-          return (
-             <a href={value} target="_blank" rel="noreferrer">
-                <img src={value} className="h-8 w-8 object-cover rounded border" alt="Preview" />
-             </a>
-          );
+        return (
+          <a href={value} target="_blank" rel="noreferrer">
+            <img src={value} className="h-8 w-8 object-cover rounded border" alt="Preview" />
+          </a>
+        );
       }
       return (
-        <a href={value} target="_blank" rel="noopener noreferrer" 
-           className="text-blue-600 hover:text-blue-800 truncate block max-w-[200px] text-xs" title={value}>
+        <a href={value} target="_blank" rel="noopener noreferrer"
+          className="text-blue-600 hover:text-blue-800 truncate block max-w-[200px] text-xs" title={value}>
           {value}
         </a>
       );
     }
-    
+
     // 5. Handle boolean
     if (typeof value === 'boolean') {
       return value ? <span className="text-green-600 font-medium text-xs">Yes</span> : <span className="text-gray-400 text-xs">No</span>;
     }
-    
+
     // 6. Handle numbers
     if (typeof value === 'number') {
       return value.toLocaleString();
     }
-    
+
     // 7. Handle strings (Generic)
     if (typeof value === 'string') {
       if (value.length > 50) {
-         // Check if it looks like a long text block (has spaces)
-         if (value.includes(' ')) {
-             return (
-                 <div className="group relative cursor-help">
-                    <div className="line-clamp-2 text-xs text-gray-700">{value}</div>
-                    <div className="hidden group-hover:block absolute left-0 bottom-full mb-2 bg-gray-900 text-white p-3 rounded shadow-lg z-50 w-80 text-xs whitespace-pre-wrap max-h-64 overflow-y-auto">
-                        {value}
-                    </div>
-                 </div>
-             );
-         }
-         // Long single word (like a hash or id)
-         return (
-             <div className="truncate max-w-[200px] text-xs" title={value}>{value}</div>
-         );
+        // Check if it looks like a long text block (has spaces)
+        if (value.includes(' ')) {
+          return (
+            <div className="group relative cursor-help">
+              <div className="line-clamp-2 text-xs text-gray-700">{value}</div>
+              <div className="hidden group-hover:block absolute left-0 bottom-full mb-2 bg-gray-900 text-white p-3 rounded shadow-lg z-50 w-80 text-xs whitespace-pre-wrap max-h-64 overflow-y-auto">
+                {value}
+              </div>
+            </div>
+          );
+        }
+        // Long single word (like a hash or id)
+        return (
+          <div className="truncate max-w-[200px] text-xs" title={value}>{value}</div>
+        );
       }
       return value;
     }
-    
+
     return String(value);
   };
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-white min-h-screen">
-        <div className="text-center">
-          <img src="/logo.png" alt="Scrapi Logo" className="w-16 h-16 mx-auto mb-4" />
-          <p className="text-gray-600">Loading dataset...</p>
-        </div>
+      <div className="flex-1 flex flex-col bg-white min-h-screen">
+        <LoadingScreen text="Loading dataset..." />
       </div>
     );
   }
@@ -1070,8 +1055,8 @@ const DatasetV2 = () => {
   // Get filtered columns based on active tab
   const getVisibleColumnsByTab = () => {
     if (isAmazonScraper() || isSeoScraper()) return allColumns;
-    
-    switch(activeTab) {
+
+    switch (activeTab) {
       case 'contact':
         return ['title', 'address', 'city', 'state', 'countryCode', 'phone', 'email', 'website'];
       case 'social':
@@ -1093,38 +1078,38 @@ const DatasetV2 = () => {
   // Define standard column order for Google Maps data
   const getOrderedColumns = () => {
     if (isAmazonScraper()) return allColumns;
-    
+
     if (isSeoScraper()) {
       const seoOrder = [
-        'url', 'title', 'meta_description', 'status_code', 'icons', 
+        'url', 'title', 'meta_description', 'status_code', 'icons',
         'open_graph', 'twitter_card', 'json_ld', 'headings', 'images', 'links',
         'meta_keywords', 'canonical', 'meta_robots', 'viewport', 'charset', 'language',
         'robots_txt', 'sitemap_xml'
       ];
-      
+
       const visibleCols = getVisibleColumnsByTab();
       const ordered = [];
-      
+
       // Add columns in SEO order
       seoOrder.forEach(col => {
         if (allColumns.includes(col) && visibleCols.includes(col)) {
           ordered.push(col);
         }
       });
-      
+
       // Add remaining
       allColumns.forEach(col => {
         if (!ordered.includes(col) && visibleCols.includes(col)) {
           ordered.push(col);
         }
       });
-      
+
       return ordered;
     }
-    
+
     const standardOrder = [
       'title',
-      'address', 
+      'address',
       'city',
       'state',
       'countryCode',
@@ -1144,24 +1129,24 @@ const DatasetV2 = () => {
       'placeId',
       'cid'
     ];
-    
+
     const visibleCols = getVisibleColumnsByTab();
     const ordered = [];
-    
+
     // Add columns in standard order if they exist and are visible
     standardOrder.forEach(col => {
       if (allColumns.includes(col) && visibleCols.includes(col)) {
         ordered.push(col);
       }
     });
-    
+
     // Add any remaining columns not in standard order
     allColumns.forEach(col => {
       if (!ordered.includes(col) && visibleCols.includes(col)) {
         ordered.push(col);
       }
     });
-    
+
     return ordered;
   };
 
@@ -1179,9 +1164,9 @@ const DatasetV2 = () => {
               </Button>
               <div className="border-l h-6"></div>
               <h1 className="text-2xl font-semibold text-blue-600">
-                {isAmazonScraper() ? 'Amazon Product Scraper - Run' : 
-                 isSeoScraper() ? 'SEO Metadata Scraper - Run' :
-                 'Google Maps Scraper - Run'}
+                {isAmazonScraper() ? 'Amazon Product Scraper - Run' :
+                  isSeoScraper() ? 'SEO Metadata Scraper - Run' :
+                    'Google Maps Scraper - Run'}
               </h1>
               <Button variant="ghost" size="icon" className="hover:bg-gray-50">
                 <Star className="w-4 h-4" />
@@ -1204,11 +1189,11 @@ const DatasetV2 = () => {
             </div>
             <div className="ml-3 flex-1">
               <p className="text-sm text-green-800">
-                <strong>Scraping finished.</strong> {isAmazonScraper() 
-                  ? 'You can view all scraped products with detailed information.' 
+                <strong>Scraping finished.</strong> {isAmazonScraper()
+                  ? 'You can view all scraped products with detailed information.'
                   : isSeoScraper()
-                  ? 'You can view comprehensive SEO metadata and content analysis.'
-                  : 'You can view all scraped places laid out on a map.'}
+                    ? 'You can view comprehensive SEO metadata and content analysis.'
+                    : 'You can view all scraped places laid out on a map.'}
               </p>
             </div>
           </div>
@@ -1247,11 +1232,10 @@ const DatasetV2 = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center space-x-2 ${
-                  activeTab === tab.id
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
-                }`}
+                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center space-x-2 ${activeTab === tab.id
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                  }`}
               >
                 {tab.icon && <tab.icon className="w-4 h-4" />}
                 <span>{tab.label}</span>
@@ -1311,13 +1295,13 @@ const DatasetV2 = () => {
                         <td className="px-4 py-4 text-sm text-gray-900 font-medium">
                           {(page - 1) * limit + index + 1}
                         </td>
-                        
+
                         {/* Picture */}
                         <td className="px-4 py-4">
                           {product.images && product.images.length > 0 ? (
                             <div className="relative group cursor-pointer" onClick={() => openImageModal(product)}>
-                              <img 
-                                src={product.images[0]} 
+                              <img
+                                src={product.images[0]}
                                 alt={product.title}
                                 className="w-16 h-16 object-cover rounded border border-gray-200 group-hover:border-blue-500 transition-all"
                                 onError={(e) => {
@@ -1341,26 +1325,26 @@ const DatasetV2 = () => {
                             </div>
                           )}
                         </td>
-                        
+
                         {/* Title */}
                         <td className="px-4 py-4 text-sm max-w-xs">
                           <div className="font-medium text-gray-900 line-clamp-2" title={product.title}>
                             {product.title || '-'}
                           </div>
                         </td>
-                        
+
                         {/* ASIN */}
                         <td className="px-4 py-4 text-sm text-gray-700">
                           <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
                             {product.asin || '-'}
                           </code>
                         </td>
-                        
+
                         {/* Brand */}
                         <td className="px-4 py-4 text-sm text-gray-700">
                           {product.brand || product.seller || product.soldBy || '-'}
                         </td>
-                        
+
                         {/* Price */}
                         <td className="px-4 py-4 text-sm">
                           {product.price ? (
@@ -1383,7 +1367,7 @@ const DatasetV2 = () => {
                             </div>
                           ) : '-'}
                         </td>
-                        
+
                         {/* Rating */}
                         <td className="px-4 py-4 text-sm">
                           {product.rating ? (
@@ -1393,12 +1377,12 @@ const DatasetV2 = () => {
                             </div>
                           ) : '-'}
                         </td>
-                        
+
                         {/* Reviews Count */}
                         <td className="px-4 py-4 text-sm text-gray-700">
                           {product.reviewCount ? product.reviewCount.toLocaleString() : '-'}
                         </td>
-                        
+
                         {/* Availability */}
                         <td className="px-4 py-4 text-sm">
                           {product.availability ? (
@@ -1415,20 +1399,20 @@ const DatasetV2 = () => {
                             </div>
                           ) : '-'}
                         </td>
-                        
+
                         {/* Category */}
                         <td className="px-4 py-4 text-sm text-gray-700 max-w-xs">
                           <div className="line-clamp-2" title={product.category}>
                             {product.category || '-'}
                           </div>
                         </td>
-                        
+
                         {/* URL */}
                         <td className="px-4 py-4 text-sm">
                           {product.url ? (
-                            <a 
-                              href={product.url} 
-                              target="_blank" 
+                            <a
+                              href={product.url}
+                              target="_blank"
                               rel="noopener noreferrer"
                               className="text-blue-600 hover:underline flex items-center gap-1"
                             >
@@ -1468,7 +1452,7 @@ const DatasetV2 = () => {
                         </td>
                         {orderedCols.map(colKey => {
                           const value = item.data[colKey];
-                          
+
                           // Special rendering for social media
                           if (colKey === 'socialMedia' && value && typeof value === 'object') {
                             return (
@@ -1477,7 +1461,7 @@ const DatasetV2 = () => {
                               </td>
                             );
                           }
-                          
+
                           // Special rendering for title (primary column - bold)
                           if (colKey === 'title') {
                             return (
@@ -1488,7 +1472,7 @@ const DatasetV2 = () => {
                               </td>
                             );
                           }
-                          
+
                           // Special rendering for phone with icon
                           if (colKey === 'phone' && value) {
                             return (
@@ -1503,7 +1487,7 @@ const DatasetV2 = () => {
                               </td>
                             );
                           }
-                          
+
                           // Special rendering for email with icon
                           if (colKey === 'email' && value) {
                             return (
@@ -1518,14 +1502,14 @@ const DatasetV2 = () => {
                               </td>
                             );
                           }
-                          
+
                           // Special rendering for website with icon
                           if (colKey === 'website' && value) {
                             return (
                               <td key={colKey} className="px-6 py-4 text-sm">
-                                <a 
-                                  href={value} 
-                                  target="_blank" 
+                                <a
+                                  href={value}
+                                  target="_blank"
                                   rel="noopener noreferrer"
                                   className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
                                 >
@@ -1537,14 +1521,14 @@ const DatasetV2 = () => {
                               </td>
                             );
                           }
-                          
+
                           // Special rendering for Google Maps URL with map icon
                           if (colKey === 'url' && value) {
                             return (
                               <td key={colKey} className="px-6 py-4 text-sm">
-                                <a 
-                                  href={value} 
-                                  target="_blank" 
+                                <a
+                                  href={value}
+                                  target="_blank"
                                   rel="noopener noreferrer"
                                   className="flex items-center gap-1 text-red-600 hover:text-red-700"
                                 >
@@ -1554,7 +1538,7 @@ const DatasetV2 = () => {
                               </td>
                             );
                           }
-                          
+
                           // Special rendering for rating with stars
                           if (colKey === 'rating' && value) {
                             return (
@@ -1566,7 +1550,7 @@ const DatasetV2 = () => {
                               </td>
                             );
                           }
-                          
+
                           // Default rendering for other columns
                           return (
                             <td key={colKey} className="px-6 py-4 text-sm text-gray-700">
@@ -1687,13 +1671,13 @@ const DatasetV2 = () => {
       {showLinksModal && selectedLinksItem && (
         <>
           {/* Transparent overlay to close on click outside */}
-          <div 
-            className="fixed inset-0 z-40" 
+          <div
+            className="fixed inset-0 z-40"
             onClick={closeLinksModal}
           />
-          
+
           {/* Contextual popup at click position */}
-          <div 
+          <div
             className="fixed z-50 bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden"
             style={{
               left: `${linksModalPosition.x}px`,
@@ -1712,7 +1696,7 @@ const DatasetV2 = () => {
                 All social links
               </div>
             </div>
-            
+
             {/* Links list - scrollable */}
             <div className="overflow-y-auto max-h-[320px]">
               <div className="py-1">
@@ -1721,7 +1705,7 @@ const DatasetV2 = () => {
                   const platformLower = platform.toLowerCase();
                   let bgClass = 'bg-gray-50 group-hover:bg-gray-100';
                   let iconColorClass = 'text-gray-600';
-                  
+
                   if (platformLower.includes('facebook')) {
                     bgClass = 'bg-blue-50 group-hover:bg-blue-100';
                     iconColorClass = 'text-blue-600';
@@ -1741,7 +1725,7 @@ const DatasetV2 = () => {
                     bgClass = 'bg-gray-100 group-hover:bg-gray-200';
                     iconColorClass = 'text-gray-900';
                   }
-                  
+
                   return (
                     <a
                       key={platform}
@@ -1767,7 +1751,7 @@ const DatasetV2 = () => {
                     </a>
                   );
                 })}
-                
+
                 {/* Website Link */}
                 {selectedLinksItem.data.website && (
                   <a
@@ -1782,15 +1766,15 @@ const DatasetV2 = () => {
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium text-gray-900">Website</div>
                       <div className="text-xs text-gray-500 truncate">
-                        {selectedLinksItem.data.website.length > 40 
-                          ? selectedLinksItem.data.website.substring(0, 40) + '...' 
+                        {selectedLinksItem.data.website.length > 40
+                          ? selectedLinksItem.data.website.substring(0, 40) + '...'
                           : selectedLinksItem.data.website}
                       </div>
                     </div>
                     <ExternalLink className="w-4 h-4 text-gray-400 ml-2 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </a>
                 )}
-                
+
                 {/* Google Maps Link */}
                 {selectedLinksItem.data.url && (
                   <a
@@ -1819,13 +1803,13 @@ const DatasetV2 = () => {
       {showImageModal && selectedProduct && (
         <>
           {/* Transparent overlay to close on click outside */}
-          <div 
-            className="fixed inset-0 z-40" 
+          <div
+            className="fixed inset-0 z-40"
             onClick={closeImageModal}
           />
-          
+
           {/* Compact image popup */}
-          <div 
+          <div
             className="fixed z-50 bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden"
             style={{
               left: '50%',
@@ -1849,21 +1833,21 @@ const DatasetV2 = () => {
                   )}
                 </div>
               </div>
-              <button 
+              <button
                 onClick={closeImageModal}
                 className="ml-2 text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
-            
+
             {/* Main Media Display with Navigation */}
             <div className="relative bg-gray-50">
               <div className="flex items-center justify-center p-3" style={{ height: '280px' }}>
                 {(() => {
                   const allMedia = getAllMedia(selectedProduct);
                   const currentMedia = allMedia[currentImageIndex];
-                  
+
                   if (!currentMedia) {
                     return (
                       <div className="text-gray-400 text-center">
@@ -1872,18 +1856,18 @@ const DatasetV2 = () => {
                       </div>
                     );
                   }
-                  
+
                   if (currentMedia.type === 'video') {
                     const videoUrl = currentMedia.url;
                     const isHLS = videoUrl.includes('.m3u8');
                     return (
-                      <CustomVideoPlayer 
-                        videoUrl={videoUrl} 
+                      <CustomVideoPlayer
+                        videoUrl={videoUrl}
                         isHLS={isHLS}
                       />
                     );
                   }
-                  
+
                   return (
                     <img
                       src={currentMedia.url}
@@ -1919,7 +1903,7 @@ const DatasetV2 = () => {
 
               {/* Media Type Indicator - Removed */}
             </div>
-            
+
             {/* Thumbnail Gallery - Combined Images and Videos */}
             {getAllMedia(selectedProduct).length > 1 && (
               <div className="px-3 py-2 border-t border-gray-200 bg-white overflow-y-auto" style={{ maxHeight: '120px' }}>
@@ -1928,11 +1912,10 @@ const DatasetV2 = () => {
                     <button
                       key={index}
                       onClick={() => selectThumbnail(index)}
-                      className={`relative flex-shrink-0 w-12 h-12 rounded overflow-hidden border-2 transition-all ${
-                        index === currentImageIndex
-                          ? 'border-blue-500 ring-1 ring-blue-200'
-                          : 'border-gray-200 hover:border-gray-400'
-                      }`}
+                      className={`relative flex-shrink-0 w-12 h-12 rounded overflow-hidden border-2 transition-all ${index === currentImageIndex
+                        ? 'border-blue-500 ring-1 ring-blue-200'
+                        : 'border-gray-200 hover:border-gray-400'
+                        }`}
                     >
                       {media.type === 'video' ? (
                         <div className="w-full h-full relative bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900">
@@ -2040,7 +2023,7 @@ const DatasetV2 = () => {
                   />
                   <span className="text-sm text-gray-900 font-medium">#</span>
                 </label>
-                
+
                 {/* Dynamic columns from data */}
                 {allColumns.map(colKey => (
                   <label key={colKey} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
@@ -2053,7 +2036,7 @@ const DatasetV2 = () => {
                     <span className="text-sm text-gray-900">{formatColumnName(colKey)}</span>
                   </label>
                 ))}
-                
+
                 {/* Actions column */}
                 <label className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
                   <input
@@ -2125,11 +2108,10 @@ const DatasetV2 = () => {
             )}
             {chatMessages.map((msg, idx) => (
               <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] rounded-lg px-4 py-3 ${
-                  msg.role === 'user'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-900'
-                }`}>
+                <div className={`max-w-[80%] rounded-lg px-4 py-3 ${msg.role === 'user'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-900'
+                  }`}>
                   {msg.role === 'user' ? (
                     <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                   ) : (
@@ -2147,8 +2129,8 @@ const DatasetV2 = () => {
                 <div className="bg-gray-100 rounded-lg px-4 py-3">
                   <div className="flex space-x-2">
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                   </div>
                 </div>
               </div>
