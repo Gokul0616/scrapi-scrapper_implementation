@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, ShieldOff, Terminal, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Terminal, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { User } from '../types';
-import { useAuth } from '../context/AuthContext';
 import { useAlert } from '../context/AlertContext';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
@@ -12,26 +11,26 @@ const TableSkeleton = () => (
         <div className="flex justify-between items-center mb-4">
             <div className="h-8 w-48 bg-gray-200 rounded"></div>
         </div>
-        
-        <div className="bg-white shadow-sm rounded border border-aws-border overflow-hidden">
+
+        <div className="bg-card shadow-sm rounded border border-border overflow-hidden">
             {/* Table Header */}
-            <div className="bg-gray-50 px-6 py-3 border-b border-aws-border flex gap-4">
+            <div className="bg-muted/30 px-6 py-3 border-b border-border flex gap-4">
                 {[1, 2, 3, 4].map(i => (
-                    <div key={i} className="h-4 bg-gray-200 rounded flex-1"></div>
+                    <div key={i} className="h-4 bg-muted rounded flex-1"></div>
                 ))}
             </div>
 
             {/* Rows */}
-            <div className="divide-y divide-aws-border">
+            <div className="divide-y divide-border">
                 {[1, 2, 3, 4, 5].map((i) => (
                     <div key={i} className="px-6 py-4 flex gap-4 items-center">
-                        <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
+                        <div className="h-8 w-8 bg-muted rounded-full"></div>
                         <div className="flex-1 space-y-2">
-                            <div className="h-4 w-32 bg-gray-200 rounded"></div>
-                            <div className="h-3 w-48 bg-gray-100 rounded"></div>
+                            <div className="h-4 w-32 bg-muted rounded"></div>
+                            <div className="h-3 w-48 bg-muted/50 rounded"></div>
                         </div>
-                        <div className="h-6 w-20 bg-gray-200 rounded-full"></div>
-                        <div className="h-6 w-24 bg-gray-200 rounded-full"></div>
+                        <div className="h-6 w-20 bg-muted rounded-full"></div>
+                        <div className="h-6 w-24 bg-muted rounded-full"></div>
                     </div>
                 ))}
             </div>
@@ -40,11 +39,10 @@ const TableSkeleton = () => (
 );
 
 export const TeamPage: React.FC = () => {
-    const { user: currentUser } = useAuth();
     const { showAlert } = useAlert();
     const [teamMembers, setTeamMembers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
-    
+
     // Pagination State
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -71,7 +69,7 @@ export const TeamPage: React.FC = () => {
             if (!response.ok) throw new Error('Failed to fetch team');
 
             const data = await response.json();
-            
+
             // Handle new paginated response format
             if (data.members) {
                 setTeamMembers(data.members);
@@ -131,48 +129,48 @@ export const TeamPage: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-2xl font-bold text-aws-text">Team Management</h1>
+            <h1 className="text-2xl font-bold text-foreground">Team Management</h1>
 
-            <div className="bg-white shadow-sm rounded border border-aws-border overflow-hidden">
+            <div className="bg-card shadow-sm rounded border border-border overflow-hidden">
                 <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-aws-border">
-                        <thead className="bg-gray-50">
+                    <table className="min-w-full divide-y divide-border table-fixed">
+                        <thead className="bg-muted/30">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-bold text-aws-text-secondary uppercase">User</th>
-                                <th className="px-6 py-3 text-left text-xs font-bold text-aws-text-secondary uppercase">Role</th>
-                                <th className="px-6 py-3 text-left text-xs font-bold text-aws-text-secondary uppercase">Terminal Access</th>
-                                <th className="px-6 py-3 text-left text-xs font-bold text-aws-text-secondary uppercase">Status</th>
+                                <th className="px-6 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase">User</th>
+                                <th className="px-6 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase">Role</th>
+                                <th className="px-6 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase">Terminal Access</th>
+                                <th className="px-6 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase">Status</th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-aws-border">
+                        <tbody className="bg-card divide-y divide-border">
                             {teamMembers.map((member) => (
-                                <tr key={member.id} className="hover:bg-blue-50 transition-colors">
+                                <tr key={member.id} className="hover:bg-muted/50 transition-colors">
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex items-center">
-                                            <div className="h-8 w-8 rounded-full bg-aws-nav flex items-center justify-center text-white font-bold text-xs mr-3">
+                                            <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs ring-1 ring-border shadow-sm mr-3">
                                                 {member.username.charAt(0).toUpperCase()}
                                             </div>
                                             <div>
-                                                <div className="text-sm font-medium text-aws-text">{member.username}</div>
-                                                <div className="text-xs text-gray-500">{member.email}</div>
+                                                <div className="text-sm font-medium text-foreground">{member.username}</div>
+                                                <div className="text-[13px] text-muted-foreground">{member.email}</div>
                                             </div>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${member.role === 'owner' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                                        <span className={`px-2 inline-flex text-[12px] leading-5 font-semibold rounded-full ${member.role === 'owner' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400' : 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
                                             }`}>
                                             {member.role}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         {member.role === 'owner' ? (
-                                            <span className="text-xs text-gray-400">Full Access</span>
+                                            <span className="text-[13px] text-muted-foreground/50">Full Access</span>
                                         ) : (
                                             <button
                                                 onClick={() => toggleTerminalAccess(member)}
-                                                className={`flex items-center space-x-1 px-3 py-1 rounded text-xs font-medium transition-colors ${(member.permissions || []).includes('terminal_access')
-                                                        ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                className={`flex items-center space-x-1 px-3 py-1 rounded text-[13px] font-medium transition-colors ${(member.permissions || []).includes('terminal_access')
+                                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/40'
+                                                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
                                                     }`}
                                             >
                                                 <Terminal size={14} />
@@ -182,16 +180,16 @@ export const TeamPage: React.FC = () => {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         {member.is_active ? (
-                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
+                                            <span className="px-2 inline-flex text-[12px] leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">Active</span>
                                         ) : (
-                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Suspended</span>
+                                            <span className="px-2 inline-flex text-[12px] leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400">Suspended</span>
                                         )}
                                     </td>
                                 </tr>
                             ))}
                             {teamMembers.length === 0 && (
                                 <tr>
-                                    <td colSpan={4} className="px-6 py-4 text-center text-gray-500">
+                                    <td colSpan={4} className="px-6 py-4 text-center text-muted-foreground">
                                         No team members found
                                     </td>
                                 </tr>
@@ -202,26 +200,26 @@ export const TeamPage: React.FC = () => {
 
                 {/* Pagination Controls */}
                 {totalPages > 1 && (
-                    <div className="bg-white px-4 py-3 border-t border-aws-border sm:px-6">
+                    <div className="bg-card px-4 py-3 border-t border-border sm:px-6">
                         <div className="flex items-center justify-between">
-                            <div className="text-sm text-aws-text-secondary">
-                                Showing <span className="font-medium">{(page - 1) * limit + 1}</span> to <span className="font-medium">{Math.min(page * limit, totalMembers)}</span> of <span className="font-medium">{totalMembers}</span> results
+                            <div className="text-[13px] text-muted-foreground">
+                                Showing <span className="font-medium text-foreground">{(page - 1) * limit + 1}</span> to <span className="font-medium text-foreground">{Math.min(page * limit, totalMembers)}</span> of <span className="font-medium text-foreground">{totalMembers}</span> results
                             </div>
                             <div className="flex-1 flex justify-end space-x-3">
-                                <button 
+                                <button
                                     onClick={() => setPage(p => Math.max(1, p - 1))}
                                     disabled={page === 1}
-                                    className={`relative inline-flex items-center px-4 py-1.5 border border-gray-300 text-sm font-medium rounded-sm bg-white 
-                                        ${page === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-aws-text hover:bg-gray-50 transition-colors'}`}
+                                    className={`relative inline-flex items-center px-4 py-1.5 border border-border text-[13px] font-medium rounded-sm bg-card 
+                                        ${page === 1 ? 'text-muted-foreground cursor-not-allowed opacity-50' : 'text-foreground hover:bg-muted/50 transition-colors'}`}
                                 >
                                     <ChevronLeft className="h-4 w-4 mr-1" />
                                     Previous
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                                     disabled={page === totalPages}
-                                    className={`relative inline-flex items-center px-4 py-1.5 border border-gray-300 text-sm font-medium rounded-sm bg-white
-                                        ${page === totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-aws-text hover:bg-gray-50 transition-colors'}`}
+                                    className={`relative inline-flex items-center px-4 py-1.5 border border-border text-[13px] font-medium rounded-sm bg-card
+                                        ${page === totalPages ? 'text-muted-foreground cursor-not-allowed opacity-50' : 'text-foreground hover:bg-muted/50 transition-colors'}`}
                                 >
                                     Next
                                     <ChevronRight className="h-4 w-4 ml-1" />

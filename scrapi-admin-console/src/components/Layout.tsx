@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Link, useLocation, Outlet } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { NavLink, useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import {
     LayoutDashboard,
     Users,
@@ -8,212 +9,429 @@ import {
     PlaySquare,
     Settings,
     LogOut,
-    Menu,
-    Bell,
     Search,
-    ChevronDown,
-    X,
     Shield,
     Terminal as TerminalIcon,
     FileText,
     ScrollText,
-    BookOpen
+    BookOpen,
+    PanelLeft,
+    PanelLeftClose,
+    ChevronDown,
+    Menu,
+    X
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
-const SidebarItem = ({ icon: Icon, label, to, active, collapsed }: { icon: any, label: string, to: string, active: boolean, collapsed: boolean }) => (
-    <Link
-        to={to}
-        className={clsx(
-            "flex items-center px-3 py-2 text-sm font-medium transition-colors mb-1 mx-2 rounded-sm",
-            active
-                ? "bg-aws-hover text-white font-bold"
-                : "text-gray-300 hover:bg-aws-hover hover:text-white"
-        )}
-        title={collapsed ? label : undefined}
-    >
-        <Icon size={20} className={clsx("flex-shrink-0", !collapsed && "mr-3")} />
-        {!collapsed && <span>{label}</span>}
-    </Link>
-);
+import CustomTooltip from './CustomTooltip';
 
 export const Layout: React.FC = () => {
     const { user, logout } = useAuth();
+    const { toggleTheme } = useTheme();
     const location = useLocation();
-    const [sidebarOpen, setSidebarOpen] = useState(true);
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const navigate = useNavigate();
+
+    // Check local storage for initial state, default to false
+    const [isCollapsed, setIsCollapsed] = useState(() => {
+        return localStorage.getItem('adminSidebarCollapsed') === 'true';
+    });
+
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        localStorage.setItem('adminSidebarCollapsed', isCollapsed.toString());
+    }, [isCollapsed]);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsUserDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Handle keyboard shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Don't trigger shortcuts when user is typing in input fields
+            const target = e.target as HTMLElement;
+            const isTypingInInput =
+                target.tagName === 'INPUT' ||
+                target.tagName === 'TEXTAREA' ||
+                target.isContentEditable;
+
+            // Check for Cmd+B (Mac) or Ctrl+B (Windows/Linux) to toggle sidebar
+            if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
+                e.preventDefault();
+                setIsCollapsed(prev => !prev);
+            }
+
+            // Check for Cmd+L (Mac) or Ctrl+L (Windows/Linux) to toggle theme
+            if ((e.metaKey || e.ctrlKey) && e.key === 'l') {
+                e.preventDefault();
+                toggleTheme();
+            }
+
+            // Handle S+Key shortcuts - ONLY when NOT typing in input
+            if ((e.key === 's' || e.key === 'S') && !isTypingInInput) {
+                const nextKey = new Promise<string | null>((resolve) => {
+                    const handler = (nextE: KeyboardEvent) => {
+                        resolve(nextE.key.toUpperCase());
+                        window.removeEventListener('keydown', handler);
+                    };
+                    window.addEventListener('keydown', handler);
+                    setTimeout(() => {
+                        window.removeEventListener('keydown', handler);
+                        resolve(null);
+                    }, 1000);
+                });
+
+                nextKey.then((key) => {
+                    const shortcuts: Record<string, string> = {
+                        'D': '/dashboard',
+                        'U': '/users',
+                        'A': '/actors',
+                        'R': '/runs',
+                        'L': '/audit-logs',
+                        'G': '/settings',
+                        'E': '/team',
+                        'T': '/terminal',
+                        'P': '/policies',
+                        'C': '/documentation'
+                    };
+                    if (key && shortcuts[key]) {
+                        navigate(shortcuts[key]);
+                    }
+                });
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [navigate, toggleTheme]);
+
+    // Detect platform for keyboard shortcut display
+    const isMac = navigator.platform?.toUpperCase().indexOf('MAC') >= 0;
+    const shortcutKey = isMac ? '⌘K' : 'Ctrl+K';
+
+    // Type for sidebar items
+    type SidebarItem = {
+        icon?: any;
+        label: string;
+        path?: string;
+        shortcut?: string;
+        type?: 'header';
+    };
 
     // Sidebar items configuration
-    const items = [
-        { icon: LayoutDashboard, label: 'Dashboard', to: '/dashboard' },
+    const items: SidebarItem[] = [
+        { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', shortcut: 'S D' },
         { label: 'Management', type: 'header' },
-        { icon: Users, label: 'Users', to: '/users' },
-        { icon: Bot, label: 'Actors', to: '/actors' },
-        { icon: PlaySquare, label: 'Runs', to: '/runs' },
-        { icon: FileText, label: 'Audit Logs', to: '/audit-logs' },
+        { icon: Users, label: 'Users', path: '/users', shortcut: 'S U' },
+        { icon: Bot, label: 'Actors', path: '/actors', shortcut: 'S A' },
+        { icon: PlaySquare, label: 'Runs', path: '/runs', shortcut: 'S R' },
+        { icon: FileText, label: 'Audit Logs', path: '/audit-logs', shortcut: 'S L' },
     ];
 
-    // Add restricted items
     if (user?.role === 'owner') {
-        items.push({ icon: Shield, label: 'Team', to: '/team' });
+        items.push({ icon: Shield, label: 'Team', path: '/team', shortcut: 'S E' });
     }
 
     if (user?.role === 'owner' || (user?.permissions || []).includes('terminal_access')) {
-        items.push({ icon: TerminalIcon, label: 'Terminal', to: '/terminal' });
+        items.push({ icon: TerminalIcon, label: 'Terminal', path: '/terminal', shortcut: 'S T' });
     }
 
-    // Continue with other items
     items.push(
         { label: 'Content', type: 'header' },
-        { icon: ScrollText, label: 'Policies', to: '/policies' },
+        { icon: ScrollText, label: 'Policies', path: '/policies', shortcut: 'S P' },
         { label: 'Configuration', type: 'header' },
-        { icon: BookOpen, label: 'API Docs', to: '/documentation' },
-        { icon: Settings, label: 'Settings', to: '/settings' }
+        { icon: BookOpen, label: 'API Docs', path: '/documentation', shortcut: 'S C' },
+        { icon: Settings, label: 'Settings', path: '/settings', shortcut: 'S G' }
     );
 
-    const renderSidebarContent = (collapsed: boolean) => (
-        <nav className="flex-1 py-4 overflow-y-auto">
-            {items.map((item, index) => {
-                if (item.type === 'header') {
-                    return (
-                        <div key={index} className={clsx("px-4 py-2 text-xs font-bold text-gray-500 uppercase mt-4 mb-1", collapsed && "hidden")}>
-                            {item.label}
-                        </div>
-                    );
-                }
-                return (
-                    <SidebarItem
-                        key={item.to}
-                        icon={item.icon}
-                        label={item.label!}
-                        to={item.to!}
-                        active={location.pathname.startsWith(item.to!)}
-                        collapsed={collapsed}
-                    />
-                );
-            })}
-        </nav>
-    );
+    const MenuItem = ({ item, isActive, onClick }: { item: SidebarItem, isActive: boolean, onClick: () => void }) => {
+        const content = (
+            <NavLink
+                to={item.path || '#'}
+                onClick={onClick}
+                className={clsx(
+                    "flex items-center space-x-2.5 rounded-md text-xs font-medium transition-colors cursor-pointer w-full",
+                    isCollapsed ? "px-0 py-1.5 justify-center" : "px-2.5 py-1.5",
+                    isActive
+                        ? "bg-accent text-accent-foreground"
+                        : "text-accent-foreground hover:bg-muted hover:text-foreground"
+                )}
+            >
+                <item.icon className="w-4 h-4 flex-shrink-0" />
+                {!isCollapsed && <span>{item.label}</span>}
+            </NavLink>
+        );
+
+        const tooltipContent = (
+            <div className="flex items-center gap-2">
+                {isCollapsed && <span>{item.label}</span>}
+                {item.shortcut && (
+                    <div className={clsx("flex items-center gap-1", isCollapsed ? "ml-2 pl-2 border-l border-border" : "")}>
+                        {item.shortcut.split(' ').map((key, idx) => (
+                            <kbd key={idx} className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-muted text-muted-foreground">{key}</kbd>
+                        ))}
+                    </div>
+                )}
+            </div>
+        );
+
+        return (
+            <div className="w-full">
+                <CustomTooltip content={tooltipContent} isDisabled={!isCollapsed && !item.shortcut}>
+                    <div className="w-full">{content}</div>
+                </CustomTooltip>
+            </div>
+        );
+    };
+
+    const renderSidebarContent = (mobile = false) => {
+        const collapsedState = mobile ? false : isCollapsed;
+        return (
+            <nav className="flex-1 overflow-y-auto px-2.5 py-2 scrollbar-hide">
+                <div className="space-y-0.5">
+                    {items.map((item, index) => {
+                        if (item.type === 'header') {
+                            if (collapsedState) {
+                                return <div key={index} className="my-1.5 mx-2 border-t border-border" />;
+                            }
+                            return (
+                                <div key={index} className="px-2.5 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-2 mb-0.5 pointer-events-none select-none">
+                                    {item.label}
+                                </div>
+                            );
+                        }
+                        return (
+                            <MenuItem
+                                key={item.path || index}
+                                item={item}
+                                isActive={location.pathname.startsWith(item.path || '#')}
+                                onClick={() => {
+                                    if (mobile) setIsMobileMenuOpen(false);
+                                }}
+                            />
+                        );
+                    })}
+                </div>
+            </nav>
+        );
+    };
+
+    const userInitials = user?.username?.substring(0, 2).toUpperCase() || 'AD';
 
     return (
-        <div className="flex flex-col h-screen bg-aws-light">
-            {/* Top Navigation Bar */}
-            <header className="bg-aws-nav text-white h-14 flex items-center justify-between px-4 shadow-md z-50 flex-shrink-0">
-                <div className="flex items-center">
-                    <button
-                        onClick={() => setSidebarOpen(!sidebarOpen)}
-                        className="p-1 mr-4 hover:bg-aws-hover rounded hidden lg:block"
-                    >
-                        <Menu size={24} />
-                    </button>
-                    <button
-                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                        className="p-1 mr-4 hover:bg-aws-hover rounded lg:hidden"
-                    >
-                        <Menu size={24} />
-                    </button>
+        <div className="flex h-screen bg-background text-foreground overflow-hidden">
+            {/* Desktop Sidebar */}
+            <div
+                className={clsx(
+                    "hidden lg:flex flex-col h-full transition-all duration-300 ease-in-out border-r border-border bg-background",
+                    isCollapsed ? "w-[60px]" : "w-[220px]"
+                )}
+            >
+                {/* Header with User Info and Search */}
+                <div className="px-4 py-2.5 border-b border-border">
+                    {!isCollapsed ? (
+                        <>
+                            {/* User Dropdown Profile equivalent */}
+                            <div className="flex items-center justify-between mb-2.5 w-full">
+                                <div className="relative w-full" ref={dropdownRef}>
+                                    <div
+                                        onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                                        className="flex items-center justify-between w-full px-2 py-1.5 hover:bg-muted rounded-md cursor-pointer border border-transparent hover:border-border transition-all"
+                                    >
+                                        <div className="flex items-center space-x-2 w-full overflow-hidden">
+                                            <div className="w-6 h-6 rounded-md bg-blue-600 flex-shrink-0 flex items-center justify-center text-white text-xs font-bold ring-1 ring-border shadow-sm">
+                                                {userInitials}
+                                            </div>
+                                            <div className="flex flex-col overflow-hidden text-left min-w-0 flex-1">
+                                                <span className="text-sm font-semibold text-foreground truncate block w-full pr-2">
+                                                    {user?.username}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                                    </div>
 
-                    <Link to="/" className="flex items-center space-x-2 mr-8">
-                        <img src="/logo.png" alt="Scrapi Logo" className="h-8 w-auto" style={{ filter: 'brightness(0) invert(1)' }} />
-                        <span className="font-bold text-lg tracking-tight">Console</span>
-                    </Link>
-
-                    <div className="hidden md:flex items-center relative">
-                        <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <Search size={14} className="text-gray-400" />
+                                    {/* Dropdown Menu */}
+                                    {isUserDropdownOpen && (
+                                        <div className="absolute top-full left-0 mt-1 w-full min-w-[200px] bg-popover border border-border rounded-md shadow-md z-50">
+                                            <div className="py-1">
+                                                <div className="px-3 py-2 text-xs text-muted-foreground border-b border-border truncate">
+                                                    {user?.email || 'Admin User'}
+                                                </div>
+                                                <button
+                                                    onClick={logout}
+                                                    className="w-full flex items-center px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors cursor-pointer"
+                                                >
+                                                    <LogOut className="w-4 h-4 mr-2" />
+                                                    Sign Out
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                            <input
-                                type="text"
-                                placeholder="Search for services, features, etc."
-                                className="bg-aws-dark text-white text-sm rounded-md pl-9 pr-4 py-1.5 w-96 border border-gray-600 focus:border-aws-blue focus:ring-1 focus:ring-aws-blue focus:outline-none placeholder-gray-400"
-                            />
+
+                            {/* Search Box */}
+                            <div className="flex items-center space-x-2">
+                                <div className="relative flex-1 cursor-not-allowed opacity-70">
+                                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                    <div className="w-full pl-8 pr-16 py-1.5 rounded-md text-xs font-medium border border-border bg-muted/50 text-muted-foreground transition-colors">
+                                        Search...
+                                    </div>
+                                    <div className="absolute right-2 bottom-1.5 pointer-events-none">
+                                        <kbd className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-muted text-muted-foreground">
+                                            {shortcutKey}
+                                        </kbd>
+                                    </div>
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="flex flex-col items-center">
+                            <div className="relative" ref={isCollapsed ? dropdownRef : undefined}>
+                                <div
+                                    onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                                    className="w-8 h-8 mt-1 rounded-md bg-blue-600 flex items-center justify-center text-white text-xs font-bold ring-1 ring-border cursor-pointer shadow-sm"
+                                >
+                                    {userInitials}
+                                </div>
+                                {/* Dropdown Menu */}
+                                {isUserDropdownOpen && (
+                                    <div className="absolute top-0 left-full ml-3 w-48 bg-popover border border-border rounded-md shadow-md z-50">
+                                        <div className="py-1">
+                                            <div className="px-3 py-2 text-xs text-muted-foreground border-b border-border truncate">
+                                                {user?.username} ({user?.role || 'admin'})
+                                            </div>
+                                            <button onClick={logout} className="w-full flex items-center px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors cursor-pointer">
+                                                <LogOut className="w-4 h-4 mr-2" />
+                                                Sign Out
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
 
-                <div className="flex items-center space-x-4">
-                    <button className="p-1 hover:bg-aws-hover rounded relative">
-                        <Bell size={20} />
-                        <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-aws-nav transform translate-x-1/4 -translate-y-1/4"></span>
-                    </button>
+                {renderSidebarContent(false)}
 
-                    <div className="relative group flex items-center space-x-2 cursor-pointer hover:bg-aws-hover px-2 py-1 rounded">
-                        <div className="text-right hidden sm:block">
-                            <p className="text-sm font-bold leading-none">{user?.username}</p>
-                            <p className="text-xs text-gray-400 leading-none mt-1">{user?.organization_name || 'Account ID: 1234-5678'}</p>
+                {/* Bottom Section */}
+                <div className="px-3.5 py-2.5 border-t border-border mt-auto">
+                    {!isCollapsed ? (
+                        <>
+                            <div className="flex justify-between items-center text-xs text-muted-foreground mb-3 px-1">
+                                <span>Role</span>
+                                <span className="font-medium px-2 py-0.5 bg-muted rounded-full text-foreground uppercase text-[10px] border border-border">
+                                    {user?.role || 'admin'}
+                                </span>
+                            </div>
+
+                            {/* Scrapi Logo */}
+                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-border">
+                                <div className="flex items-center space-x-2">
+                                    <div className="w-5 h-5 flex items-center justify-center">
+                                        <img src="/logo.png" alt="Scrapi" className="max-w-full max-h-full dark:brightness-0 dark:invert" />
+                                    </div>
+                                    <span className="text-sm font-semibold text-foreground tracking-tight">
+                                        Scrapi Admin
+                                    </span>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                    <CustomTooltip content={
+                                        <div className="flex items-center gap-2">
+                                            {isCollapsed && <span>Collapse Sidebar</span>}
+                                            <div className={clsx("flex items-center gap-1", isCollapsed ? "ml-2 pl-2 border-l border-border" : "")}>
+                                                {(isMac ? "⌘ B" : "Ctrl B").split(' ').map((key, idx) => (
+                                                    <kbd key={idx} className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-muted text-muted-foreground">{key}</kbd>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    } isDisabled={!isCollapsed}>
+                                        <button
+                                            onClick={() => setIsCollapsed(true)}
+                                            className="p-1.5 rounded transition-colors hover:bg-muted text-muted-foreground cursor-pointer"
+                                        >
+                                            <PanelLeftClose className="w-4 h-4" />
+                                        </button>
+                                    </CustomTooltip>
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="flex flex-col items-center space-y-2 mb-1 mt-1">
+                            <CustomTooltip content={
+                                <div className="flex items-center gap-2">
+                                    <span>Expand Sidebar</span>
+                                    <div className="flex items-center gap-1 ml-2 pl-2 border-l border-border">
+                                        {(isMac ? "⌘ B" : "Ctrl B").split(' ').map((key, idx) => (
+                                            <kbd key={idx} className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-muted text-muted-foreground">{key}</kbd>
+                                        ))}
+                                    </div>
+                                </div>
+                            }>
+                                <button
+                                    onClick={() => setIsCollapsed(false)}
+                                    className="p-1.5 rounded transition-colors hover:bg-muted text-muted-foreground cursor-pointer"
+                                >
+                                    <PanelLeft className="w-4 h-4" />
+                                </button>
+                            </CustomTooltip>
                         </div>
-                        <ChevronDown size={16} className="text-gray-400" />
+                    )}
+                </div>
+            </div>
 
-                        <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden group-hover:block">
-                            <button
-                                onClick={logout}
-                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            >
-                                Sign Out
+            {/* Mobile Header & Sidebar overlay */}
+            <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-background border-b border-border flex items-center justify-between px-4 z-40">
+                <div className="flex items-center space-x-2">
+                    <button onClick={() => setIsMobileMenuOpen(true)} className="p-1.5 -ml-1.5 rounded-md hover:bg-muted text-muted-foreground cursor-pointer">
+                        <Menu className="w-5 h-5" />
+                    </button>
+                    <img src="/logo.png" alt="Scrapi" className="h-6 w-auto dark:brightness-0 dark:invert" />
+                </div>
+                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold ring-1 ring-border">
+                    {userInitials}
+                </div>
+            </div>
+
+            {isMobileMenuOpen && (
+                <div className="fixed inset-0 z-50 lg:hidden">
+                    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)} />
+                    <div className="fixed inset-y-0 left-0 flex flex-col w-[280px] bg-background border-r border-border shadow-xl">
+                        <div className="h-14 flex items-center justify-between px-4 border-b border-border">
+                            <span className="font-bold text-lg">Menu</span>
+                            <button onClick={() => setIsMobileMenuOpen(false)} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground cursor-pointer">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        {renderSidebarContent(true)}
+                        <div className="p-4 border-t border-border">
+                            <button onClick={logout} className="flex items-center text-muted-foreground hover:text-foreground w-full py-2 cursor-pointer transition-colors">
+                                <LogOut className="w-5 h-5 mr-3" />
+                                <span className="font-medium">Sign Out</span>
                             </button>
                         </div>
                     </div>
                 </div>
-            </header>
+            )}
 
-            <div className="flex flex-1 overflow-hidden">
-                {/* Desktop Sidebar */}
-                <aside
-                    className={clsx(
-                        "bg-aws-nav text-white flex-shrink-0 transition-all duration-300 ease-in-out flex flex-col",
-                        sidebarOpen ? "w-64" : "w-16",
-                        "hidden lg:flex"
-                    )}
-                >
-                    {renderSidebarContent(!sidebarOpen)}
-
-                    <div className="p-4 border-t border-gray-700">
-                        <button
-                            onClick={logout}
-                            className={clsx(
-                                "flex items-center text-gray-300 hover:text-white transition-colors w-full",
-                                !sidebarOpen && "justify-center"
-                            )}
-                            title="Sign Out"
-                        >
-                            <LogOut size={20} className={clsx(!sidebarOpen ? "" : "mr-3")} />
-                            {sidebarOpen && <span>Sign Out</span>}
-                        </button>
-                    </div>
-                </aside>
-
-                {/* Mobile Sidebar Overlay */}
-                {mobileMenuOpen && (
-                    <div className="fixed inset-0 z-40 lg:hidden">
-                        <div className="fixed inset-0 bg-gray-900 bg-opacity-75" onClick={() => setMobileMenuOpen(false)}></div>
-                        <div className="fixed inset-y-0 left-0 flex flex-col w-64 bg-aws-nav text-white shadow-xl z-50">
-                            <div className="h-14 flex items-center justify-between px-4 border-b border-gray-700">
-                                <span className="font-bold text-lg">Menu</span>
-                                <button onClick={() => setMobileMenuOpen(false)}>
-                                    <X size={24} />
-                                </button>
-                            </div>
-
-                            {renderSidebarContent(false)}
-
-                            <div className="p-4 border-t border-gray-700">
-                                <button onClick={logout} className="flex items-center text-gray-300 hover:text-white w-full">
-                                    <LogOut size={20} className="mr-3" />
-                                    <span>Sign Out</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Main Content */}
-                <main className="flex-1 overflow-auto bg-aws-light p-6">
-                    <div className="max-w-7xl mx-auto">
-                        <Outlet />
-                    </div>
-                </main>
-            </div>
+            {/* Main Content Area */}
+            <main className="flex-1 overflow-y-auto bg-background p-6 lg:p-8 pt-20 lg:pt-6 transition-colors">
+                <div className="max-w-7xl mx-auto w-full">
+                    <Outlet />
+                </div>
+            </main>
         </div>
     );
 };
+

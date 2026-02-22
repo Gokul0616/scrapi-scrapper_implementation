@@ -1,6 +1,5 @@
 from fastapi import FastAPI, APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -51,7 +50,7 @@ app = FastAPI(
     title="Scrapi - Web Scraping Platform",
     docs_url=None,  # Disable default docs
     redoc_url=None,  # Disable default redoc
-    openapi_url="/api/openapi.json"
+    openapi_url=None  # Disable default openapi.json to protect it
 )
 
 # Create a router with the /api prefix
@@ -136,37 +135,376 @@ async def get_docs_user(
             detail="Could not validate credentials"
         )
 
-@app.get("/api/docs", include_in_schema=False)
-async def custom_swagger_ui_html(current_user: dict = Depends(get_docs_user)):
-    """Protected Swagger UI documentation - requires authentication"""
-    # Check if user is admin or owner
+def _swagger_dark_css() -> str:
+    return """
+        html, body { margin: 0; padding: 0; background: #0b0d11; color: #f1f5f9; }
+        .swagger-ui { background: #0b0d11; filter: invert(0); }
+        .swagger-ui .topbar { display: none; }
+        .swagger-ui .info { margin: 20px 0; background: transparent; }
+        .swagger-ui .info .title { color: #f1f5f9; font-family: 'Inter', sans-serif; }
+        .swagger-ui .info .description { color: #94a3b8; }
+        .swagger-ui .info a { color: #82aaff; text-decoration: none; }
+        .swagger-ui .info a:hover { text-decoration: underline; }
+        
+        /* Operation groups */
+        .swagger-ui .opblock-tag { color: #f1f5f9 !important; border-bottom: 1px solid #1e293b; padding: 10px 20px; }
+        .swagger-ui .opblock-tag:hover { background: #1e293b; }
+        .swagger-ui .opblock-tag small { color: #64748b !important; }
+        
+        /* Operation blocks */
+        .swagger-ui .opblock { background: #161a22; border: 1px solid #334155; border-radius: 8px; margin: 8px 0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .swagger-ui .opblock .opblock-summary { border-bottom: 1px solid rgba(51, 65, 85, 0.5); padding: 10px 20px; }
+        
+        /* PATH VISIBILITY FIX */
+        .swagger-ui .opblock-summary .opblock-summary-path,
+        .swagger-ui .opblock-summary .opblock-summary-path span,
+        .swagger-ui .opblock-summary-path__deprecated { 
+            color: #82aaff !important; 
+            font-weight: 600 !important;
+            font-family: 'JetBrains Mono', monospace;
+            text-shadow: 0 0 1px rgba(0,0,0,0.5);
+        }
+        .swagger-ui .opblock-description-wrapper p,
+        .swagger-ui .opblock-external-docs-wrapper p,
+        .swagger-ui .opblock-title_normal p,
+        .swagger-ui .opblock-summary-description,
+        .swagger-ui .parameter__empty,
+        .swagger-ui .parameter__extension,
+        .swagger-ui .parameter__in { 
+            color: #cbd5e1 !important; 
+            font-size: 14px; 
+        }
+        
+        .swagger-ui .opblock-body { background: #0f172a; padding: 20px; }
+        
+        /* Section Headers (Parameters, Request Body) */
+        .swagger-ui .opblock-section-header {
+            background: #1e293b !important;
+            box-shadow: none !important;
+            border-bottom: 1px solid #334155 !important;
+            padding: 8px 20px !important;
+            min-height: 40px !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+        .swagger-ui .opblock-section-header h4 {
+            color: #f1f5f9 !important;
+            margin: 0 !important;
+        }
+        .swagger-ui .opblock-section-header label {
+            color: #cbd5e1 !important;
+            margin: 0 !important;
+        }
+        
+        /* Media Type Selectors and labels */
+        .swagger-ui .opblock-control-container select,
+        .swagger-ui .opblock-section-header select {
+            background: #0f172a !important;
+            color: #f1f5f9 !important;
+            border: 1px solid #334155 !important;
+            border-radius: 4px;
+            padding: 4px 8px !important;
+        }
+        
+        /* Method badges */
+        .swagger-ui .opblock .opblock-summary-method { border-radius: 4px; font-weight: bold; min-width: 80px; }
+        
+        /* Models / Schema section */
+        .swagger-ui section.models { background: #161a22; border: 1px solid #334155; border-radius: 8px; margin-top: 30px; }
+        .swagger-ui section.models h4 { color: #f1f5f9 !important; padding: 15px 20px; border-bottom: 1px solid #334155; margin: 0; }
+        .swagger-ui section.models h4 svg { fill: #f1f5f9 !important; }
+        .swagger-ui .model-box { background: #0f172a; border-radius: 4px; padding: 10px; margin: 10px 0; }
+        .swagger-ui .model { color: #f1f5f9; }
+        .swagger-ui .model-title { color: #f1f5f9 !important; opacity: 0.9; }
+        .swagger-ui .prop-type { color: #c084fc; }
+        .swagger-ui .prop-format { color: #64748b; font-size: 12px; }
+        .swagger-ui .property { color: #f1f5f9; }
+        .swagger-ui .model .property.primitive { color: #82aaff; }
+        
+        /* Tables */
+        .swagger-ui table thead tr td, .swagger-ui table thead tr th { color: #f1f5f9; border-bottom: 2px solid #334155; padding: 12px; }
+        .swagger-ui table tbody tr td { border-bottom: 1px solid #1e293b; color: #cbd5e1; padding: 12px; }
+        
+        /* Parameters */
+        .swagger-ui .parameter__name { color: #f1f5f9 !important; font-weight: 600 !important; }
+        .swagger-ui .parameter__type { color: #94a3b8; font-style: italic; }
+        .swagger-ui .parameter__in { color: #fbbf24; font-weight: bold; opacity: 0.8; }
+        .swagger-ui .parameter__extension, .swagger-ui .parameter__in { font-family: monospace; }
+        
+        /* Responses */
+        .swagger-ui .response-col_status { color: #f1f5f9; font-weight: bold; }
+        .swagger-ui .response-col_description .markdown p { color: #cbd5e1; }
+        
+        /* Tabs and code blocks */
+        .swagger-ui .tab { border-bottom: 1px solid #334155; }
+        .swagger-ui .tab li { color: #94a3b8; padding: 8px 16px; transition: all 0.2s; }
+        .swagger-ui .tab li:hover { color: #f1f5f9; }
+        .swagger-ui .tab li.active { color: #82aaff; border-bottom: 2px solid #82aaff; }
+        .swagger-ui .microlight { background: #020617 !important; color: #f1f5f9 !important; border-radius: 4px; padding: 15px !important; }
+        .swagger-ui .highlight-code { background: #020617; border-radius: 4px; }
+        
+        /* Inputs and Buttons */
+        .swagger-ui textarea, .swagger-ui input[type=text], .swagger-ui select {
+            background: #1e293b !important;
+            color: #f1f5f9 !important;
+            border: 1px solid #334155 !important;
+            border-radius: 4px !important;
+            padding: 8px 12px !important;
+        }
+        .swagger-ui .btn { 
+            background: #1e293b; 
+            color: #f1f5f9; 
+            border: 1px solid #334155; 
+            border-radius: 4px;
+            padding: 6px 20px;
+            transition: all 0.2s;
+        }
+        .swagger-ui .btn:hover { background: #334155; border-color: #475569; }
+        .swagger-ui .btn.authorize { border-color: #10b981; color: #10b981; }
+        .swagger-ui .btn.authorize svg { fill: #10b981; }
+        .swagger-ui .btn.execute { background: #3b82f6; border-color: #2563eb; color: #ffffff; font-weight: bold; }
+        .swagger-ui .btn.execute:hover { background: #2563eb; }
+        
+        /* Dialogs / Modals */
+        .swagger-ui .dialog-ux .modal-ux { background: #161a22; border: 1px solid #334155; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
+        .swagger-ui .dialog-ux .modal-ux-header { background: #0f172a; border-bottom: 1px solid #334155; padding: 15px 20px; }
+        .swagger-ui .dialog-ux .modal-ux-header h3 { color: #f1f5f9; }
+        .swagger-ui .dialog-ux .modal-ux-content { padding: 20px; }
+        .swagger-ui .dialog-ux .modal-ux-inside label { color: #94a3b8; margin-bottom: 8px; display: block; }
+        
+        /* Specific method colors on dark */
+        .swagger-ui .opblock.opblock-get { border-color: #1d4ed8; }
+        .swagger-ui .opblock.opblock-get .opblock-summary { background: rgba(29, 78, 216, 0.1); }
+        .swagger-ui .opblock.opblock-post { border-color: #047857; }
+        .swagger-ui .opblock.opblock-post .opblock-summary { background: rgba(4, 120, 87, 0.1); }
+        .swagger-ui .opblock.opblock-put { border-color: #b45309; }
+        .swagger-ui .opblock.opblock-put .opblock-summary { background: rgba(180, 83, 9, 0.1); }
+        .swagger-ui .opblock.opblock-delete { border-color: #b91c1c; }
+        .swagger-ui .opblock.opblock-delete .opblock-summary { background: rgba(185, 28, 28, 0.1); }
+        
+        /* Various fixes */
+        .swagger-ui .renderedMarkdown code { background: #1e293b; color: #fbbf24; padding: 2px 4px; border-radius: 4px; }
+        .swagger-ui .scheme-container { background: #0f172a; border-top: 1px solid #334155; border-bottom: 1px solid #334155; padding: 20px 0; margin-bottom: 20px; }
+        .swagger-ui .servers-title { color: #94a3b8; }
+        .swagger-ui .arrow { fill: #94a3b8; }
+        .swagger-ui .model-toggle:after { filter: invert(1); }
+    """
+
+def _swagger_light_css() -> str:
+    return """
+        html, body { margin: 0; padding: 0; background: #ffffff; color: #1a1a2e; }
+        .swagger-ui { background: #ffffff; }
+        .swagger-ui .topbar { display: none; }
+    """
+
+def _redoc_dark_theme() -> str:
+    return '''{
+        "colors": {
+            "primary": {"main": "#82aaff"},
+            "text": {"primary": "#f1f5f9", "secondary": "#94a3b8"},
+            "border": {"light": "#334155", "dark": "#1e293b"},
+            "responses": {
+                "success": {"color": "#10b981", "backgroundColor": "rgba(16, 185, 129, 0.1)"},
+                "error": {"color": "#ef4444", "backgroundColor": "rgba(239, 68, 68, 0.1)"}
+            },
+            "http": {
+                "get": "#3b82f6",
+                "post": "#10b981",
+                "put": "#f59e0b",
+                "delete": "#ef4444"
+            }
+        },
+        "sidebar": {
+            "backgroundColor": "#0b0d11",
+            "textColor": "#cbd5e1",
+            "activeTextColor": "#82aaff",
+            "groupItems": {"verticalSpacing": "10"}
+        },
+        "rightPanel": {
+            "backgroundColor": "#0f172a",
+            "textColor": "#cbd5e1",
+            "width": "40%"
+        },
+        "schema": {
+            "nestedBackground": "#161a22",
+            "typeNameColor": "#c084fc",
+            "typeTitleColor": "#82aaff"
+        },
+        "typography": {
+            "fontSize": "15px",
+            "fontFamily": "Inter, sans-serif",
+            "headings": {"fontFamily": "Inter, sans-serif", "fontWeight": "600"},
+            "code": {
+                "backgroundColor": "#020617",
+                "color": "#f1f5f9",
+                "fontFamily": "JetBrains Mono, monospace"
+            }
+        }
+    }'''
+
+def _redoc_light_theme() -> str:
+    return '''{
+        "colors": {"primary": {"main": "#3b82f6"}},
+        "sidebar": {"backgroundColor": "#f8fafc", "textColor": "#1e293b"},
+        "rightPanel": {"backgroundColor": "#f1f5f9", "textColor": "#1e293b"}
+    }'''
+
+@app.get("/api/openapi.json", include_in_schema=False)
+async def get_openapi(current_user: dict = Depends(get_docs_user)):
+    """Protected OpenAPI JSON - requires authentication"""
     if current_user.get("role") not in ["admin", "owner"]:
         return JSONResponse(
             status_code=403,
             content={"detail": "Access denied. Admin or Owner privileges required."}
         )
-    return get_swagger_ui_html(
-        openapi_url="/api/openapi.json",
-        title=f"{app.title} - Swagger UI",
-        oauth2_redirect_url=None,
-        swagger_js_url="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-bundle.js",
-        swagger_css_url="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui.css",
-    )
+    return app.openapi()
+
+@app.get("/api/docs", include_in_schema=False)
+async def custom_swagger_ui_html(current_user: dict = Depends(get_docs_user), theme: Optional[str] = "dark"):
+    """Protected Swagger UI documentation - requires authentication"""
+    if current_user.get("role") not in ["admin", "owner"]:
+        return JSONResponse(
+            status_code=403,
+            content={"detail": "Access denied. Admin or Owner privileges required."}
+        )
+    
+    is_dark = (theme or "dark") == "dark"
+    extra_css = _swagger_dark_css() if is_dark else _swagger_light_css()
+    
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>{app.title} - Swagger UI</title>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui.css" >
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+        <style>{extra_css}</style>
+    </head>
+    <body>
+        <div id="swagger-ui"></div>
+        <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"> </script>
+        <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js"> </script>
+        <script>
+        window.onload = function() {{
+            window.ui = SwaggerUIBundle({{
+                url: "/api/openapi.json" + window.location.search,
+                dom_id: '#swagger-ui',
+                presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+                layout: "StandaloneLayout",
+                deepLinking: true,
+                showExtensions: true,
+                showCommonExtensions: true,
+                requestInterceptor: function(request) {{
+                    const params = new URLSearchParams(window.location.search);
+                    const token = params.get('token');
+                    if (token) request.headers['Authorization'] = 'Bearer ' + token;
+                    return request;
+                }}
+            }})
+
+            // CLEANUP: Hide the token from the OpenAPI JSON link text in the UI
+            const observer = new MutationObserver(() => {{
+                const urlLink = document.querySelector('.info .url');
+                if (urlLink && urlLink.innerText.includes('token=')) {{
+                    urlLink.innerText = "/api/openapi.json";
+                }}
+            }});
+            observer.observe(document.getElementById('swagger-ui'), {{ childList: true, subtree: true }});
+        }}
+        </script>
+    </body>
+    </html>
+    """
+    return HTMLResponse(html)
 
 @app.get("/api/redoc", include_in_schema=False)
-async def redoc_html(current_user: dict = Depends(get_docs_user)):
+async def redoc_html(current_user: dict = Depends(get_docs_user), theme: Optional[str] = "dark"):
     """Protected ReDoc documentation - requires authentication"""
-    # Check if user is admin or owner
     if current_user.get("role") not in ["admin", "owner"]:
         return JSONResponse(
             status_code=403,
             content={"detail": "Access denied. Admin or Owner privileges required."}
         )
-    return get_redoc_html(
-        openapi_url="/api/openapi.json",
-        title=f"{app.title} - ReDoc",
-        redoc_js_url="https://cdn.jsdelivr.net/npm/redoc@2.0.0/bundles/redoc.standalone.js",
-    )
+
+    is_dark = (theme or "dark") == "dark"
+    redoc_theme = _redoc_dark_theme() if is_dark else _redoc_light_theme()
+    bg = "#0b0d11" if is_dark else "#ffffff"
+    text_color = "#f1f5f9" if is_dark else "#1e293b"
+    
+    extra_css = f"""
+        body {{ margin: 0; padding: 0; background: {bg}; color: {text_color}; font-family: 'Inter', sans-serif; }}
+        [data-role="search-input"] {{ 
+            background: {"#1e293b" if is_dark else "#f1f5f9"} !important; 
+            color: {text_color} !important; 
+            border: 1px solid {"#334155" if is_dark else "#e2e8f0"} !important;
+            border-radius: 4px !important;
+        }}
+        .api-content {{ background: {bg} !important; }}
+        
+        /* Fix ReDoc Dim Labels (Authorizations, Schema titles, etc) */
+        h5 {{ color: {"#82aaff" if is_dark else "inherit"} !important; opacity: 1 !important; }}
+        label {{ color: {text_color} !important; opacity: 1 !important; }}
+        
+        /* Targeting ReDoc specifically for Headers and Titles */
+        .sc-gxOMlj, .sc-dlnjwi, .sc-hKgILg {{ color: {"#82aaff" if is_dark else "inherit"} !important; opacity: 1 !important; text-transform: uppercase; font-weight: 600; font-size: 12px; }}
+        
+        /* Response Schema and Authorization Labels */
+        div[role="tabpanel"] h5, 
+        div[role="tabpanel"] span,
+        .sc-jMhqS {{ 
+            color: {"#f1f5f9" if is_dark else "inherit"} !important; 
+            opacity: 1 !important; 
+        }}
+        
+        /* Response Schema Title */
+        .sc-hLBpMG {{ color: {"#94a3b8" if is_dark else "inherit"} !important; opacity: 1 !important; }}
+        
+        /* Schema 'any', 'string' labels */
+        .sc-eCImPb {{ color: {"#c084fc" if is_dark else "inherit"} !important; }}
+
+        .redoc-wrap {{ background: {bg}; }}
+        /* Custom scrollbar for ReDoc */
+        ::-webkit-scrollbar {{ width: 8px; height: 8px; }}
+        ::-webkit-scrollbar-track {{ background: {bg}; }}
+        ::-webkit-scrollbar-thumb {{ background: {"#334155" if is_dark else "#cbd5e1"}; border-radius: 10px; }}
+        ::-webkit-scrollbar-thumb:hover {{ background: {"#475569" if is_dark else "#94a3b8"}; }}
+    """
+
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>{app.title} - ReDoc</title>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+        <style>{extra_css}</style>
+    </head>
+    <body>
+        <div id="redoc-container"></div>
+        <script src="https://cdn.jsdelivr.net/npm/redoc@2.0.0/bundles/redoc.standalone.js"> </script>
+        <script>
+            const specUrl = "/api/openapi.json" + window.location.search;
+            const themeOptions = {redoc_theme};
+            
+            Redoc.init(
+                specUrl,
+                {{
+                    scrollYOffset: 0,
+                    hideDownloadButton: false,
+                    expandResponses: "200,201",
+                    theme: themeOptions,
+                    nativeScrollbars: false
+                }},
+                document.getElementById('redoc-container')
+            );
+        </script>
+    </body>
+    </html>
+    """
+    return HTMLResponse(html)
 
 # Add a root health endpoint for Kubernetes ingress
 @app.get("/")

@@ -32,7 +32,7 @@ export const TerminalPage: React.FC = () => {
         if (!terminalRef.current || !user) return;
 
         let isCleaningUp = false;
-        let reconnectTimeout: NodeJS.Timeout;
+        let reconnectTimeout: ReturnType<typeof setTimeout> | undefined = undefined;
 
         // Initialize xterm.js
         const term = new Terminal({
@@ -67,7 +67,7 @@ export const TerminalPage: React.FC = () => {
         term.loadAddon(fitAddon);
 
         term.open(terminalRef.current);
-        
+
         // Use setTimeout to ensure terminal is fully mounted before fitting
         setTimeout(() => {
             if (!isCleaningUp) {
@@ -89,7 +89,7 @@ export const TerminalPage: React.FC = () => {
 
         const clientId = Math.random().toString(36).substring(7);
         const wsUrl = `${getWebSocketURL()}/api/terminal/ws/${clientId}?token=${token}`;
-        
+
         console.log('Connecting to WebSocket:', wsUrl);
         const ws = new WebSocket(wsUrl);
 
@@ -129,7 +129,7 @@ export const TerminalPage: React.FC = () => {
                 console.log('WebSocket closed:', event.code, event.reason);
                 setConnected(false);
                 term.write('\r\n\x1b[31mDisconnected from backend\x1b[0m\r\n');
-                
+
                 if (event.code !== 1000) { // Not a normal closure
                     setConnectionError(`Connection closed: ${event.reason || 'Unknown reason'}`);
                 }
@@ -189,15 +189,15 @@ export const TerminalPage: React.FC = () => {
     }, [user, navigate]);
 
     return (
-        <div className="h-[calc(100vh-100px)] bg-[#1a1b26] rounded-lg p-2 overflow-hidden flex flex-col shadow-xl">
+        <div className="h-[calc(100vh-100px)] bg-card border border-border rounded-lg p-2 overflow-hidden flex flex-col shadow-sm">
             <div className="flex justify-between items-center mb-2 px-2">
                 <div className="flex items-center space-x-2">
                     <div className={`w-3 h-3 rounded-full ${connected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
-                    <span className="text-gray-400 text-xs font-mono">
+                    <span className="text-muted-foreground text-[12px] font-mono">
                         {connected ? 'CONNECTED' : connectionError || 'DISCONNECTED'}
                     </span>
                 </div>
-                <div className="text-gray-500 text-xs text-right">
+                <div className="text-muted-foreground/50 text-[12px] text-right">
                     Only authorized personnel • Monitor access logged
                 </div>
             </div>

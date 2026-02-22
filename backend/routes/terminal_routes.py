@@ -10,6 +10,9 @@ import subprocess
 import asyncio
 import logging
 import json
+import tempfile
+import shutil
+from pathlib import Path
 from auth import get_current_user, decode_token
 
 # Configure logging
@@ -71,9 +74,6 @@ async def read_from_pty(client_id: str, fd: int):
                     # EOF
                     logger.info(f"EOF or no data from PTY for {client_id}")
                     break
-                # Send data to websocket
-                # xterm.js expects string data, but raw bytes might be needed for some encodings.
-                # Usually safely decodable as utf-8.
                 try:
                     valid_str = data.decode('utf-8', 'replace')
                     await manager.send_personal_message(valid_str, client_id)
@@ -101,15 +101,6 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str, token: str):
         user_id = user_info.get("sub")
         role = user_info.get("role")
         
-        # Check permissions: Owner OR 'terminal_access' permission
-        # To strictly check permissions we would need to query DB, but we put permissions in token?
-        # If permissions are NOT in token, we should query DB or update token logic.
-        # For now, let's assume valid token means user is logged in. 
-        # We perform a double-check against DB logic if needed, but for performance let's trust token + an extra DB check if critical.
-        
-        # NOTE: WE NEED TO FETCH USER TO CHECK PERMISSIONS IF THEY ARE NOT IN TOKEN (Token update in auth.py comes next)
-        # But wait, we haven't updated auth.py to put permissions in token yet. 
-        # So we must fetch user from DB here to be safe.
         from database import get_db
         db = get_db()
         if db is None:
@@ -136,10 +127,9 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str, token: str):
     await manager.connect(websocket, client_id)
     
     # Create PTY
-    # Use absolute path to shell
-    shell = os.environ.get('SHELL', '/bin/bash')
+    shell = os.environ.get('SHELL', '/bin/zsh' if os.path.exists('/bin/zsh') else '/bin/bash')
     if not os.path.exists(shell):
-        shell = '/bin/sh'  # Fallback to sh
+        shell = '/bin/sh'
     
     logger.info(f"Starting terminal with shell: {shell}")
     
@@ -153,43 +143,126 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str, token: str):
     if pid == 0:
         # Child process
         try:
-            os.execv(shell, [shell])
+            # Resolve absolute project root
+            project_root = str(Path(__file__).resolve().parent.parent.parent)
+            
+            # Start inside the project root
+            os.chdir(project_root)
+            
+            # Set critical environment variables
+            os.environ['PROJECT_ROOT'] = project_root
+            os.environ['HOME'] = project_root
+            
+            # ---------------------------------------------------------------
+            # CROSS-SHELL RESTRICTION STRATEGY:
+            # 
+            # Supports both BASH and ZSH.
+            # BASH uses PROMPT_COMMAND.
+            # ZSH uses precmd_functions.
+            # ---------------------------------------------------------------
+            
+            restrict_script = f'''
+# === SCRAPI ADMIN TERMINAL RESTRICTION ===
+export PROJECT_ROOT="{project_root}"
+export HOME="{project_root}"
+
+# Guard function to enforce project root
+_scrapi_enforce_root() {{
+    local cwd
+    cwd="$(pwd -L 2>/dev/null || pwd)"
+    
+    # Check if we are still within project root
+    if [[ "$cwd" != "{project_root}"* ]]; then
+        echo ""
+        echo -e "\\033[1;31m[SCRAPI] Access denied:\\033[0m Cannot leave project directory."
+        echo -e "\\033[33mReturning to: {project_root}\\033[0m"
+        builtin cd "{project_root}" 2>/dev/null
+    fi
+}}
+
+# BASH setup
+if [ -n "$BASH_VERSION" ]; then
+    PROMPT_COMMAND="_scrapi_enforce_root; $PROMPT_COMMAND"
+fi
+
+# ZSH setup
+if [ -n "$ZSH_VERSION" ]; then
+    autoload -Uz add-zsh-hook
+    add-zsh-hook precmd _scrapi_enforce_root
+fi
+
+# SH setup (basic support via PS1 if possible, but limited)
+if [ -z "$BASH_VERSION" ] && [ -z "$ZSH_VERSION" ]; then
+    export PS1="`_scrapi_enforce_root`$PS1"
+fi
+
+# Function overrides for immediate feedback
+cd() {{
+    if [ "$#" -eq 0 ] || [ "$1" = "~" ]; then
+        builtin cd "{project_root}"
+    else
+        builtin cd "$@" 2>/dev/null || {{ echo -e "\\033[31mcd: no such directory\\033[0m"; return 1; }}
+    fi
+}}
+alias pushd='cd'
+alias popd='cd {project_root}'
+builtin cd "{project_root}" 2>/dev/null
+clear
+echo -e "\\033[1;32m╔══════════════════════════════════════════════════════════╗\\033[0m"
+echo -e "\\033[1;32m║        Welcome to Scrapi Admin Terminal                  ║\\033[0m"
+echo -e "\\033[1;32m╚══════════════════════════════════════════════════════════╝\\033[0m"
+echo ""
+'''
+
+            # We need to make sure the shell actually SOURCES this script.
+            # For BASH, --rcfile works.
+            # For ZSH, we can use ZDOTDIR or source it via a temporary .zshrc.
+            
+            temp_dir = tempfile.mkdtemp(prefix="scrapi_term_")
+            init_file_path = os.path.join(temp_dir, "init.sh")
+            with open(init_file_path, "w") as f:
+                f.write(restrict_script)
+            
+            if 'zsh' in shell:
+                # For zsh, we create a .zshrc in the temp dir and set ZDOTDIR
+                zshrc_path = os.path.join(temp_dir, ".zshrc")
+                with open(zshrc_path, "w") as f:
+                    f.write(f'source {init_file_path}\n')
+                    # Also source system zshrc if it exists to keep common aliases/settings
+                    if os.path.exists('/etc/zshrc'):
+                        f.write('source /etc/zshrc\n')
+                
+                os.environ['ZDOTDIR'] = temp_dir
+                os.execv(shell, [shell])
+            elif 'bash' in shell:
+                os.execv(shell, [shell, '--rcfile', init_file_path])
+            else:
+                # Fallback for other shells
+                os.environ['ENV'] = init_file_path
+                os.execv(shell, [shell, '-i'])
+                
         except Exception as e:
             logger.error(f"Failed to exec shell: {e}")
             exit(1)
     else:
         # Parent process
         manager.fd_map[client_id] = fd
-        # We don't have exactly process object here from pty.fork(), 
-        # but we have pid. cleaning up might need os.waitpid(pid)
-        # To keep it simple in python, we might use subprocess.Popen with pty if needed, 
-        # but pty.fork is standard for terminals.
-        
-        # Start background task to read from pty
         asyncio.create_task(read_from_pty(client_id, fd))
         
         try:
             while True:
                 data = await websocket.receive_text()
-                # If data is a resize command (custom protocol), handle it.
-                # Or if it starts with special char?
-                # Simple implementation: All text is input, unless JSON for resize.
-                
                 try:
                     parsed = json.loads(data)
                     if isinstance(parsed, dict) and parsed.get('type') == 'resize':
                         cols = parsed.get('cols', 80)
                         rows = parsed.get('rows', 24)
-                        # Set window size
                         winsize = struct.pack("HHHH", rows, cols, 0, 0)
                         fcntl.ioctl(fd, termios.TIOCSWINSZ, winsize)
                         continue
                 except json.JSONDecodeError:
                     pass
-                
-                # Write to PTY
                 os.write(fd, data.encode('utf-8'))
-                
         except WebSocketDisconnect:
             manager.disconnect(client_id)
         except Exception as e:

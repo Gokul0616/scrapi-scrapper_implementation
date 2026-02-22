@@ -22,15 +22,15 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon: Icon, color
     };
 
     return (
-        <div className="bg-white rounded shadow-sm p-6 border border-aws-border hover:shadow-md transition-shadow">
+        <div className="bg-card rounded shadow-sm p-6 border border-border hover:shadow-md hover:-translate-y-1 transition-all">
             <div className="flex items-center justify-between">
                 <div>
-                    <p className="text-sm font-medium text-aws-text-secondary truncate">{title}</p>
+                    <p className="text-sm font-medium text-muted-foreground truncate">{title}</p>
                     <div className="mt-1 flex items-baseline">
-                        <p className="text-3xl font-semibold text-aws-text">{value}</p>
+                        <p className="text-3xl font-semibold text-card-foreground">{value}</p>
                     </div>
                 </div>
-                <div className={clsx("p-3 rounded-full bg-gray-50", colorClasses[color])}>
+                <div className={clsx("p-3 rounded-full bg-muted/50", colorClasses[color])}>
                     <Icon size={24} />
                 </div>
             </div>
@@ -44,31 +44,31 @@ const DashboardSkeleton = () => (
         {/* Metric Cards Skeleton */}
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="bg-white rounded shadow-sm p-6 border border-aws-border">
+                <div key={i} className="bg-card rounded shadow-sm p-6 border border-border">
                     <div className="flex items-center justify-between">
                         <div>
-                            <div className="h-4 w-24 bg-gray-200 rounded mb-2"></div>
-                            <div className="h-8 w-16 bg-gray-200 rounded"></div>
+                            <div className="h-4 w-24 bg-muted rounded mb-2"></div>
+                            <div className="h-8 w-16 bg-muted rounded"></div>
                         </div>
-                        <div className="h-12 w-12 bg-gray-200 rounded-full"></div>
+                        <div className="h-12 w-12 bg-muted rounded-full"></div>
                     </div>
                 </div>
             ))}
         </div>
 
         {/* Recent Activity Skeleton */}
-        <div className="bg-white shadow-sm rounded border border-aws-border p-6">
-            <div className="h-6 w-32 bg-gray-200 rounded mb-6"></div>
+        <div className="bg-card shadow-sm rounded border border-border p-6">
+            <div className="h-6 w-32 bg-muted rounded mb-6"></div>
             <div className="space-y-6">
                 {[1, 2, 3, 4, 5].map((i) => (
                     <div key={i} className="flex space-x-3">
-                        <div className="h-8 w-8 bg-gray-200 rounded-full flex-shrink-0"></div>
+                        <div className="h-8 w-8 bg-muted rounded-full flex-shrink-0"></div>
                         <div className="flex-1 space-y-2">
                             <div className="flex justify-between">
-                                <div className="h-4 w-64 bg-gray-200 rounded"></div>
-                                <div className="h-4 w-16 bg-gray-200 rounded"></div>
+                                <div className="h-4 w-64 bg-muted rounded"></div>
+                                <div className="h-4 w-16 bg-muted rounded"></div>
                             </div>
-                            <div className="h-3 w-32 bg-gray-100 rounded"></div>
+                            <div className="h-3 w-32 bg-muted/50 rounded"></div>
                         </div>
                     </div>
                 ))}
@@ -158,34 +158,34 @@ export const Dashboard: React.FC = () => {
                 />
             </div>
 
-            <div className="bg-white shadow-sm rounded border border-aws-border p-6">
-                <h3 className="text-lg leading-6 font-medium text-aws-text mb-4">Recent Activity</h3>
+            <div className="bg-card shadow-sm rounded border border-border p-6">
+                <h3 className="text-lg leading-6 font-medium text-foreground mb-4">Recent Activity</h3>
                 <div className="flow-root">
                     <ul className="-mb-8">
                         {stats.recent_activity.map((item, itemIdx) => (
                             <li key={item.id}>
                                 <div className="relative pb-8">
                                     {itemIdx !== stats.recent_activity.length - 1 ? (
-                                        <span className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true" />
+                                        <span className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-border" aria-hidden="true" />
                                     ) : null}
                                     <div className="relative flex space-x-3">
                                         <div>
                                             <span className={clsx(
-                                                "h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white",
-                                                item.status === 'succeeded' ? "bg-green-500" : 
-                                                item.status === 'failed' ? "bg-red-500" : "bg-aws-blue"
+                                                "h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-background",
+                                                item.status === 'succeeded' ? "bg-green-500" :
+                                                    item.status === 'failed' ? "bg-red-500" : "bg-blue-600"
                                             )}>
                                                 {item.status === 'succeeded' ? <CheckCircle className="h-5 w-5 text-white" /> : <Play className="h-5 w-5 text-white" />}
                                             </span>
                                         </div>
                                         <div className="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
                                             <div>
-                                                <p className="text-sm text-aws-text-secondary">
+                                                <p className="text-sm text-muted-foreground">
                                                     {item.status === 'succeeded' ? 'Run completed successfully' : `Run ${item.status}`}
-                                                    <span className="font-medium text-aws-text"> {item.actor_name}</span>
+                                                    <span className="font-medium text-foreground"> {item.actor_name}</span>
                                                 </p>
                                             </div>
-                                            <div className="text-right text-sm whitespace-nowrap text-gray-500">
+                                            <div className="text-right text-sm whitespace-nowrap text-muted-foreground">
                                                 <time>{item.hours_ago === 0 ? 'Just now' : `${item.hours_ago}h ago`}</time>
                                             </div>
                                         </div>
@@ -194,7 +194,7 @@ export const Dashboard: React.FC = () => {
                             </li>
                         ))}
                         {stats.recent_activity.length === 0 && (
-                            <p className="text-sm text-gray-500 italic">No recent activity found.</p>
+                            <p className="text-sm text-muted-foreground italic">No recent activity found.</p>
                         )}
                     </ul>
                 </div>

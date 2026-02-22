@@ -34,35 +34,35 @@ const PLAN_OPTIONS = [
 const TableSkeleton = () => (
     <div className="space-y-6 animate-pulse">
         <div className="flex justify-between items-center mb-4">
-             <div className="h-8 w-48 bg-gray-200 rounded"></div>
-             <div className="h-9 w-24 bg-gray-200 rounded"></div>
+            <div className="h-8 w-48 bg-gray-200 rounded"></div>
+            <div className="h-9 w-24 bg-gray-200 rounded"></div>
         </div>
-        
-        <div className="bg-white shadow-sm rounded border border-aws-border overflow-hidden">
-             {/* Toolbar Skeleton */}
-            <div className="p-4 border-b border-aws-border flex flex-col sm:flex-row gap-4 justify-between items-center bg-gray-50">
-                <div className="h-9 w-full sm:w-96 bg-gray-200 rounded"></div>
-                <div className="h-9 w-24 bg-gray-200 rounded"></div>
+
+        <div className="bg-card shadow-sm rounded border border-border overflow-hidden">
+            {/* Toolbar Skeleton */}
+            <div className="p-4 border-b border-border flex flex-col sm:flex-row gap-4 justify-between items-center bg-muted/30">
+                <div className="h-9 w-full sm:w-96 bg-muted rounded"></div>
+                <div className="h-9 w-24 bg-muted rounded"></div>
             </div>
 
             {/* Table Header */}
-            <div className="bg-gray-50 px-6 py-3 border-b border-aws-border flex gap-4">
+            <div className="bg-muted/30 px-6 py-3 border-b border-border flex gap-4">
                 {[1, 2, 3, 4, 5].map(i => (
-                    <div key={i} className="h-4 bg-gray-200 rounded flex-1"></div>
+                    <div key={i} className="h-4 bg-muted rounded flex-1"></div>
                 ))}
             </div>
 
             {/* Rows */}
-            <div className="divide-y divide-aws-border">
+            <div className="divide-y divide-border">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
                     <div key={i} className="px-6 py-4 flex gap-4 items-center">
-                        <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
+                        <div className="h-8 w-8 bg-muted rounded-full"></div>
                         <div className="flex-1 space-y-2">
-                             <div className="h-4 w-32 bg-gray-200 rounded"></div>
-                             <div className="h-3 w-48 bg-gray-100 rounded"></div>
+                            <div className="h-4 w-32 bg-muted rounded"></div>
+                            <div className="h-3 w-48 bg-muted/50 rounded"></div>
                         </div>
-                        <div className="h-6 w-20 bg-gray-200 rounded-full"></div>
-                        <div className="h-4 w-24 bg-gray-200 rounded"></div>
+                        <div className="h-6 w-20 bg-muted rounded-full"></div>
+                        <div className="h-4 w-24 bg-muted rounded"></div>
                     </div>
                 ))}
             </div>
@@ -77,7 +77,7 @@ export const UsersPage: React.FC = () => {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    
+
     // Pagination State
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -117,7 +117,7 @@ export const UsersPage: React.FC = () => {
                 page: page.toString(),
                 limit: limit.toString(),
             });
-            
+
             if (searchTerm) {
                 queryParams.append('search', searchTerm);
             }
@@ -191,7 +191,7 @@ export const UsersPage: React.FC = () => {
                 const errorData = await response.json();
                 throw new Error(errorData.detail || 'Action failed');
             }
-            
+
             // Update local state optimistic or refetch
             setUsers(users.map(u => u.id === user.id ? { ...u, is_active: !u.is_active } : u));
             showAlert(`User ${action}ed successfully`, 'success');
@@ -237,50 +237,49 @@ export const UsersPage: React.FC = () => {
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <h1 className="text-2xl font-bold text-aws-text">User Management</h1>
-                <button className="bg-aws-orange hover:bg-orange-600 text-white px-4 py-2 rounded-sm text-sm font-medium shadow-sm transition-colors">
+                <h1 className="text-2xl font-bold text-foreground">User Management</h1>
+                <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-sm text-sm font-medium shadow-sm transition-colors">
                     Add User
                 </button>
             </div>
 
-            <div className="bg-white shadow-sm rounded border border-aws-border overflow-hidden">
-                <div className="p-4 border-b border-aws-border flex flex-col sm:flex-row gap-4 justify-between items-center bg-gray-50">
+            <div className="bg-card shadow-sm rounded border border-border overflow-hidden">
+                <div className="p-4 border-b border-border flex flex-col sm:flex-row gap-4 justify-between items-center bg-muted/30">
                     <div className="relative w-full sm:w-96">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search className="h-4 w-4 text-gray-400" />
+                            <Search className="h-4 w-4 text-muted-foreground" />
                         </div>
                         <input
                             type="text"
-                            className="block w-full pl-9 pr-3 py-1.5 border border-gray-300 rounded-sm leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-aws-blue focus:border-aws-blue sm:text-sm transition-shadow"
+                            className="block w-full pl-9 pr-3 py-1.5 border border-border rounded-sm leading-5 bg-card placeholder-muted-foreground text-foreground focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-shadow"
                             placeholder="Search users..."
                             value={searchTerm}
                             onChange={handleSearch}
                         />
                     </div>
-                    <button 
+                    <button
                         onClick={() => setShowFilters(!showFilters)}
-                        className={`flex items-center space-x-2 px-3 py-1.5 border rounded-sm text-sm font-medium transition-colors ${
-                            hasActiveFilters 
-                                ? 'text-white bg-aws-blue border-aws-blue' 
-                                : 'text-aws-text hover:text-aws-blue border-gray-300 bg-white'
-                        }`}
+                        className={`flex items-center space-x-2 px-3 py-1.5 border rounded-sm text-sm font-medium transition-colors ${hasActiveFilters
+                                ? 'text-white bg-blue-600 border-blue-600'
+                                : 'text-foreground hover:text-blue-500 border-border bg-card'
+                            }`}
                     >
                         <Filter className="h-4 w-4" />
                         <span>Filters</span>
-                        {hasActiveFilters && <span className="ml-1 px-1.5 py-0.5 text-xs bg-white text-aws-blue rounded-full">•</span>}
+                        {hasActiveFilters && <span className="ml-1 px-1.5 py-0.5 text-xs bg-white text-blue-600 rounded-full">•</span>}
                     </button>
                 </div>
 
                 {/* Filter Panel */}
                 {showFilters && (
-                    <div className="p-4 bg-blue-50 border-b border-aws-border">
+                    <div className="p-4 bg-muted/50 border-b border-border">
                         <div className="flex flex-wrap gap-4 items-end">
                             <div className="flex-1 min-w-[200px]">
-                                <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
+                                <label className="block text-xs font-medium text-foreground mb-1">Status</label>
                                 <select
                                     value={statusFilter}
                                     onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-                                    className="block w-full px-3 py-1.5 border border-gray-300 rounded-sm bg-white text-sm focus:outline-none focus:ring-1 focus:ring-aws-blue focus:border-aws-blue"
+                                    className="block w-full px-3 py-1.5 border border-border rounded-sm bg-card text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                     data-testid="status-filter-select"
                                 >
                                     {STATUS_OPTIONS.map(option => (
@@ -289,11 +288,11 @@ export const UsersPage: React.FC = () => {
                                 </select>
                             </div>
                             <div className="flex-1 min-w-[200px]">
-                                <label className="block text-xs font-medium text-gray-700 mb-1">Role</label>
+                                <label className="block text-xs font-medium text-foreground mb-1">Role</label>
                                 <select
                                     value={roleFilter}
                                     onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}
-                                    className="block w-full px-3 py-1.5 border border-gray-300 rounded-sm bg-white text-sm focus:outline-none focus:ring-1 focus:ring-aws-blue focus:border-aws-blue"
+                                    className="block w-full px-3 py-1.5 border border-border rounded-sm bg-card text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                     data-testid="role-filter-select"
                                 >
                                     {ROLE_OPTIONS.map(option => (
@@ -302,11 +301,11 @@ export const UsersPage: React.FC = () => {
                                 </select>
                             </div>
                             <div className="flex-1 min-w-[200px]">
-                                <label className="block text-xs font-medium text-gray-700 mb-1">Plan</label>
+                                <label className="block text-xs font-medium text-foreground mb-1">Plan</label>
                                 <select
                                     value={planFilter}
                                     onChange={(e) => { setPlanFilter(e.target.value); setPage(1); }}
-                                    className="block w-full px-3 py-1.5 border border-gray-300 rounded-sm bg-white text-sm focus:outline-none focus:ring-1 focus:ring-aws-blue focus:border-aws-blue"
+                                    className="block w-full px-3 py-1.5 border border-border rounded-sm bg-card text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                     data-testid="plan-filter-select"
                                 >
                                     {PLAN_OPTIONS.map(option => (
@@ -317,7 +316,7 @@ export const UsersPage: React.FC = () => {
                             {hasActiveFilters && (
                                 <button
                                     onClick={clearFilters}
-                                    className="flex items-center space-x-1 px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 bg-white border border-gray-300 rounded-sm transition-colors"
+                                    className="flex items-center space-x-1 px-3 py-1.5 text-sm font-medium text-foreground hover:text-blue-500 bg-card border border-border rounded-sm transition-colors"
                                     data-testid="clear-filters-btn"
                                 >
                                     <X className="h-4 w-4" />
@@ -329,22 +328,22 @@ export const UsersPage: React.FC = () => {
                 )}
 
                 <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-aws-border">
-                        <thead className="bg-gray-50">
+                    <table className="min-w-full divide-y divide-border table-fixed">
+                        <thead className="bg-muted/30">
                             <tr>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-aws-text-secondary uppercase tracking-wider">
+                                <th scope="col" className="px-6 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                                     User
                                 </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-aws-text-secondary uppercase tracking-wider">
+                                <th scope="col" className="px-6 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                                     Role
                                 </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-aws-text-secondary uppercase tracking-wider">
+                                <th scope="col" className="px-6 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                                     Plan
                                 </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-aws-text-secondary uppercase tracking-wider">
+                                <th scope="col" className="px-6 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                                     Status
                                 </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-aws-text-secondary uppercase tracking-wider">
+                                <th scope="col" className="px-6 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                                     Joined
                                 </th>
                                 <th scope="col" className="relative px-6 py-3">
@@ -352,40 +351,40 @@ export const UsersPage: React.FC = () => {
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-aws-border">
+                        <tbody className="bg-card divide-y divide-border">
                             {users.map((user) => (
-                                <tr key={user.id} className="hover:bg-blue-50 transition-colors">
+                                <tr key={user.id} className="hover:bg-muted/50 transition-colors">
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex items-center">
                                             <div className="flex-shrink-0 h-8 w-8">
-                                                <div className="h-8 w-8 rounded-full bg-aws-nav flex items-center justify-center text-white font-bold text-xs">
+                                                <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs ring-1 ring-border shadow-sm">
                                                     {user.username.charAt(0).toUpperCase()}
                                                 </div>
                                             </div>
                                             <div className="ml-4">
-                                                <div className="text-sm font-medium text-aws-blue hover:underline cursor-pointer">{user.username}</div>
-                                                <div className="text-sm text-aws-text-secondary">{user.email}</div>
+                                                <div className="text-sm font-medium text-foreground hover:underline cursor-pointer">{user.username}</div>
+                                                <div className="text-[13px] text-muted-foreground">{user.email}</div>
                                                 {user.organization_name && (
-                                                    <div className="text-xs text-gray-400">{user.organization_name}</div>
+                                                    <div className="text-[12px] text-muted-foreground/70">{user.organization_name}</div>
                                                 )}
                                             </div>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.role === 'owner' ? 'bg-purple-100 text-purple-800' :
-                                                user.role === 'admin' ? 'bg-blue-100 text-blue-800' :
-                                                    'bg-gray-100 text-gray-800'
+                                        <span className={`px-2 inline-flex text-[12px] leading-5 font-semibold rounded-full ${user.role === 'owner' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400' :
+                                            user.role === 'admin' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400' :
+                                                'bg-muted text-foreground'
                                             }`}>
                                             {user.role}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-aws-text">
+                                    <td className="px-6 py-4 whitespace-nowrap text-[13px] text-foreground">
                                         {user.plan}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         {getStatusBadge(user)}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-aws-text-secondary">
+                                    <td className="px-6 py-4 whitespace-nowrap text-[13px] text-muted-foreground">
                                         {new Date(user.created_at).toLocaleDateString()}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -393,14 +392,14 @@ export const UsersPage: React.FC = () => {
                                             {user.account_status !== 'deleted' && user.account_status !== 'pending_deletion' && (
                                                 <button
                                                     onClick={() => confirmToggleStatus(user)}
-                                                    className={`text-gray-400 hover:${user.is_active ? 'text-red-600' : 'text-green-600'} transition-colors`}
+                                                    className={`text-muted-foreground hover:${user.is_active ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'} transition-colors`}
                                                     title={user.is_active ? "Suspend User" : "Activate User"}
                                                     data-testid={`toggle-status-${user.id}`}
                                                 >
                                                     {user.is_active ? <ShieldOff size={16} /> : <Shield size={16} />}
                                                 </button>
                                             )}
-                                            <button className="text-gray-400 hover:text-aws-text transition-colors">
+                                            <button className="text-muted-foreground hover:text-foreground transition-colors">
                                                 <MoreVertical size={16} />
                                             </button>
                                         </div>
@@ -409,7 +408,7 @@ export const UsersPage: React.FC = () => {
                             ))}
                             {users.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                                    <td colSpan={6} className="px-6 py-4 text-center text-muted-foreground">
                                         No users found
                                     </td>
                                 </tr>
@@ -417,28 +416,28 @@ export const UsersPage: React.FC = () => {
                         </tbody>
                     </table>
                 </div>
-                
+
                 {/* Pagination Controls */}
-                <div className="bg-white px-4 py-3 border-t border-aws-border sm:px-6">
+                <div className="bg-card px-4 py-3 border-t border-border sm:px-6">
                     <div className="flex items-center justify-between">
-                        <div className="text-sm text-aws-text-secondary">
-                            Showing <span className="font-medium">{(page - 1) * limit + 1}</span> to <span className="font-medium">{Math.min(page * limit, totalUsers)}</span> of <span className="font-medium">{totalUsers}</span> results
+                        <div className="text-[13px] text-muted-foreground">
+                            Showing <span className="font-medium text-foreground">{(page - 1) * limit + 1}</span> to <span className="font-medium text-foreground">{Math.min(page * limit, totalUsers)}</span> of <span className="font-medium text-foreground">{totalUsers}</span> results
                         </div>
                         <div className="flex-1 flex justify-end space-x-3">
-                            <button 
+                            <button
                                 onClick={() => setPage(p => Math.max(1, p - 1))}
                                 disabled={page === 1}
-                                className={`relative inline-flex items-center px-4 py-1.5 border border-gray-300 text-sm font-medium rounded-sm bg-white 
-                                    ${page === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-aws-text hover:bg-gray-50 transition-colors'}`}
+                                className={`relative inline-flex items-center px-4 py-1.5 border border-border text-sm font-medium rounded-sm bg-card 
+                                    ${page === 1 ? 'text-muted-foreground cursor-not-allowed opacity-50' : 'text-foreground hover:bg-muted/50 transition-colors'}`}
                             >
                                 <ChevronLeft className="h-4 w-4 mr-1" />
                                 Previous
                             </button>
-                            <button 
+                            <button
                                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                                 disabled={page === totalPages || totalPages === 0}
-                                className={`relative inline-flex items-center px-4 py-1.5 border border-gray-300 text-sm font-medium rounded-sm bg-white
-                                    ${(page === totalPages || totalPages === 0) ? 'text-gray-300 cursor-not-allowed' : 'text-aws-text hover:bg-gray-50 transition-colors'}`}
+                                className={`relative inline-flex items-center px-4 py-1.5 border border-border text-sm font-medium rounded-sm bg-card
+                                    ${(page === totalPages || totalPages === 0) ? 'text-muted-foreground cursor-not-allowed opacity-50' : 'text-foreground hover:bg-muted/50 transition-colors'}`}
                             >
                                 Next
                                 <ChevronRight className="h-4 w-4 ml-1" />
@@ -459,7 +458,7 @@ export const UsersPage: React.FC = () => {
             >
                 <div className="space-y-3">
                     <p>
-                        Are you sure you want to <strong>{modalConfig.action}</strong> the user 
+                        Are you sure you want to <strong>{modalConfig.action}</strong> the user
                         <span className="font-bold"> {modalConfig.user?.username}</span>?
                     </p>
                     {modalConfig.action === 'suspend' && (

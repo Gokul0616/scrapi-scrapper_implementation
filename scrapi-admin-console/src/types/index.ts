@@ -39,6 +39,9 @@ export interface Actor {
     category: string;
     runs_count: number;
     created_at: string;
+    icon?: string;
+    author_name?: string;
+    updated_at?: string;
 }
 
 export interface SystemHealth {
@@ -61,6 +64,7 @@ export interface AuditLog {
     admin_username: string;
     action: string;
     target_type: string;
+    target_id?: string;
     target_name?: string;
     details?: string;
     ip_address?: string;

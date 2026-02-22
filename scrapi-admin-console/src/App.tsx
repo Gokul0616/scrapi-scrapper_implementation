@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
@@ -10,6 +10,7 @@ import { RunsPage } from './pages/Runs';
 import { SettingsPage } from './pages/Settings';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AlertProvider } from './context/AlertContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { RoleSelection } from './pages/RoleSelection';
 import { TeamPage } from './pages/TeamPage';
 import { TerminalPage } from './pages/TerminalPage';
@@ -37,6 +38,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return <>{children}</>;
 };
 
+/*
 const PublicRoute = () => {
   const { isAuthenticated } = useAuth();
   if (isAuthenticated) {
@@ -44,6 +46,7 @@ const PublicRoute = () => {
   }
   return <Outlet />;
 };
+*/
 
 const RoleSelectionRoute = () => {
   const { isAuthenticated, pendingRoleSelection } = useAuth();
@@ -84,43 +87,45 @@ const PermissionRoute: React.FC<{
 function App() {
   return (
     <BrowserRouter>
-      <AlertProvider>
-        <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/select-role" element={<RoleSelectionRoute />} />
+      <ThemeProvider>
+        <AlertProvider>
+          <AuthProvider>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/select-role" element={<RoleSelectionRoute />} />
 
-            <Route path="/" element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }>
-              <Route index element={<Navigate to="/dashboard" replace />} />
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="users" element={<UsersPage />} />
-              <Route path="actors" element={<ActorsPage />} />
-              <Route path="runs" element={<RunsPage />} />
-              <Route path="policies" element={<PoliciesPage />} />
-              <Route path="documentation" element={<ApiDocsPage />} />
-              <Route path="settings" element={<SettingsPage />} />
-              <Route path="audit-logs" element={<AuditLogs />} />
-              <Route path="team" element={
-                <PermissionRoute requiredRole="owner">
-                  <TeamPage />
-                </PermissionRoute>
-              } />
-              <Route path="terminal" element={
-                <PermissionRoute requiredPermission="terminal_access">
-                  <TerminalPage />
-                </PermissionRoute>
-              } />
-            </Route>
+              <Route path="/" element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Navigate to="/dashboard" replace />} />
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="users" element={<UsersPage />} />
+                <Route path="actors" element={<ActorsPage />} />
+                <Route path="runs" element={<RunsPage />} />
+                <Route path="policies" element={<PoliciesPage />} />
+                <Route path="documentation" element={<ApiDocsPage />} />
+                <Route path="settings" element={<SettingsPage />} />
+                <Route path="audit-logs" element={<AuditLogs />} />
+                <Route path="team" element={
+                  <PermissionRoute requiredRole="owner">
+                    <TeamPage />
+                  </PermissionRoute>
+                } />
+                <Route path="terminal" element={
+                  <PermissionRoute requiredPermission="terminal_access">
+                    <TerminalPage />
+                  </PermissionRoute>
+                } />
+              </Route>
 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </AlertProvider>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </AlertProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }
