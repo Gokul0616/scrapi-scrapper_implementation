@@ -5,7 +5,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
 import { Search, Star, Play, TrendingUp, Award, PlusCircle } from 'lucide-react';
-import { toast } from '../hooks/use-toast';
+import ErrorDisplay, { showError } from '../components/ErrorDisplay';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -29,11 +29,7 @@ const ActorsV2 = () => {
       setActors(response.data);
     } catch (error) {
       console.error('Failed to fetch actors:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load actors',
-        variant: 'destructive'
-      });
+      showError('Failed to load actors', { type: 'error', title: 'Error' });
     } finally {
       setLoading(false);
     }
@@ -134,19 +130,18 @@ const ActorsV2 = () => {
                       className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
                     >
                       <Star
-                        className={`w-5 h-5 ${
-                          actor.is_starred
+                        className={`w-5 h-5 ${actor.is_starred
                             ? 'fill-yellow-400 text-yellow-400'
                             : 'text-white'
-                        }`}
+                          }`}
                       />
                     </button>
                   </div>
-                  
+
                   <h3 className="text-white font-bold text-xl mt-4">
                     {actor.name}
                   </h3>
-                  
+
                   <div className="flex items-center space-x-2 mt-2">
                     <Badge variant="outline" className="bg-white/20 text-white border-white/30 text-xs">
                       {actor.category}

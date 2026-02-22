@@ -49,6 +49,22 @@ class BillingService:
         
         total_usage = cu_cost # Simplified total
         
+        # Calculate current active RAM usage
+        running_runs_cursor = db.runs.find({
+            "user_id" if workspace_type == "personal" else "organization_id": workspace_id,
+            "status": "running"
+        })
+        
+        current_ram_mb = 0
+        async for active_run in running_runs_cursor:
+            current_ram_mb += active_run.get("ram_mb", 1024)
+            
+        # Get plan limits
+        plan_limits = workspace.get("limits", {})
+        # Default to 2GB (2048MB) if not set, or read from plan limits
+        max_ram_gb = plan_limits.get("max_ram_gb", 8)
+        max_ram_mb = max_ram_gb * 1024
+        
         return {
             "totalUsage": total_usage,
             "billingPeriod": {
@@ -60,6 +76,10 @@ class BillingService:
                 "freeUsed": free_used,
                 "freeTotal": free_total,
                 "freeRemaining": free_remaining
+            },
+            "ramUsage": {
+                "used_mb": current_ram_mb,
+                "limit_mb": max_ram_mb
             },
             "services": [
                 { "name": 'Actors', "color": 'bg-emerald-500', "amount": cu_cost, "icon": '●' },

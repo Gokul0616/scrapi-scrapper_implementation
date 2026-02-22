@@ -4,7 +4,7 @@ import {
   Clock, Plus, Play, Pause, Trash2, Edit, Calendar,
   Activity, CheckCircle, XCircle, AlertCircle, Copy, Download, Filter, Search, HelpCircle, X, Info
 } from 'lucide-react';
-import { useToast } from '../hooks/use-toast';
+import ErrorDisplay, { showError } from '../components/ErrorDisplay';
 import AlertModal from '../components/AlertModal';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
@@ -21,7 +21,7 @@ const Schedules = () => {
   const [selectedSchedules, setSelectedSchedules] = useState([]);
   const [filterStatus, setFilterStatus] = useState('all'); // all, active, paused
   const [searchQuery, setSearchQuery] = useState('');
-  const { toast } = useToast();
+
 
   // Alert Modal State
   const [confirmModal, setConfirmModal] = useState({
@@ -49,11 +49,7 @@ const Schedules = () => {
       setLoading(false);
     } catch (error) {
       console.error('Error fetching schedules:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load schedules",
-        variant: "destructive"
-      });
+      showError('Failed to load schedules', { type: 'error', title: 'Error' });
       setLoading(false);
     }
   };
@@ -82,10 +78,7 @@ const Schedules = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      toast({
-        title: "Success",
-        description: `Schedule ${isEnabled ? 'disabled' : 'enabled'} successfully`
-      });
+      showError(`Schedule ${isEnabled ? 'disabled' : 'enabled'} successfully`, { type: 'success', title: 'Success' });
 
       fetchSchedules();
     } catch (error) {
@@ -107,10 +100,7 @@ const Schedules = () => {
             headers: { Authorization: `Bearer ${token}` }
           });
 
-          toast({
-            title: "Success",
-            description: "Schedule deleted successfully"
-          });
+          showError('Schedule deleted successfully', { type: 'success', title: 'Success' });
 
           fetchSchedules();
         } catch (error) {
@@ -129,10 +119,7 @@ const Schedules = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      toast({
-        title: "Success",
-        description: `Run started: ${response.data.run_id}`
-      });
+      showError(`Run started: ${response.data.run_id}`, { type: 'success', title: 'Success' });
     } catch (error) {
       console.error('Error running schedule:', error);
     }
@@ -155,10 +142,7 @@ const Schedules = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      toast({
-        title: "Success",
-        description: "Schedule cloned successfully"
-      });
+      showError('Schedule cloned successfully', { type: 'success', title: 'Success' });
 
       fetchSchedules();
     } catch (error) {
@@ -186,10 +170,7 @@ const Schedules = () => {
             )
           );
 
-          toast({
-            title: "Success",
-            description: `${selectedSchedules.length} schedule(s) deleted successfully`
-          });
+          showError(`${selectedSchedules.length} schedule(s) deleted successfully`, { type: 'success', title: 'Success' });
 
           setSelectedSchedules([]);
           fetchSchedules();
@@ -217,10 +198,7 @@ const Schedules = () => {
         )
       );
 
-      toast({
-        title: "Success",
-        description: `${selectedSchedules.length} schedule(s) ${enable ? 'enabled' : 'disabled'} successfully`
-      });
+      showError(`${selectedSchedules.length} schedule(s) ${enable ? 'enabled' : 'disabled'} successfully`, { type: 'success', title: 'Success' });
 
       setSelectedSchedules([]);
       fetchSchedules();
@@ -249,10 +227,7 @@ const Schedules = () => {
     a.click();
     URL.revokeObjectURL(url);
 
-    toast({
-      title: "Success",
-      description: "Schedules exported successfully"
-    });
+    showError('Schedules exported successfully', { type: 'success', title: 'Success' });
   };
 
   const toggleSelectSchedule = (scheduleId) => {
@@ -545,8 +520,8 @@ const Schedules = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${schedule.is_enabled
-                          ? 'bg-black text-white'
-                          : 'bg-gray-200 text-gray-800'
+                        ? 'bg-black text-white'
+                        : 'bg-gray-200 text-gray-800'
                         }`}>
                         {schedule.is_enabled ? <CheckCircle size={12} /> : <Pause size={12} />}
                         {schedule.is_enabled ? 'Active' : 'Paused'}
@@ -554,8 +529,8 @@ const Schedules = () => {
                       {schedule.last_status && (
                         <div className="mt-1">
                           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs ${schedule.last_status === 'success'
-                              ? 'bg-gray-800 text-white'
-                              : 'bg-gray-300 text-black'
+                            ? 'bg-gray-800 text-white'
+                            : 'bg-gray-300 text-black'
                             }`}>
                             {schedule.last_status === 'success' ? <CheckCircle size={10} /> : <XCircle size={10} />}
                             Last: {schedule.last_status}
@@ -578,8 +553,8 @@ const Schedules = () => {
                         <button
                           onClick={() => handleToggleSchedule(schedule.id, schedule.is_enabled)}
                           className={`p-1 rounded border border-gray-300 ${schedule.is_enabled
-                              ? 'text-gray-600 hover:text-black hover:bg-gray-100'
-                              : 'text-black hover:text-gray-700 hover:bg-gray-100'
+                            ? 'text-gray-600 hover:text-black hover:bg-gray-100'
+                            : 'text-black hover:text-gray-700 hover:bg-gray-100'
                             }`}
                           title={schedule.is_enabled ? 'Pause' : 'Activate'}
                         >
@@ -851,7 +826,6 @@ const ScheduleModal = ({ isEdit, schedule, actors, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [selectedActor, setSelectedActor] = useState(null);
-  const { toast } = useToast();
 
   // Handle ESC key to close modal
   useEffect(() => {
@@ -907,10 +881,7 @@ const ScheduleModal = ({ isEdit, schedule, actors, onClose, onSuccess }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      toast({
-        title: "Success",
-        description: `Schedule ${isEdit ? 'updated' : 'created'} successfully`
-      });
+      showError(`Schedule ${isEdit ? 'updated' : 'created'} successfully`, { type: 'success', title: 'Success' });
 
       onSuccess();
     } catch (error) {

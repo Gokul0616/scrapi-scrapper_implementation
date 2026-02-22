@@ -9,7 +9,7 @@ import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
 import LoadingScreen from '../components/LoadingScreen'; // Added this import
 import { Search, Download, ArrowLeft, MessageSquare, X, Send, Mail, Phone, CheckCircle2, FileText, MapPin, ExternalLink, Settings, Eye, Table as TableIcon, MoreHorizontal, Star, ChevronLeft, ChevronRight, Play } from 'lucide-react';
-import { toast } from '../hooks/use-toast';
+import ErrorDisplay, { showError } from '../components/ErrorDisplay';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -425,11 +425,7 @@ const DatasetV2 = () => {
         return;
       }
 
-      toast({
-        title: 'Error',
-        description: 'Failed to load dataset',
-        variant: 'destructive'
-      });
+      showError('Failed to load dataset', { type: 'error', title: 'Error' });
     } finally {
       setLoading(false);
     }
@@ -520,17 +516,10 @@ const DatasetV2 = () => {
       link.click();
       link.remove();
 
-      toast({
-        title: 'Export successful',
-        description: `Dataset exported as ${format.toUpperCase()}`
-      });
+      showError(`Dataset exported as ${format.toUpperCase()}`, { type: 'success', title: 'Export successful' });
     } catch (error) {
       console.error('Failed to export dataset:', error);
-      toast({
-        title: 'Export failed',
-        description: 'Failed to export dataset',
-        variant: 'destructive'
-      });
+      showError('Failed to export dataset', { type: 'error', title: 'Export failed' });
     }
   };
 

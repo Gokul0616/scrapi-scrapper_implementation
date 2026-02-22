@@ -14,14 +14,14 @@ import {
   Clock
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
-import { useToast } from '../hooks/use-toast';
+import ErrorDisplay, { showError } from '../components/ErrorDisplay';
 import AlertModal from './AlertModal';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const ApiIntegrations = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
+
 
   // State
   const [userId, setUserId] = useState('');
@@ -142,11 +142,7 @@ const ApiIntegrations = () => {
 
   const handleCreateKey = async () => {
     if (!newKeyName.trim()) {
-      toast({
-        title: "Error",
-        description: "Key name is required",
-        variant: "destructive"
-      });
+      showError('Key name is required', { type: 'error', title: 'Error' });
       return;
     }
 
@@ -184,25 +180,14 @@ const ApiIntegrations = () => {
             remaining: 30
           });
         }
-        toast({
-          title: "Success",
-          description: "API token created successfully",
-        });
+        showError('API token created successfully', { type: 'success', title: 'Success' });
       } else {
         const errorData = await response.json();
-        toast({
-          title: "Error",
-          description: errorData.detail || "Failed to create API token",
-          variant: "destructive"
-        });
+        showError(errorData.detail || 'Failed to create API token', { type: 'error', title: 'Error' });
       }
     } catch (error) {
       console.error("Error creating key", error);
-      toast({
-        title: "Error",
-        description: "Failed to create API token",
-        variant: "destructive"
-      });
+      showError('Failed to create API token', { type: 'error', title: 'Error' });
     } finally {
       setIsCreating(false);
     }
@@ -236,18 +221,11 @@ const ApiIntegrations = () => {
           setActiveKeyId(null);
           setTimerData(null);
         }
-        toast({
-          title: "Success",
-          description: "API token deleted successfully",
-        });
+        showError('API token deleted successfully', { type: 'success', title: 'Success' });
       }
     } catch (error) {
       console.error("Error deleting key", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete API token",
-        variant: "destructive"
-      });
+      showError('Failed to delete API token', { type: 'error', title: 'Error' });
     }
   };
 
@@ -260,10 +238,7 @@ const ApiIntegrations = () => {
       setCopiedKey(text);
       setTimeout(() => setCopiedKey(null), 2000);
     }
-    toast({
-      title: "Copied",
-      description: type === 'userId' ? "User ID copied to clipboard" : "API token copied to clipboard",
-    });
+    showError(type === 'userId' ? 'User ID copied to clipboard' : 'API token copied to clipboard', { type: 'info', title: 'Copied' });
   };
 
   const toggleKeyVisibility = (keyId) => {
@@ -432,7 +407,7 @@ const ApiIntegrations = () => {
                   {/* Progress bar for active timer - Show if this key has active timer */}
                   {activeKeyId === key.id && timerData && timerData.remaining > 0 && (
                     <div
-                      className="absolute bottom-0 left-0 h-1 transition-all duration-1000 ease-linear bg-green-500"
+                      className="absolute bottom-0 left-0 h-1 transition-all duration-1000 ease-linear bg-blue-600"
                       style={{ width: `${(timerData.remaining / 30) * 100}%` }}
                     />
                   )}
@@ -445,7 +420,7 @@ const ApiIntegrations = () => {
                       </span>
                       {/* Show timer badge if this key has active timer */}
                       {activeKeyId === key.id && timerData && timerData.remaining > 0 && (
-                        <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded font-semibold bg-green-500/10 text-green-600 dark:text-green-400">
+                        <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded font-semibold bg-blue-600/10 text-blue-600 dark:text-blue-400">
                           <Clock className="w-3 h-3" />
                           {timerData.remaining}s
                         </span>

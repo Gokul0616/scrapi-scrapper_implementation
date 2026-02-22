@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { Check, X, AlertCircle } from 'lucide-react';
+import { Check, X, AlertCircle, Info, AlertTriangle } from 'lucide-react';
 import { useTheme } from './ThemeContext';
 
 const MessageContext = createContext();
@@ -41,6 +41,32 @@ export const MessageProvider = ({ children }) => {
         setMessages((prev) => prev.filter((msg) => msg.id !== id));
     }, []);
 
+    useEffect(() => {
+        const handleGlobalMessage = (event) => {
+            const { message, type, title, duration } = event.detail;
+            const finalMessage = title ? `${title}: ${message}` : message;
+            showMessage(finalMessage, type, duration);
+        };
+
+        window.addEventListener('show-global-message', handleGlobalMessage);
+        return () => window.removeEventListener('show-global-message', handleGlobalMessage);
+    }, [showMessage]);
+
+    const getIcon = (type) => {
+        switch (type) {
+            case 'success':
+                return <Check className="w-5 h-5 text-green-500 flex-shrink-0" strokeWidth={2.5} />;
+            case 'error':
+                return <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" strokeWidth={2.5} />;
+            case 'warning':
+                return <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0" strokeWidth={2.5} />;
+            case 'info':
+                return <Info className="w-5 h-5 text-blue-500 flex-shrink-0" strokeWidth={2.5} />;
+            default:
+                return <Info className="w-5 h-5 text-gray-500 flex-shrink-0" strokeWidth={2.5} />;
+        }
+    };
+
     return (
         <MessageContext.Provider value={{ showMessage, dismissMessage }}>
             {children}
@@ -55,11 +81,7 @@ export const MessageProvider = ({ children }) => {
                             }`}
                     >
                         <div className="flex items-center space-x-3">
-                            {msg.type === 'success' ? (
-                                <Check className="w-5 h-5 text-green-500 flex-shrink-0" strokeWidth={2.5} />
-                            ) : (
-                                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" strokeWidth={2.5} />
-                            )}
+                            {getIcon(msg.type)}
                             <span className="text-sm font-medium">{msg.text}</span>
                         </div>
                         <button

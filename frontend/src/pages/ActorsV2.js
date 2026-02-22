@@ -5,7 +5,7 @@ import {
   Search, Star, ChevronDown, ChevronUp, Play,
   ArrowUpDown, Filter, MapPin
 } from 'lucide-react';
-import { toast } from '../hooks/use-toast';
+import ErrorDisplay, { showError } from '../components/ErrorDisplay';
 import LoadingScreen from '../components/LoadingScreen';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -42,11 +42,7 @@ const ActorsV2 = () => {
       setActors(response.data);
     } catch (error) {
       console.error('Failed to fetch recently viewed actors:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load recently viewed actors',
-        variant: 'destructive'
-      });
+      showError('Failed to load recently viewed actors', { type: 'error', title: 'Error' });
     } finally {
       setLoading(false);
     }
@@ -61,11 +57,7 @@ const ActorsV2 = () => {
       setActors(response.data);
     } catch (error) {
       console.error('Failed to fetch actors:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load actors',
-        variant: 'destructive'
-      });
+      showError('Failed to load actors', { type: 'error', title: 'Error' });
     } finally {
       setLoading(false);
     }

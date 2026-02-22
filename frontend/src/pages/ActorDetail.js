@@ -8,7 +8,7 @@ import { Textarea } from '../components/ui/textarea';
 import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Terminal } from 'lucide-react';
-import { useToast } from '../hooks/use-toast';
+import ErrorDisplay, { showError } from '../components/ErrorDisplay';
 import LoadingScreen from '../components/LoadingScreen';
 import { Play, Settings, Clock, Database, Info, Copy } from 'lucide-react';
 
@@ -84,11 +84,7 @@ const ActorDetail = () => {
         return;
       }
 
-      toast({
-        title: 'Error',
-        description: 'Failed to load actor details',
-        variant: 'destructive'
-      });
+      showError('Failed to load actor details', { type: 'error', title: 'Error' });
     } finally {
       setLoading(false);
     }
@@ -100,11 +96,7 @@ const ActorDetail = () => {
 
   const handleLegacyRun = async () => {
     if (!config.searchTerms && !config.location) {
-      toast({
-        title: 'Configuration required',
-        description: 'Please provide search terms or location',
-        variant: 'destructive'
-      });
+      showError('Please provide search terms or location', { type: 'error', title: 'Configuration required' });
       return;
     }
 
@@ -138,10 +130,7 @@ const ActorDetail = () => {
         }
       );
 
-      toast({
-        title: 'Run started!',
-        description: `${actor.name} is now running. Check the Runs tab for progress.`
-      });
+      showError(`${actor.name} is now running. Check the Runs tab for progress.`, { type: 'success', title: 'Run started!' });
 
       // Navigate to runs page after a short delay
       setTimeout(() => {
@@ -171,11 +160,7 @@ const ActorDetail = () => {
         const fieldNames = missingFields
           .map(f => actor.input_schema.properties[f]?.title || f)
           .join(', ');
-        toast({
-          title: 'Required fields missing',
-          description: `Please fill in: ${fieldNames}`,
-          variant: 'destructive'
-        });
+        showError(`Please fill in: ${fieldNames}`, { type: 'error', title: 'Required fields missing' });
         return;
       }
     }
@@ -196,10 +181,7 @@ const ActorDetail = () => {
           headers: { Authorization: `Bearer ${token}` }
         }
       );
-      toast({
-        title: 'Run started!',
-        description: `${actor.name} is now running. Check the Runs tab for progress.`
-      });
+      showError(`${actor.name} is now running. Check the Runs tab for progress.`, { type: 'success', title: 'Run started!' });
 
       // Navigate to runs page after a short delay
       setTimeout(() => {
@@ -626,7 +608,7 @@ const ActorDetail = () => {
                         className="h-6 w-6"
                         onClick={() => {
                           navigator.clipboard.writeText(actor.api_id);
-                          toast({ title: "Copied", description: "API ID copied to clipboard" });
+                          showError('API ID copied to clipboard', { type: 'info', title: 'Copied' });
                         }}
                       >
                         <Copy className="h-3 w-3" />

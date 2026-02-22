@@ -7,8 +7,8 @@ import { ModalProvider } from './contexts/ModalContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { WorkspaceProvider } from './contexts/WorkspaceContext';
 import { MessageProvider, useMessage } from './contexts/MessageContext';
-import { Toaster } from './components/ui/toaster';
-import { ErrorDisplayContainer } from './components/ErrorDisplay';
+
+
 import GlobalModals from './components/GlobalModals';
 import LoadingScreen from './components/LoadingScreen';
 import { setupAxiosInterceptor } from './utils/axiosInterceptor';
@@ -218,8 +218,8 @@ function App() {
                 <ModalProvider>
                   <AppRoutes />
                   <GlobalModals />
-                  <Toaster />
-                  <ErrorDisplayContainer />
+
+
                 </ModalProvider>
               </NotificationProvider>
             </WorkspaceProvider>

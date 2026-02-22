@@ -59,6 +59,7 @@ const Sidebar = () => {
   const { currentWorkspace } = useWorkspace();
   const navigate = useNavigate();
   const location = useLocation();
+  const [billingData, setBillingData] = useState(null);
   const [isCollapsed, setIsCollapsed] = useState(() => {
     // Load sidebar state from localStorage
     const savedCollapsed = localStorage.getItem('sidebarCollapsed');
@@ -169,6 +170,25 @@ const Sidebar = () => {
       [section]: !prev[section]
     }));
   };
+
+  // Load billing data for usage stats
+  useEffect(() => {
+    const fetchBillingData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (token && currentWorkspace) {
+          const response = await axios.get(`${API}/billing/summary`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setBillingData(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to load billing summary:', error);
+      }
+    };
+
+    fetchBillingData();
+  }, [currentWorkspace]);
 
   // Handle keyboard shortcut
   useEffect(() => {
@@ -570,18 +590,35 @@ const Sidebar = () => {
                     <span
                       className="font-medium text-foreground"
                     >
-                      0 MB / 8 GB
+                      {billingData ? (
+                        `${billingData.ramUsage?.used_mb >= 1024
+                          ? (billingData.ramUsage.used_mb / 1024).toFixed(1) + ' GB'
+                          : billingData.ramUsage?.used_mb + ' MB'} / ${billingData.ramUsage?.limit_mb >= 1024
+                            ? (billingData.ramUsage.limit_mb / 1024).toFixed(1) + ' GB'
+                            : billingData.ramUsage?.limit_mb + ' MB'
+                        }`
+                      ) : '0 MB / 8 GB'}
                     </span>
                   </div>
                   <Progress
-                    value={0}
+                    value={billingData ? Math.min(100, (billingData.ramUsage?.used_mb / billingData.ramUsage?.limit_mb) * 100) : 0}
                     className="h-1.5 bg-muted"
                   />
-                  <div
-                    className="text-xs mt-1 text-muted-foreground"
-                  >
-                    $0.00 / $5.00
+                </div>
+
+                {/* Credit Usage */}
+                <div className="mb-3.5">
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-muted-foreground">Credit Usage</span>
+                    <span className="font-medium text-foreground">
+                      {billingData ? `$${billingData.planConsumption?.freeUsed.toFixed(2)} / $${billingData.planConsumption?.freeTotal.toFixed(2)}` : '$0.00 / $5.00'}
+                    </span>
                   </div>
+                  <Progress
+                    value={billingData ? Math.min(100, (billingData.planConsumption?.freeUsed / billingData.planConsumption?.freeTotal) * 100) : 0}
+                    className="h-1.5 bg-blue-500/20"
+                    indicatorColor="bg-blue-500"
+                  />
                 </div>
 
                 {/* Upgrade Button */}
