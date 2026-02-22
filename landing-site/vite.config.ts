@@ -18,7 +18,7 @@ export default defineConfig({
         },
         proxy: {
             '/api': {
-                target: "https://bash-launcher.preview.emergentagent.com/",
+                target: "http://localhost:8001",
                 changeOrigin: true,
                 secure: false,
             },
