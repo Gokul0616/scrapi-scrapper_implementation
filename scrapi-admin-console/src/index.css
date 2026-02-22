@@ -20,7 +20,12 @@
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
-  
+
+  --color-aws-orange: #ff9900;
+  --color-aws-light: hsl(var(--background));
+  --color-aws-text: hsl(var(--foreground));
+  --color-aws-text-secondary: hsl(var(--muted-foreground));
+
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
@@ -90,24 +95,25 @@
     @apply bg-background text-foreground;
     margin: 0;
     font-family:
-        "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Roboto", "Oxygen",
-        "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-        sans-serif;
+      "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Roboto", "Oxygen",
+      "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+      sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   /* Global cursor pointer for interactive elements */
-  button, 
-  [type="button"], 
-  [type="reset"], 
-  [type="submit"], 
+  button,
+  [type="button"],
+  [type="reset"],
+  [type="submit"],
   [role="button"] {
     cursor: pointer;
   }
 }
 
 @layer utilities {
+
   /* Hide scrollbar for Chrome, Safari and Opera */
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
@@ -115,8 +121,10 @@
 
   /* Hide scrollbar for IE, Edge and Firefox */
   .scrollbar-hide {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
   }
 
   /* Custom thin scrollbar */

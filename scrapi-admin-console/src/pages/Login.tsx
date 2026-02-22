@@ -34,35 +34,35 @@ export const Login: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-aws-light flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-background flex flex-col justify-center py-12 sm:px-6 lg:px-8">
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="flex justify-center">
                     <img src="/logo.png" alt="Scrapi Logo" className="h-16 w-auto" />
                 </div>
-                <h2 className="mt-6 text-center text-3xl font-extrabold text-aws-text">
+                <h2 className="mt-6 text-center text-3xl font-extrabold text-foreground">
                     Sign in to Console
                 </h2>
-                <p className="mt-2 text-center text-sm text-aws-text-secondary">
+                <p className="mt-2 text-center text-sm text-muted-foreground">
                     Scrapi Admin Platform
                 </p>
             </div>
 
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-                <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border-t-4 border-aws-orange">
+                <div className="bg-card py-8 px-4 shadow-xl sm:rounded-xl sm:px-10 border border-border">
                     {error && (
-                        <div className="mb-4 bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+                        <div className="mb-4 bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-lg relative text-sm">
                             <span className="block sm:inline">{error}</span>
                         </div>
                     )}
 
                     <form className="space-y-6" onSubmit={handleSubmit}>
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-aws-text">
+                            <label htmlFor="email" className="block text-sm font-medium text-foreground">
                                 Email address
                             </label>
                             <div className="mt-1 relative rounded-md shadow-sm">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Mail className="h-5 w-5 text-gray-400" />
+                                    <Mail className="h-5 w-5 text-muted-foreground" />
                                 </div>
                                 <input
                                     id="email"
@@ -72,19 +72,19 @@ export const Login: React.FC = () => {
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="focus:ring-aws-orange focus:border-aws-orange block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2"
+                                    className="focus:ring-aws-orange focus:border-aws-orange block w-full pl-10 sm:text-sm border-border rounded-md py-2 bg-background text-foreground placeholder-muted-foreground shadow-sm"
                                     placeholder="admin@scrapi.com"
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-aws-text">
+                            <label htmlFor="password" className="block text-sm font-medium text-foreground">
                                 Password
                             </label>
                             <div className="mt-1 relative rounded-md shadow-sm">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Lock className="h-5 w-5 text-gray-400" />
+                                    <Lock className="h-5 w-5 text-muted-foreground" />
                                 </div>
                                 <input
                                     id="password"
@@ -94,12 +94,12 @@ export const Login: React.FC = () => {
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="focus:ring-aws-orange focus:border-aws-orange block w-full pl-10 pr-10 sm:text-sm border-gray-300 rounded-md py-2"
+                                    className="focus:ring-aws-orange focus:border-aws-orange block w-full pl-10 pr-10 sm:text-sm border-border rounded-md py-2 bg-background text-foreground placeholder-muted-foreground shadow-sm"
                                     placeholder="••••••••"
                                 />
                                 <div
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-gray-400 hover:text-gray-600"
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-muted-foreground hover:text-foreground"
                                 >
                                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                                 </div>
@@ -110,7 +110,7 @@ export const Login: React.FC = () => {
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-aws-orange hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-aws-orange disabled:opacity-50 transition-colors"
+                                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-aws-orange hover:bg-aws-orange/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-aws-orange disabled:opacity-50 transition-colors"
                             >
                                 {isLoading ? (
                                     <span className="flex items-center">
@@ -131,7 +131,7 @@ export const Login: React.FC = () => {
                         <div className="text-center">
                             <Link
                                 to="/register"
-                                className="text-sm text-aws-orange hover:text-orange-600 font-medium"
+                                className="text-sm text-aws-orange hover:text-aws-orange/80 font-medium transition-colors"
                             >
                                 Don't have an account? Register here
                             </Link>

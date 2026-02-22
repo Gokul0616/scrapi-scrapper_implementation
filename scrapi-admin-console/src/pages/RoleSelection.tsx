@@ -84,22 +84,22 @@ export const RoleSelection: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-aws-light flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-background flex flex-col justify-center py-12 sm:px-6 lg:px-8 transition-colors duration-300">
             <div className="sm:mx-auto sm:w-full sm:max-w-3xl">
                 <div className="flex justify-center">
                     <img src="/logo.png" alt="Scrapi Logo" className="h-16 w-auto" />
                 </div>
-                <h2 className="mt-6 text-center text-3xl font-extrabold text-aws-text">
+                <h2 className="mt-6 text-center text-3xl font-extrabold text-foreground">
                     Choose Your Role
                 </h2>
-                <p className="mt-2 text-center text-sm text-aws-text-secondary">
+                <p className="mt-2 text-center text-sm text-muted-foreground">
                     Select your access level for the Admin Console
                 </p>
             </div>
 
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-3xl">
                 {error && (
-                    <div className="mb-4 bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+                    <div className="mb-4 bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-lg relative text-sm">
                         <span className="block sm:inline">{error}</span>
                     </div>
                 )}
@@ -108,53 +108,53 @@ export const RoleSelection: React.FC = () => {
                     {/* Owner Role Card */}
                     <div
                         onClick={() => handleRoleSelect('owner')}
-                        className={`bg-white p-8 rounded-lg shadow-md cursor-pointer transition-all border-4 ${selectedRole === 'owner'
-                            ? 'border-aws-orange shadow-xl scale-105'
-                            : 'border-gray-200 hover:border-gray-300 hover:shadow-lg'
+                        className={`bg-card p-8 rounded-2xl shadow-lg cursor-pointer transition-all border-4 ${selectedRole === 'owner'
+                            ? 'border-aws-orange shadow-2xl scale-105 bg-aws-orange/5'
+                            : 'border-border hover:border-aws-orange/30 hover:shadow-xl'
                             }`}
                     >
                         <div className="flex flex-col items-center text-center">
                             <div
                                 className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${selectedRole === 'owner'
-                                    ? 'bg-gradient-to-br from-yellow-400 to-orange-500'
-                                    : 'bg-gradient-to-br from-gray-100 to-gray-200'
+                                    ? 'bg-gradient-to-br from-yellow-400 to-orange-500 shadow-lg shadow-orange-500/30'
+                                    : 'bg-muted'
                                     }`}
                             >
                                 <Crown
-                                    className={`h-10 w-10 ${selectedRole === 'owner' ? 'text-white' : 'text-gray-500'
+                                    className={`h-10 w-10 ${selectedRole === 'owner' ? 'text-white' : 'text-foreground/50'
                                         }`}
                                 />
                             </div>
-                            <h3 className="text-2xl font-bold text-aws-text mb-2">Owner</h3>
-                            <p className="text-sm text-aws-text-secondary mb-4">
+                            <h3 className="text-2xl font-bold text-foreground mb-2">Owner</h3>
+                            <p className="text-sm text-muted-foreground mb-4">
                                 Full system control and management
                             </p>
                             <div className="space-y-2 text-left w-full">
                                 <div className="flex items-start">
                                     <div className="text-green-500 mr-2">✓</div>
-                                    <p className="text-sm text-aws-text">Complete access to all features</p>
+                                    <p className="text-sm text-foreground">Complete access to all features</p>
                                 </div>
                                 <div className="flex items-start">
                                     <div className="text-green-500 mr-2">✓</div>
-                                    <p className="text-sm text-aws-text">User management capabilities</p>
+                                    <p className="text-sm text-foreground">User management capabilities</p>
                                 </div>
                                 <div className="flex items-start">
                                     <div className="text-green-500 mr-2">✓</div>
-                                    <p className="text-sm text-aws-text">System configuration access</p>
+                                    <p className="text-sm text-foreground">System configuration access</p>
                                 </div>
                                 <div className="flex items-start">
                                     <div className="text-green-500 mr-2">✓</div>
-                                    <p className="text-sm text-aws-text">Billing and subscription control</p>
+                                    <p className="text-sm text-foreground">Billing and subscription control</p>
                                 </div>
                                 <div className="flex items-start">
                                     <div className="text-green-500 mr-2">✓</div>
-                                    <p className="text-sm text-aws-text">Audit logs and analytics</p>
+                                    <p className="text-sm text-foreground">Audit logs and analytics</p>
                                 </div>
                             </div>
                             {selectedRole === 'owner' && (
                                 <div className="mt-4 w-full">
-                                    <div className="bg-orange-50 border border-orange-200 rounded p-3">
-                                        <p className="text-xs text-orange-800 font-medium">
+                                    <div className="bg-aws-orange/10 border border-aws-orange/20 rounded-lg p-3">
+                                        <p className="text-xs text-aws-orange font-medium">
                                             ⚠️ Only one owner can exist per system
                                         </p>
                                     </div>
@@ -166,53 +166,53 @@ export const RoleSelection: React.FC = () => {
                     {/* Admin Role Card */}
                     <div
                         onClick={() => handleRoleSelect('admin')}
-                        className={`bg-white p-8 rounded-lg shadow-md cursor-pointer transition-all border-4 ${selectedRole === 'admin'
-                            ? 'border-aws-orange shadow-xl scale-105'
-                            : 'border-gray-200 hover:border-gray-300 hover:shadow-lg'
+                        className={`bg-card p-8 rounded-2xl shadow-lg cursor-pointer transition-all border-4 ${selectedRole === 'admin'
+                            ? 'border-aws-orange shadow-2xl scale-105 bg-aws-orange/5'
+                            : 'border-border hover:border-aws-orange/30 hover:shadow-xl'
                             }`}
                     >
                         <div className="flex flex-col items-center text-center">
                             <div
                                 className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${selectedRole === 'admin'
-                                    ? 'bg-gradient-to-br from-blue-400 to-blue-600'
-                                    : 'bg-gradient-to-br from-gray-100 to-gray-200'
+                                    ? 'bg-gradient-to-br from-blue-400 to-blue-600 shadow-lg shadow-blue-500/30'
+                                    : 'bg-muted'
                                     }`}
                             >
                                 <Shield
-                                    className={`h-10 w-10 ${selectedRole === 'admin' ? 'text-white' : 'text-gray-500'
+                                    className={`h-10 w-10 ${selectedRole === 'admin' ? 'text-white' : 'text-foreground/50'
                                         }`}
                                 />
                             </div>
-                            <h3 className="text-2xl font-bold text-aws-text mb-2">Admin</h3>
-                            <p className="text-sm text-aws-text-secondary mb-4">
+                            <h3 className="text-2xl font-bold text-foreground mb-2">Admin</h3>
+                            <p className="text-sm text-muted-foreground mb-4">
                                 Standard administrative access
                             </p>
                             <div className="space-y-2 text-left w-full">
                                 <div className="flex items-start">
                                     <div className="text-green-500 mr-2">✓</div>
-                                    <p className="text-sm text-aws-text">Manage scrapers and actors</p>
+                                    <p className="text-sm text-foreground">Manage scrapers and actors</p>
                                 </div>
                                 <div className="flex items-start">
                                     <div className="text-green-500 mr-2">✓</div>
-                                    <p className="text-sm text-aws-text">View and manage runs</p>
+                                    <p className="text-sm text-foreground">View and manage runs</p>
                                 </div>
                                 <div className="flex items-start">
                                     <div className="text-green-500 mr-2">✓</div>
-                                    <p className="text-sm text-aws-text">Access to datasets and exports</p>
+                                    <p className="text-sm text-foreground">Access to datasets and exports</p>
                                 </div>
                                 <div className="flex items-start">
                                     <div className="text-green-500 mr-2">✓</div>
-                                    <p className="text-sm text-aws-text">Monitor system health</p>
+                                    <p className="text-sm text-foreground">Monitor system health</p>
                                 </div>
                                 <div className="flex items-start">
                                     <div className="text-red-500 mr-2">✗</div>
-                                    <p className="text-sm text-gray-400">Limited user management</p>
+                                    <p className="text-sm text-muted-foreground">Limited user management</p>
                                 </div>
                             </div>
                             {selectedRole === 'admin' && (
                                 <div className="mt-4 w-full">
-                                    <div className="bg-blue-50 border border-blue-200 rounded p-3">
-                                        <p className="text-xs text-blue-800 font-medium">
+                                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                                        <p className="text-xs text-blue-500 font-medium">
                                             ℹ️ Can be upgraded to owner later
                                         </p>
                                     </div>
@@ -226,7 +226,7 @@ export const RoleSelection: React.FC = () => {
                     <button
                         onClick={handleSubmit}
                         disabled={!selectedRole || isLoading}
-                        className="flex items-center px-8 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-aws-orange hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-aws-orange disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="flex items-center px-8 py-3 border border-transparent rounded-md shadow-lg text-base font-medium text-white bg-aws-orange hover:bg-aws-orange/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-aws-orange disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
                     >
                         {isLoading ? (
                             <span className="flex items-center">
