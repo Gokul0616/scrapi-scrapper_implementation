@@ -23,7 +23,7 @@ const UserDropdown = ({ isCollapsed = false }) => {
 
   // Get current workspace info - with loading state handling
   const currentWorkspaceType = currentWorkspace?.workspace_type || 'personal';
-  const currentWorkspaceName = currentWorkspace?.workspace_name || (user?.username || 'Personal');
+  const currentWorkspaceName = currentWorkspaceType === 'organization' ? currentWorkspace?.workspace_name : (user?.username || 'Personal');
   const currentWorkspaceRole = currentWorkspace?.role;
 
   const accountTypeLabel = currentWorkspaceType === 'organization' ? 'Organization' : 'Personal';
@@ -269,7 +269,7 @@ const UserDropdown = ({ isCollapsed = false }) => {
                           className="w-full flex items-center space-x-2.5 rounded-md text-xs transition-colors m-1 px-1 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                         >
                           <User className="w-3 h-3" />
-                          <span className="flex-1 text-left">{personalWorkspace.workspace_name}</span>
+                          <span className="flex-1 text-left">{user?.username || personalWorkspace.workspace_name}</span>
                         </button>
                       </div>
                     )}

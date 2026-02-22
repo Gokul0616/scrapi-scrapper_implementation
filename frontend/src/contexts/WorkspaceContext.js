@@ -42,20 +42,22 @@ export const WorkspaceProvider = ({ children }) => {
       setLoading(true);
       const response = await axios.get(`${API}/organizations/workspaces`);
       setWorkspaces(response.data.workspaces || []);
-      
+
       // Check if there's a saved workspace in localStorage
       const savedWorkspace = localStorage.getItem('activeWorkspace');
       if (savedWorkspace) {
         try {
           const parsed = JSON.parse(savedWorkspace);
           // Verify the saved workspace still exists in the fetched workspaces
-          const workspaceExists = response.data.workspaces.some(
+          const freshWorkspace = response.data.workspaces.find(
             w => w.workspace_id === parsed.workspace_id && w.workspace_type === parsed.workspace_type
           );
-          
-          if (workspaceExists) {
-            // Use the saved workspace
-            setCurrentWorkspace(parsed);
+
+          if (freshWorkspace) {
+            // Use the fresh workspace from the API (which has the updated name)
+            setCurrentWorkspace(freshWorkspace);
+            // Also update localStorage so it's fresh
+            localStorage.setItem('activeWorkspace', JSON.stringify(freshWorkspace));
           } else {
             // Saved workspace no longer exists, use default
             setDefaultWorkspace();
@@ -81,10 +83,10 @@ export const WorkspaceProvider = ({ children }) => {
     // Update state and localStorage
     setCurrentWorkspace(workspace);
     localStorage.setItem('activeWorkspace', JSON.stringify(workspace));
-    
+
     // Dispatch event to notify components about workspace change
     window.dispatchEvent(new CustomEvent('workspaceChanged', { detail: workspace }));
-    
+
     // Reload the page to refresh data for new workspace
     window.location.reload();
   };

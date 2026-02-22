@@ -313,7 +313,7 @@ const Sidebar = () => {
         onClick={onClick}
         className={`flex items-center space-x-2.5 ${isCollapsed ? 'px-0 py-1.5 justify-center' : 'px-2.5 py-1.5'} rounded-md text-xs font-medium transition-colors ${isActive
           ? 'bg-accent text-accent-foreground'
-          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+          : 'text-accent-foreground hover:bg-muted hover:text-foreground'
           }`}
       >
         <item.icon className="w-4 h-4 flex-shrink-0" />
@@ -429,7 +429,7 @@ const Sidebar = () => {
                         }}
                         className={`w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${isStorePage
                           ? 'bg-accent text-accent-foreground'
-                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                          : 'text-accent-foreground hover:bg-muted hover:text-foreground'
                           }`}
                       >
                         <Store className="w-3.5 h-3.5" />
