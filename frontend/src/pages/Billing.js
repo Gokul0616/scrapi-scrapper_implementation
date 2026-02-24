@@ -247,7 +247,7 @@ const Billing = () => {
           </div>
         </div>
       ) : (
-        <div className=" px-6 py-6">
+        <div className="px-6 py-3">
           {/* Header with Title and Action Buttons */}
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold text-foreground">{pageTitle}</h1>

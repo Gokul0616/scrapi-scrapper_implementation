@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { FileText } from 'lucide-react';
 import type { AuditLog } from '../types';
+import { useTheme } from '../context/ThemeContext';
+import { clsx } from 'clsx';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
 
@@ -42,6 +44,7 @@ const TableSkeleton = () => (
 );
 
 export const AuditLogs: React.FC = () => {
+    const { theme } = useTheme();
     const [logs, setLogs] = useState<AuditLog[]>([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
@@ -102,7 +105,12 @@ export const AuditLogs: React.FC = () => {
                                         {log.admin_username}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                                        <span className="px-2 inline-flex text-[12px] leading-5 font-semibold rounded-full bg-blue-100/50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800/50">
+                                        <span className={clsx(
+                                            "px-2 inline-flex text-[12px] leading-5 font-semibold rounded-full border",
+                                            theme === 'dark'
+                                                ? "bg-blue-900/30 text-blue-400 border-blue-800/50"
+                                                : "bg-blue-100/50 text-blue-700 border-blue-200/50"
+                                        )}>
                                             {log.action}
                                         </span>
                                     </td>

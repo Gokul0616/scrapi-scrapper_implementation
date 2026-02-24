@@ -311,7 +311,7 @@ const Sidebar = () => {
       <NavLink
         to={item.path}
         onClick={onClick}
-        className={`flex items-center space-x-2.5 ${isCollapsed ? 'px-0 py-1.5 justify-center' : 'px-2.5 py-1.5'} rounded-md text-xs font-medium transition-colors ${isActive
+        className={`flex items-center space-x-2.5 ${isCollapsed ? 'px-0 py-1.5 justify-center' : 'px-2.5 py-1.5'} rounded-md text-xs font-bold transition-colors ${isActive
           ? 'bg-accent text-accent-foreground'
           : 'text-accent-foreground hover:bg-muted hover:text-foreground'
           }`}
@@ -331,16 +331,16 @@ const Sidebar = () => {
           side="right"
           className="flex items-center gap-2"
         >
-          <span className="font-medium">{item.label}</span>
+          <span className="font-bold">{item.label}</span>
           {item.shortcut && (
             <div className="flex items-center gap-1 ml-2 pl-2 border-l border-border">
               {item.shortcut.split(' ').map((key, idx) => (
-                <kbd
+                <h2
                   key={idx}
-                  className="px-1.5 py-0.5 rounded text-xs font-mono bg-muted text-muted-foreground"
+                  className="px-1.5 py-0.5 rounded text-xs font-bold bg-muted text-muted-foreground"
                 >
                   {key}
-                </kbd>
+                </h2>
               ))}
             </div>
           )}
@@ -382,11 +382,11 @@ const Sidebar = () => {
                       Search...
                     </div>
                     <div className="absolute right-2 bottom-1">
-                      <kbd
+                      <h2
                         className="px-1.5 py-0.5 rounded text-xs font-mono bg-muted text-muted-foreground"
                       >
                         {shortcutKey}
-                      </kbd>
+                      </h2>
                     </div>
                   </div>
                   <button
@@ -427,7 +427,7 @@ const Sidebar = () => {
                           setActiveSection('scrapiStore');
                           navigate('/store');
                         }}
-                        className={`w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${isStorePage
+                        className={`w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-md text-xs font-bold transition-colors ${isStorePage
                           ? 'bg-accent text-accent-foreground'
                           : 'text-accent-foreground hover:bg-muted hover:text-foreground'
                           }`}
@@ -440,10 +440,10 @@ const Sidebar = () => {
                       side="right"
                       className="flex items-center gap-2"
                     >
-                      <span className="font-medium">Scrapi Store</span>
+                      <span className="font-bold">Scrapi Store</span>
                       <div className="flex items-center gap-1 ml-2 pl-2 border-l border-border">
-                        <kbd className="px-1.5 py-0.5 rounded text-xs font-mono bg-muted text-muted-foreground">S</kbd>
-                        <kbd className="px-1.5 py-0.5 rounded text-xs font-mono bg-muted text-muted-foreground">O</kbd>
+                        <h2 className="px-1.5 py-0.5 rounded text-xs font-bold bg-muted text-muted-foreground">S</h2>
+                        <h2 className="px-1.5 py-0.5 rounded text-xs font-bold bg-muted text-muted-foreground">O</h2>
                       </div>
                     </TooltipContent>
                   </Tooltip>
@@ -468,7 +468,7 @@ const Sidebar = () => {
                 <div className="mb-1">
                   <button
                     onClick={() => toggleSection('development')}
-                    className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors text-muted-foreground hover:bg-muted hover:text-foreground"
+                    className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-bold transition-colors text-muted-foreground hover:bg-muted hover:text-foreground"
                   >
                     <span>Development</span>
                     {expandedSections.development ? (
@@ -525,10 +525,10 @@ const Sidebar = () => {
                     side="right"
                     className="flex items-center gap-2"
                   >
-                    <span className="font-medium">Scrapi Store</span>
+                    <span className="font-bold">Scrapi Store</span>
                     <div className="flex items-center gap-1 ml-2 pl-2 border-l border-border">
-                      <kbd className="px-1.5 py-0.5 rounded text-xs font-mono bg-muted text-muted-foreground">S</kbd>
-                      <kbd className="px-1.5 py-0.5 rounded text-xs font-mono bg-muted text-muted-foreground">O</kbd>
+                      <h2 className="px-1.5 py-0.5 rounded text-xs font-bold bg-muted text-muted-foreground">S</h2>
+                      <h2 className="px-1.5 py-0.5 rounded text-xs font-bold bg-muted text-muted-foreground">O</h2>
                     </div>
                   </TooltipContent>
                 </Tooltip>
@@ -583,12 +583,12 @@ const Sidebar = () => {
                 <div className="mb-2.5">
                   <div className="flex justify-between text-xs mb-1">
                     <span
-                      className="text-muted-foreground"
+                      className="text-muted-foreground font-semibold"
                     >
                       RAM Usage
                     </span>
                     <span
-                      className="font-medium text-foreground"
+                      className="font-semibold text-foreground"
                     >
                       {billingData ? (
                         `${billingData.ramUsage?.used_mb >= 1024
@@ -602,21 +602,22 @@ const Sidebar = () => {
                   </div>
                   <Progress
                     value={billingData ? Math.min(100, (billingData.ramUsage?.used_mb / billingData.ramUsage?.limit_mb) * 100) : 0}
-                    className="h-1.5 bg-muted"
+                    // value={50}
+                    className="h-1 bg-muted"
                   />
                 </div>
 
                 {/* Credit Usage */}
                 <div className="mb-3.5">
                   <div className="flex justify-between text-xs mb-1">
-                    <span className="text-muted-foreground">Credit Usage</span>
-                    <span className="font-medium text-foreground">
+                    <span className="text-muted-foreground font-semibold">Credit Usage</span>
+                    <span className="font-semibold text-foreground">
                       {billingData ? `$${billingData.planConsumption?.freeUsed.toFixed(2)} / $${billingData.planConsumption?.freeTotal.toFixed(2)}` : '$0.00 / $5.00'}
                     </span>
                   </div>
                   <Progress
                     value={billingData ? Math.min(100, (billingData.planConsumption?.freeUsed / billingData.planConsumption?.freeTotal) * 100) : 0}
-                    className="h-1.5 bg-blue-500/20"
+                    className="h-1 bg-blue-500/20"
                     indicatorColor="bg-blue-500"
                   />
                 </div>
@@ -640,7 +641,7 @@ const Sidebar = () => {
                     <span
                       className="text-sm font-semibold text-foreground"
                     >
-                      scrapi
+                      Scrapi
                     </span>
                   </div>
                   <div className="flex items-center space-x-1">
@@ -665,10 +666,10 @@ const Sidebar = () => {
                         side="right"
                         className="flex items-center gap-2"
                       >
-                        <span className="font-medium">Collapse Sidebar</span>
+                        <span className="font-bold">Collapse Sidebar</span>
                         <div className="flex items-center gap-1 ml-2 pl-2 border-l border-border">
-                          <kbd className="px-1.5 py-0.5 rounded text-xs font-mono bg-muted text-muted-foreground">{isMac ? '⌘' : 'Ctrl'}</kbd>
-                          <kbd className="px-1.5 py-0.5 rounded text-xs font-mono bg-muted text-muted-foreground">B</kbd>
+                          <h2 className="px-1.5 py-0.5 rounded text-xs font-bold bg-muted text-muted-foreground">{isMac ? '⌘' : 'Ctrl'}</h2>
+                          <h2 className="px-1.5 py-0.5 rounded text-xs font-bold bg-muted text-muted-foreground">B</h2>
                         </div>
                       </TooltipContent>
                     </Tooltip>
@@ -704,10 +705,10 @@ const Sidebar = () => {
                     side="right"
                     className="flex items-center gap-2"
                   >
-                    <span className="font-medium">Expand Sidebar</span>
+                    <span className="font-bold">Expand Sidebar</span>
                     <div className="flex items-center gap-1 ml-2 pl-2 border-l border-border">
-                      <kbd className="px-1.5 py-0.5 rounded text-xs font-mono bg-muted text-muted-foreground">{isMac ? '⌘' : 'Ctrl'}</kbd>
-                      <kbd className="px-1.5 py-0.5 rounded text-xs font-mono bg-muted text-muted-foreground">B</kbd>
+                      <h2 className="px-1.5 py-0.5 rounded text-xs font-bold bg-muted text-muted-foreground">{isMac ? '⌘' : 'Ctrl'}</h2>
+                      <h2 className="px-1.5 py-0.5 rounded text-xs font-bold bg-muted text-muted-foreground">B</h2>
                     </div>
                   </TooltipContent>
                 </Tooltip>

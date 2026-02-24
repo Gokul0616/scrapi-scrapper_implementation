@@ -2,21 +2,12 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
-import CustomBarChart from './CustomBarChart';
+import CustomBarChart, { SERVICE_THEMES } from './CustomBarChart';
 import CustomDropdown from './CustomDropdown';
 import CustomTooltip from './CustomTooltip';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
-
-const COLORS = [
-    '#10b981', // emerald-500 (Actor compute units)
-    '#f97316', // orange-500 (Proxy)
-    '#8b5cf6', // violet-500 (Data transfer)
-    '#06b6d4', // cyan-500 (Storage)
-    '#f43f5e', // rose-500
-    '#3b82f6', // blue-500
-];
 
 const HistoricalUsageView = ({ currentWorkspace }) => {
     const { user } = useAuth();
@@ -61,7 +52,6 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
     }, [currentWorkspace, selectedMonth, selectedYear]);
 
     const handlePrevMonth = () => {
-        // Prevent navigating past the account creation month/year
         if (selectedYear === creationDate.getFullYear() && selectedMonth === (creationDate.getMonth() + 1)) {
             return;
         }
@@ -77,7 +67,6 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
     };
 
     const handleNextMonth = () => {
-        // Prevent navigating past the current actual month/year
         if (selectedYear === currentDate.getFullYear() && selectedMonth === (currentDate.getMonth() + 1)) {
             return;
         }
@@ -137,7 +126,6 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
             const y = date.getFullYear();
             const m = date.getMonth() + 1;
 
-            // Stop generating options before the account was created
             if (y < creationDate.getFullYear() || (y === creationDate.getFullYear() && m < (creationDate.getMonth() + 1))) {
                 break;
             }
@@ -153,9 +141,6 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
     const chartData = useMemo(() => {
         if (!data || !data.daily_usage) return [];
 
-        // Time aggregation: Daily vs Monthly
-        // For now, if "Monthly" is selected, we just sum up the whole month to a single bar.
-        // In Apify, "Monthly" spans the whole year, but since our API returns data per month, we will just show 1 bar.
         let baseData = data.daily_usage;
         if (timeAgg === 'Monthly') {
             const totalUnits = baseData.reduce((acc, curr) => acc + (curr['Actor compute units'] || 0), 0);
@@ -165,7 +150,6 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
             }];
         }
 
-        // Amount type: Absolute vs Cumulative
         if (viewType === 'Cumulative') {
             let cumulativeSum = 0;
             return baseData.map(day => {
@@ -180,153 +164,203 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
         return baseData;
     }, [data, timeAgg, viewType, selectedMonth, selectedYear]);
 
+    // Dynamically get the services the backend returned so the legend only shows active ones
+    const activeServices = useMemo(() => {
+        if (!chartData || chartData.length === 0) return [];
+        const keys = new Set();
+        chartData.forEach(day => {
+            Object.keys(day).forEach(key => {
+                if (key !== 'date' && key !== 'formattedDate' && SERVICE_THEMES[key]) {
+                    keys.add(key);
+                }
+            });
+        });
+        return Array.from(keys);
+    }, [chartData]);
+
+    // Stable pattern-id helper matching CustomBarChart
+    const pid = (key) => `stripe-${key.replace(/[\s()/-]+/g, '-').toLowerCase()}`;
+
     return (
-        <div className="space-y-6">
-            <div className="text-sm text-foreground">
-                Here you can view your raw platform usage, which does not reflect free Actor compute units or other discounts from your subscription plan. See actual billed amounts in the <span className="text-blue-500 cursor-pointer hover:underline">Current period</span> or past <span className="text-blue-500 cursor-pointer hover:underline">Invoices</span>.
+        <div className="space-y-2 w-full mx-auto">
+            {/* Hidden SVG defs – shared across legend + tooltip pattern dots */}
+            <svg width="0" height="0" style={{ position: 'absolute', overflow: 'hidden' }}>
+                <defs>
+                    {Object.entries(SERVICE_THEMES).filter(([, t]) => t.pattern).map(([key, t]) => (
+                        <pattern
+                            key={key}
+                            id={pid(key)}
+                            patternUnits="userSpaceOnUse"
+                            width="6"
+                            height="6"
+                            patternTransform="rotate(45)"
+                        >
+                            <rect width="6" height="6" fill="white" opacity="0.6" />
+                            <rect width="3" height="6" fill={t.color} />
+                        </pattern>
+                    ))}
+                </defs>
+            </svg>
+
+            {/* Info text */}
+            <p className="text-sm text-muted-foreground leading-relaxed">
+                Here you can view your raw platform usage, which does not reflect free Actor compute units
+                or other discounts from your subscription plan. See actual billed amounts in the{' '}
+                <span className="text-blue-500 cursor-pointer hover:underline">Current period</span> or past{' '}
+                <span className="text-blue-500 cursor-pointer hover:underline">Invoices</span>.
+            </p>
+
+            {/* Month selector row – right-aligned, outside the chart card */}
+            <div className="flex justify-end items-center gap-0.5">
+                <CustomTooltip content="Previous Month (z + ←)">
+                    <button
+                        id="prev-month-btn"
+                        onClick={handlePrevMonth}
+                        disabled={selectedYear === creationDate.getFullYear() && selectedMonth === (creationDate.getMonth() + 1)}
+                        className="p-1 border border-border rounded-l-md bg-card text-foreground hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                        <ChevronLeft className="w-4 h-4" />
+                    </button>
+                </CustomTooltip>
+                <CustomTooltip content="Next Month (z + →)">
+                    <button
+                        id="next-month-btn"
+                        onClick={handleNextMonth}
+                        disabled={selectedYear === currentDate.getFullYear() && selectedMonth === (currentDate.getMonth() + 1)}
+                        className="p-1 border border-border rounded-r-md bg-card text-foreground hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed transition-colors border-l-0"
+                    >
+                        <ChevronRight className="w-4 h-4" />
+                    </button>
+                </CustomTooltip>
+                <div className="ml-2">
+                    <CustomDropdown
+                        value={`${selectedYear}-${selectedMonth.toString().padStart(2, '0')}`}
+                        onChange={handleMonthChange}
+                        options={monthOptions}
+                    />
+                </div>
             </div>
 
-            {/* Controls Container */}
-            <div className="flex flex-col sm:flex-row justify-between items-center bg-card rounded-t-lg border-t border-l border-r border-border p-4 gap-4">
-                {/* Left Side: Time Aggregation Tab */}
-                <div className="flex items-center bg-muted rounded-md border border-border p-0.5">
-                    <button
-                        onClick={() => setTimeAgg('Daily')}
-                        className={`px-3.5 py-1 text-sm font-medium rounded-md transition-colors ${timeAgg === 'Daily' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                    >
-                        Daily
-                    </button>
-                    <button
-                        onClick={() => setTimeAgg('Monthly')}
-                        className={`px-3.5 py-1 text-sm font-medium rounded-md transition-colors ${timeAgg === 'Monthly' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                    >
-                        Monthly
-                    </button>
-                </div>
+            {/* ── Main chart card ─────────────────────────────────────────────── */}
+            <div
+                className="bg-card rounded-lg border border-border"
+                style={{ display: 'flex', flexDirection: 'column' }}
+            >
+                <div className="flex overflow-hidden rounded-lg ">
 
-                {/* Right Side: Month Selection & View Type Tab */}
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center justify-end">
-                        <div className="flex items-center">
-                            <CustomTooltip content="Previous Month (z + ←)">
-                                <button
-                                    id="prev-month-btn"
-                                    onClick={handlePrevMonth}
-                                    className={`p-1 border border-border border-r-0 rounded-l-md text-foreground m-0.5 bg-card ${selectedYear === creationDate.getFullYear() && selectedMonth === (creationDate.getMonth() + 1) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted'}`}
-                                    disabled={selectedYear === creationDate.getFullYear() && selectedMonth === (creationDate.getMonth() + 1)}
-                                >
-                                    <ChevronLeft className="w-5 h-5" />
-                                </button>
-                            </CustomTooltip>
-                            <CustomTooltip content="Next Month (z + →)">
-                                <button
-                                    id="next-month-btn"
-                                    onClick={handleNextMonth}
-                                    className={`p-1 border border-border border-r-0 text-foreground m-0.5 bg-card ${selectedYear === currentDate.getFullYear() && selectedMonth === (currentDate.getMonth() + 1) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted'}`}
-                                    disabled={selectedYear === currentDate.getFullYear() && selectedMonth === (currentDate.getMonth() + 1)}
-                                >
-                                    <ChevronRight className="w-5 h-5" />
-                                </button>
-                            </CustomTooltip>
-                            <div className="ml-3 flex h-9">
-                                <CustomDropdown
-                                    value={`${selectedYear}-${selectedMonth.toString().padStart(2, '0')}`}
-                                    onChange={handleMonthChange}
-                                    options={monthOptions}
-                                />
+                    {/* ── Left: chart column ────── */}
+                    <div className="flex-1 min-w-0 px-2 pt-2 pb-0 flex flex-col">
+                        {/* Toggle bar: Daily/Monthly on left, Absolute/Cumulative on right */}
+                        <div className="flex justify-between items-center mb-2 px-2">
+                            {/* Daily / Monthly */}
+                            <div className="flex items-center bg-muted rounded-md p-0.5 text-sm">
+                                {['Daily', 'Monthly'].map(opt => (
+                                    <button
+                                        key={opt}
+                                        onClick={() => setTimeAgg(opt)}
+                                        className={`px-3 py-1 rounded font-medium transition-all text-sm ${timeAgg === opt
+                                            ? 'bg-white dark:bg-card text-foreground shadow-sm'
+                                            : 'bg-transparent text-muted-foreground hover:text-foreground'
+                                            }`}
+                                    >
+                                        {opt}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Absolute / Cumulative */}
+                            <div className="flex items-center bg-muted rounded-md p-0.5 text-sm">
+                                {['Absolute', 'Cumulative'].map(opt => (
+                                    <button
+                                        key={opt}
+                                        onClick={() => setViewType(opt)}
+                                        className={`px-3 py-1 rounded font-medium transition-all text-sm ${viewType === opt
+                                            ? 'bg-white dark:bg-card text-foreground shadow-sm'
+                                            : 'bg-transparent text-muted-foreground hover:text-foreground'
+                                            }`}
+                                    >
+                                        {opt}
+                                    </button>
+                                ))}
                             </div>
                         </div>
+
+                        {/* Chart body – fills remaining height */}
+                        {isLoading ? (
+                            <div className="flex-1 flex items-center justify-center" style={{ minHeight: 400 }}>
+                                <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                            </div>
+                        ) : error ? (
+                            <div
+                                className="flex-1 flex items-center justify-center text-destructive bg-destructive/10 rounded-lg p-4 border border-destructive/20 font-medium"
+                                style={{ minHeight: 400 }}
+                            >
+                                {error}
+                            </div>
+                        ) : (
+                            <div className="flex-1" style={{ minHeight: 400 }}>
+                                <CustomBarChart data={chartData} timeAgg={timeAgg} viewType={viewType} />
+                            </div>
+                        )}
                     </div>
-                    <div className="hidden sm:flex items-center bg-muted rounded-md border border-border p-0.5">
-                        <button
-                            onClick={() => setViewType('Absolute')}
-                            className={`px-3.5 py-1 text-sm font-medium rounded-md transition-colors ${viewType === 'Absolute' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                        >
-                            Absolute
-                        </button>
-                        <button
-                            onClick={() => setViewType('Cumulative')}
-                            className={`px-3.5 py-1 text-sm font-medium rounded-md transition-colors ${viewType === 'Cumulative' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                        >
-                            Cumulative
-                        </button>
+
+                    {/* ── Right: legend column ────── */}
+                    <div className="shrink-0 border-l border-border px-3 py-3 w-52 hidden md:flex flex-col gap-2 justify-start pt-[56px]">
+                        {activeServices.map(key => {
+                            const theme = SERVICE_THEMES[key];
+                            return (
+                                <div key={key} className="flex items-center gap-2 text-xs text-muted-foreground whitespace-nowrap">
+                                    <svg width="12" height="12" viewBox="0 0 12 12" className="shrink-0">
+                                        <circle cx="6" cy="6" r="6"
+                                            fill={theme.pattern ? `url(#${pid(key)})` : theme.color} />
+                                    </svg>
+                                    <span className="truncate">{key}</span>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             </div>
 
-            {/* Mobile View Type Tab (wrap under) */}
-            <div className="sm:hidden flex items-center justify-center bg-muted rounded-md border border-border p-1 w-full mx-auto max-w-sm mt-[-10px] mb-4">
-                <button
-                    onClick={() => setViewType('Absolute')}
-                    className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${viewType === 'Absolute' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                >
-                    Absolute
-                </button>
-                <button
-                    onClick={() => setViewType('Cumulative')}
-                    className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${viewType === 'Cumulative' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                >
-                    Cumulative
-                </button>
-            </div>
-
-            {/* Chart Section */}
-            <div className="bg-card border-x border-b border-border rounded-b-lg p-6 min-h-[400px]">
-                {isLoading ? (
-                    <div className="flex items-center justify-center h-full min-h-[400px]">
-                        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-                    </div>
-                ) : error ? (
-                    <div className="flex items-center justify-center h-full min-h-[400px] text-destructive bg-destructive/10 rounded-lg max-w-sm mx-auto my-auto p-4 border border-destructive/20 font-medium">
-                        {error}
-                    </div>
-                ) : (
-                    <div className="h-[400px] w-full">
-                        <CustomBarChart data={chartData} timeAgg={timeAgg} viewType={viewType} />
-                    </div>
-                )}
-            </div>
-
-            {/* Actors Usage Table */}
+            {/* ── Actors Usage Table ─────────────────────────────────────────── */}
             {!isLoading && !error && data && data.actor_usage.length > 0 && (
-                <div className="border border-border rounded-lg bg-card overflow-hidden mt-4">
-                    <div className="px-3 py-2 border-b border-border flex items-center gap-2">
-                        <h3 className="font-semibold text-[14px] text-foreground">Usage by Actors</h3>
+                <div className="border border-border rounded-lg bg-card overflow-hidden">
+                    <div className="px-4 py-2.5 border-b border-border flex items-center gap-2">
+                        <h3 className="font-semibold text-sm text-foreground">Usage by Actors</h3>
                     </div>
-                    <div className="w-full">
-                        <table className="w-full text-left">
-                            <thead>
-                                <tr className="border-b border-border bg-muted/50 text-[12px] text-foreground">
-                                    <th className="px-3 py-1.5 font-medium text-foreground">Actor</th>
-                                    <th className="px-3 py-1.5 font-medium text-right text-foreground">Total usage</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {data.actor_usage.map((actor, i) => (
-                                    <tr key={i} className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors">
-                                        <td className="px-3 py-2">
-                                            <div className="flex items-center gap-2.5">
-                                                <div className="w-6 h-6 rounded shrink-0 flex items-center justify-center text-sm bg-white relative">
-                                                    {actor.actor_icon ? (
-                                                        <img src={actor.actor_icon} alt={actor.actor_name} className="w-full h-full object-cover rounded" />
-                                                    ) : (
-                                                        <span>🌐</span>
-                                                    )}
-                                                </div>
-                                                <div>
-                                                    <div className="font-medium text-[13px] text-foreground">{actor.actor_name}</div>
-                                                    <div className="text-[10px] text-muted-foreground hidden sm:block">compass/{actor.actor_id.toLowerCase()}</div>
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr className="border-b border-border bg-muted/30 text-xs text-muted-foreground">
+                                <th className="px-4 py-2 font-medium">Actor</th>
+                                <th className="px-4 py-2 font-medium text-right">Total usage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {data.actor_usage.map((actor, i) => (
+                                <tr key={i} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+                                    <td className="px-4 py-2.5">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-7 h-7 rounded shrink-0 flex items-center justify-center text-sm bg-white border border-border overflow-hidden">
+                                                {actor.actor_icon
+                                                    ? <img src={actor.actor_icon} alt={actor.actor_name} className="w-full h-full object-cover" />
+                                                    : <span className="opacity-60">🌐</span>
+                                                }
+                                            </div>
+                                            <div>
+                                                <div className="font-medium text-[13px] text-foreground">{actor.actor_name}</div>
+                                                <div className="text-[11px] text-muted-foreground hidden sm:block">
+                                                    scrapi/{actor.actor_id?.toLowerCase().substring(0, 8)}…
                                                 </div>
                                             </div>
-                                        </td>
-                                        <td className="px-3 py-2 text-right font-medium text-foreground text-[13px]">
-                                            ${actor.total_usage.toFixed(2)}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-4 py-2.5 text-right font-semibold text-foreground text-sm">
+                                        ${actor.total_usage.toFixed(2)}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             )}
         </div>
@@ -334,3 +368,4 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
 };
 
 export default HistoricalUsageView;
+

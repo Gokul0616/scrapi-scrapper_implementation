@@ -441,6 +441,50 @@ async def redoc_html(current_user: dict = Depends(get_docs_user), theme: Optiona
             border: 1px solid {"#334155" if is_dark else "#e2e8f0"} !important;
             border-radius: 4px !important;
         }}
+        
+        /* Fix Inputs and Dropdowns */
+        input, textarea {{
+            background: {"#1e293b" if is_dark else "#ffffff"} !important;
+            color: {text_color} !important;
+            border-color: {"#334155" if is_dark else "#e2e8f0"} !important;
+        }}
+        
+        select {{
+            background: {"#0f172a" if is_dark else "#ffffff"} !important;
+            color: {"#f8fafc" if is_dark else "#1e293b"} !important;
+            border: 1px solid {"#334155" if is_dark else "#e2e8f0"} !important;
+        }}
+
+        option {{
+            background: {"#0f172a" if is_dark else "#ffffff"} !important;
+            color: {"#f8fafc" if is_dark else "#1e293b"} !important;
+        }}
+        
+        /* Select dropdown wrapper specific fix */
+        div[class*="Dropdown"] select,
+        .sc-bOikfv, .sc-dIouRR,
+        /* React tabs and generic white wrappers */
+        .react-tabs__tab-panel div,
+        div[class*="Operation"] div[style*="background"],
+        div[class*="Server"] div {{
+            background-color: {"transparent" if is_dark else "inherit"} !important;
+            color: {"#f8fafc" if is_dark else "inherit"} !important;
+        }}
+        
+        /* Explicit Server Input Box & Response tabs */
+        .react-tabs__tab-list, .react-tabs__tab {{
+            background: {"#0f172a" if is_dark else "inherit"} !important;
+            color: {text_color} !important;
+        }}
+        
+        /* Any container with a hardcoded white background */
+        div[style*="background: white"],
+        div[style*="background-color: white"],
+        div[style*="background: #ffffff"],
+        div[style*="background-color: #ffffff"],
+        div[style*="background-color: rgb(255, 255, 255)"] {{
+            background-color: {"#1e293b" if is_dark else "#ffffff"} !important;
+        }}
         .api-content {{ background: {bg} !important; }}
         
         /* Fix ReDoc Dim Labels (Authorizations, Schema titles, etc) */

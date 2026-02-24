@@ -124,7 +124,7 @@ const UserDropdown = ({ isCollapsed = false }) => {
                     className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
                     style={{ background: profileColor }}
                   >
-                    <span className="text-white text-sm font-semibold">{userInitials}</span>
+                    <span className="text-white text-sm font-bold">{userInitials}</span>
                   </div>
                 )}
               </button>
@@ -195,7 +195,7 @@ const UserDropdown = ({ isCollapsed = false }) => {
                       </div>
                     )}
                     <div className="flex-1 min-w-0 text-left">
-                      <div className="font-medium text-xs text-foreground">
+                      <div className="font-medium text-xs text-foreground font-bold">
                         {currentWorkspaceName}
                       </div>
                       <div className="text-xs truncate text-muted-foreground">
@@ -214,7 +214,7 @@ const UserDropdown = ({ isCollapsed = false }) => {
                       <div className="flex items-center justify-between space-x-1.5 mb-1 mt-2 px-1">
                         <div className="flex items-center space-x-1.5">
                           <Building2 className="w-3 h-3 text-muted-foreground" />
-                          <div className="text-xs tracking-wider text-muted-foreground">
+                          <div className="text-xs tracking-wider text-muted-foreground font-bold">
                             Organizations
                           </div>
                         </div>
@@ -240,9 +240,9 @@ const UserDropdown = ({ isCollapsed = false }) => {
                         >
                           <Building2 className="w-3 h-3" />
                           <div className="flex-1 text-left min-w-0">
-                            <div className="truncate">{workspace.workspace_name}</div>
+                            <div className="truncate font-semibold">{workspace.workspace_name}</div>
                             {workspace.role && (
-                              <div className="text-xs text-muted-foreground">
+                              <div className="text-xs text-muted-foreground font-semibold">
                                 {workspace.role.charAt(0).toUpperCase() + workspace.role.slice(1)}
                               </div>
                             )}
@@ -259,7 +259,7 @@ const UserDropdown = ({ isCollapsed = false }) => {
                       <div className="border-b border-border py-1">
                         <div className="flex items-center space-x-1.5 mb-1 mt-2 px-1">
                           <User className="w-3 h-3 text-muted-foreground" />
-                          <div className="text-xs tracking-wider text-muted-foreground">
+                          <div className="text-xs tracking-wider text-muted-foreground font-bold">
                             Switch Account
                           </div>
                         </div>
@@ -269,7 +269,7 @@ const UserDropdown = ({ isCollapsed = false }) => {
                           className="w-full flex items-center space-x-2.5 rounded-md text-xs transition-colors m-1 px-1 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                         >
                           <User className="w-3 h-3" />
-                          <span className="flex-1 text-left">{user?.username || personalWorkspace.workspace_name}</span>
+                          <span className="flex-1 text-left font-medium">{user?.username || personalWorkspace.workspace_name}</span>
                         </button>
                       </div>
                     )}
@@ -280,7 +280,7 @@ const UserDropdown = ({ isCollapsed = false }) => {
                         <div className="flex items-center justify-between space-x-1.5 mb-1 mt-2 px-1">
                           <div className="flex items-center space-x-1.5">
                             <Building2 className="w-3 h-3 text-muted-foreground" />
-                            <div className="text-xs tracking-wider text-muted-foreground">
+                            <div className="text-xs tracking-wider text-muted-foreground font-bold">
                               Organizations
                             </div>
                           </div>
@@ -308,9 +308,9 @@ const UserDropdown = ({ isCollapsed = false }) => {
                             >
                               <Building2 className="w-3 h-3" />
                               <div className="flex-1 text-left min-w-0">
-                                <div className="truncate">{workspace.workspace_name}</div>
+                                <div className="truncate font-semibold">{workspace.workspace_name}</div>
                                 {workspace.role && (
-                                  <div className="text-xs text-muted-foreground">
+                                  <div className="text-xs text-muted-foreground font-semibold">
                                     {workspace.role.charAt(0).toUpperCase() + workspace.role.slice(1)}
                                   </div>
                                 )}
@@ -329,7 +329,7 @@ const UserDropdown = ({ isCollapsed = false }) => {
                     <button
                       onClick={handleCreateOrganization}
                       style={{ fontSize: '13px' }}
-                      className="w-full flex items-center space-x-2.5 rounded-md text-xs transition-colors m-1 px-1 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                      className="w-full flex items-center space-x-2.5 rounded-md text-xs transition-colors m-1 px-1 py-1.5 font-bold text-muted-foreground hover:bg-muted hover:text-foreground"
                     >
                       <Plus className="w-3 h-3" />
                       <span>Create organization</span>
@@ -341,7 +341,7 @@ const UserDropdown = ({ isCollapsed = false }) => {
                 <div className="border-b border-border">
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center space-x-2.5 rounded-md text-xs font-medium transition-colors m-1 px-1 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    className="w-full flex items-center space-x-2.5 rounded-md text-xs font-bold transition-colors m-1 px-1 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                     data-testid="sign-out-button"
                   >
                     <LogOut className="w-3 h-3" />
@@ -467,7 +467,7 @@ const UserDropdown = ({ isCollapsed = false }) => {
                   </div>
                 )}
                 <div className="flex-1 min-w-0 text-left">
-                  <div className="font-medium text-xs text-foreground">
+                  <div className="font-semibold text-xs text-foreground">
                     {currentWorkspaceName}
                   </div>
                   <div className="text-xs truncate text-muted-foreground">
@@ -486,7 +486,7 @@ const UserDropdown = ({ isCollapsed = false }) => {
                   <div className="flex items-center justify-between space-x-1.5 mb-1 mt-2 px-1">
                     <div className="flex items-center space-x-1.5">
                       <Building2 className="w-3 h-3 text-muted-foreground" />
-                      <div className="text-xs tracking-wider text-muted-foreground">
+                      <div className="text-xs tracking-wider text-muted-foreground font-bold">
                         Organizations
                       </div>
                     </div>
@@ -512,9 +512,9 @@ const UserDropdown = ({ isCollapsed = false }) => {
                     >
                       <Building2 className="w-3 h-3" />
                       <div className="flex-1 text-left min-w-0">
-                        <div className="truncate">{workspace.workspace_name}</div>
+                        <div className="truncate font-medium">{workspace.workspace_name}</div>
                         {workspace.role && (
-                          <div className="text-xs text-muted-foreground">
+                          <div className="text-xs text-muted-foreground font-medium">
                             {workspace.role.charAt(0).toUpperCase() + workspace.role.slice(1)}
                           </div>
                         )}
@@ -531,7 +531,7 @@ const UserDropdown = ({ isCollapsed = false }) => {
                   <div className="border-b border-border py-1">
                     <div className="flex items-center space-x-1.5 mb-1 mt-2 px-1">
                       <User className="w-3 h-3 text-muted-foreground" />
-                      <div className="text-xs tracking-wider text-muted-foreground">
+                      <div className="text-xs tracking-wider text-muted-foreground font-bold">
                         Switch Account
                       </div>
                     </div>
@@ -541,7 +541,7 @@ const UserDropdown = ({ isCollapsed = false }) => {
                       className="w-full flex items-center space-x-2.5 rounded-md text-xs transition-colors m-1 px-1 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                     >
                       <User className="w-3 h-3" />
-                      <span className="flex-1 text-left">{personalWorkspace.workspace_name}</span>
+                      <span className="flex-1 text-left font-medium">{personalWorkspace.workspace_name}</span>
                     </button>
                   </div>
                 )}
@@ -552,7 +552,7 @@ const UserDropdown = ({ isCollapsed = false }) => {
                     <div className="flex items-center justify-between space-x-1.5 mb-1 mt-2 px-1">
                       <div className="flex items-center space-x-1.5">
                         <Building2 className="w-3 h-3 text-muted-foreground" />
-                        <div className="text-xs tracking-wider text-muted-foreground">
+                        <div className="text-xs tracking-wider text-muted-foreground font-bold">
                           Organizations
                         </div>
                       </div>
@@ -601,7 +601,7 @@ const UserDropdown = ({ isCollapsed = false }) => {
                 <button
                   onClick={handleCreateOrganization}
                   style={{ fontSize: '13px' }}
-                  className="w-full flex items-center space-x-2.5 rounded-md text-xs transition-colors m-1 px-1 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  className="w-full flex items-center font-bold space-x-2.5 rounded-md text-xs transition-colors m-1 px-1 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                 >
                   <Plus className="w-3 h-3" />
                   <span>Create organization</span>
@@ -613,7 +613,7 @@ const UserDropdown = ({ isCollapsed = false }) => {
             <div className="border-b border-border">
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center space-x-2.5 rounded-md text-xs font-medium transition-colors m-1 px-1 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="w-full flex items-center space-x-2.5 rounded-md text-xs font-bold transition-colors m-1 px-1 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                 data-testid="sign-out-button"
               >
                 <LogOut className="w-3 h-3" />

@@ -22,12 +22,11 @@ import {
     X
 } from 'lucide-react';
 import { clsx } from 'clsx';
-
 import CustomTooltip from './CustomTooltip';
 
 export const Layout: React.FC = () => {
     const { user, logout } = useAuth();
-    const { toggleTheme } = useTheme();
+    const { toggleTheme, theme } = useTheme();
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -340,14 +339,14 @@ export const Layout: React.FC = () => {
                             <div className="flex items-center justify-between mt-2 pt-2 border-t border-border">
                                 <div className="flex items-center space-x-2">
                                     <div className="w-5 h-5 flex items-center justify-center">
-                                        <img src="/logo.png" alt="Scrapi" className="max-w-full max-h-full dark:brightness-0 dark:invert" />
+                                        <img src="/logo.png" alt="Scrapi" className="max-w-full max-h-full" style={{ filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none' }} />
                                     </div>
                                     <span className="text-sm font-semibold text-foreground tracking-tight">
                                         Scrapi Admin
                                     </span>
                                 </div>
                                 <div className="flex items-center space-x-1">
-                                    <CustomTooltip content={
+                                    <CustomTooltip className="inline-flex" content={
                                         <div className="flex items-center gap-2">
                                             {isCollapsed && <span>Collapse Sidebar</span>}
                                             <div className={clsx("flex items-center gap-1", isCollapsed ? "ml-2 pl-2 border-l border-border" : "")}>
@@ -356,7 +355,7 @@ export const Layout: React.FC = () => {
                                                 ))}
                                             </div>
                                         </div>
-                                    } isDisabled={!isCollapsed}>
+                                    } isDisabled={isCollapsed}>
                                         <button
                                             onClick={() => setIsCollapsed(true)}
                                             className="p-1.5 rounded transition-colors hover:bg-muted text-muted-foreground cursor-pointer"
@@ -369,7 +368,7 @@ export const Layout: React.FC = () => {
                         </>
                     ) : (
                         <div className="flex flex-col items-center space-y-2 mb-1 mt-1">
-                            <CustomTooltip content={
+                            <CustomTooltip className="inline-flex" content={
                                 <div className="flex items-center gap-2">
                                     <span>Expand Sidebar</span>
                                     <div className="flex items-center gap-1 ml-2 pl-2 border-l border-border">
@@ -397,7 +396,7 @@ export const Layout: React.FC = () => {
                     <button onClick={() => setIsMobileMenuOpen(true)} className="p-1.5 -ml-1.5 rounded-md hover:bg-muted text-muted-foreground cursor-pointer">
                         <Menu className="w-5 h-5" />
                     </button>
-                    <img src="/logo.png" alt="Scrapi" className="h-6 w-auto dark:brightness-0 dark:invert" />
+                    <img src="/logo.png" alt="Scrapi" className="h-6 w-auto" style={{ filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none' }} />
                 </div>
                 <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold ring-1 ring-border">
                     {userInitials}

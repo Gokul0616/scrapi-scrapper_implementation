@@ -36,32 +36,32 @@ function Store() {
   const fetchInitialData = async () => {
     try {
       const token = localStorage.getItem('token');
-      
+
       // Fetch categories
       const categoriesRes = await fetch(`${BACKEND_URL}/api/store/categories`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const categoriesData = await categoriesRes.json();
       setCategories(categoriesData);
-      
+
       // Fetch featured actors for landing
       const featuredRes = await fetch(`${BACKEND_URL}/api/store/featured?limit=6`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const featuredData = await featuredRes.json();
       setFeaturedActors(featuredData);
-      
+
       // Fetch developers
       const developersRes = await fetch(`${BACKEND_URL}/api/store/developers`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const developersData = await developersRes.json();
       setDevelopers([{ id: 'all', name: 'All developers' }, ...developersData]);
-      
+
       // Get total count
       const totalCategory = categoriesData.find(c => c.id === 'all');
       setTotalActors(totalCategory?.count || 0);
-      
+
       setLoading(false);
     } catch (error) {
       console.error('Error fetching initial data:', error);
@@ -73,17 +73,17 @@ function Store() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      
+
       const params = new URLSearchParams({
         skip: '0',
         limit: '50',
         sort_by: sortBy
       });
-      
+
       if (searchQuery) params.append('search', searchQuery);
       if (selectedCategory !== 'all') params.append('category', selectedCategory);
       if (selectedDeveloper !== 'all') params.append('developer', selectedDeveloper);
-      
+
       const response = await fetch(`${BACKEND_URL}/api/store/actors?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -114,10 +114,10 @@ function Store() {
   };
 
   const hasActiveFilters = () => {
-    return selectedCategory !== 'all' || 
-           selectedDeveloper !== 'all' || 
-           selectedPricing !== 'all' || 
-           sortBy !== 'relevant';
+    return selectedCategory !== 'all' ||
+      selectedDeveloper !== 'all' ||
+      selectedPricing !== 'all' ||
+      sortBy !== 'relevant';
   };
 
   const handleCategoryClick = (categoryId) => {
@@ -131,25 +131,22 @@ function Store() {
     <div
       onClick={() => navigate(`/actor/${actor.id}`)}
       data-testid={`actor-card-${actor.id}`}
-      className={`border rounded-xl p-5 transition-all cursor-pointer group hover:shadow-lg hover:-translate-y-1 ${
-        theme === 'dark' 
-          ? 'bg-card border-border hover:border-muted-foreground/30' 
-          : 'bg-white border-gray-200 hover:border-gray-300'
-      }`}
+      className={`border rounded-xl p-5 transition-all cursor-pointer group hover:shadow-lg hover:-translate-y-1 ${theme === 'dark'
+        ? 'bg-card border-border hover:border-muted-foreground/30'
+        : 'bg-white border-gray-200 hover:border-gray-300'
+        }`}
     >
       {/* Actor Icon and Info */}
       <div className="flex items-start gap-3 mb-4">
-        <div 
-          className={`w-12 h-12 rounded flex items-center justify-center text-2xl flex-shrink-0 border ${
-            theme === 'dark' ? 'bg-card border-border' : 'bg-white border-gray-200'
-          }`}
+        <div
+          className={`w-12 h-12 rounded flex items-center justify-center text-2xl flex-shrink-0 border ${theme === 'dark' ? 'bg-card border-border' : 'bg-white border-gray-200'
+            }`}
         >
           {actor.icon || '🗺️'}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className={`font-semibold text-[15px] leading-tight mb-1 transition-colors ${
-            theme === 'dark' ? 'text-card-foreground' : 'text-gray-900'
-          }`}>
+          <h3 className={`font-semibold text-[15px] leading-tight mb-1 transition-colors ${theme === 'dark' ? 'text-card-foreground' : 'text-gray-900'
+            }`}>
             {actor.name}
           </h3>
           <p className={`text-[12px] ${theme === 'dark' ? 'text-muted-foreground' : 'text-gray-500'}`}>
@@ -159,16 +156,14 @@ function Store() {
       </div>
 
       {/* Description */}
-      <p className={`text-[13px] leading-[1.6] mb-4 line-clamp-3 min-h-[62px] ${
-        theme === 'dark' ? 'text-muted-foreground' : 'text-gray-600'
-      }`}>
+      <p className={`text-[13px] leading-[1.6] mb-4 line-clamp-3 min-h-[62px] ${theme === 'dark' ? 'text-muted-foreground' : 'text-gray-600'
+        }`}>
         {actor.description || 'No description available'}
       </p>
 
       {/* Stats */}
-      <div className={`flex items-center gap-5 text-[12px] font-medium ${
-        theme === 'dark' ? 'text-muted-foreground' : 'text-gray-600'
-      }`}>
+      <div className={`flex items-center gap-5 text-[12px] font-medium ${theme === 'dark' ? 'text-muted-foreground' : 'text-gray-600'
+        }`}>
         <div className="flex items-center gap-1.5">
           <Users className="w-3.5 h-3.5" />
           <span>{(actor.runs_count || 0).toLocaleString()}</span>
@@ -187,16 +182,14 @@ function Store() {
   // Landing View
   if (view === 'landing') {
     return (
-      <div className={`min-h-screen p-8 font-sans transition-colors ${
-        theme === 'dark' ? 'bg-background' : 'bg-background'
-      }`}>
+      <div className={`min-h-screen p-8 font-sans transition-colors ${theme === 'dark' ? 'bg-background' : 'bg-background'
+        }`}>
         <div className="max-w-[1240px] mx-auto">
-          
+
           {/* Header */}
           <div className="mb-8 text-center">
-            <h1 className={`text-[40px] font-normal mb-4 tracking-tight ${
-              theme === 'dark' ? 'text-foreground' : 'text-gray-900'
-            }`}>
+            <h1 className={`text-[40px] font-medium mb-4 tracking-tight ${theme === 'dark' ? 'text-foreground' : 'text-gray-900'
+              }`}>
               Scrapi Store
             </h1>
           </div>
@@ -204,9 +197,8 @@ function Store() {
           {/* Search Bar */}
           <div className="mb-7 max-w-[640px] mx-auto">
             <div className="relative">
-              <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 w-[18px] h-[18px] ${
-                theme === 'dark' ? 'text-muted-foreground' : 'text-gray-400'
-              }`} />
+              <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 w-[18px] h-[18px] ${theme === 'dark' ? 'text-muted-foreground' : 'text-gray-400'
+                }`} />
               <input
                 type="text"
                 placeholder="Search for Actors"
@@ -216,11 +208,10 @@ function Store() {
                   if (e.target.value) setView('all');
                 }}
                 data-testid="store-search-input"
-                className={`w-full h-[52px] pl-12 pr-4 border rounded-lg text-[15px] focus:outline-none focus:ring-2 transition-colors ${
-                  theme === 'dark' 
-                    ? 'bg-card border-border text-foreground placeholder-muted-foreground focus:ring-blue-500' 
-                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500 focus:border-blue-500'
-                }`}
+                className={`w-full h-[52px] pl-12 pr-4 border rounded-lg text-[15px] focus:outline-none focus:ring-2 transition-colors ${theme === 'dark'
+                  ? 'bg-card border-border text-foreground placeholder-muted-foreground focus:ring-blue-500'
+                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500 focus:border-blue-500'
+                  }`}
               />
             </div>
           </div>
@@ -235,11 +226,10 @@ function Store() {
                   if (cat) handleCategoryClick(cat.id);
                 }}
                 data-testid={`category-pill-${categoryName.toLowerCase().replace(/\s+/g, '-')}`}
-                className={`px-4 py-2 rounded-md text-[13px] font-medium transition-all ${
-                  theme === 'dark'
-                    ? 'bg-muted text-muted-foreground hover:bg-muted/80'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                className={`px-4 py-2 rounded-md text-[13px] font-semibold transition-all ${theme === 'dark'
+                  ? 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
               >
                 {categoryName}
               </button>
@@ -249,19 +239,17 @@ function Store() {
           {/* All Actors Section */}
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h2 className={`text-[22px] font-semibold ${
-                theme === 'dark' ? 'text-foreground' : 'text-gray-900'
-              }`}>
+              <h2 className={`text-[22px] font-semibold ${theme === 'dark' ? 'text-foreground' : 'text-gray-900'
+                }`}>
                 All Actors
               </h2>
-              <button 
+              <button
                 onClick={handleViewAll}
                 data-testid="view-all-button"
-                className={`text-[14px] font-medium flex items-center gap-1 transition-colors ${
-                  theme === 'dark' 
-                    ? 'text-blue-400 hover:text-blue-300' 
-                    : 'text-blue-600 hover:text-blue-700'
-                }`}
+                className={`text-[14px] font-semibold flex items-center gap-1 transition-colors ${theme === 'dark'
+                  ? 'text-blue-400 hover:text-blue-300'
+                  : 'text-blue-600 hover:text-blue-700'
+                  }`}
               >
                 View all →
               </button>
@@ -276,11 +264,10 @@ function Store() {
                 ))}
               </div>
             ) : (
-              <div className={`text-center py-12 rounded-lg border ${
-                theme === 'dark' 
-                  ? 'bg-card border-border' 
-                  : 'bg-gray-50 border-gray-200'
-              }`}>
+              <div className={`text-center py-12 rounded-lg border ${theme === 'dark'
+                ? 'bg-card border-border'
+                : 'bg-gray-50 border-gray-200'
+                }`}>
                 <p className={theme === 'dark' ? 'text-muted-foreground' : 'text-gray-500'}>
                   No actors found
                 </p>
@@ -295,21 +282,19 @@ function Store() {
 
   // All Actors View
   return (
-    <div className={`min-h-screen p-8 font-sans transition-colors ${
-      theme === 'dark' ? 'bg-background' : 'bg-background'
-    }`}>
+    <div className={`min-h-screen p-8 font-sans transition-colors ${theme === 'dark' ? 'bg-background' : 'bg-background'
+      }`}>
       <div className="max-w-[1240px] mx-auto">
-        
+
         {/* Back Button */}
         <div className="mb-5">
           <button
             onClick={handleBackToLanding}
             data-testid="back-to-landing-button"
-            className={`text-[14px] font-medium flex items-center gap-1 transition-colors ${
-                  theme === 'dark' 
-                    ? 'text-blue-400 hover:text-blue-300' 
-                    : 'text-blue-600 hover:text-blue-700'
-                }`}
+            className={`text-[14px] font-semibold flex items-center gap-1 transition-colors ${theme === 'dark'
+              ? 'text-blue-400 hover:text-blue-300'
+              : 'text-blue-600 hover:text-blue-700'
+              }`}
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             Back to Store
@@ -319,20 +304,18 @@ function Store() {
         {/* Search Bar */}
         <div className="mb-5">
           <div className="relative">
-            <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 w-[18px] h-[18px] ${
-              theme === 'dark' ? 'text-muted-foreground' : 'text-gray-400'
-            }`} />
+            <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 w-[18px] h-[18px] ${theme === 'dark' ? 'text-muted-foreground' : 'text-gray-400'
+              }`} />
             <input
               type="text"
               placeholder="Search for Actors"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               data-testid="all-actors-search-input"
-              className={`w-full h-[52px] pl-12 pr-4 border rounded-lg text-[15px] focus:outline-none focus:ring-2 transition-colors ${
-                theme === 'dark' 
-                  ? 'bg-card border-border text-foreground placeholder-muted-foreground focus:ring-blue-500' 
-                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500 focus:border-blue-500'
-              }`}
+              className={`w-full h-[52px] pl-12 pr-4 border rounded-lg text-[15px] focus:outline-none focus:ring-2 transition-colors ${theme === 'dark'
+                ? 'bg-card border-border text-foreground placeholder-muted-foreground focus:ring-blue-500'
+                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500 focus:border-blue-500'
+                }`}
             />
           </div>
         </div>
@@ -397,11 +380,10 @@ function Store() {
               <button
                 onClick={handleClearFilters}
                 data-testid="clear-filters-button"
-                className={`flex items-center gap-2 px-4 h-10 rounded-lg text-[13px] font-medium transition-all ${
-                  theme === 'dark'
-                    ? 'bg-red-600/20 text-red-400 hover:bg-red-600/30'
-                    : 'bg-red-50 text-red-600 hover:bg-red-100'
-                }`}
+                className={`flex items-center gap-2 px-4 h-10 rounded-lg text-[13px] font-medium transition-all ${theme === 'dark'
+                  ? 'bg-red-600/20 text-red-400 hover:bg-red-600/30'
+                  : 'bg-red-50 text-red-600 hover:bg-red-100'
+                  }`}
               >
                 <X className="w-4 h-4" />
                 Clear filters
@@ -410,9 +392,8 @@ function Store() {
           </div>
 
           {/* Actor Count */}
-          <div className={`text-[15px] font-semibold ${
-            theme === 'dark' ? 'text-foreground' : 'text-gray-900'
-          }`} data-testid="actor-count">
+          <div className={`text-[15px] font-semibold ${theme === 'dark' ? 'text-foreground' : 'text-gray-900'
+            }`} data-testid="actor-count">
             {totalActors.toLocaleString()} Actors
           </div>
         </div>
@@ -427,11 +408,10 @@ function Store() {
             ))}
           </div>
         ) : (
-          <div className={`text-center py-12 rounded-lg border ${
-            theme === 'dark' 
-              ? 'bg-card border-border' 
-              : 'bg-gray-50 border-gray-200'
-          }`}>
+          <div className={`text-center py-12 rounded-lg border ${theme === 'dark'
+            ? 'bg-card border-border'
+            : 'bg-gray-50 border-gray-200'
+            }`}>
             <p className={`mb-2 text-[14px] ${theme === 'dark' ? 'text-foreground' : 'text-gray-500'}`}>
               No actors found
             </p>

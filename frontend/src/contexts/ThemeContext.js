@@ -150,7 +150,7 @@ export const ThemeProvider = ({ children }) => {
     try {
       const token = localStorage.getItem('token');
       if (token) {
-        await axios.put(
+        const response = await axios.put(
           `${API}/settings/preferences`,
           { theme_preference: newPreference },
           { headers: { Authorization: `Bearer ${token}` } }
@@ -158,7 +158,6 @@ export const ThemeProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Failed to save theme preference to backend:', error);
-      // Even if backend fails, we still have it in localStorage
     }
   };
 

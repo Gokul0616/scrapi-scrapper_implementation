@@ -1,13 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useTheme } from '../context/ThemeContext';
 
 interface CustomTooltipProps {
     content: React.ReactNode;
     children: React.ReactNode;
     isDisabled?: boolean;
+    className?: string; // Allow customizing the wrapper class
 }
 
-const CustomTooltip: React.FC<CustomTooltipProps> = ({ content, children, isDisabled = false }) => {
+const CustomTooltip: React.FC<CustomTooltipProps> = ({ content, children, isDisabled = false, className = "inline-flex w-full" }) => {
     const [isVisible, setIsVisible] = useState(false);
     const [position, setPosition] = useState({ top: 0, left: 0 });
     const [arrowStyle, setArrowStyle] = useState<React.CSSProperties>({});
@@ -87,12 +89,12 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ content, children, isDisa
                 ref={triggerRef}
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
-                className="inline-flex w-full"
+                className={className}
             >
                 {children}
             </div>
 
-            {isVisible && (
+            {isVisible && createPortal(
                 <div
                     ref={tooltipRef}
                     style={{ top: position.top, left: position.left, position: 'fixed' }}
@@ -106,7 +108,8 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ content, children, isDisa
                         className="absolute border-solid"
                         style={arrowStyle}
                     />
-                </div>
+                </div>,
+                document.body
             )}
         </>
     );
