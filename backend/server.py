@@ -62,7 +62,7 @@ from routes.organization_routes import router as organization_router, set_db as 
 from routes.notification_routes import router as notification_router, set_notification_db
 from routes.terminal_routes import router as terminal_router
 from routes.admin_users_routes import router as admin_users_router
-from routes.billing_routes import router as billing_router
+from routes.billing_routes import router as billing_router, set_billing_db
 from routes.routes_legacy import set_db as set_legacy_db
 set_db(db)
 set_search_db(db)
@@ -70,6 +70,7 @@ set_settings_db(db)
 set_org_db(db)
 set_notification_db(db)
 set_legacy_db(db)
+set_billing_db(db)
 
 # Add your routes to the router instead of directly to app
 @api_router.get("/")

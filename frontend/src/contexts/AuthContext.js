@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
+import { isValidSidebarPath } from '../utils/routeUtils';
 
 const AuthContext = createContext(null);
 
@@ -39,15 +40,15 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await axios.get(`${API}/auth/me`);
       setUser(response.data);
-      
+
       // Load theme from backend if available
       if (response.data.theme_preference) {
         // Dispatch custom event to notify ThemeContext
-        window.dispatchEvent(new CustomEvent('backendThemeLoaded', { 
-          detail: { theme: response.data.theme_preference } 
+        window.dispatchEvent(new CustomEvent('backendThemeLoaded', {
+          detail: { theme: response.data.theme_preference }
         }));
       }
-      
+
       // Load user preferences (including sidebar state)
       try {
         const prefsResponse = await axios.get(`${API}/settings/preferences`);
@@ -75,7 +76,8 @@ export const AuthProvider = ({ children }) => {
   const fetchLastPath = async () => {
     try {
       const response = await axios.get(`${API}/auth/last-path`);
-      setLastPath(response.data.last_path || '/home');
+      const path = response.data.last_path;
+      setLastPath(isValidSidebarPath(path) ? path : '/home');
     } catch (error) {
       console.error('Failed to fetch last path:', error);
       setLastPath('/home');
@@ -84,8 +86,10 @@ export const AuthProvider = ({ children }) => {
 
   const updateLastPath = async (path) => {
     try {
-      await axios.patch(`${API}/auth/last-path`, { last_path: path });
-      setLastPath(path);
+      if (isValidSidebarPath(path)) {
+        await axios.patch(`${API}/auth/last-path`, { last_path: path });
+        setLastPath(path);
+      }
     } catch (error) {
       console.error('Failed to update last path:', error);
     }
@@ -94,7 +98,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     try {
       const response = await axios.post(`${API}/auth/login`, { username, password });
-      
+
       // Check if account is pending deletion
       if (response.data.account_status === 'pending_deletion') {
         // Store the token even for pending deletion (needed for reactivation)
@@ -102,7 +106,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('token', access_token);
         setToken(access_token);
         axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-        
+
         return {
           success: true,
           pending_deletion: true,
@@ -115,23 +119,24 @@ export const AuthProvider = ({ children }) => {
           }
         };
       }
-      
+
       const { access_token, user } = response.data;
       setToken(access_token);
       setUser(user);
       localStorage.setItem('token', access_token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-      
+
       // Fetch last path after successful login
       let redirectPath = '/home';
       try {
         const pathResponse = await axios.get(`${API}/auth/last-path`);
-        redirectPath = pathResponse.data.last_path || '/home';
+        const path = pathResponse.data.last_path;
+        redirectPath = isValidSidebarPath(path) ? path : '/home';
         setLastPath(redirectPath);
       } catch (error) {
         setLastPath('/home');
       }
-      
+
       return { success: true, redirectPath };
     } catch (error) {
       return { success: false, error: error.response?.data?.detail || 'Login failed' };
@@ -170,7 +175,7 @@ export const AuthProvider = ({ children }) => {
 
   const updateUser = async (updatedData) => {
     setUser(prev => ({ ...prev, ...updatedData }));
-    
+
     // If profile_picture or username was updated, re-fetch user to ensure sync
     if (updatedData.profile_picture !== undefined || updatedData.username !== undefined) {
       try {

@@ -4,6 +4,7 @@ import random
 import string
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
 from datetime import datetime, timedelta, timezone
 import logging
 
@@ -22,6 +23,10 @@ class EmailService:
     
     async def send_otp_email(self, to_email: str, otp: str, purpose: str = "login"):
         """Send OTP email via SMTP."""
+        if os.getenv('APP_ENV') != 'production':
+            logger.info(f"[MOCK EMAIL] OTP for {to_email}: {otp} (Purpose: {purpose})")
+            return True
+
         try:
             # Create message
             message = MIMEMultipart("alternative")
@@ -96,6 +101,10 @@ class EmailService:
     
     async def send_account_deletion_email(self, to_email: str, username: str):
         """Send account deletion confirmation email."""
+        if os.getenv('APP_ENV') != 'production':
+            logger.info(f"[MOCK EMAIL] Account deleted: {to_email}")
+            return True
+
         try:
             # Create message
             message = MIMEMultipart("alternative")
@@ -193,6 +202,10 @@ class EmailService:
     
     async def send_deletion_scheduled_email(self, to_email: str, username: str, deletion_date: str, days_remaining: int):
         """Send email when account deletion is scheduled."""
+        if os.getenv('APP_ENV') != 'production':
+            logger.info(f"[MOCK EMAIL] Deletion scheduled for {to_email} on {deletion_date}")
+            return True
+
         try:
             message = MIMEMultipart("alternative")
             message["Subject"] = "Your SCRAPI Account Deletion is Scheduled"
@@ -282,6 +295,10 @@ class EmailService:
     
     async def send_deletion_reminder_email(self, to_email: str, username: str, days_remaining: int, deletion_date):
         """Send reminder email for pending account deletion."""
+        if os.getenv('APP_ENV') != 'production':
+            logger.info(f"[MOCK EMAIL] Deletion reminder for {to_email} ({days_remaining} days left)")
+            return True
+
         try:
             message = MIMEMultipart("alternative")
             message["Subject"] = f"Reminder: Your SCRAPI Account Will Be Deleted in {days_remaining} Days"
@@ -373,6 +390,10 @@ class EmailService:
     
     async def send_account_reactivated_email(self, to_email: str, username: str):
         """Send email when account is reactivated."""
+        if os.getenv('APP_ENV') != 'production':
+            logger.info(f"[MOCK EMAIL] Account reactivated: {to_email}")
+            return True
+
         try:
             message = MIMEMultipart("alternative")
             message["Subject"] = "Your SCRAPI Account Has Been Reactivated"
@@ -453,6 +474,266 @@ class EmailService:
         except Exception as e:
             logger.error(f"Failed to send reactivation email: {str(e)}")
             return False
+
+
+    async def send_payment_confirmation(
+        self,
+        to_emails: list,
+        invoice_no: str,
+        invoice_id: str,
+        plan: str,
+        billing_cycle: str,
+        amount: float,
+        subtotal: float,
+        tax_amount: float,
+        payment_method: str,
+        issued_date: str,
+        billing_name: str = None,
+        pdf_content: bytes = None,
+        invoice_filename: str = "invoice.pdf"
+    ):
+        """Send a payment confirmation / receipt email. Only sent in production."""
+        if os.getenv('APP_ENV') != 'production':
+            logger.info(f"[MOCK EMAIL] Payment confirmation for {invoice_no} to {to_emails}")
+            return True
+
+        frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+        invoice_url = f"{frontend_url}/billing/invoices/{invoice_id}"
+        name_display = billing_name or "Customer"
+        year = datetime.now().year
+
+        html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Payment Confirmation — Scrapi</title>
+</head>
+<body style="margin:0;padding:0;background:#EEF2F7;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#EEF2F7;padding:40px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #dde3ec;box-shadow:0 4px 24px rgba(0,0,0,0.07);">
+
+          <!-- ─── HEADER ─────────────────────────────────── -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#0d1929 0%,#1e3a5f 100%);padding:36px 40px;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td>
+                    <table cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="background:#2563eb;width:44px;height:44px;border-radius:10px;text-align:center;vertical-align:middle;">
+                          <span style="color:#fff;font-size:22px;font-weight:900;line-height:44px;">S</span>
+                        </td>
+                        <td style="padding-left:14px;">
+                          <p style="margin:0;color:#ffffff;font-size:20px;font-weight:800;letter-spacing:-0.5px;">Scrapi</p>
+                          <p style="margin:0;color:#60a5fa;font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;">Console</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                  <td align="right" style="vertical-align:middle;">
+                    <span style="display:inline-block;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#86efac;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">
+                      ✓&nbsp;&nbsp;Payment Confirmed
+                    </span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ─── HERO AMOUNT BAND ───────────────────────── -->
+          <tr>
+            <td style="background:#f0f7ff;border-bottom:1px solid #dde3ec;padding:32px 40px;text-align:center;">
+              <p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:1.2px;">Amount Charged</p>
+              <p style="margin:0;font-size:52px;font-weight:900;color:#0f172a;letter-spacing:-2px;line-height:1;">${amount:.2f}<span style="font-size:18px;font-weight:600;color:#64748b;letter-spacing:0;"> USD</span></p>
+              <p style="margin:8px 0 0;font-size:13px;color:#94a3b8;">{plan.capitalize()} Plan &bull; {billing_cycle} &bull; via {payment_method.capitalize()}</p>
+            </td>
+          </tr>
+
+          <!-- ─── GREETING ───────────────────────────────── -->
+          <tr>
+            <td style="padding:36px 40px 20px;">
+              <h2 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0f172a;">Thank you, {name_display}!</h2>
+              <p style="margin:0;font-size:15px;color:#475569;line-height:1.7;">
+                Your payment was captured successfully and your <strong>{plan.capitalize()} subscription</strong> is now active.
+                Below is a summary of this transaction — you can view or download the full invoice using the buttons at the bottom.
+              </p>
+            </td>
+          </tr>
+
+          <!-- ─── INVOICE DETAIL TABLE ───────────────────── -->
+          <tr>
+            <td style="padding:0 40px 28px;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+                <tr style="background:#f8fafc;">
+                  <td colspan="2" style="padding:12px 20px;border-bottom:1px solid #e2e8f0;">
+                    <p style="margin:0;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;">Order & Payment Details</p>
+                  </td>
+                </tr>
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                  <td style="padding:12px 20px;font-size:14px;color:#64748b;width:140px;">Invoice #</td>
+                  <td style="padding:12px 20px;font-size:13px;font-weight:700;color:#0f172a;text-align:right;font-family:monospace;">{invoice_no}</td>
+                </tr>
+                <tr style="border-bottom:1px solid #f1f5f9;background:#fafbfc;">
+                  <td style="padding:12px 20px;font-size:14px;color:#64748b;">Workspace ID</td>
+                  <td style="padding:12px 20px;font-size:13px;font-weight:700;color:#0f172a;text-align:right;font-family:monospace;">{invoice_id[:12]}... (View full in app)</td>
+                </tr>
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                  <td style="padding:12px 20px;font-size:14px;color:#64748b;">Account Email</td>
+                  <td style="padding:12px 20px;font-size:14px;font-weight:700;color:#0f172a;text-align:right;">{to_emails[0]}</td>
+                </tr>
+                <tr style="border-bottom:1px solid #f1f5f9;background:#fafbfc;">
+                  <td style="padding:12px 20px;font-size:14px;color:#64748b;">Plan</td>
+                  <td style="padding:12px 20px;font-size:14px;font-weight:700;color:#0f172a;text-align:right;">{plan.capitalize()} &mdash; {billing_cycle}</td>
+                </tr>
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                  <td style="padding:12px 20px;font-size:14px;color:#64748b;">Payment Method</td>
+                  <td style="padding:12px 20px;font-size:14px;font-weight:700;color:#0f172a;text-align:right;text-transform:capitalize;">{payment_method}</td>
+                </tr>
+                <tr style="border-bottom:1px solid #f1f5f9;background:#fafbfc;">
+                  <td style="padding:12px 20px;font-size:14px;color:#64748b;">Issued Date</td>
+                  <td style="padding:12px 20px;font-size:14px;font-weight:700;color:#0f172a;text-align:right;">{issued_date}</td>
+                </tr>
+                <tr style="border-bottom:1px solid #f1f5f9;background:#fafbfc;">
+                  <td style="padding:12px 20px;font-size:14px;color:#64748b;">Plan Subtotal</td>
+                  <td style="padding:12px 20px;font-size:14px;font-weight:700;color:#0f172a;text-align:right;">${subtotal:.2f}</td>
+                </tr>
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                  <td style="padding:12px 20px;font-size:14px;color:#64748b;">Subtotal (Add-ons)</td>
+                  <td style="padding:12px 20px;font-size:14px;font-weight:700;color:#0f172a;text-align:right;">${(amount - subtotal):.2f}</td>
+                </tr>
+                <tr style="background:#f0f7ff;">
+                  <td style="padding:16px 20px;font-size:15px;font-weight:800;color:#0f172a;">Total Paid</td>
+                  <td style="padding:16px 20px;font-size:20px;font-weight:900;color:#2563eb;text-align:right;">${amount:.2f} USD</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ─── CTA BUTTONS ────────────────────────────── -->
+          <tr>
+            <td style="padding:0 40px 36px;text-align:center;">
+              <table align="center" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="padding:0 8px 0 0;">
+                    <a href="{invoice_url}"
+                       style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;padding:14px 28px;border-radius:9px;letter-spacing:0.3px;">
+                      View Invoice &rarr;
+                    </a>
+                  </td>
+                  <td style="padding:0 0 0 8px;">
+                    <a href="{invoice_url}?download=1"
+                       style="display:inline-block;background:#0f172a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;padding:14px 28px;border-radius:9px;letter-spacing:0.3px;">
+                      &#8681;&nbsp; Download PDF
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:20px 0 0;font-size:12px;color:#94a3b8;">
+                Buttons not working? Copy this link into your browser:<br/>
+                <a href="{invoice_url}" style="color:#3b82f6;word-break:break-all;">{invoice_url}</a>
+              </p>
+            </td>
+          </tr>
+
+          <!-- ─── DIVIDER ────────────────────────────────── -->
+          <tr>
+            <td style="padding:0 40px;">
+              <hr style="border:none;border-top:1px solid #e2e8f0;margin:0;" />
+            </td>
+          </tr>
+
+          <!-- ─── SUPPORT NOTE ───────────────────────────── -->
+          <tr>
+            <td style="padding:24px 40px;background:#f8fafc;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td>
+                    <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#334155;">Need help?</p>
+                    <p style="margin:0;font-size:13px;color:#64748b;line-height:1.6;">
+                      If you have any questions about this invoice, our support team is here to help.<br/>
+                      Reach us at <a href="mailto:billing@scrapi.io" style="color:#2563eb;font-weight:600;">billing@scrapi.io</a>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ─── FOOTER ─────────────────────────────────── -->
+          <tr>
+            <td style="background:#0f172a;padding:20px 40px;text-align:center;">
+              <p style="margin:0;font-size:11px;color:#475569;line-height:1.8;">
+                © {year} Scrapi Technologies Pvt. Ltd. &nbsp;&bull;&nbsp; Chennai, Tamil Nadu — 600001, India<br/>
+                <a href="{frontend_url}" style="color:#60a5fa;text-decoration:none;">scrapi.io</a>
+                &nbsp;&bull;&nbsp;
+                <a href="mailto:billing@scrapi.io" style="color:#60a5fa;text-decoration:none;">billing@scrapi.io</a>
+              </p>
+              <p style="margin:10px 0 0;font-size:10px;color:#334155;">This is an automated transactional email. Please do not reply directly to this message.</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>"""
+
+        text = f"""
+Scrapi — Payment Confirmation
+==============================
+
+Thank you, {name_display}!
+
+Your {plan.capitalize()} plan ({billing_cycle}) is now active.
+
+Invoice Summary
+---------------
+Invoice No.   : {invoice_no}
+Account       : {to_emails[0]}
+Plan          : {plan.capitalize()} — {billing_cycle}
+Payment Method: {payment_method.capitalize()}
+Date          : {issued_date}
+
+Plan Subtotal : ${subtotal:.2f} USD
+Add-ons Total : ${(amount - subtotal):.2f} USD
+Total Paid    : ${amount:.2f} USD
+
+View Invoice  : {invoice_url}
+Download PDF  : {invoice_url}?download=1
+
+Questions? Contact billing@scrapi.io
+© {year} Scrapi Technologies Pvt. Ltd. — Chennai, India
+        """
+
+        sent_to = set()
+        for email in to_emails:
+            if not email or email in sent_to:
+                continue
+            try:
+                message = MIMEMultipart("alternative")
+                message["Subject"] = f"Payment Confirmed — #{invoice_no} | Scrapi"
+                message["From"] = self.smtp_email
+                message["To"] = email
+                message.attach(MIMEText(text, "plain"))
+                message.attach(MIMEText(html, "html"))
+
+                # ── Attach PDF ────────────────────────────────
+                if pdf_content:
+                    attachment = MIMEApplication(pdf_content, _subtype="pdf")
+                    attachment.add_header('Content-Disposition', 'attachment', filename=invoice_filename)
+                    message.attach(attachment)
+                with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
+                    server.starttls()
+                    server.login(self.smtp_email, self.smtp_password)
+                    server.send_message(message)
+                sent_to.add(email)
+                logger.info(f"Payment confirmation email sent to {email}")
+            except Exception as e:
+                logger.error(f"Failed to send payment confirmation to {email}: {str(e)}")
 
 
 # Singleton instance

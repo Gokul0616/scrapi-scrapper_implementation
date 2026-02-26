@@ -12,6 +12,7 @@ import { MessageProvider, useMessage } from './contexts/MessageContext';
 import GlobalModals from './components/GlobalModals';
 import LoadingScreen from './components/LoadingScreen';
 import { setupAxiosInterceptor } from './utils/axiosInterceptor';
+import { isValidSidebarPath } from './utils/routeUtils';
 import Sidebar from './components/Sidebar';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -34,6 +35,9 @@ import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
 import Billing from './pages/Billing';
 import CreateOrganizationModal from './components/CreateOrganizationModal';
+import UpgradeCheckout from './pages/UpgradeCheckout';
+import PaymentSuccess from './pages/checkout/PaymentSuccess';
+import InvoiceDetail from './pages/InvoiceDetail';
 
 // Component to handle root redirect based on last path
 const RootRedirect = () => {
@@ -53,10 +57,9 @@ const RouteTracker = () => {
   useEffect(() => {
     setupAxiosInterceptor(navigate, showMessage);
   }, [navigate]);
-
   useEffect(() => {
-    // Only track authenticated routes (not login/register)
-    if (user && location.pathname !== '/login' && location.pathname !== '/register' && location.pathname !== '/') {
+    // Only track authenticated routes that match the sidebar whitelist
+    if (user && isValidSidebarPath(location.pathname)) {
       updateLastPath(location.pathname);
     }
   }, [location.pathname, user, updateLastPath]);
@@ -194,11 +197,15 @@ function AppRoutes() {
         <Route path="/proxy" element={<ProtectedRoute><DashboardLayout><div className="p-8">Proxy</div></DashboardLayout></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><DashboardLayout><Settings /></DashboardLayout></ProtectedRoute>} />
         <Route path="/billing" element={<ProtectedRoute><DashboardLayout><Billing /></DashboardLayout></ProtectedRoute>} />
+        <Route path="/billing/invoices/:invoiceId" element={<ProtectedRoute><DashboardLayout><InvoiceDetail /></DashboardLayout></ProtectedRoute>} />
         <Route path="/docs" element={<ProtectedRoute><DashboardLayout><div className="p-8">Documentation</div></DashboardLayout></ProtectedRoute>} />
         <Route path="/help" element={<ProtectedRoute><DashboardLayout><div className="p-8">Help</div></DashboardLayout></ProtectedRoute>} />
 
         {/* Explicit Not Found Route */}
         <Route path="/not-found" element={<DashboardLayout><NotFound /></DashboardLayout>} />
+
+        <Route path="/upgrade-checkout" element={<ProtectedRoute><UpgradeCheckout /></ProtectedRoute>} />
+        <Route path="/payment-success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
 
         {/* 404 Catch-all Route - Must be last */}
         <Route path="*" element={<DashboardLayout><NotFound /></DashboardLayout>} />

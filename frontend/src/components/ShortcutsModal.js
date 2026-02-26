@@ -64,7 +64,7 @@ const ShortcutsModal = () => {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] px-4 backdrop-blur-sm bg-black/40"
+      className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] px-4 backdrop-blur-[2px] bg-black/70"
       onClick={closeModal}
     >
       <div

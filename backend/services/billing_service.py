@@ -6,6 +6,72 @@ from database import get_db
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "sk_test_fake_key")
 
 class BillingService:
+    PLAN_DATA = {
+        "free": {
+            "name": "Free", "price": 0, 
+            "features": ["5 Actor runs / month", "1 GB memory", "7-day data retention"],
+            "gradient": "linear-gradient(90deg,#f97316,#ef4444)", "payg": None, "tier": None
+        },
+        "starter": {
+            "name": "Starter", "price": 29, 
+            "features": ["100 Actor runs / month", "4 GB memory", "30-day data retention", "Email support"],
+            "gradient": "linear-gradient(90deg,#f59e0b,#fbbf24)", "payg": "$29 then\nPay as you go", "tier": "Bronze 🥉"
+        },
+        "growth": {
+            "name": "Growth", "price": 99, 
+            "features": ["Unlimited Actor runs", "8 GB memory", "90-day data retention", "Priority support"],
+            "gradient": "linear-gradient(90deg,#6366f1,#8b5cf6)", "payg": "$99 then\nPay as you go", "tier": "Silver 🥈"
+        },
+        "scale": {
+            "name": "Scale", "price": 299, 
+            "features": ["Unlimited everything", "16 GB memory", "180-day data retention", "Dedicated support"],
+            "gradient": "linear-gradient(90deg,#10b981,#14b8a6)", "payg": "$299 then\nPay as you go", "tier": "Gold 🥇"
+        },
+        "enterprise": {
+            "name": "Enterprise", "price": None, 
+            "features": ["Custom usage limits", "Custom retention", "Dedicated support", "SSO & more"],
+            "gradient": "linear-gradient(90deg,#7c3aed,#5b21b6)", "payg": None, "tier": None
+        }
+    }
+
+    ADDON_DATA = {
+        "datacenter_proxies": {
+            "label": "Shared datacenter proxies", "price": 1, "unit": "IP",
+            "title": "Shared datacenter proxies",
+            "description": "Improve reliability of data extraction from the web.",
+            "tooltip": "Additional shared datacenter proxy IPs billed at $1 per IP per month.",
+            "displayPrice": "$1 / IP", "type": "spinner", "min": 0, "max": 500
+        },
+        "actor_memory": {
+            "label": "Max Actor memory", "price": 2, "unit": "GB",
+            "title": "Max Actor memory",
+            "description": "Run Actors with more memory to make them faster.",
+            "tooltip": "Extra RAM available for each Actor run, billed at $2 per GB.",
+            "displayPrice": "$2 / GB", "type": "spinner", "min": 0, "max": 256
+        },
+        "priority_support": {
+            "label": "Priority chat support", "price": 100, "unit": None,
+            "title": "Priority chat support",
+            "description": "Get priority for chatting with the Scrapi support team.",
+            "tooltip": "Skip the queue and get priority access to our support agents.",
+            "displayPrice": "$100", "type": "toggle", "min": 0, "max": 1
+        },
+        "tech_training": {
+            "label": "Personal tech training", "price": 150, "unit": "hour", # Changed from 'hr' for consistency
+            "title": "Personal tech training",
+            "description": "Individual time with Scrapi engineers to help you develop your scrapers.",
+            "tooltip": "One-on-one session with a Scrapi engineer at $150 per hour.",
+            "displayPrice": "$150 / hour", "type": "spinner", "min": 0, "max": 20
+        },
+        "concurrent_runs": {
+            "label": "Max Actor concurrent runs", "price": 5, "unit": "run",
+            "title": "Max Actor concurrent runs",
+            "description": "Run more Actors in parallel.",
+            "tooltip": "Add extra concurrent Actor run slots at $5 per run.",
+            "displayPrice": "$5 / run", "type": "spinner", "min": 0, "max": 100
+        },
+    }
+
     async def get_billing_summary(self, workspace_id: str, workspace_type: str):
         """Generates the billing payload expected by the frontend Billing.js"""
         db = get_db()
@@ -235,5 +301,641 @@ class BillingService:
             # Fallback for when API keys are totally fake and crash
             print(f"Stripe error: {str(e)}")
             return 'http://localhost:3000/settings?tab=billing&dummyCheckout=true'
+
+    # ── PayPal Integration ───────────────────────────────────────────────────
+
+    async def get_paypal_access_token(self):
+        """Retrieves an OAuth2 access token from PayPal"""
+        import httpx
+        client_id = os.getenv("PAYPAL_CLIENT_ID", "fake_client_id")
+        secret = os.getenv("PAYPAL_CLIENT_SECRET", "fake_secret")
+        mode = os.getenv("PAYPAL_MODE", "sandbox")
+        
+        base_url = "https://api-m.sandbox.paypal.com" if mode == "sandbox" else "https://api-m.paypal.com"
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{base_url}/v1/oauth2/token",
+                auth=(client_id, secret),
+                data={"grant_type": "client_credentials"}
+            )
+            response.raise_for_status()
+            return response.json()["access_token"]
+
+    async def get_plans_data(self):
+        """Returns the master plan and addon configuration"""
+        return {
+            "plans": self.PLAN_DATA,
+            "addons": self.ADDON_DATA
+        }
+
+    async def create_paypal_order(self, amount: float, currency: str = "USD"):
+        """Creates a PayPal order and returns the approval link"""
+        import httpx
+        token = await self.get_paypal_access_token()
+        mode = os.getenv("PAYPAL_MODE", "sandbox")
+        base_url = "https://api-m.sandbox.paypal.com" if mode == "sandbox" else "https://api-m.paypal.com"
+        
+        frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+
+        payload = {
+            "intent": "CAPTURE",
+            "purchase_units": [
+                {
+                    "amount": {
+                        "currency_code": currency,
+                        "value": f"{amount:.2f}"
+                    },
+                    "description": "Scrapi Subscription Upgrade"
+                }
+            ],
+            "application_context": {
+                "return_url": f"{frontend_url}/payment-success?provider=paypal",
+                "cancel_url": f"{frontend_url}/upgrade-checkout",
+                "brand_name": "Scrapi",
+                "user_action": "PAY_NOW"
+            }
+        }
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{base_url}/v2/checkout/orders",
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "Content-Type": "application/json"
+                },
+                json=payload
+            )
+            response.raise_for_status()
+            data = response.json()
+            
+            # Find the approval link
+            approval_link = next(link["href"] for link in data["links"] if link["rel"] == "approve")
+            return {
+                "order_id": data["id"],
+                "approval_url": approval_link
+            }
+
+    async def capture_paypal_order(
+        self, 
+        order_id: str, 
+        user_id: str, 
+        workspace_id: str, 
+        workspace_type: str, 
+        plan_data: dict,
+        billing_details: dict = None
+    ):
+        """Captures the payment for a given PayPal order ID and updates the subscription in DB"""
+        import httpx
+        token = await self.get_paypal_access_token()
+        mode = os.getenv("PAYPAL_MODE", "sandbox")
+        base_url = "https://api-m.sandbox.paypal.com" if mode == "sandbox" else "https://api-m.paypal.com"
+        
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        async with httpx.AsyncClient() as client:
+            auth_header = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+
+            # ── Pre-flight: check the order status before capturing ──────────────────
+            # This is the industry-standard approach to make captures idempotent.
+            # It prevents 422 errors from double-captures (React StrictMode, page refresh).
+            order_check_resp = await client.get(
+                f"{base_url}/v2/checkout/orders/{order_id}",
+                headers={"Authorization": f"Bearer {token}"}
+            )
+            if order_check_resp.status_code == 200:
+                order_status = order_check_resp.json().get("status", "")
+                logger.info(f"PayPal order {order_id} pre-check status: {order_status}")
+
+                if order_status == "COMPLETED":
+                    # The order was already captured (e.g. double-fire from StrictMode / refresh)
+                    db = get_db()
+                    existing_invoice = await db.invoices.find_one({"paypal_order_id": order_id})
+                    if existing_invoice:
+                        logger.info(f"Existing invoice found for {order_id}. Returning COMPLETED.")
+                        return {"status": "COMPLETED", "already_captured": True}
+                    # Invoice missing but PayPal says COMPLETED — fall through to create invoice
+                    logger.warning(f"Order {order_id} is COMPLETED in PayPal but invoice missing in DB — re-creating.")
+                    capture_data = order_check_resp.json()
+                elif order_status not in ("APPROVED",):
+                    raise ValueError(
+                        f"Cannot capture PayPal order {order_id}: status is '{order_status}'. "
+                        f"The order may have expired or been cancelled. Please start a new checkout."
+                    )
+                else:
+                    # Status is APPROVED — proceed with capture
+                    response = await client.post(
+                        f"{base_url}/v2/checkout/orders/{order_id}/capture",
+                        headers=auth_header
+                    )
+                    if response.status_code == 422:
+                        error_body = {}
+                        try: error_body = response.json()
+                        except Exception: pass
+                        issue = ""
+                        try: issue = error_body.get("details", [{}])[0].get("issue", "")
+                        except Exception: pass
+                        logger.warning(f"PayPal 422 for {order_id}. issue='{issue}' body={error_body}")
+
+                        if issue in ("ORDER_ALREADY_CAPTURED", ""):
+                            db = get_db()
+                            existing_invoice = await db.invoices.find_one({"paypal_order_id": order_id})
+                            if existing_invoice:
+                                return {"status": "COMPLETED", "already_captured": True}
+
+                        if issue == "INSTRUMENT_DECLINED":
+                            # Extract the PayPal retry URL so the frontend can redirect the user back
+                            retry_url = None
+                            try:
+                                for link in error_body.get("links", []):
+                                    if link.get("rel") == "redirect":
+                                        retry_url = link.get("href")
+                                        break
+                            except Exception:
+                                pass
+                            raise ValueError(f"INSTRUMENT_DECLINED|{retry_url or ''}")
+
+                        error_msg = error_body.get("message") or issue or "PayPal rejected this capture"
+                        raise ValueError(f"PayPal capture rejected: {error_msg}")
+
+                    response.raise_for_status()
+                    capture_data = response.json()
+            else:
+                # Could not check pre-flight — attempt capture directly
+                logger.warning(f"Pre-flight check failed ({order_check_resp.status_code}), attempting capture directly.")
+                response = await client.post(
+                    f"{base_url}/v2/checkout/orders/{order_id}/capture",
+                    headers=auth_header
+                )
+                response.raise_for_status()
+                capture_data = response.json()
+
+            logger.info(f"PayPal capture result for {order_id}: status={capture_data.get('status')}")
+            
+            # If successful capture, update the database
+            if capture_data.get("status") == "COMPLETED":
+                db = get_db()
+                purchase_units = capture_data.get("purchase_units", [])
+                if not purchase_units:
+                    logger.error("No purchase units in capture data")
+                    raise ValueError("Incomplete capture data from PayPal")
+                
+                # Generate a unique invoice number
+                import uuid
+                invoice_no = f"INV-{datetime.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
+                
+                # Calculate amount (resilient extraction — both fresh capture and GET-order shapes)
+                try:
+                    purchase_unit = purchase_units[0]
+                    # Try capture payments first (standard capture response)
+                    captures = purchase_unit.get("payments", {}).get("captures", [])
+                    if captures:
+                        amount_val = captures[0].get("amount", {}).get("value", "0")
+                    else:
+                        # Fallback: use the purchase unit amount directly
+                        amount_val = purchase_unit.get("amount", {}).get("value", "0")
+                    amount = float(amount_val)
+                except (IndexError, KeyError, TypeError, ValueError) as e:
+                    logger.error(f"Failed to extract amount from PayPal response: {e}. Data: {capture_data}")
+                    amount = 0.0  # Safe fallback
+                tax_rate = 0.0
+                subtotal = amount
+                tax_amount = 0.0
+
+                # ── Save/Update billing details if provided (persist for future) ──
+                if billing_details:
+                    # Normalize keys to match DB schema (camelCase -> snake_case)
+                    payload = {
+                        "full_name": billing_details.get("fullName"),
+                        "company": billing_details.get("company"),
+                        "tax_id": billing_details.get("taxId"),
+                        "registration_no": billing_details.get("registrationNo"),
+                        "billing_contact": billing_details.get("billingContact"),
+                        "street_address": billing_details.get("streetAddress"),
+                        "city": billing_details.get("city"),
+                        "postal_code": billing_details.get("postalCode"),
+                        "country": billing_details.get("country"),
+                        "billing_email": billing_details.get("billingEmail"),
+                        "custom_address_text": billing_details.get("customAddressText"),
+                        "custom_goods_text": billing_details.get("customGoodsText"),
+                        "user_id": user_id,
+                        "workspace_id": workspace_id,
+                        "workspace_type": workspace_type,
+                        "updated_at": datetime.now(timezone.utc)
+                    }
+                    payload = {k: v for k, v in payload.items() if v is not None}
+                    match_filter = {"user_id": user_id, "workspace_id": workspace_id, "workspace_type": workspace_type}
+                    await db.billing_details.update_one(match_filter, {"$set": payload}, upsert=True)
+                    bd = payload
+                else:
+                    # Fetch saved billing details (pre-existing)
+                    billing_details_doc = await db.billing_details.find_one(
+                        {"user_id": user_id, "workspace_id": workspace_id, "workspace_type": workspace_type},
+                        {"_id": 0, "user_id": 0, "updated_at": 0}
+                    )
+                    if not billing_details_doc:
+                        billing_details_doc = await db.billing_details.find_one(
+                            {"user_id": user_id},
+                            {"_id": 0, "user_id": 0, "updated_at": 0}
+                        )
+                    bd = billing_details_doc or {}
+
+                # ── Extract PayPal payer info from capture response (always available) ──
+                payer = capture_data.get("payer", {})
+                payer_name = payer.get("name", {})
+                payer_given = payer_name.get("given_name", "")
+                payer_surname = payer_name.get("surname", "")
+                payer_full_name = f"{payer_given} {payer_surname}".strip() or None
+                payer_email = payer.get("email_address") or None
+                payer_address = payer.get("address", {})
+                payer_country = payer_address.get("country_code") or None
+
+                # Retrieve user's account email for the invoice document
+                user_doc = await db.users.find_one({"id": user_id}, {"email": 1})
+                account_email = (user_doc or {}).get("email")
+
+                # Use manual billing data first; fallback to Scrapi account email, then PayPal payer info
+                invoice_billing_name = bd.get("full_name") or payer_full_name
+                invoice_billing_email = bd.get("billing_email") or account_email or payer_email
+                invoice_billing_country = bd.get("country") or payer_country
+
+                # Calculate total addon cost
+                total_addon_cost = 0.0
+                invoice_addons = plan_data.get("addons", {})
+                for aid, qty in invoice_addons.items():
+                    if aid in self.ADDON_DATA:
+                        total_addon_cost += qty * self.ADDON_DATA[aid]["price"]
+
+                # Subtotal is the plan price (Total - Addons)
+                subtotal = amount - total_addon_cost
+                tax_amount = 0.0
+
+                invoice_payload = {
+                    "invoice_no": invoice_no,
+                    "user_id": user_id,
+                    "account_email": account_email,
+                    "workspace_id": workspace_id,
+                    "workspace_type": workspace_type,
+                    "plan": plan_data.get("plan"),
+                    "is_annual": plan_data.get("is_annual"),
+                    "amount": amount,
+                    "subtotal": subtotal,
+                    "tax_amount": tax_amount,
+                    "currency": "USD",
+                    "status": "paid",
+                    "payment_method": "paypal",
+                    "paypal_order_id": order_id,
+                    "created_at": datetime.now(timezone.utc),
+                    "addons": invoice_addons,
+                    "total_addon_cost": total_addon_cost,
+                    # Billing details (manual entry takes priority; PayPal payer info as fallback)
+                    "billing_full_name": invoice_billing_name,
+                    "billing_company": bd.get("company"),
+                    "billing_tax_id": bd.get("tax_id"),
+                    "billing_registration_no": bd.get("registration_no"),
+                    "billing_contact": bd.get("billing_contact"),
+                    "billing_street_address": bd.get("street_address"),
+                    "billing_city": bd.get("city"),
+                    "billing_postal_code": bd.get("postal_code"),
+                    "billing_country": invoice_billing_country,
+                    "billing_email": invoice_billing_email,
+                    "billing_custom_address_text": bd.get("custom_address_text"),
+                    "billing_custom_goods_text": bd.get("custom_goods_text"),
+                    # PayPal payer info stored separately for reference
+                    "paypal_payer_name": payer_full_name,
+                    "paypal_payer_email": payer_email,
+                    "paypal_payer_country": payer_country,
+                }
+                
+                await db.invoices.insert_one(invoice_payload)
+
+                # ── Generate & Send payment confirmation email (Mocking now handled by EmailService) ──
+                try:
+                    from services.email_service import get_email_service
+                    email_svc = get_email_service()
+
+                    # Generate professional PDF attachment
+                    try:
+                        pdf_content = await self.generate_invoice_pdf(invoice_payload)
+                    except Exception as pdf_err:
+                        logger.error(f"PDF attachment generation failed: {pdf_err}")
+                        pdf_content = None
+
+                    # Retrieve user's account email
+                    user_doc = await db.users.find_one({"id": user_id}, {"email": 1})
+                    user_email = (user_doc or {}).get("email")
+                    billing_email_addr = bd.get("billing_email")
+                    
+                    org_billing_email = None
+                    if workspace_type == "organization":
+                        org_doc = await db.organizations.find_one({"id": workspace_id}, {"billing_email": 1})
+                        org_billing_email = (org_doc or {}).get("billing_email")
+
+                    # Collect unique, valid recipients (purchaser account email + provided billing email + org billing email)
+                    recipients = list({e for e in [user_email, billing_email_addr, org_billing_email] if e})
+                    if not recipients:
+                         logger.warning(f"No recipeints found for invoice {invoice_no}, cannot send email.")
+
+                    billing_cycle_label = "Annual" if plan_data.get("is_annual") else "Monthly"
+                    issued_str = datetime.now(timezone.utc).strftime("%B %d, %Y")
+                    
+                    invoice_id_str = str(invoice_payload.get("_id", ""))
+
+                    await email_svc.send_payment_confirmation(
+                        to_emails=recipients,
+                        invoice_no=invoice_no,
+                        invoice_id=invoice_id_str,
+                        plan=plan_data.get("plan", ""),
+                        billing_cycle=billing_cycle_label,
+                        amount=amount,
+                        subtotal=subtotal,
+                        tax_amount=tax_amount,
+                        payment_method="paypal",
+                        issued_date=issued_str,
+                        billing_name=bd.get("full_name") or bd.get("company"),
+                        pdf_content=pdf_content,
+                        invoice_filename=f"invoice_{invoice_no}.pdf"
+                    )
+                except Exception as email_err:
+                    # Never block the capture flow due to email failure
+                    logger.error(f"Payment email failed: {email_err}")
+                
+                subscription_payload = {
+                    "user_id": user_id,
+                    "workspace_id": workspace_id,
+                    "workspace_type": workspace_type,
+                    "plan": plan_data.get("plan"),
+                    "is_annual": plan_data.get("is_annual"),
+                    "payment_method": "paypal",
+                    "paypal_order_id": order_id,
+                    "confirmed_at": datetime.now(timezone.utc)
+                }
+                match_filter = {"user_id": user_id, "workspace_id": workspace_id, "workspace_type": workspace_type}
+                await db.billing_subscriptions.update_one(match_filter, {"$set": subscription_payload}, upsert=True)
+                
+                # Add Scrapi-specific IDs and full transaction data to the response for the frontend
+                capture_data["invoice_id"] = str(invoice_payload.get("_id", ""))
+                capture_data["invoice_no"] = invoice_no
+                capture_data["amount"] = amount
+                capture_data["subtotal"] = subtotal
+                capture_data["tax_amount"] = tax_amount
+                capture_data["plan"] = plan_data.get("plan")
+                capture_data["is_annual"] = plan_data.get("is_annual")
+                capture_data["addons"] = invoice_addons
+                capture_data["account_email"] = account_email
+                capture_data["paypal_order_id"] = order_id
+                capture_data["workspace_name"] = bd.get("company") or bd.get("full_name") or payer_full_name
+                
+            return capture_data
+
+    async def generate_invoice_pdf(self, invoice: dict) -> bytes:
+        """Generates a professional PDF version of the invoice using fpdf2"""
+        from fpdf import FPDF
+        import io
+
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_auto_page_break(auto=True, margin=15)
+
+        # ─── Colors and Assets ───────────────────────────
+        # Scrapi Blue: #2563eb (37, 99, 235)
+        # Dark Text: #0f172a (15, 23, 42)
+        # Muted Text: #64748b (100, 116, 139)
+        
+        # ─── Header ─────────────────────────────────────
+        # Brand Logo
+        logo_path = os.path.join(os.path.dirname(__file__), "..", "assets", "logo.png")
+        if os.path.exists(logo_path):
+            pdf.image(logo_path, 10, 10, 12, 12)
+        else:
+            pdf.set_fill_color(37, 99, 235)
+            pdf.rect(10, 10, 12, 12, 'F')
+            pdf.set_text_color(255, 255, 255)
+            pdf.set_font('helvetica', 'B', 10)
+            pdf.text(14, 18.2, 'S')
+        
+        # Brand Name
+        pdf.set_text_color(15, 23, 42)
+        pdf.set_font('helvetica', 'B', 16)
+        pdf.text(25, 17, 'Scrapi')
+        pdf.set_text_color(100, 116, 139)
+        pdf.set_font('helvetica', 'B', 8)
+        pdf.text(25, 21, 'CONSOLE')
+
+        # Invoice label
+        pdf.set_text_color(15, 23, 42)
+        pdf.set_font('helvetica', 'B', 24)
+        pdf.cell(0, 12, 'INVOICE', ln=True, align='R')
+        pdf.set_font('helvetica', '', 10)
+        pdf.cell(0, 5, f"#{invoice.get('invoice_no')}", ln=True, align='R')
+        pdf.ln(10)
+
+        # ─── From / To ──────────────────────────────────
+        from_lines = [
+            'Scrapi Technologies Pvt. Ltd.',
+            'Chennai, Tamil Nadu',
+            'India - 600001',
+            'billing@scrapi.io'
+        ]
+
+        # Prepare To lines (Manual Billing + Account Email)
+        to_lines = []
+        billed_name = invoice.get('billing_full_name')
+        if billed_name:
+            to_lines.append(billed_name)
+            if invoice.get('billing_company'): to_lines.append(invoice.get('billing_company'))
+            if invoice.get('billing_street_address'): to_lines.append(invoice.get('billing_street_address'))
+            city_zip = f"{invoice.get('billing_city', '')} {invoice.get('billing_postal_code', '')}".strip()
+            if city_zip: to_lines.append(city_zip)
+            if invoice.get('billing_country'): to_lines.append(invoice.get('billing_country'))
+        
+        acc_email = invoice.get('account_email')
+        bill_email = invoice.get('billing_email')
+        if acc_email:
+            to_lines.append(f"Account: {acc_email}")
+        if bill_email and bill_email != acc_email and bill_email != invoice.get('paypal_payer_email'):
+             to_lines.append(f"Contact: {bill_email}")
+        
+        # Add custom billing fields to "BILLED TO"
+        if invoice.get('billing_tax_id'): to_lines.append(f"Tax ID: {invoice['billing_tax_id']}")
+        if invoice.get('billing_registration_no'): to_lines.append(f"Reg No: {invoice['billing_registration_no']}")
+        if invoice.get('billing_custom_address_text'): to_lines.append(invoice['billing_custom_address_text'])
+        
+        if not to_lines: to_lines = ["Valued Customer"]
+
+        # Prepare PayPal lines (Secondary/Reference)
+        pp_lines = []
+        if invoice.get('paypal_payer_name'):
+             pp_lines.append(f"Payer: {invoice.get('paypal_payer_name')}")
+             if invoice.get('paypal_payer_email') and invoice.get('paypal_payer_email') != acc_email:
+                 pp_lines.append(invoice.get('paypal_payer_email'))
+             if invoice.get('paypal_payer_country'):
+                 pp_lines.append(f"Country: {invoice.get('paypal_payer_country')}")
+
+        # Draw Headers
+        pdf.set_font('helvetica', 'B', 10)
+        pdf.set_text_color(15, 23, 42)
+        pdf.cell(95, 7, 'FROM', ln=False)
+        pdf.cell(95, 7, 'BILLED TO', ln=True)
+
+        # Draw Content
+        pdf.set_font('helvetica', '', 9)
+        pdf.set_text_color(71, 85, 105)
+        
+        all_right_lines = to_lines + ([""] if to_lines and pp_lines else []) + pp_lines
+        max_lines = max(len(from_lines), len(all_right_lines))
+        for i in range(max_lines):
+            left = from_lines[i] if i < len(from_lines) else ''
+            right = all_right_lines[i] if i < len(all_right_lines) else ''
+            pdf.cell(95, 5, left, ln=False)
+            pdf.cell(95, 5, right, ln=True)
+        
+        pdf.ln(10)
+
+        # ─── Order Information ──────────────────────────
+        pdf.set_fill_color(248, 250, 252)
+        pdf.set_draw_color(226, 232, 240)
+        pdf.rect(10, pdf.get_y(), 190, 32, 'FD') # Increased height for more fields
+        
+        pdf.set_font('helvetica', 'B', 8)
+        pdf.set_text_color(100, 116, 139)
+        pdf.cell(47.5, 9, ' ISSUED DATE', align='L')
+        pdf.cell(47.5, 9, 'PAYMENT METHOD', align='L')
+        pdf.cell(47.5, 9, 'STATUS', align='L')
+        pdf.cell(47.5, 9, 'PAYPAL TRANS ID', ln=True, align='L')
+        
+        pdf.set_font('helvetica', 'B', 9)
+        pdf.set_text_color(15, 23, 42)
+        
+        issued_date = invoice.get('created_at')
+        if issued_date:
+            if isinstance(issued_date, str): issued_str = issued_date[:10]
+            else: issued_str = issued_date.strftime('%Y-%m-%d')
+        else: issued_str = datetime.now().strftime('%Y-%m-%d')
+            
+        pdf.cell(47.5, 7, f" {issued_str}", align='L')
+        pdf.cell(47.5, 7, invoice.get('payment_method', 'N/A').upper(), align='L')
+        pdf.set_text_color(5, 150, 105) # Green for paid
+        pdf.cell(47.5, 7, invoice.get('status', 'PAID').upper(), align='L')
+        pdf.set_text_color(15, 23, 42)
+        pdf.set_font('helvetica', 'B', 8)
+        pdf.cell(47.5, 7, str(invoice.get('paypal_order_id') or invoice.get('paypal_payer_id') or 'N/A'), ln=True, align='L')
+        
+        # New row for Workspace/Account info
+        pdf.ln(2)
+        pdf.set_font('helvetica', 'B', 8)
+        pdf.set_text_color(100, 116, 139)
+        pdf.cell(95, 6, ' WORKSPACE ID', align='L')
+        pdf.cell(95, 6, 'ACCOUNT EMAIL', ln=True, align='L')
+        
+        pdf.set_font('helvetica', '', 8)
+        pdf.set_text_color(15, 23, 42)
+        pdf.cell(95, 5, f" {invoice.get('workspace_id', 'N/A')}", align='L')
+        pdf.cell(95, 5, f"{invoice.get('account_email', 'N/A')}", ln=True, align='L')
+        
+        pdf.ln(12)
+
+        # ─── Table ──────────────────────────────────────
+        pdf.set_fill_color(15, 23, 42)
+        pdf.set_text_color(255, 255, 255)
+        pdf.set_font('helvetica', 'B', 10)
+        
+        pdf.cell(110, 10, '  SERVICE DESCRIPTION', fill=True)
+        pdf.cell(40, 10, 'PLAN', fill=True, align='C')
+        pdf.cell(40, 10, 'AMOUNT', ln=True, fill=True, align='R')
+        
+        pdf.set_text_color(15, 23, 42)
+        pdf.set_font('helvetica', '', 10)
+        
+        plan_name = invoice.get('plan', 'Starter').capitalize()
+        cycle = 'Annual' if invoice.get('is_annual') else 'Monthly'
+        pdf.cell(110, 12, f"  Scrapi {plan_name} Subscription ({cycle})", border='B')
+        pdf.cell(40, 12, f"{plan_name}", border='B', align='C')
+        pdf.cell(40, 12, f"${invoice.get('subtotal', 0):.2f}", border='B', ln=True, align='R')
+        
+        addons = invoice.get('addons', {})
+        for addon_id, qty in addons.items():
+            if qty > 0:
+                addon_info = self.ADDON_DATA.get(addon_id, {})
+                name = addon_info.get("label", addon_id.replace('_', ' ').capitalize())
+                price_each = addon_info.get("price", 0)
+                total_addon = qty * price_each
+                
+                pdf.cell(110, 10, f"  + {name} (Qty: {qty}{' ' + addon_info['unit'] if addon_info.get('unit') else ''})", border='B')
+                pdf.cell(40, 10, 'Add-on', border='B', align='C')
+                pdf.cell(40, 10, f"${total_addon:.2f} (incl.)", border='B', ln=True, align='R')
+
+        # Add custom goods text if present
+        if invoice.get('billing_custom_goods_text'):
+             pdf.set_font('helvetica', 'I', 8)
+             pdf.set_text_color(100, 116, 139)
+             pdf.cell(190, 8, f"  Note: {invoice['billing_custom_goods_text']}", ln=True)
+             pdf.set_font('helvetica', '', 10)
+             pdf.set_text_color(15, 23, 42)
+
+        pdf.ln(10)
+
+        # ─── Totals ─────────────────────────────────────
+        pdf.set_x(120)
+        pdf.set_font('helvetica', '', 10)
+        pdf.set_text_color(100, 116, 139)
+        pdf.cell(40, 7, 'Plan Subtotal:', align='R')
+        pdf.set_text_color(15, 23, 42)
+        pdf.cell(40, 7, f"${invoice.get('subtotal', 0):.2f}", ln=True, align='R')
+        
+        pdf.set_x(120)
+        pdf.set_font('helvetica', '', 10)
+        pdf.set_text_color(100, 116, 139)
+        pdf.cell(40, 7, 'Subtotal (Add-ons):', align='R')
+        pdf.set_text_color(15, 23, 42)
+        pdf.cell(40, 7, f"${(invoice.get('amount', 0) - invoice.get('subtotal', 0)):.2f}", ln=True, align='R')
+        
+        pdf.ln(2)
+        pdf.set_x(120)
+        pdf.set_font('helvetica', 'B', 12)
+        pdf.set_fill_color(240, 247, 255)
+        pdf.cell(80, 12, f"TOTAL PAID:  ${invoice.get('amount', 0):.2f} USD ", fill=True, align='R')
+        
+        # ─── Footer ─────────────────────────────────────
+        pdf.set_y(-30)
+        pdf.set_font('helvetica', 'I', 8)
+        pdf.set_text_color(148, 163, 184)
+        pdf.cell(0, 5, 'Thank you for choosing Scrapi.', ln=True, align='C')
+        pdf.cell(0, 5, 'For support, contact billing@scrapi.io', ln=True, align='C')
+        pdf.cell(0, 5, 'Generated automatically on scrapi.io', ln=True, align='C')
+
+        return pdf.output()
+
+    async def get_invoices(self, workspace_id: str, workspace_type: str):
+        """Fetch all invoices for a workspace"""
+        db = get_db()
+        cursor = db.invoices.find({
+            "workspace_id": workspace_id,
+            "workspace_type": workspace_type
+        }).sort("created_at", -1)
+        
+        invoices = []
+        async for doc in cursor:
+            doc["_id"] = str(doc["_id"])
+            if "created_at" in doc and isinstance(doc["created_at"], datetime):
+                doc["created_at"] = doc["created_at"].isoformat()
+            invoices.append(doc)
+        return invoices
+
+    async def get_invoice_by_id(self, invoice_id: str):
+        """Fetch a single invoice by its ID"""
+        from bson import ObjectId
+        from bson.errors import InvalidId
+        try:
+            db = get_db()
+            doc = await db.invoices.find_one({"_id": ObjectId(invoice_id)})
+            if doc:
+                doc["_id"] = str(doc["_id"])
+                if "created_at" in doc and isinstance(doc["created_at"], datetime):
+                    doc["created_at"] = doc["created_at"].isoformat()
+            return doc
+        except InvalidId:
+            return None
 
 billing_service = BillingService()

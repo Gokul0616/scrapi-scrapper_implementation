@@ -91,6 +91,17 @@ export const WorkspaceProvider = ({ children }) => {
     window.location.reload();
   };
 
+  /**
+   * Like switchWorkspace but WITHOUT a page reload.
+   * Use this when you need to change the active workspace and immediately
+   * navigate somewhere (e.g. UpgradeModal → checkout) without losing state.
+   */
+  const selectWorkspace = (workspace) => {
+    setCurrentWorkspace(workspace);
+    localStorage.setItem('activeWorkspace', JSON.stringify(workspace));
+    window.dispatchEvent(new CustomEvent('workspaceChanged', { detail: workspace }));
+  };
+
   const refreshWorkspaces = async () => {
     await fetchWorkspaces();
   };
@@ -102,9 +113,11 @@ export const WorkspaceProvider = ({ children }) => {
         currentWorkspace,
         loading,
         switchWorkspace,
+        selectWorkspace,
         refreshWorkspaces
       }}
     >
+
       {children}
     </WorkspaceContext.Provider>
   );

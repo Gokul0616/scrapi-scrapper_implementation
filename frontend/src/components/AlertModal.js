@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
 import { Button } from './ui/button';
-import { 
-  AlertCircle, 
-  CheckCircle2, 
-  XCircle, 
-  Info, 
+import {
+  AlertCircle,
+  CheckCircle2,
+  XCircle,
+  Info,
   AlertTriangle,
-  X 
+  X
 } from 'lucide-react';
 
 /**
@@ -140,22 +140,21 @@ const AlertModal = ({
   };
 
   return (
-    <div 
-      className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[100] backdrop-blur-sm"
+    <div
+      className="fixed inset-0 bg-black/70 flex items-center justify-center z-[100] backdrop-blur-[2px]"
       onClick={handleBackdropClick}
     >
-      <div 
+      <div
         className={`bg-white rounded-xl shadow-2xl p-6 ${modalSizeClass} w-full mx-4 animate-in fade-in zoom-in duration-200 border border-gray-200`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start gap-4">
           {/* Icon */}
-          <div className={`flex-shrink-0 w-12 h-12 rounded-full ${config.iconBgColor} flex items-center justify-center ring-2 ring-offset-2 ${
-            type === 'success' ? 'ring-green-200' :
-            type === 'error' ? 'ring-red-200' :
-            type === 'warning' ? 'ring-orange-200' :
-            'ring-gray-200'
-          }`}>
+          <div className={`flex-shrink-0 w-12 h-12 rounded-full ${config.iconBgColor} flex items-center justify-center ring-2 ring-offset-2 ${type === 'success' ? 'ring-green-200' :
+              type === 'error' ? 'ring-red-200' :
+                type === 'warning' ? 'ring-orange-200' :
+                  'ring-gray-200'
+            }`}>
             <IconComponent className={`w-6 h-6 ${config.iconColor}`} />
           </div>
 

@@ -1,17 +1,43 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { useWorkspace } from '../contexts/WorkspaceContext';
-import { ExternalLink, ChevronRight, Loader2 } from 'lucide-react';
+import { useModal } from '../contexts/ModalContext';
+import {
+  ExternalLink, ChevronRight, Loader2, HelpCircle, FileText,
+  Download, Eye, Tag, Search, Filter, ArrowUpDown,
+  ChevronLeft, ChevronDown
+} from 'lucide-react';
 import axios from 'axios';
 import HistoricalUsageView from '../components/HistoricalUsageView';
+import CustomTooltip from '../components/CustomTooltip';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const Billing = () => {
   const { theme } = useTheme();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { currentWorkspace } = useWorkspace();
-  const [activeTab, setActiveTab] = useState('current');
+  const { openModal } = useModal();
+  const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'current');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Sync URL when tab changes
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    setSearchParams({ tab: tabId }, { replace: true });
+  };
+
+  // Sync active tab if URL changes externally (e.g. navigating from PaymentSuccess)
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // Determine if we're in organization mode
   const isOrganization = currentWorkspace?.workspace_type === 'organization';
@@ -19,8 +45,15 @@ const Billing = () => {
   const pageTitle = isOrganization ? 'Organization billing' : 'Billing';
 
   const [billingData, setBillingData] = useState(null);
+  const [invoices, setInvoices] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingInvoices, setIsLoadingInvoices] = useState(false);
   const [error, setError] = useState(null);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [goToPage, setGoToPage] = useState('');
 
   useEffect(() => {
     const fetchBillingData = async () => {
@@ -40,21 +73,52 @@ const Billing = () => {
     };
     if (currentWorkspace) {
       fetchBillingData();
+      fetchInvoices();
     }
   }, [currentWorkspace]);
 
-  const handleUpgrade = async () => {
+  const fetchInvoices = async () => {
     try {
+      setIsLoadingInvoices(true);
       const token = localStorage.getItem('token');
-      const response = await axios.post(`${API}/billing/checkout`, { plan_type: 'Starter' }, {
+      const response = await axios.get(`${API}/billing/invoices`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (response.data.url) {
-        window.location.href = response.data.url;
-      }
+      setInvoices(response.data || []);
     } catch (err) {
-      console.error('Error redirecting to checkout:', err);
+      console.error('Error fetching invoices:', err);
+    } finally {
+      setIsLoadingInvoices(false);
     }
+  };
+
+  const filteredInvoices = useMemo(() => {
+    if (!searchQuery.trim()) return invoices;
+    const q = searchQuery.toLowerCase();
+    return invoices.filter(inv =>
+      inv.invoice_no.toLowerCase().includes(q) ||
+      inv.plan.toLowerCase().includes(q)
+    );
+  }, [invoices, searchQuery]);
+
+  const paginatedInvoices = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredInvoices.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredInvoices, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(filteredInvoices.length / itemsPerPage);
+
+  const handleGoToPage = (e) => {
+    e.preventDefault();
+    const pageNum = parseInt(goToPage);
+    if (!isNaN(pageNum) && pageNum > 0 && pageNum <= totalPages) {
+      setCurrentPage(pageNum);
+      setGoToPage('');
+    }
+  };
+
+  const handleUpgrade = () => {
+    openModal('upgrade');
   };
 
   const tabs = [
@@ -178,19 +242,299 @@ const Billing = () => {
     </div>
   );
 
-  const renderPricing = () => (
-    <div className="text-center py-12">
-      <p className="text-muted-foreground">Pricing information and plan comparison</p>
-      <p className="text-sm text-muted-foreground mt-1">Compare different plans and features</p>
+  const renderPricingRow = (label, value, tooltip) => (
+    <div className="flex items-center py-4 border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+      <div className="w-1/2 flex items-center gap-1.5 pl-4">
+        <span className="text-sm font-medium text-muted-foreground">{label}</span>
+        {tooltip && (
+          <CustomTooltip content={tooltip}>
+            <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/60 hover:text-foreground cursor-help transition-colors" />
+          </CustomTooltip>
+        )}
+      </div>
+      <div className="w-1/2">
+        <span className="text-sm font-semibold text-foreground">{value}</span>
+      </div>
     </div>
   );
 
-  const renderInvoices = () => (
-    <div className="text-center py-12">
-      <p className="text-muted-foreground">No invoices available</p>
-      <p className="text-sm text-muted-foreground mt-1">Your billing invoices will appear here</p>
+  const renderPricing = () => (
+    <div className="space-y-4 pb-12">
+      {/* Actors */}
+      <div className="rounded-lg border border-border bg-card overflow-hidden">
+        <div className="p-4 border-b border-border bg-muted/20">
+          <h3 className="text-base font-bold text-foreground">Actors</h3>
+        </div>
+        <div>
+          {renderPricingRow('Compute units (CU)', '$0.30 / CU', 'Billed per second of Actor run based on memory allocated')}
+        </div>
+      </div>
+
+      {/* Proxy */}
+      <div className="rounded-lg border border-border bg-card overflow-hidden">
+        <div className="p-4 border-b border-border bg-muted/20">
+          <h3 className="text-base font-bold text-foreground">Proxy</h3>
+        </div>
+        <div>
+          {renderPricingRow('Residential proxies', '$8.00 / GB', 'Charged per GB of traffic')}
+          {renderPricingRow('Datacenter proxies', '5 IPs included', 'Shared IPs included in free tier')}
+          {renderPricingRow('SERPs proxy', '$2.50 / 1,000 SERPs', 'Billed per 1,000 search engine result pages')}
+        </div>
+      </div>
+
+      {/* Storage */}
+      <div className="rounded-lg border border-border bg-card overflow-hidden">
+        <div className="p-4 border-b border-border bg-muted/20">
+          <h3 className="text-base font-bold text-foreground">Storage</h3>
+        </div>
+
+        {/* Dataset */}
+        <div className="border-b border-border">
+          <div className="px-4 py-3 bg-muted/10 font-medium text-foreground text-sm">
+            Dataset
+          </div>
+          {renderPricingRow('Timed storage 1,000 GB-hours', '$1.00', 'Storage billed hourly')}
+          {renderPricingRow('1,000 reads', '$0.0004')}
+          {renderPricingRow('1,000 writes', '$0.005')}
+        </div>
+
+        {/* Key-value store */}
+        <div className="border-b border-border">
+          <div className="px-4 py-3 bg-muted/10 font-medium text-foreground text-sm">
+            Key-value store
+          </div>
+          {renderPricingRow('Timed storage 1,000 GB-hours', '$1.00', 'Storage billed hourly')}
+          {renderPricingRow('1,000 reads', '$0.005')}
+          {renderPricingRow('1,000 writes', '$0.05')}
+          {renderPricingRow('1,000 lists', '$0.05')}
+        </div>
+
+        {/* Request queue */}
+        <div>
+          <div className="px-4 py-3 bg-muted/10 font-medium text-foreground text-sm">
+            Request queue
+          </div>
+          {renderPricingRow('Timed storage 1,000 GB-hours', '$4.00', 'Storage billed hourly')}
+          {renderPricingRow('1,000 reads', '$0.0004')}
+          {renderPricingRow('1,000 writes', '$0.02')}
+        </div>
+      </div>
+
+      {/* Data transfer */}
+      <div className="rounded-lg border border-border bg-card overflow-hidden">
+        <div className="p-4 border-b border-border bg-muted/20">
+          <h3 className="text-base font-bold text-foreground">Data transfer</h3>
+        </div>
+        <div>
+          {renderPricingRow('External / GB', '$0.20', 'Transfer outside of Scrapi network')}
+          {renderPricingRow('Internal / GB', '$0.05', 'Transfer within Scrapi network')}
+        </div>
+      </div>
     </div>
   );
+
+  const renderInvoices = () => {
+    if (isLoadingInvoices) {
+      return (
+        <div className="flex flex-col items-center justify-center py-20 animate-pulse">
+          <div className="w-12 h-12 bg-muted rounded-full mb-4"></div>
+          <div className="h-4 bg-muted rounded w-48"></div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        {/* Search and Filter Area */}
+        <div className="flex items-center gap-4">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Filter invoices"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            />
+          </div>
+          <span className="text-sm font-medium text-foreground">
+            {filteredInvoices.length} {filteredInvoices.length === 1 ? 'item' : 'items'}
+          </span>
+        </div>
+
+        {/* Invoices Table */}
+        <div className="border border-border rounded-xl bg-card overflow-hidden flex flex-col">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-max border-collapse">
+              <thead>
+                <tr className="border-b border-border bg-muted/5 text-left h-[44px]">
+                  <th className="px-4 py-3 text-[13px] font-semibold text-muted-foreground hover:text-foreground cursor-pointer transition-colors group">
+                    <div className="flex items-center gap-1">
+                      Number
+                      <ArrowUpDown className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </th>
+                  <th className="px-4 py-3 text-[13px] font-semibold text-muted-foreground hover:text-foreground cursor-pointer transition-colors group">
+                    <div className="flex items-center gap-1">
+                      Amount
+                      <ArrowUpDown className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </th>
+                  <th className="px-4 py-3 text-[13px] font-semibold text-muted-foreground hover:text-foreground cursor-pointer transition-colors group">
+                    <div className="flex items-center gap-1">
+                      Issued on
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    </div>
+                  </th>
+                  <th className="px-4 py-3 text-[13px] font-semibold text-muted-foreground cursor-default transition-colors group">
+                    <div className="flex items-center gap-1">
+                      Due on
+                    </div>
+                  </th>
+                  <th className="px-4 py-3 text-[13px] font-semibold text-muted-foreground hover:text-foreground cursor-pointer transition-colors group">
+                    <div className="flex items-center gap-1">
+                      Payment status
+                      <Filter className="w-3.5 h-3.5 text-muted-foreground/60" />
+                    </div>
+                  </th>
+                  <th className="px-4 py-3 text-[13px] font-semibold text-muted-foreground cursor-default transition-colors group">
+                    <div className="flex items-center gap-1">
+                      Payment attempts
+                    </div>
+                  </th>
+                  <th className="px-4 py-3 text-[13px] font-semibold text-muted-foreground hover:text-foreground cursor-pointer transition-colors group">
+                    <div className="flex items-center gap-1">
+                      Invoice type
+                      <Filter className="w-3.5 h-3.5 text-muted-foreground/60" />
+                    </div>
+                  </th>
+                  <th className="px-4 py-3 text-[13px] font-semibold text-muted-foreground text-right pr-6">
+                    View
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {paginatedInvoices.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="py-20 text-center text-sm text-muted-foreground">
+                      No results found
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedInvoices.map((inv) => (
+                    <tr
+                      key={inv._id}
+                      className="group hover:bg-muted/40 transition-colors cursor-pointer"
+                      onClick={() => navigate(`/billing/invoices/${inv._id}`)}
+                    >
+                      <td className="px-4 py-4">
+                        <span className="text-[13px] font-medium text-foreground">#{inv.invoice_no.split('-').pop()}</span>
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className="text-[13px] font-semibold text-foreground">${inv.amount.toFixed(2)} USD</span>
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className="text-[13px] text-foreground">
+                          {new Date(inv.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className="text-[13px] text-foreground">
+                          {new Date(inv.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 w-fit border border-emerald-100 dark:border-emerald-900/30">
+                          <span className="text-[11px] font-bold uppercase tracking-wider">Paid</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className="text-[13px] text-foreground">1</span>
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className="text-[13px] text-foreground capitalize">{inv.plan} Subscription</span>
+                      </td>
+                      <td className="px-4 py-4 text-right pr-6">
+                        <button
+                          className="text-[13px] font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/billing/invoices/${inv._id}`);
+                          }}
+                        >
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Table Footer / Pagination */}
+          <div className="border-t border-border px-4 py-3 bg-muted/5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted-foreground">Items per page:</span>
+              <div className="relative">
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="appearance-none bg-card border border-border rounded px-3 py-1 text-sm pr-8 focus:outline-none focus:border-blue-500 cursor-pointer"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              </div>
+              <span className="text-sm text-muted-foreground ml-2">
+                {filteredInvoices.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} - {Math.min(currentPage * itemsPerPage, filteredInvoices.length)} of {filteredInvoices.length}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-6">
+              <form onSubmit={handleGoToPage} className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Go to page:</span>
+                <input
+                  type="text"
+                  value={goToPage}
+                  onChange={(e) => setGoToPage(e.target.value)}
+                  placeholder={currentPage}
+                  className="w-12 h-8 border border-border rounded bg-card px-2 text-sm text-center outline-none focus:border-blue-500"
+                />
+                <button type="submit" className="px-3 py-1 border border-border rounded text-sm font-medium hover:bg-muted transition-colors">Go</button>
+              </form>
+
+              <div className="flex items-center gap-1">
+                <button
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  className="p-1.5 rounded-md hover:bg-muted disabled:opacity-30 disabled:hover:bg-transparent transition-all"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <div className="w-8 h-8 flex items-center justify-center bg-blue-600 text-white rounded-md text-sm font-bold shadow-sm">
+                  {currentPage}
+                </div>
+                <button
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  className="p-1.5 rounded-md hover:bg-muted disabled:opacity-30 disabled:hover:bg-transparent transition-all"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const renderLimits = () => (
     <div className="space-y-4">
@@ -252,11 +596,11 @@ const Billing = () => {
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold text-foreground">{pageTitle}</h1>
             <div className="flex items-center gap-3">
-              <button className="px-4 py-2 border border-border rounded-lg text-sm font-medium hover:bg-muted transition-colors text-foreground bg-card">
+              <button className="px-4 py-2 border border-border rounded-lg text-sm font-medium hover:bg-muted transition-colors text-foreground bg-card uppercase tracking-wider font-bold">
                 API
               </button>
               {isOwner && (
-                <button onClick={handleUpgrade} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">
+                <button onClick={handleUpgrade} className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold transition-all shadow-lg shadow-blue-500/20 active:scale-95">
                   Upgrade
                 </button>
               )}
@@ -265,19 +609,19 @@ const Billing = () => {
 
           {/* Tabs */}
           <div className="border-b border-border mb-4">
-            <div className="flex gap-6">
+            <div className="flex gap-8">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`pb-2.5 text-sm font-medium transition-colors relative ${activeTab === tab.id
+                  onClick={() => handleTabChange(tab.id)}
+                  className={`pb-3 text-sm font-bold transition-all relative ${activeTab === tab.id
                     ? 'text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
                     }`}
                 >
                   {tab.label}
                   {activeTab === tab.id && (
-                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-500" />
+                    <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-blue-500 rounded-full" />
                   )}
                 </button>
               ))}
@@ -285,7 +629,7 @@ const Billing = () => {
           </div>
 
           {/* Tab Content */}
-          <div>
+          <div className="pb-10">
             {renderTabContent()}
           </div>
         </div>

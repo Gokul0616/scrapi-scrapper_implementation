@@ -67,7 +67,7 @@ const AccountDeletionPending = ({ deletionInfo, onReactivate }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-[2px]">
       <div className="max-w-lg w-full p-6 rounded-lg shadow-lg bg-popover border border-border">
         <div className="flex items-start gap-3 mb-5">
           <div className="flex-shrink-0">
