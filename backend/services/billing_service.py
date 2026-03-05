@@ -1,6 +1,6 @@
 import os
 import stripe
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from database import get_db
 
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "sk_test_fake_key")
@@ -32,6 +32,14 @@ class BillingService:
             "features": ["Custom usage limits", "Custom retention", "Dedicated support", "SSO & more"],
             "gradient": "linear-gradient(90deg,#7c3aed,#5b21b6)", "payg": None, "tier": None
         }
+    }
+    
+    PLAN_PRICES = {
+        "free": 0.0,
+        "starter": 29.0,
+        "growth": 99.0,
+        "scale": 299.0,
+        "enterprise": 0.0
     }
 
     ADDON_DATA = {
@@ -85,20 +93,48 @@ class BillingService:
         if not workspace:
             raise ValueError("Workspace not found")
             
-        plan_name = workspace.get("plan", "Free")
-        platform_credits = workspace.get("platform_credits", 5.0)
+        plan_name = workspace.get("plan", "Free").lower()
         
-        # Calculate current billing period (e.g. beginning of month)
+        base_credits = {
+            "free": 0.0,
+            "starter": 29.0,
+            "growth": 99.0,
+            "scale": 299.0,
+            "enterprise": 0.0
+        }
+        monthly_base = base_credits.get(plan_name, 0.0)
+        
+        plan_period = workspace.get("billing_period", "monthly")
         now = datetime.now(timezone.utc)
-        start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        end_of_month = now.replace(month=now.month % 12 + 1, day=1, hour=0, minute=0, second=0, microsecond=0) if now.month < 12 else now.replace(year=now.year + 1, month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
         
+        # Irrespective of the subscription duration, credits reset and map strictly to a 30-day window
+        platform_credits = 5.0 + monthly_base
+
+        expires_at_str = workspace.get("expires_at")
+        
+        if expires_at_str:
+            if isinstance(expires_at_str, str):
+                expires_at = datetime.fromisoformat(expires_at_str.replace("Z", "+00:00"))
+                if expires_at.tzinfo is None:
+                    expires_at = expires_at.replace(tzinfo=timezone.utc)
+            else:
+                expires_at = expires_at_str
+        else:
+            expires_at = now + timedelta(days=28)
+            
+        # For all plans (Annual or Monthly), credits and usage reset on the 1st of every calendar month
+        start_of_period = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        if start_of_period.month == 12:
+            end_of_period = start_of_period.replace(year=start_of_period.year + 1, month=1)
+        else:
+            end_of_period = start_of_period.replace(month=start_of_period.month + 1)
+
         # Aggregate usage from runs in this period
         # Note: created_at is stored as ISO string in DB, so we need to compare strings
         db = get_db()
         runsCursor = db.runs.find({
             "user_id" if workspace_type == "personal" else "organization_id": workspace_id,
-            "created_at": {"$gte": start_of_month.isoformat()}
+            "created_at": {"$gte": start_of_period.isoformat()}
         })
         
         compute_units_used = 0.0
@@ -108,12 +144,13 @@ class BillingService:
         # CU Price roughly $0.50
         cu_cost = compute_units_used * 0.50
         
-        # The mock frontend expects planConsumption
+        # The frontend expects planConsumption
         free_used = min(cu_cost, platform_credits)
         free_total = platform_credits
         free_remaining = max(0, free_total - free_used)
         
         total_usage = cu_cost # Simplified total
+        
         
         # Calculate current active RAM usage
         running_runs_cursor = db.runs.find({
@@ -134,9 +171,9 @@ class BillingService:
         return {
             "totalUsage": total_usage,
             "billingPeriod": {
-                "start": start_of_month.strftime("%b %d, %Y"),
-                "end": end_of_month.strftime("%b %d, %Y"),
-                "type": "Monthly"
+                "start": start_of_period.strftime("%b %d, %Y"),
+                "end": end_of_period.strftime("%b %d, %Y"),
+                "type": "Annual" if plan_period == "yearly" else "Monthly"
             },
             "planConsumption": {
                 "freeUsed": free_used,
@@ -147,14 +184,86 @@ class BillingService:
                 "used_mb": current_ram_mb,
                 "limit_mb": max_ram_mb
             },
+            "limits": {
+                "max_concurrent_runs": plan_limits.get("max_concurrent_runs", 1),
+                "max_ram_gb": max_ram_gb,
+                "max_actor_build_mins": plan_limits.get("max_actor_build_mins", 10),
+                "data_retention_days": plan_limits.get("data_retention_days", 7),
+                "max_schedules": plan_limits.get("max_schedules", 0)
+            },
             "services": [
                 { "name": 'Actors', "color": 'bg-emerald-500', "amount": cu_cost, "icon": '●' },
                 { "name": 'Data transfer', "color": 'bg-purple-500', "amount": 0.00, "icon": '●' },
                 { "name": 'Proxy', "color": 'bg-orange-500', "amount": 0.00, "icon": '●' },
                 { "name": 'Storage', "color": 'bg-blue-500', "amount": 0.00, "icon": '●' }
             ],
-            "plan_name": plan_name
+            "plan_period": workspace.get("billing_period", "monthly"),
+            "expires_at": workspace.get("expires_at") or (datetime.now(timezone.utc) + timedelta(days=28)).isoformat(),
+            "plan_name": plan_name,
+            "plan": plan_name,
+            "account_balance": workspace.get("account_balance", 0.0)
         }
+
+    async def get_proration_discount(self, workspace_id: str, workspace_type: str) -> float:
+        """Calculates unused plan value based on the lesser of time remaining or credits remaining."""
+        try:
+            summary = await self.get_billing_summary(workspace_id, workspace_type)
+        except ValueError:
+            return 0.0
+            
+        plan_name = summary.get("plan_name", "Free").lower()
+        if plan_name == "free":
+            return 0.0
+            
+        now = datetime.now(timezone.utc)
+        expires_at_str = summary.get("expires_at")
+        if not expires_at_str:
+            return 0.0
+            
+        if isinstance(expires_at_str, str):
+            expires_at = datetime.fromisoformat(expires_at_str.replace("Z", "+00:00"))
+            if expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+        else:
+            expires_at = expires_at_str
+            
+        if now >= expires_at:
+            return 0.0
+            
+        plan_period = summary.get("plan_period", "monthly")
+        
+        # Determine total cycle days based on period
+        total_cycle_days = 365.0 if plan_period == "yearly" else 28.0
+        
+        # 1. Time Remaining Ratio
+        delta = expires_at - now
+        days_remaining = max(0.0, delta.total_seconds() / 86400.0)
+        time_ratio = min(1.0, days_remaining / total_cycle_days)
+        
+        # 2. Credits Remaining Ratio
+        consumption = summary.get("planConsumption", {})
+        free_remaining = float(consumption.get("freeRemaining", 0.0))
+        free_total = float(consumption.get("freeTotal", 0.0))
+        credit_ratio = 1.0
+        if free_total > 0:
+            credit_ratio = min(1.0, free_remaining / free_total)
+            
+        # The actual ratio to use is the lesser of the two
+        effective_ratio = min(time_ratio, credit_ratio)
+        
+        # Calculate historical price
+        plan_data = self.PLAN_DATA.get(plan_name)
+        if not plan_data: return 0.0
+        base_price = plan_data.get("price", 0)
+        if base_price is None: return 0.0
+        
+        if plan_period == "yearly":
+            historical_price = round(base_price * 0.9) * 12
+        else:
+            historical_price = base_price
+            
+        discount = round(historical_price * effective_ratio, 2)
+        return float(discount)
 
     async def get_historical_usage(self, workspace_id: str, workspace_type: str, month: int, year: int):
         """Generates historical usage data for the specified month and year"""
@@ -562,13 +671,41 @@ class BillingService:
 
                 # Calculate total addon cost
                 total_addon_cost = 0.0
+                is_annual = plan_data.get("is_annual")
                 invoice_addons = plan_data.get("addons", {})
                 for aid, qty in invoice_addons.items():
                     if aid in self.ADDON_DATA:
-                        total_addon_cost += qty * self.ADDON_DATA[aid]["price"]
+                        price = self.ADDON_DATA[aid]["price"]
+                        total_addon_cost += qty * price
 
-                # Subtotal is the plan price (Total - Addons)
-                subtotal = amount - total_addon_cost
+                # Extract proration discount and account balance used
+                proration_discount = float(plan_data.get("proration_discount", 0.0))
+                account_balance_used = float(plan_data.get("account_balance_used", 0.0))
+                total_available_credit = proration_discount + account_balance_used
+
+                plan_price_monthly = self.PLAN_PRICES.get(plan_data.get("plan", "free"), 0.0)
+                base_plan_cost = plan_price_monthly * 12 * 0.9 if is_annual else plan_price_monthly
+                total_expected_cost = base_plan_cost + total_addon_cost
+                
+                # Check for proration overflow to credit to account_balance
+                overflow = max(0.0, total_available_credit - total_expected_cost)
+                
+                collection = db.organizations if workspace_type == "organization" else db.users
+                if overflow > 0:
+                    # If we overpaid somehow, set balance to the overflow
+                    await collection.update_one(
+                        {"id": workspace_id},
+                        {"$set": {"account_balance": overflow}}
+                    )
+                elif account_balance_used > 0:
+                    # If we used balance and didn't overflow, the balance is now zero
+                    await collection.update_one(
+                        {"id": workspace_id},
+                        {"$set": {"account_balance": 0.0}}
+                    )
+
+                # Subtotal is always the true base cost of the plan
+                subtotal = base_plan_cost
                 tax_amount = 0.0
 
                 invoice_payload = {
@@ -589,6 +726,9 @@ class BillingService:
                     "created_at": datetime.now(timezone.utc),
                     "addons": invoice_addons,
                     "total_addon_cost": total_addon_cost,
+                    "proration_discount": proration_discount,
+                    "account_balance_used": account_balance_used,
+                    "overflow_credited": overflow,
                     # Billing details (manual entry takes priority; PayPal payer info as fallback)
                     "billing_full_name": invoice_billing_name,
                     "billing_company": bd.get("company"),
@@ -654,6 +794,10 @@ class BillingService:
                         payment_method="paypal",
                         issued_date=issued_str,
                         billing_name=bd.get("full_name") or bd.get("company"),
+                        proration_discount=proration_discount,
+                        account_balance_used=account_balance_used,
+                        total_addon_cost=total_addon_cost,
+                        overflow_credited=overflow,
                         pdf_content=pdf_content,
                         invoice_filename=f"invoice_{invoice_no}.pdf"
                     )
@@ -674,11 +818,147 @@ class BillingService:
                 match_filter = {"user_id": user_id, "workspace_id": workspace_id, "workspace_type": workspace_type}
                 await db.billing_subscriptions.update_one(match_filter, {"$set": subscription_payload}, upsert=True)
                 
+                # ── Update Workspace Plan, Credits, and Limits ──
+                plan_name_lower = str(plan_data.get("plan", "free")).lower()
+                
+                # Base limits per plan
+                base_limits = {
+                    "free": {"max_concurrent_runs": 1, "max_ram_gb": 8, "max_actor_build_mins": 10, "data_retention_days": 7, "max_schedules": 0},
+                    "starter": {"max_concurrent_runs": 10, "max_ram_gb": 32, "max_actor_build_mins": 30, "data_retention_days": 30, "max_schedules": 5},
+                    "growth": {"max_concurrent_runs": 50, "max_ram_gb": 64, "max_actor_build_mins": 60, "data_retention_days": 90, "max_schedules": 25},
+                    "scale": {"max_concurrent_runs": 200, "max_ram_gb": 128, "max_actor_build_mins": 120, "data_retention_days": 180, "max_schedules": 9999},
+                    "enterprise": {"max_concurrent_runs": 9999, "max_ram_gb": 9999, "max_actor_build_mins": 240, "data_retention_days": 365, "max_schedules": 9999}
+                }
+                
+                # Base platform credits per plan
+                base_credits = {
+                    "free": 5.0,
+                    "starter": 29.0,
+                    "growth": 99.0,
+                    "scale": 299.0,
+                    "enterprise": 999.0
+                }
+                
+                ws_limits = base_limits.get(plan_name_lower, base_limits["free"]).copy()
+                is_annual = plan_data.get("is_annual", False)
+                
+                # Base platform credits per plan (monthly allotment)
+                base_monthly_credits = {
+                    "free": 5.0,
+                    "starter": 29.0,
+                    "growth": 99.0,
+                    "scale": 299.0,
+                    "enterprise": 999.0
+                }
+                
+                monthly_credits = base_monthly_credits.get(plan_name_lower, 5.0)
+                # Credits map exactly to a rolling 30-day window, regardless of annual/monthly
+                ws_credits = float(monthly_credits + 5.0)
+                
+                # Process Addons
+                for aid, qty in invoice_addons.items():
+                    if aid == "concurrent_runs":
+                        ws_limits["max_concurrent_runs"] += qty
+                    elif aid == "actor_memory":
+                        ws_limits["max_ram_gb"] += qty
+                    
+                    # Addons affect limits (concurrent runs, memory), not platform credits
+                    # Credits are derived solely from the base plan selection
+                    pass
+                
+                # Process Promo Code / Attached Offers
+                promo_code = plan_data.get("promo_code")
+                if promo_code:
+                    promo_code = promo_code.strip().upper()
+                    affiliate = await db.affiliate_links.find_one({"code": promo_code})
+                    if affiliate:
+                        # Validate expiry
+                        expiry = affiliate.get("expiry_date")
+                        if expiry:
+                            try:
+                                if datetime.now(timezone.utc) > datetime.fromisoformat(expiry):
+                                    logger.warning(f"Promo code {promo_code} is expired. Skipping.")
+                                    affiliate = None 
+                            except ValueError:
+                                pass
+                                
+                        # Validate applicable plans
+                        allowed_plans = affiliate.get("applicable_plans", []) if affiliate else []
+                        if affiliate and allowed_plans and len(allowed_plans) > 0:
+                            target_plan = plan_data.get("plan", "").lower()
+                            if target_plan not in [p.lower() for p in allowed_plans]:
+                                logger.warning(f"Promo code {promo_code} is not applicable for plan {target_plan}. Skipping.")
+                                affiliate = None
+                                
+                    if affiliate:
+                        # Inject attached offers directly into workspace limits & credits
+                        for offer in affiliate.get("attached_offers", []):
+                            offer_type = offer.get("type")
+                            offer_id = offer.get("id")
+                            qty = offer.get("qty", 0)
+                            
+                            if offer_type == "limit":
+                                if offer_id in ws_limits:
+                                    ws_limits[offer_id] += qty
+                                else:
+                                    ws_limits[offer_id] = qty
+                            elif offer_type == "addon":
+                                if offer_id == "concurrent_runs":
+                                    ws_limits["max_concurrent_runs"] += qty
+                                elif offer_id == "actor_memory":
+                                    ws_limits["max_ram_gb"] += qty
+                                elif offer_id == "platform_credits":
+                                    ws_credits += qty
+                                    
+                        # Track conversions on affiliate link
+                        await db.affiliate_links.update_one(
+                            {"code": promo_code},
+                            {"$inc": {"conversions": 1}}
+                        )
+                        
+                        # Generate referral receipt for accrual payouts
+                        comm_rate = affiliate.get("commission_rate", 0)
+                        referral_doc = {
+                            "referral_code": promo_code,
+                            "referred_user_id": user_id,
+                            "referred_workspace_id": workspace_id,
+                            "owner_user_id": affiliate.get("owner_user_id"),
+                            "commission_rate": comm_rate,
+                            "commission_earned": round(amount * comm_rate, 2),
+                            "paypal_order_id": order_id,
+                            "created_at": datetime.now(timezone.utc).isoformat(),
+                            "active_until": (datetime.now(timezone.utc) + timedelta(days=365)).isoformat() # Apify Lifetime tracking simplified to 1yr active
+                        }
+                        await db.referral_tracking.insert_one(referral_doc)
+                
+                # Calculate expiration date
+                now = datetime.now(timezone.utc)
+                if is_annual:
+                    expires_at = now + timedelta(days=365)
+                else:
+                    expires_at = now + timedelta(days=28)
+                
+                update_ws_payload = {
+                    "plan": plan_data.get("plan"),
+                    "platform_credits": ws_credits,
+                    "limits": ws_limits,
+                    "expires_at": expires_at.isoformat() if isinstance(expires_at, datetime) else expires_at,
+                    "billing_period": "yearly" if is_annual else "monthly",
+                    "expiry_reminder_sent": {"5d": False, "2d": False, "0d": False}
+                }
+                
+                if workspace_type == "organization":
+                    await db.organizations.update_one({"id": workspace_id}, {"$set": update_ws_payload})
+                else:
+                    await db.users.update_one({"id": workspace_id}, {"$set": update_ws_payload})
+
+                
                 # Add Scrapi-specific IDs and full transaction data to the response for the frontend
                 capture_data["invoice_id"] = str(invoice_payload.get("_id", ""))
                 capture_data["invoice_no"] = invoice_no
                 capture_data["amount"] = amount
                 capture_data["subtotal"] = subtotal
+                capture_data["payment_method"] = "paypal"
                 capture_data["tax_amount"] = tax_amount
                 capture_data["plan"] = plan_data.get("plan")
                 capture_data["is_annual"] = plan_data.get("is_annual")
@@ -686,6 +966,9 @@ class BillingService:
                 capture_data["account_email"] = account_email
                 capture_data["paypal_order_id"] = order_id
                 capture_data["workspace_name"] = bd.get("company") or bd.get("full_name") or payer_full_name
+                capture_data["proration_discount"] = proration_discount
+                capture_data["account_balance_used"] = account_balance_used
+                capture_data["overflow_credited"] = overflow
                 
             return capture_data
 
@@ -764,14 +1047,20 @@ class BillingService:
         
         if not to_lines: to_lines = ["Valued Customer"]
 
-        # Prepare PayPal lines (Secondary/Reference)
+        # Prepare Payment Source lines (Secondary/Reference)
         pp_lines = []
-        if invoice.get('paypal_payer_name'):
-             pp_lines.append(f"Payer: {invoice.get('paypal_payer_name')}")
-             if invoice.get('paypal_payer_email') and invoice.get('paypal_payer_email') != acc_email:
-                 pp_lines.append(invoice.get('paypal_payer_email'))
-             if invoice.get('paypal_payer_country'):
-                 pp_lines.append(f"Country: {invoice.get('paypal_payer_country')}")
+        payment_method = invoice.get("payment_method", "paypal")
+        if payment_method == "paypal":
+            if invoice.get('paypal_payer_name'):
+                 pp_lines.append(f"Payer: {invoice.get('paypal_payer_name')}")
+                 if invoice.get('paypal_payer_email') and invoice.get('paypal_payer_email') != acc_email:
+                     pp_lines.append(invoice.get('paypal_payer_email'))
+                 if invoice.get('paypal_payer_country'):
+                     pp_lines.append(f"Country: {invoice.get('paypal_payer_country')}")
+        elif payment_method == "credit_balance":
+            pp_lines.append("Source: Account Credits")
+            pp_lines.append(f"Workspace: {invoice.get('workspace_id', 'Unknown')}")
+            pp_lines.append("Type: Internal Transfer")
 
         # Draw Headers
         pdf.set_font('helvetica', 'B', 10)
@@ -803,7 +1092,16 @@ class BillingService:
         pdf.cell(47.5, 9, ' ISSUED DATE', align='L')
         pdf.cell(47.5, 9, 'PAYMENT METHOD', align='L')
         pdf.cell(47.5, 9, 'STATUS', align='L')
-        pdf.cell(47.5, 9, 'PAYPAL TRANS ID', ln=True, align='L')
+        
+        # Dynamic Transaction ID Header
+        if payment_method == "paypal":
+            trans_label = 'PAYPAL TRANS ID'
+        elif payment_method == "credit_balance":
+            trans_label = 'INTERNAL REF ID'
+        else:
+            trans_label = 'TRANSACTION ID'
+            
+        pdf.cell(47.5, 9, trans_label, ln=True, align='L')
         
         pdf.set_font('helvetica', 'B', 9)
         pdf.set_text_color(15, 23, 42)
@@ -815,12 +1113,21 @@ class BillingService:
         else: issued_str = datetime.now().strftime('%Y-%m-%d')
             
         pdf.cell(47.5, 7, f" {issued_str}", align='L')
-        pdf.cell(47.5, 7, invoice.get('payment_method', 'N/A').upper(), align='L')
+        pdf.cell(47.5, 7, payment_method.replace('_', ' ').upper(), align='L')
         pdf.set_text_color(5, 150, 105) # Green for paid
         pdf.cell(47.5, 7, invoice.get('status', 'PAID').upper(), align='L')
         pdf.set_text_color(15, 23, 42)
         pdf.set_font('helvetica', 'B', 8)
-        pdf.cell(47.5, 7, str(invoice.get('paypal_order_id') or invoice.get('paypal_payer_id') or 'N/A'), ln=True, align='L')
+        
+        # Dynamic Transaction ID Value
+        if payment_method == "paypal":
+            trans_value = str(invoice.get('paypal_order_id') or invoice.get('paypal_payer_id') or 'N/A')
+        elif payment_method == "credit_balance":
+            trans_value = f"INT-{str(invoice.get('_id', ''))[:8].upper()}"
+        else:
+            trans_value = "N/A"
+            
+        pdf.cell(47.5, 7, trans_value, ln=True, align='L')
         
         # New row for Workspace/Account info
         pdf.ln(2)
@@ -866,6 +1173,31 @@ class BillingService:
                 pdf.cell(40, 10, 'Add-on', border='B', align='C')
                 pdf.cell(40, 10, f"${total_addon:.2f} (incl.)", border='B', ln=True, align='R')
 
+        # Add proration discount if present
+        proration = invoice.get("proration_discount", 0)
+        if proration > 0:
+            pdf.set_text_color(5, 150, 105) # Green for discount
+            pdf.cell(110, 10, f"  - Unused plan credit", border='B')
+            pdf.cell(40, 10, 'Discount', border='B', align='C')
+            pdf.cell(40, 10, f"-${proration:.2f}", border='B', ln=True, align='R')
+            pdf.set_text_color(15, 23, 42)
+
+        account_balance_used = invoice.get("account_balance_used", 0)
+        if account_balance_used > 0:
+            pdf.set_text_color(37, 99, 235) # Blue
+            pdf.cell(110, 10, f"  - Credit Balance Applied", border='B')
+            pdf.cell(40, 10, 'Credit', border='B', align='C')
+            pdf.cell(40, 10, f"-${account_balance_used:.2f}", border='B', ln=True, align='R')
+            pdf.set_text_color(15, 23, 42)
+
+        overflow = invoice.get("overflow_credited", 0)
+        if overflow > 0:
+            pdf.set_text_color(37, 99, 235) # Blue for credit balance
+            pdf.cell(110, 10, f"  + Credit Balance Saved", border='B')
+            pdf.cell(40, 10, 'Credit', border='B', align='C')
+            pdf.cell(40, 10, f"+${overflow:.2f}", border='B', ln=True, align='R')
+            pdf.set_text_color(15, 23, 42)
+
         # Add custom goods text if present
         if invoice.get('billing_custom_goods_text'):
              pdf.set_font('helvetica', 'I', 8)
@@ -889,7 +1221,7 @@ class BillingService:
         pdf.set_text_color(100, 116, 139)
         pdf.cell(40, 7, 'Subtotal (Add-ons):', align='R')
         pdf.set_text_color(15, 23, 42)
-        pdf.cell(40, 7, f"${(invoice.get('amount', 0) - invoice.get('subtotal', 0)):.2f}", ln=True, align='R')
+        pdf.cell(40, 7, f"${invoice.get('total_addon_cost', 0):.2f}", ln=True, align='R')
         
         pdf.ln(2)
         pdf.set_x(120)
@@ -907,13 +1239,26 @@ class BillingService:
 
         return pdf.output()
 
-    async def get_invoices(self, workspace_id: str, workspace_type: str):
-        """Fetch all invoices for a workspace"""
+    async def get_invoices(self, workspace_id: str, workspace_type: str, page: int = 1, limit: int = 10, search: str = None):
+        """Fetch paginated and searchable invoices for a workspace"""
         db = get_db()
-        cursor = db.invoices.find({
+        query = {
             "workspace_id": workspace_id,
             "workspace_type": workspace_type
-        }).sort("created_at", -1)
+        }
+        
+        if search:
+            query["$or"] = [
+                {"invoice_no": {"$regex": search, "$options": "i"}},
+                {"plan": {"$regex": search, "$options": "i"}}
+            ]
+        
+        # Get total count
+        total = await db.invoices.count_documents(query)
+        
+        # Skip and limit for pagination
+        skip = (page - 1) * limit
+        cursor = db.invoices.find(query).sort("created_at", -1).skip(skip).limit(limit)
         
         invoices = []
         async for doc in cursor:
@@ -921,7 +1266,11 @@ class BillingService:
             if "created_at" in doc and isinstance(doc["created_at"], datetime):
                 doc["created_at"] = doc["created_at"].isoformat()
             invoices.append(doc)
-        return invoices
+            
+        return {
+            "invoices": invoices,
+            "total": total
+        }
 
     async def get_invoice_by_id(self, invoice_id: str):
         """Fetch a single invoice by its ID"""
@@ -937,5 +1286,207 @@ class BillingService:
             return doc
         except InvalidId:
             return None
+
+    async def apply_zero_dollar_upgrade(self, user_id: str, workspace_id: str, workspace_type: str, plan_data: dict):
+        """Processes an upgrade when the proration discount fully covers the cost, applying leftover to account_balance."""
+        db = get_db()
+        
+        is_annual = plan_data.get("is_annual", False)
+        invoice_addons = plan_data.get("addons", {})
+        total_addon_cost = 0.0
+        
+        for aid, qty in invoice_addons.items():
+            if aid in self.ADDON_DATA:
+                price = self.ADDON_DATA[aid]["price"]
+                total_addon_cost += qty * price
+
+        plan_price_monthly = self.PLAN_PRICES.get(plan_data.get("plan", "free"), 0.0)
+        base_plan_cost = plan_price_monthly * 12 * 0.9 if is_annual else plan_price_monthly
+        total_expected_cost = base_plan_cost + total_addon_cost
+        
+        proration_discount = float(plan_data.get("proration_discount", 0.0))
+        account_balance_used = float(plan_data.get("account_balance_used", 0.0))
+        total_available_credit = proration_discount + account_balance_used
+        
+        if total_expected_cost > total_available_credit:
+             raise ValueError("Insufficient proration discount and account balance to cover a zero-dollar upgrade.")
+             
+        # Overflow is the extra credit remaining after paying for this specific upgrade
+        overflow = round(total_available_credit - total_expected_cost, 2)
+        
+        # We must zero out their exsting account_balance and insert only the leftover overflow
+        collection = db.organizations if workspace_type == "organization" else db.users
+        await collection.update_one(
+            {"id": workspace_id},
+            {"$set": {"account_balance": overflow}}
+        )
+            
+        plan_name_lower = str(plan_data.get("plan", "free")).lower()
+        base_limits = {
+            "free": {"max_concurrent_runs": 1, "max_ram_gb": 8, "max_actor_build_mins": 10, "data_retention_days": 7, "max_schedules": 0},
+            "starter": {"max_concurrent_runs": 10, "max_ram_gb": 32, "max_actor_build_mins": 30, "data_retention_days": 30, "max_schedules": 5},
+            "growth": {"max_concurrent_runs": 50, "max_ram_gb": 64, "max_actor_build_mins": 60, "data_retention_days": 90, "max_schedules": 25},
+            "scale": {"max_concurrent_runs": 200, "max_ram_gb": 128, "max_actor_build_mins": 120, "data_retention_days": 180, "max_schedules": 9999},
+            "enterprise": {"max_concurrent_runs": 9999, "max_ram_gb": 9999, "max_actor_build_mins": 240, "data_retention_days": 365, "max_schedules": 9999}
+        }
+        ws_limits = base_limits.get(plan_name_lower, base_limits["free"]).copy()
+        
+        base_monthly_credits = {
+            "free": 5.0,
+            "starter": 29.0,
+            "growth": 99.0,
+            "scale": 299.0,
+            "enterprise": 999.0
+        }
+        
+        monthly_credits = base_monthly_credits.get(plan_name_lower, 5.0)
+        # Credits map exactly to a rolling 30-day window, regardless of annual/monthly
+        ws_credits = float(monthly_credits + 5.0)
+            
+        for aid, qty in invoice_addons.items():
+            if aid == "concurrent_runs":
+                ws_limits["max_concurrent_runs"] += qty
+            elif aid == "actor_memory":
+                ws_limits["max_ram_gb"] += qty
+                
+        now = datetime.now(timezone.utc)
+        expires_at = now + timedelta(days=365) if is_annual else now + timedelta(days=28)
+        
+        update_ws_payload = {
+            "plan": plan_data.get("plan"),
+            "platform_credits": ws_credits,
+            "limits": ws_limits,
+            "expires_at": expires_at.isoformat(),
+            "billing_period": "yearly" if is_annual else "monthly",
+            "expiry_reminder_sent": {"5d": False, "2d": False, "0d": False}
+        }
+        
+        collection = db.organizations if workspace_type == "organization" else db.users
+        await collection.update_one({"id": workspace_id}, {"$set": update_ws_payload})
+        
+        subscription_payload = {
+            "user_id": user_id,
+            "workspace_id": workspace_id,
+            "workspace_type": workspace_type,
+            "plan": plan_data.get("plan"),
+            "is_annual": is_annual,
+            "payment_method": "credit_balance",
+            "confirmed_at": datetime.now(timezone.utc)
+        }
+        match_filter = {"user_id": user_id, "workspace_id": workspace_id, "workspace_type": workspace_type}
+        await db.billing_subscriptions.update_one(match_filter, {"$set": subscription_payload}, upsert=True)
+        import uuid
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        invoice_no = f"INV-{datetime.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
+        
+        # User details for email
+        user_doc = await db.users.find_one({"id": user_id}, {"email": 1, "username": 1})
+        user_email = (user_doc or {}).get("email")
+        
+        org_billing_email = None
+        if workspace_type == "organization":
+            org_doc = await db.organizations.find_one({"id": workspace_id}, {"billing_email": 1})
+            org_billing_email = (org_doc or {}).get("billing_email")
+            
+        bd = plan_data.get("billing_details", {}) or {}
+
+        invoice_payload = {
+            "invoice_no": invoice_no,
+            "user_id": user_id,
+            "account_email": user_email,
+            "workspace_id": workspace_id,
+            "workspace_type": workspace_type,
+            "plan": plan_data.get("plan"),
+            "is_annual": is_annual,
+            "amount": 0.0,
+            "subtotal": base_plan_cost,
+            "tax_amount": 0.0,
+            "currency": "USD",
+            "status": "paid",
+            "payment_method": "credit_balance",
+            "created_at": datetime.now(timezone.utc),
+            "addons": invoice_addons,
+            "total_addon_cost": total_addon_cost,
+            "proration_discount": proration_discount,
+            "account_balance_used": account_balance_used,
+            "overflow_credited": overflow,
+            "billing_full_name": bd.get("full_name") or bd.get("fullName"),
+            "billing_company": bd.get("company"),
+            "billing_tax_id": bd.get("tax_id"),
+            "billing_registration_no": bd.get("registration_no"),
+            "billing_contact": bd.get("billing_contact"),
+            "billing_street_address": bd.get("street_address") or bd.get("streetAddress"),
+            "billing_city": bd.get("city"),
+            "billing_postal_code": bd.get("postal_code") or bd.get("postalCode"),
+            "billing_country": bd.get("country"),
+            "billing_email": bd.get("billing_email") or bd.get("billingEmail"),
+            "billing_custom_address_text": bd.get("custom_address_text"),
+            "billing_custom_goods_text": bd.get("custom_goods_text")
+        }
+        
+        await db.invoices.insert_one(invoice_payload)
+        
+        try:
+            from services.email_service import get_email_service
+            email_svc = get_email_service()
+
+            try:
+                pdf_content = await self.generate_invoice_pdf(invoice_payload)
+            except Exception as pdf_err:
+                logger.error(f"PDF attachment generation failed: {pdf_err}")
+                pdf_content = None
+
+            raw_emails = [
+                user_email,
+                bd.get("billing_email") or bd.get("billingEmail"),
+                org_billing_email
+            ]
+            
+            valid_emails = list({e for e in raw_emails if e and "@" in e})
+            billing_cycle_label = "Annual" if plan_data.get("is_annual") else "Monthly"
+            issued_str = datetime.now(timezone.utc).strftime("%B %d, %Y")
+            invoice_id_str = str(invoice_payload.get("_id", ""))
+            
+            await email_svc.send_payment_confirmation(
+                to_emails=valid_emails,
+                invoice_no=invoice_no,
+                invoice_id=invoice_id_str,
+                plan=plan_data.get("plan", "Unknown").capitalize(),
+                billing_cycle=billing_cycle_label,
+                amount=0.0,
+                subtotal=base_plan_cost,
+                tax_amount=0.0,
+                payment_method="credit_balance",
+                issued_date=issued_str,
+                billing_name=bd.get("full_name") or bd.get("company") or (user_doc or {}).get("username", "Customer"),
+                proration_discount=proration_discount,
+                account_balance_used=account_balance_used,
+                total_addon_cost=total_addon_cost,
+                overflow_credited=overflow,
+                pdf_content=pdf_content,
+                invoice_filename=f"invoice_{invoice_no}.pdf"
+            )
+        except Exception as email_err:
+            logger.error(f"Failed to send email receipt for zero-dollar upgrade {invoice_no}: {email_err}")
+            
+        return {
+            "status": "COMPLETED",
+            "invoice_id": str(invoice_payload.get("_id", "")),
+            "invoice_no": invoice_no,
+            "plan": plan_data.get("plan"),
+            "is_annual": is_annual,
+            "amount": 0.0,
+            "subtotal": base_plan_cost,
+            "tax_amount": 0.0,
+            "payment_method": "credit_balance",
+            "addons": invoice_addons,
+            "total_addon_cost": total_addon_cost,
+            "account_email": user_email,
+            "proration_discount": proration_discount,
+            "account_balance_used": account_balance_used,
+            "overflow_credited": overflow
+        }
 
 billing_service = BillingService()

@@ -26,7 +26,7 @@ const RunsV3 = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [limit, setLimit] = useState(20);
+  const [limit, setLimit] = useState(10);
   const [sortBy, setSortBy] = useState('created_at');
   const [sortOrder, setSortOrder] = useState('desc');
   const [goToPageInput, setGoToPageInput] = useState('');
@@ -183,13 +183,6 @@ const RunsV3 = () => {
     setPage(1);
   };
 
-  const handleGoToPage = () => {
-    const pageNum = parseInt(goToPageInput);
-    if (pageNum >= 1 && pageNum <= totalPages) {
-      setPage(pageNum);
-      setGoToPageInput('');
-    }
-  };
 
   const toggleRunSelection = (runId) => {
     setSelectedRuns(prev => {
@@ -296,66 +289,14 @@ const RunsV3 = () => {
           toggleAllRunsSelection={toggleAllRunsSelection}
           abortRun={abortRun}
           abortingRuns={abortingRuns}
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          itemsPerPage={limit}
+          onItemsPerPageChange={(val) => { setLimit(val); setPage(1); }}
+          totalItems={totalCount}
         />
 
-        {/* Pagination */}
-        <div className="mt-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-[13px] text-muted-foreground">Items per page:</span>
-            <div className="relative">
-              <select
-                value={limit}
-                onChange={(e) => setLimit(Number(e.target.value))}
-                className="appearance-none bg-card border border-border text-foreground text-[13px] rounded px-3 py-1 pr-8 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
-              >
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-muted-foreground">
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-[13px] text-muted-foreground">Go to page:</span>
-              <input
-                type="text"
-                value={goToPageInput}
-                onChange={(e) => setGoToPageInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleGoToPage()}
-                placeholder={page}
-                className="w-[40px] px-2 py-1 text-[13px] text-center bg-card border border-border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-              <button
-                onClick={handleGoToPage}
-                className="px-3 py-1 text-[13px] bg-white dark:bg-zinc-800 border border-border rounded shadow-sm hover:bg-muted transition-colors font-medium text-foreground"
-              >
-                Go
-              </button>
-            </div>
-
-            <div className="flex items-center">
-              <button
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <span className="px-2 text-[13px] font-medium text-foreground">{page}</span>
-              <button
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
 
       </div>
 

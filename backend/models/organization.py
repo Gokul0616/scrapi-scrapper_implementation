@@ -16,6 +16,8 @@ class Organization(BaseModel):
     subscription_id: Optional[str] = None
     stripe_customer_id: Optional[str] = None
     platform_credits: float = 5.0
+    limits: dict = Field(default_factory=dict)
+    spending_limit: Optional[float] = None
     is_active: bool = True
     settings: dict = Field(default_factory=dict)  # Organization-wide settings
     billing_email: Optional[str] = None

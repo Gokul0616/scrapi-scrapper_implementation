@@ -1,6 +1,13 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 import jwt
+import bcrypt
+if getattr(bcrypt, "__about__", None) is None:
+    class About:
+        pass
+    About.__version__ = getattr(bcrypt, "__version__", getattr(bcrypt, "__version", ""))
+    bcrypt.__about__ = About
+
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials

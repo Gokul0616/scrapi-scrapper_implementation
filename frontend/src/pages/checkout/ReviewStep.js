@@ -3,6 +3,7 @@ import { ChevronLeft, CheckCircle2, CreditCard, Package, User, FileText, Loader2
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
+import { useNavigate } from 'react-router-dom';
 import CheckoutSummary from './CheckoutSummary';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
@@ -75,10 +76,31 @@ const ReviewStep = ({
     addonCost = 0,
     configs,
 }) => {
-    const { user } = useAuth();
+    const { user, token } = useAuth();
     const { currentWorkspace } = useWorkspace();
+    const navigate = useNavigate();
     const [confirming, setConfirming] = useState(false);
     const [confirmed, setConfirmed] = useState(false);
+    const [prorationDiscount, setProrationDiscount] = useState(0);
+    const [accountBalance, setAccountBalance] = useState(0);
+
+    // Fetch account balances & proration on mount
+    useEffect(() => {
+        const fetchProration = async () => {
+            if (!currentWorkspace || !token) return;
+            try {
+                const API = process.env.REACT_APP_API_URL || 'http://localhost:8001/api';
+                const res = await axios.get(`${API}/billing/proration?workspace_id=${currentWorkspace.workspace_id}&workspace_type=${currentWorkspace.workspace_type}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setProrationDiscount(res.data?.discount || 0);
+                setAccountBalance(res.data?.account_balance || 0);
+            } catch (err) {
+                console.error("Failed to fetch proration discount:", err);
+            }
+        };
+        fetchProration();
+    }, [currentWorkspace, token]);
 
     const isOrg = currentWorkspace?.workspace_type === 'organization';
     const workspaceName = currentWorkspace?.workspace_name || user?.username || 'Your account';
@@ -90,7 +112,7 @@ const ReviewStep = ({
     const planData = configs.plans[selectedPlan] || { name: selectedPlan, price: 0, features: [] };
     const planName = planData.name || (selectedPlan ? selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1) : '—');
     const basePrice = planData.price ?? 0;
-    const price = isAnnual ? Math.round(basePrice * 0.9) : basePrice;
+    const price = isAnnual ? (basePrice * 0.9) : basePrice;
     const features = planData.features ?? [];
 
     // Extract last 4 from raw digits or masked restored number (e.g. "•••• •••• •••• 4242")
@@ -98,13 +120,36 @@ const ReviewStep = ({
     const last4 = rawNum.length >= 4 ? rawNum.slice(-4) : null;
     const expiryDisplay = paymentCard.expiry || paymentCard.expiryDisplay || '';
 
-    const totalAmount = price + addonCost;
+    let totalAmount = (isAnnual ? price * 12 : price) + addonCost - prorationDiscount - accountBalance;
+    if (totalAmount < 0) totalAmount = 0;
 
     const handleConfirm = async () => {
         setConfirming(true);
         try {
             const token = localStorage.getItem('token');
             const headers = { Authorization: `Bearer ${token}` };
+
+            // ── Handle Zero-Dollar Upgrades ────────────────────────────────
+            if (totalAmount <= 0) {
+                const response = await axios.post(`${API}/billing/upgrade/confirm`, {
+                    workspace_id: currentWorkspace?.workspace_id || null,
+                    workspace_type: currentWorkspace?.workspace_type || null,
+                    plan_data: {
+                        plan: selectedPlan,
+                        is_annual: isAnnual,
+                        addons,
+                        promo_code: localStorage.getItem('scrapi_active_promo') || null,
+                        proration_discount: prorationDiscount,
+                        account_balance_used: accountBalance,
+                        billing_details: billingDetails
+                    }
+                }, { headers });
+
+                navigate('/payment-success', {
+                    state: response.data
+                });
+                return;
+            }
 
             // ── Handle PayPal flow ───────────────────────────────────────
             if (paymentMethod === 'paypal') {
@@ -115,7 +160,10 @@ const ReviewStep = ({
                     addons,
                     billing_details: billingDetails,
                     workspace_id: currentWorkspace?.workspace_id,
-                    workspace_type: currentWorkspace?.workspace_type
+                    workspace_type: currentWorkspace?.workspace_type,
+                    promo_code: localStorage.getItem('scrapi_active_promo') || null,
+                    proration_discount: prorationDiscount,
+                    account_balance_used: accountBalance
                 };
                 localStorage.setItem('scrapi_paypal_checkout_state', JSON.stringify(checkoutState));
 
@@ -144,6 +192,7 @@ const ReviewStep = ({
                 billing_country: billingDetails.country || null,
                 workspace_id: currentWorkspace?.workspace_id || null,
                 workspace_type: currentWorkspace?.workspace_type || null,
+                promo_code: localStorage.getItem('scrapi_active_promo') || null
             }, { headers });
         } catch (err) {
             console.error("Confirmation error:", err);
@@ -177,7 +226,7 @@ const ReviewStep = ({
                             <div className="space-y-0.5">
                                 <Row label="Plan" value={planName} />
                                 <Row label="Billing cycle" value={isAnnual ? 'Annual (10% off)' : 'Monthly'} />
-                                <Row label="Price" value={`$${price}.00 / month`} highlight />
+                                <Row label="Price" value={isAnnual ? `$${(price * 12).toFixed(2)} / year` : `$${price.toFixed(2)} / month`} highlight />
                                 {features.length > 0 && (
                                     <div className="mt-3 pt-3 border-t border-border space-y-1.5">
                                         {features.map(f => (
@@ -342,7 +391,7 @@ const ReviewStep = ({
                                 ) : confirming ? (
                                     <><Loader2 className="w-4 h-4 animate-spin" />Confirming…</>
                                 ) : (
-                                    'Confirm subscription'
+                                    totalAmount <= 0 ? 'Activate Subscription' : 'Confirm subscription'
                                 )}
                             </button>
                         </div>

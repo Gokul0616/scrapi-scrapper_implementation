@@ -17,6 +17,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { getProfileColor, getUserInitials, getUserDisplayName } from '../utils/userUtils';
 import { useTheme } from '../contexts/ThemeContext';
 import { RecentActorSkeleton, SuggestedActorSkeleton, RunRowSkeleton } from '../components/SkeletonLoader';
+import DataTable from '../components/ui/DataTable';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
@@ -30,6 +31,7 @@ function Home() {
   const [recentActors, setRecentActors] = useState([]);
   const [suggestedActors, setSuggestedActors] = useState([]);
   const [recentRuns, setRecentRuns] = useState([]);
+  const [billingData, setBillingData] = useState(null);
 
   // Loading states
   const [loadingRecent, setLoadingRecent] = useState(true);
@@ -52,9 +54,9 @@ function Home() {
           headers: { Authorization: `Bearer ${token}` }
         });
 
-        const recentViewsData = Array.isArray(recentViewsRes.data)
-          ? recentViewsRes.data
-          : [];
+        const recentViewsData = Array.isArray(recentViewsRes.data?.actors)
+          ? recentViewsRes.data.actors
+          : (Array.isArray(recentViewsRes.data) ? recentViewsRes.data : []);
 
         setRecentActors(recentViewsData);
       } catch (error) {
@@ -86,7 +88,9 @@ function Home() {
       // Fetch recent runs
       try {
         setLoadingRuns(true);
-        const runsRes = await axios.get(`${BACKEND_URL}/api/runs?page=1&limit=5&sort_by=created_at&sort_order=desc`);
+        const runsRes = await axios.get(`${BACKEND_URL}/api/runs?page=1&limit=5&sort_by=created_at&sort_order=desc`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
 
         const runsData = Array.isArray(runsRes.data?.runs)
           ? runsRes.data.runs
@@ -98,6 +102,16 @@ function Home() {
         setRecentRuns([]);
       } finally {
         setLoadingRuns(false);
+      }
+
+      // Fetch billing summary for plan name
+      try {
+        const billingRes = await axios.get(`${BACKEND_URL}/api/billing/summary`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setBillingData(billingRes.data);
+      } catch (error) {
+        console.error("Failed to fetch billing proxy data:", error);
       }
     };
 
@@ -142,6 +156,62 @@ function Home() {
     );
   };
 
+  const columns = [
+    {
+      header: "Status",
+      id: "status",
+      className: "w-[120px]",
+      cell: ({ row }) => getStatusBadge(row.status)
+    },
+    {
+      header: "Actor",
+      accessorKey: "actor_name",
+      cell: ({ row }) => (
+        <div className="flex items-center gap-3">
+          <div className="w-6 h-6 border rounded-[4px] flex items-center justify-center shrink-0 bg-card border-border">
+            <div className="w-3 h-3 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full"></div>
+          </div>
+          <div className="min-w-0">
+            <div className="font-semibold text-[13px] text-foreground">{row.actor_name || 'Unknown Actor'}</div>
+            <div className="text-[12px] text-muted-foreground font-mono truncate">{row.actor_id}</div>
+          </div>
+        </div>
+      )
+    },
+    {
+      header: "Results",
+      accessorKey: "results_count",
+      className: "w-[100px]",
+      cellClassName: "text-center",
+      cell: ({ row }) => (
+        <span className="text-[13px] font-medium text-blue-600 hover:underline dark:text-blue-400">
+          {row.results_count || 0}
+        </span>
+      )
+    },
+    {
+      header: "Started",
+      accessorKey: "started_at",
+      className: "w-[160px]",
+      cell: ({ row }) => (
+        <span className="text-[13px] text-muted-foreground whitespace-nowrap">
+          {formatDate(row.started_at)}
+        </span>
+      )
+    },
+    {
+      header: "Duration",
+      accessorKey: "duration_seconds",
+      className: "w-[100px] text-right",
+      cellClassName: "text-right",
+      cell: ({ row }) => (
+        <span className="text-[13px] text-muted-foreground">
+          {formatDuration(row.duration_seconds)}
+        </span>
+      )
+    }
+  ];
+
   return (
     <div className="min-h-screen p-8 font-sans transition-colors bg-background text-foreground">
       <div className="max-w-[1240px] mx-auto grid grid-cols-4 gap-8">
@@ -169,7 +239,7 @@ function Home() {
                     : (user?.full_name || `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || user?.username || 'User')}
                 </h1>
                 <span className="px-1.5 py-[1px] bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400 text-[10px] font-bold uppercase tracking-wide rounded-sm border border-orange-200 dark:border-orange-900/30">
-                  Free plan
+                  {billingData?.plan ? `${billingData.plan} plan` : 'Free plan'}
                 </span>
               </div>
               <div className="text-[14px] flex items-center gap-2 text-muted-foreground">
@@ -331,68 +401,14 @@ function Home() {
             </div>
 
             {activeTab === 'recent' && (
-              <div className="border rounded-lg overflow-hidden border-border bg-card">
-                <table className="w-full table-fixed">
-                  <thead>
-                    <tr className="border-b border-border bg-muted/30">
-                      <th className="w-[50px] px-4 py-2 text-left text-[12px] font-semibold text-muted-foreground">Status</th>
-                      <th className="w-[45%] px-4 py-2 text-left text-[12px] font-semibold text-muted-foreground">Actor</th>
-                      <th className="w-[10%] px-4 py-2 text-left text-[12px] font-semibold text-muted-foreground">Results</th>
-                      <th className="w-[15%] px-4 py-2 text-left text-[12px] font-semibold text-muted-foreground">Started</th>
-                      <th className="w-[10%] px-4 py-2 text-left text-[12px] font-semibold text-muted-foreground">Duration</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {loadingRuns ? (
-                      <>
-                        {Array.from({ length: 5 }).map((_, idx) => (
-                          <RunRowSkeleton key={idx} />
-                        ))}
-                      </>
-                    ) : recentRuns.length > 0 ? (
-                      recentRuns.map((run) => (
-                        <tr
-                          key={run.id}
-                          className="group cursor-pointer hover:bg-muted/50"
-                        >
-                          <td className="px-4 py-2">
-                            {getStatusBadge(run.status)}
-                          </td>
-                          <td className="px-4 py-2">
-                            <div className="flex items-center gap-3">
-                              <div className="w-6 h-6 border rounded-[4px] flex items-center justify-center shrink-0 bg-card border-border">
-                                {/* Mimic icons */}
-                                <div className="w-3 h-3 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full"></div>
-                              </div>
-                              <div className="min-w-0">
-                                <div className="font-semibold text-[13px] text-foreground">{run.actor_name || 'Unknown Actor'}</div>
-                                <div className="text-[12px] text-muted-foreground font-mono truncate">{run.actor_id}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-4 py-2">
-                            <span className="text-[13px] font-medium text-blue-600 hover:underline dark:text-blue-400">
-                              {run.results_count || 0}
-                            </span>
-                          </td>
-                          <td className="px-4 py-2 text-[13px] text-muted-foreground">
-                            {formatDate(run.started_at)}
-                          </td>
-                          <td className="px-4 py-2 text-[13px] text-muted-foreground">
-                            {formatDuration(run.duration_seconds)}
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="5" className="px-4 py-8 text-center text-sm text-muted-foreground">
-                          No recent runs found.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+              <DataTable
+                columns={columns}
+                data={recentRuns}
+                loading={loadingRuns}
+                onRowClick={(row) => navigate(`/runs/${row.id}`)}
+                emptyState="No recent runs found."
+                className="max-h-[500px]"
+              />
             )}
           </div>
         </div>

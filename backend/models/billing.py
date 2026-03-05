@@ -10,6 +10,8 @@ class PlanLimit(BaseModel):
     platform_credits: float = 5.0  # e.g., $5 for Free plan
     compute_unit_price: float = 0.50  # per CU
     storage_gb_price: float = 0.20  # per GB-month
+    data_retention_days: int = 7
+    max_schedules: int = 0
 
 class Plan(BaseModel):
     """Available Plans (Free, Starter, Scale)"""

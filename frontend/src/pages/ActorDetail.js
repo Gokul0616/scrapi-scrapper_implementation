@@ -11,6 +11,7 @@ import { Terminal } from 'lucide-react';
 import ErrorDisplay, { showError } from '../components/ErrorDisplay';
 import LoadingScreen from '../components/LoadingScreen';
 import { Play, Settings, Clock, Database, Info, Copy } from 'lucide-react';
+import Checkbox from '../components/ui/CustomCheckbox';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -269,12 +270,10 @@ const ActorDetail = () => {
       case 'boolean':
         return (
           <div key={fieldName} className="flex items-center space-x-3">
-            <input
+            <Checkbox
               id={fieldName}
-              type="checkbox"
               checked={formData[fieldName] || false}
               onChange={(e) => setFormData({ ...formData, [fieldName]: e.target.checked })}
-              className="w-4 h-4 text-gray-800 border-gray-300 rounded focus:ring-gray-800"
             />
             <Label htmlFor={fieldName} className="text-base font-medium cursor-pointer">
               {label}
@@ -498,12 +497,10 @@ const ActorDetail = () => {
 
                   <div className="space-y-3">
                     <div className="flex items-center space-x-3">
-                      <input
+                      <Checkbox
                         id="extractReviews"
-                        type="checkbox"
                         checked={config.extractReviews}
                         onChange={(e) => setConfig({ ...config, extractReviews: e.target.checked })}
-                        className="w-4 h-4 text-black border-gray-300 rounded focus:ring-gray-800"
                       />
                       <Label htmlFor="extractReviews" className="text-base font-medium cursor-pointer">
                         Extract Reviews
@@ -511,12 +508,10 @@ const ActorDetail = () => {
                     </div>
 
                     <div className="flex items-center space-x-3">
-                      <input
+                      <Checkbox
                         id="extractImages"
-                        type="checkbox"
                         checked={config.extractImages}
                         onChange={(e) => setConfig({ ...config, extractImages: e.target.checked })}
-                        className="w-4 h-4 text-black border-gray-300 rounded focus:ring-gray-800"
                       />
                       <Label htmlFor="extractImages" className="text-base font-medium cursor-pointer">
                         Extract Images

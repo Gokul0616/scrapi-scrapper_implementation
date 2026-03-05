@@ -27,6 +27,7 @@ import secrets
 import hashlib
 import time
 import random
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -231,8 +232,33 @@ async def register(user_data: UserCreate):
     }
 
 @router.post("/auth/login", response_model=dict)
-async def login(credentials: UserLogin):
+async def login(credentials: UserLogin, request: Request):
     """Login user with username or email."""
+    # Honeypot check
+    if credentials.website_check:
+        logger.warning(f"🤖 Bot detected via honeypot field (Login) for {credentials.username}")
+        raise HTTPException(status_code=400, detail="Registration failed. Please try again.")
+
+    access_control_service = request.app.state.access_control_service
+    captcha_service = request.app.state.captcha_service
+    client_ip = request.client.host
+    
+    # Check if blocked
+    is_blocked, remaining = await access_control_service.is_blocked(client_ip, credentials.username)
+    if is_blocked:
+        time_str = access_control_service.format_time_remaining(remaining)
+        raise HTTPException(
+            status_code=429, 
+            detail=f"Too many attempts. Please try again in {time_str}."
+        )
+
+    # Verify CAPTCHA if provided
+    if credentials.captcha_id and credentials.captcha_answer:
+        is_valid = await captcha_service.verify_captcha(credentials.captcha_id, credentials.captcha_answer)
+        if not is_valid:
+            await access_control_service.record_failure(client_ip, credentials.username)
+            raise HTTPException(status_code=400, detail="Invalid CAPTCHA answer")
+    
     # Search by username or email
     user_doc = await db.users.find_one({
         "$or": [
@@ -242,7 +268,11 @@ async def login(credentials: UserLogin):
     }, {"_id": 0})
     
     if not user_doc or not verify_password(credentials.password, user_doc['hashed_password']):
+        await access_control_service.record_failure(client_ip, credentials.username)
         raise HTTPException(status_code=401, detail="Invalid username or password")
+    
+    # Success - Reset attempts
+    await access_control_service.reset_attempts(client_ip, credentials.username)
     
     # Generate profile color if not exists (for existing users)
     profile_color = user_doc.get('profile_color')
@@ -1202,8 +1232,12 @@ async def check_email(email: str):
             detail="This email is associated with a deleted account and cannot be used for registration. Please contact support if you need assistance."
         )
     
-    user_exists = await db.users.find_one({"email": email})
-    return {"exists": bool(user_exists), "email": email}
+    user_doc = await db.users.find_one({"email": email})
+    return {
+        "exists": bool(user_doc), 
+        "email": email,
+        "auth_provider": user_doc.get("auth_provider", "email") if user_doc else None
+    }
 
 @router.get("/users/generate-username")
 async def generate_username_suggestion(count: int = 5):
@@ -1237,15 +1271,49 @@ async def generate_username_suggestion(count: int = 5):
 
 # ============= OTP Routes =============
 @router.post("/auth/send-otp", response_model=OTPResponse)
-async def send_otp(request: SendOTPRequest):
+async def send_otp(otp_request: SendOTPRequest, request: Request):
     """Send OTP to user's email for login or registration."""
+    access_control_service = request.app.state.access_control_service
+    captcha_service = request.app.state.captcha_service
+    client_ip = request.client.host
+    
+    # Check if blocked
+    is_blocked, remaining = await access_control_service.is_blocked(client_ip, otp_request.email)
+    if is_blocked:
+        time_str = access_control_service.format_time_remaining(remaining)
+        raise HTTPException(
+            status_code=429, 
+            detail=f"Too many attempts. Please try again in {time_str}."
+        )
+
+    # 🛡️ Enterprise Shield Check (Silent)
+    if otp_request.shield_nonce and otp_request.shield_solution and otp_request.fingerprint:
+        security_service = request.app.state.security_service
+        success, msg = await security_service.verify_shield(
+            otp_request.shield_nonce,
+            otp_request.shield_solution,
+            otp_request.fingerprint,
+            client_ip
+        )
+        if not success:
+            await access_control_service.record_failure(client_ip, otp_request.email)
+            raise HTTPException(status_code=400, detail=msg)
+    # Fallback to legacy CAPTCHA (Visible)
+    elif otp_request.captcha_id and otp_request.captcha_answer:
+        is_valid = await captcha_service.verify_captcha(otp_request.captcha_id, otp_request.captcha_answer)
+        if not is_valid:
+            await access_control_service.record_failure(client_ip, otp_request.email)
+            raise HTTPException(status_code=400, detail="Invalid CAPTCHA answer")
+    else:
+        # Require at least one form of security
+        raise HTTPException(status_code=400, detail="Security verification required")
     from services.email_service import get_email_service
     from services.email_validator import validate_email_comprehensive
     
     try:
         # Layer 1-3 validation: Format, Alias, Disposable check (always performed)
         is_valid, error_message = await validate_email_comprehensive(
-            request.email,
+            otp_request.email,
             check_mx=False,  # Optional: Set to True for MX record verification
             check_smtp=False  # Optional: Set to True for SMTP verification (slower)
         )
@@ -1254,8 +1322,8 @@ async def send_otp(request: SendOTPRequest):
             raise HTTPException(status_code=400, detail=error_message)
         
         # Check if email is associated with a deleted account (for registration only)
-        if request.purpose == "register":
-            deleted_account = await db.deleted_accounts_legal_retention.find_one({"email": request.email})
+        if otp_request.purpose == "register":
+            deleted_account = await db.deleted_accounts_legal_retention.find_one({"email": otp_request.email})
             if deleted_account:
                 raise HTTPException(
                     status_code=400, 
@@ -1265,43 +1333,42 @@ async def send_otp(request: SendOTPRequest):
         email_service = get_email_service()
         
         # Check if user exists for login, or doesn't exist for registration
-        user_exists = await db.users.find_one({"email": request.email})
+        user_exists = await db.users.find_one({"email": otp_request.email})
         
-        if request.purpose == "login" and not user_exists:
+        if otp_request.purpose == "login" and not user_exists:
             raise HTTPException(status_code=404, detail="No account found with this email")
         
-        if request.purpose == "register" and user_exists:
+        if otp_request.purpose == "register" and user_exists:
             raise HTTPException(status_code=400, detail="Email already registered")
         
         # Generate OTP
         otp_code = email_service.generate_otp()
         
         # Delete any existing OTPs for this email and purpose
-        await db.otps.delete_many({"email": request.email, "purpose": request.purpose})
+        await db.otps.delete_many({"email": otp_request.email, "purpose": otp_request.purpose})
         
         # Store OTP in database
         otp = OTP(
-            email=request.email,
+            email=otp_request.email,
             otp_code=otp_code,
-            purpose=request.purpose
+            purpose=otp_request.purpose
         )
         
+        # Store as native datetime so MongoDB TTL indexes work correctly
         doc = otp.model_dump()
-        doc['created_at'] = doc['created_at'].isoformat()
-        doc['expires_at'] = doc['expires_at'].isoformat()
         await db.otps.insert_one(doc)
         
         # Send OTP email
         if os.getenv("APP_ENV") == "test":
-            logger.info(f"TEST ENV: OTP generated for {request.email} is {otp_code} (Email sending skipped)")
+            logger.info(f"TEST ENV: OTP generated for {otp_request.email} is {otp_code} (Email sending skipped)")
         else:
-            await email_service.send_otp_email(request.email, otp_code, request.purpose)
-            logger.info(f"OTP sent to {request.email} for {request.purpose}")
+            await email_service.send_otp_email(otp_request.email, otp_code, otp_request.purpose)
+            logger.info(f"OTP sent to {otp_request.email} for {otp_request.purpose}")
         
         return OTPResponse(
             success=True,
-            message=f"Verification code sent to {request.email}",
-            email=request.email
+            message=f"Verification code sent to {otp_request.email}",
+            email=otp_request.email
         )
         
     except HTTPException:
@@ -1581,15 +1648,26 @@ async def get_recently_viewed_actors(current_user: dict = Depends(get_current_us
     """Get recently viewed actors for the current user."""
     try:
         # Get recent views for this user
+        # Fetch more than the limit to allow for Python-side deduplication of any existing duplicates
         cursor = db.actor_views.find(
             {"user_id": current_user['id']}
-        ).sort("viewed_at", -1).limit(limit)
+        ).sort("viewed_at", -1).limit(limit * 2)
         
-        views = await cursor.to_list(length=limit)
+        all_views = await cursor.to_list(length=limit * 2)
         
-        # Get actor details for each view
+        # Deduplicate by actor_id on the Python side
+        seen_actor_ids = set()
+        unique_views = []
+        for v in all_views:
+            if v["actor_id"] not in seen_actor_ids:
+                seen_actor_ids.add(v["actor_id"])
+                unique_views.append(v)
+            if len(unique_views) >= limit:
+                break
+        
+        # Get actor details for each unique view
         result = []
-        for view in views:
+        for view in unique_views:
             actor = await db.actors.find_one({"id": view["actor_id"]}, {"_id": 0})
             if actor:
                 # Convert datetime strings if needed
@@ -1940,23 +2018,27 @@ async def track_actor_view(actor_id: str, current_user: dict = Depends(get_curre
         if not actor:
             raise HTTPException(status_code=404, detail="Actor not found")
         
-        # Create or update actor view record
-        actor_view = ActorView(
-            user_id=current_user['id'],
-            actor_id=actor_id,
-            viewed_at=datetime.now(timezone.utc)
+        # Use upsert to create or update the view timestamp atomically
+        # This prevents race conditions where multiple rapid requests create duplicate entries
+        viewed_at = datetime.now(timezone.utc).isoformat()
+        
+        await db.actor_views.update_one(
+            {
+                "user_id": current_user['id'],
+                "actor_id": actor_id
+            },
+            {
+                "$set": {
+                    "viewed_at": viewed_at
+                },
+                "$setOnInsert": {
+                    "id": str(uuid.uuid4()),
+                    "user_id": current_user['id'],
+                    "actor_id": actor_id
+                }
+            },
+            upsert=True
         )
-        
-        # Remove old view from this user for this actor (to update the timestamp)
-        await db.actor_views.delete_many({
-            "user_id": current_user['id'],
-            "actor_id": actor_id
-        })
-        
-        # Insert new view record
-        doc = actor_view.model_dump()
-        doc['viewed_at'] = doc['viewed_at'].isoformat()
-        await db.actor_views.insert_one(doc)
         
         return {"message": "View tracked successfully"}
     except HTTPException:

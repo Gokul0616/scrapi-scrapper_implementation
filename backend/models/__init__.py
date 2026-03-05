@@ -10,6 +10,8 @@ from .proxy import Proxy, ProxyCreate
 from .chat import LeadChatMessage, LeadChatRequest, GlobalChatMessage, GlobalChatRequest
 from .schedule import Schedule, ScheduleCreate, ScheduleUpdate, ScheduleResponse
 from .otp import OTP, SendOTPRequest, VerifyOTPRequest, OTPResponse
+from .captcha import CaptchaVerifyRequest
+from .security import ShieldChallengeResponse, ShieldVerifyRequest
 from .audit import AuditLog
 from .api_key import ApiKey, ApiKeyCreate, ApiKeyDisplay
 from .category import Category, CategoryCreate, CategoryUpdate
@@ -41,6 +43,10 @@ __all__ = [
     'Schedule', 'ScheduleCreate', 'ScheduleUpdate', 'ScheduleResponse',
     # OTP models
     'OTP', 'SendOTPRequest', 'VerifyOTPRequest', 'OTPResponse',
+    # CAPTCHA models
+    'CaptchaVerifyRequest',
+    # Security models
+    'ShieldChallengeResponse', 'ShieldVerifyRequest',
     # Audit models
     'AuditLog',
     # ApiKey models

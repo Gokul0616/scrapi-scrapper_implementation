@@ -187,6 +187,69 @@ async def create_run(
     if workspace_type == 'organization' and workspace_id:
         organization_id = workspace_id
         
+    # === Billing Limits Check ===
+    from services.billing_service import billing_service
+    try:
+        target_ws_id = workspace_id if workspace_id else current_user['id']
+        billing_info = await billing_service.get_billing_summary(target_ws_id, workspace_type)
+        
+        # === Check Plan Expiration ===
+        expires_at_str = workspace.get("expires_at")
+        if expires_at_str:
+            try:
+                expires_at = datetime.fromisoformat(expires_at_str.replace('Z', '+00:00'))
+                if expires_at.tzinfo is None:
+                    expires_at = expires_at.replace(tzinfo=timezone.utc)
+                
+                if datetime.now(timezone.utc) > expires_at:
+                    # Plan expired! Force Free limits
+                    logger.warning(f"⚠️ Plan for {target_ws_id} has expired on {expires_at_str}. Fallback to Free limits.")
+                    # Temporarily override billing_info for this check
+                    plan_consumption["freeRemaining"] = workspace.get("platform_credits", 5.0) # Reset to free credits if needed? 
+                    # Actually, we should probably just use the free remaining from summary but warn
+                    # For now, let's keep it simple: if expired, we still check freeRemaining which might be 0 anyway.
+            except Exception as e:
+                logger.error(f"Error parsing expiry date: {e}")
+
+        # 1. Platform Credit Check
+        if free_remaining <= 0:
+            raise HTTPException(
+                status_code=403, 
+                detail="Platform compute credits exhausted or plan expired. Please upgrade or renew your plan."
+            )
+            
+        limits = billing_info.get("limits", {})
+        max_concurrent_runs = limits.get("max_concurrent_runs", 1)
+        max_ram_gb = limits.get("max_ram_gb", 2)
+        
+        # 2. Concurrency Check
+        active_query = {"status": {"$in": ["queued", "running"]}}
+        if organization_id:
+            active_query["organization_id"] = organization_id
+        else:
+            active_query["user_id"] = current_user['id']
+            
+        active_runs_count = await db.runs.count_documents(active_query)
+        if active_runs_count >= max_concurrent_runs:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Concurrent runs limit reached ({max_concurrent_runs}). Upgrade your plan to run more actors simultaneously."
+            )
+            
+        # 3. RAM Check
+        if max_ram_gb < 1:
+            raise HTTPException(
+                status_code=403,
+                detail="Insufficient RAM limits on your plan."
+            )
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error checking billing limits: {e}")
+        raise HTTPException(status_code=500, detail="Failed to verify plan limits.")
+    # ==========================
+        
     # Create run
     run = Run(
         user_id=current_user['id'],

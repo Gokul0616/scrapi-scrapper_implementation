@@ -19,6 +19,7 @@ import {
     PanelLeftClose,
     ChevronDown,
     Menu,
+    Tag,
     X
 } from 'lucide-react';
 import { clsx } from 'clsx';
@@ -100,7 +101,8 @@ export const Layout: React.FC = () => {
                         'E': '/team',
                         'T': '/terminal',
                         'P': '/policies',
-                        'C': '/documentation'
+                        'C': '/documentation',
+                        'O': '/promos'
                     };
                     if (key && shortcuts[key]) {
                         navigate(shortcuts[key]);
@@ -133,6 +135,7 @@ export const Layout: React.FC = () => {
         { icon: Users, label: 'Users', path: '/users', shortcut: 'S U' },
         { icon: Bot, label: 'Actors', path: '/actors', shortcut: 'S A' },
         { icon: PlaySquare, label: 'Runs', path: '/runs', shortcut: 'S R' },
+        { icon: Tag, label: 'Promos', path: '/promos', shortcut: 'S O' },
         { icon: FileText, label: 'Audit Logs', path: '/audit-logs', shortcut: 'S L' },
     ];
 

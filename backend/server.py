@@ -4,8 +4,12 @@ from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
+# Triggering reload for SecurityService grace period update
 import logging
 from pathlib import Path
+from services.captcha_service import CaptchaService
+from services.access_control_service import AccessControlService
+from services.security_service import SecurityService
 
 # --- Mock Playwright to run backend without it ---
 import sys
@@ -45,6 +49,16 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
+
+# Initialize Captcha Service
+captcha_service = CaptchaService(db.captchas)
+
+# Initialize Access Control Service
+access_control_service = AccessControlService(db.auth_attempts)
+
+# Initialize Security Service
+security_service = SecurityService(db.security_challenges)
+
 # Create the main app with docs disabled (we'll add custom protected routes)
 app = FastAPI(
     title="Scrapi - Web Scraping Platform",
@@ -52,6 +66,18 @@ app = FastAPI(
     redoc_url=None,  # Disable default redoc
     openapi_url=None  # Disable default openapi.json to protect it
 )
+
+@app.on_event("startup")
+async def startup_event():
+    # Ensure indexes for security services
+    await captcha_service.ensure_indexes()
+    await access_control_service.ensure_indexes()
+    await security_service.ensure_indexes()
+
+# Add custom services to app state
+app.state.captcha_service = captcha_service
+app.state.access_control_service = access_control_service
+app.state.security_service = security_service
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
@@ -888,6 +914,15 @@ Extracts: URL, status code, title, meta description, meta keywords, canonical UR
         logger.info("✅ Deletion scheduler initialized successfully")
     except Exception as e:
         logger.error(f"❌ Failed to initialize deletion scheduler: {str(e)}", exc_info=True)
+        
+    # Initialize subscription scheduler
+    try:
+        logger.info("🔧 Initializing subscription scheduler...")
+        from services.subscription_scheduler import init_subscription_scheduler
+        await init_subscription_scheduler(db)
+        logger.info("✅ Subscription scheduler initialized successfully")
+    except Exception as e:
+        logger.error(f"❌ Failed to initialize subscription scheduler: {str(e)}", exc_info=True)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
@@ -910,6 +945,16 @@ async def shutdown_db_client():
             logger.info("✅ Deletion scheduler stopped")
     except Exception as e:
         logger.warning(f"Failed to stop deletion scheduler: {str(e)}")
+
+    try:
+        # Stop subscription scheduler
+        from services.subscription_scheduler import get_subscription_scheduler
+        sub_scheduler = get_subscription_scheduler()
+        if sub_scheduler:
+            await sub_scheduler.stop()
+            logger.info("✅ Subscription scheduler stopped")
+    except Exception as e:
+        logger.warning(f"Failed to stop subscription scheduler: {str(e)}")
     
     # Close MongoDB client
     client.close()

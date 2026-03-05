@@ -165,8 +165,22 @@ const InvoiceDetail = () => {
         }
     };
 
-    const formatDate = (dateStr) =>
-        new Date(dateStr).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '—';
+        const date = new Date(dateStr);
+        const day = date.getDate();
+        const month = date.toLocaleString('default', { month: 'long' });
+        const year = date.getFullYear();
+
+        let hours = date.getHours();
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12; // the hour '0' should be '12'
+
+        const timeStr = `${hours}:${minutes} ${ampm}`;
+        return `${day} ${month} ${year}, ${timeStr}`;
+    };
 
     if (loading) {
         return (
@@ -293,23 +307,43 @@ const InvoiceDetail = () => {
                         </div>
                     </Section>
 
-                    {/* PayPal Payer Info (Transaction Source) */}
-                    <Section icon={CreditCard} label="Payment Source (PayPal)">
-                        {invoice.paypal_payer_email ? (
-                            <div className="space-y-0.5">
-                                {invoice.paypal_payer_name && <Row label="Payer Name" value={invoice.paypal_payer_name} truncate />}
-                                {invoice.paypal_payer_email && <Row label="Payer Email" value={invoice.paypal_payer_email} truncate />}
-                                {invoice.paypal_payer_country && <Row label="Country" value={invoice.paypal_payer_country} />}
-                                <div className="mt-2 pt-2 border-t border-border/50">
-                                    <Row label="PayPal Order ID" value={invoice.paypal_order_id} mono />
+                    {/* Dynamic Payment Source */}
+                    {invoice.payment_method === 'paypal' && (
+                        <Section icon={CreditCard} label="Payment Source (PayPal)">
+                            {invoice.paypal_payer_email ? (
+                                <div className="space-y-0.5">
+                                    {invoice.paypal_payer_name && <Row label="Payer Name" value={invoice.paypal_payer_name} truncate />}
+                                    {invoice.paypal_payer_email && <Row label="Payer Email" value={invoice.paypal_payer_email} truncate />}
+                                    {invoice.paypal_payer_country && <Row label="Country" value={invoice.paypal_payer_country} />}
+                                    <div className="mt-2 pt-2 border-t border-border/50">
+                                        <Row label="PayPal Order ID" value={invoice.paypal_order_id} mono truncate />
+                                    </div>
                                 </div>
+                            ) : (
+                                <p className="text-sm text-muted-foreground/40 italic py-1">
+                                    No PayPal payer details recorded.
+                                </p>
+                            )}
+                        </Section>
+                    )}
+
+                    {invoice.payment_method === 'credit_balance' && (
+                        <Section icon={CreditCard} label="Payment Source (Credit Balance)">
+                            <div className="space-y-0.5">
+                                <Row label="Account Entity" value={invoice.workspace_type === 'organization' ? 'Organization Balance' : 'Personal Balance'} />
+                                <Row label="Workspace ID" value={invoice.workspace_id} mono truncate />
+                                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium mt-3">Internal Transfer</p>
                             </div>
-                        ) : (
-                            <p className="text-sm text-muted-foreground/40 italic py-1">
-                                No PayPal payer details recorded.
-                            </p>
-                        )}
-                    </Section>
+                        </Section>
+                    )}
+
+                    {invoice.payment_method !== 'paypal' && invoice.payment_method !== 'credit_balance' && (
+                        <Section icon={CreditCard} label={`Payment Source (${(invoice.payment_method || 'Unknown').toUpperCase()})`}>
+                            <div className="space-y-0.5">
+                                <Row label="Status" value="Processed successfully" highlight />
+                            </div>
+                        </Section>
+                    )}
                 </div>
 
                 {/* Payment & Plan Details */}
@@ -362,6 +396,42 @@ const InvoiceDetail = () => {
                             );
                         })}
 
+                        {invoice.proration_discount > 0 && (
+                            <div className="flex items-center justify-between py-2.5">
+                                <div className="flex items-center gap-2">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-green-500/40 flex-shrink-0"></span>
+                                    <p className="text-sm text-green-600 dark:text-green-400">Unused plan credit</p>
+                                </div>
+                                <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+                                    -${invoice.proration_discount.toFixed(2)}
+                                </span>
+                            </div>
+                        )}
+
+                        {invoice.account_balance_used > 0 && (
+                            <div className="flex items-center justify-between py-2.5">
+                                <div className="flex items-center gap-2">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500/40 flex-shrink-0"></span>
+                                    <p className="text-[13px] font-bold text-blue-600 dark:text-blue-400">Credit Balance Applied</p>
+                                </div>
+                                <span className="text-[13px] font-bold text-blue-600 dark:text-blue-400">
+                                    -${invoice.account_balance_used.toFixed(2)}
+                                </span>
+                            </div>
+                        )}
+
+                        {invoice.overflow_credited > 0 && (
+                            <div className="flex items-center justify-between py-2.5">
+                                <div className="flex items-center gap-2">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500/40 flex-shrink-0"></span>
+                                    <p className="text-[13px] font-bold text-blue-600 dark:text-blue-400">Credit Balance Saved</p>
+                                </div>
+                                <span className="text-[13px] font-bold text-blue-600 dark:text-blue-400">
+                                    +${invoice.overflow_credited.toFixed(2)}
+                                </span>
+                            </div>
+                        )}
+
                         {invoice.billing_custom_goods_text && (
                             <div className="py-2.5">
                                 <p className="text-[10px] text-muted-foreground/60 uppercase tracking-widest font-bold mb-1">Customer Note</p>
@@ -372,11 +442,11 @@ const InvoiceDetail = () => {
                         <div className="pt-3 space-y-2">
                             <div className="flex justify-between items-center text-sm text-muted-foreground">
                                 <span>Plan Subtotal</span>
-                                <span>${invoice.subtotal.toFixed(2)}</span>
+                                <span>${(invoice.subtotal || 0).toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between items-center text-sm text-muted-foreground">
                                 <span>Subtotal (Add-ons)</span>
-                                <span>${(invoice.amount - invoice.subtotal).toFixed(2)}</span>
+                                <span>${(invoice.total_addon_cost ?? (invoice.amount - (invoice.subtotal || 0))).toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between items-baseline pt-2 border-t border-border">
                                 <span className="text-sm font-bold text-foreground">Total</span>

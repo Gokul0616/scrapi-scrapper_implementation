@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from typing import List, Optional
 from datetime import datetime, timezone
 import logging
+import uuid
 
 from database import get_db
 from routes.utils import get_workspace_query, parse_datetime_safe
@@ -37,8 +38,14 @@ async def get_actors(
     
     actors = await db.actors.find(query, {"_id": 0}).to_list(1000)
     
-    # Convert datetime strings
+    # Fetch user's starred actors
+    user_stars_cursor = db.actor_stars.find({"user_id": current_user['id']})
+    starred_actor_ids = {star["actor_id"] for star in await user_stars_cursor.to_list(10000)}
+    
+    # Convert datetime strings and apply user's star status
     for actor in actors:
+        actor['is_starred'] = actor.get('id') in starred_actor_ids
+        
         if isinstance(actor.get('created_at'), str):
             actor['created_at'] = datetime.fromisoformat(actor['created_at'])
         if isinstance(actor.get('updated_at'), str):
@@ -176,33 +183,114 @@ async def validate_code(request: dict, current_user: dict = Depends(get_current_
 
 # Specific actor routes MUST come before the dynamic {actor_id} route
 @router.get("/actors/recently-viewed")
-async def get_recently_viewed_actors(current_user: dict = Depends(get_current_user), limit: int = 10):
-    """Get recently viewed actors for the current user."""
+async def get_recently_viewed_actors(
+    page: int = 1,
+    limit: int = 10,
+    search: Optional[str] = None,
+    status: Optional[str] = 'all',
+    pricingModel: Optional[str] = 'all',
+    bookmarked: bool = False,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get recently viewed actors for the current user (paginated)."""
     db = get_db()
     try:
-        # Get recent views for this user
+        # Get all views to deduplicate in memory (simple approach for now)
         cursor = db.actor_views.find(
             {"user_id": current_user['id']}
-        ).sort("viewed_at", -1).limit(limit)
+        ).sort("viewed_at", -1)
         
-        views = await cursor.to_list(length=limit)
+        all_views = await cursor.to_list(length=1000)
         
-        # Get actor details for each view
-        result = []
-        for view in views:
+        # Deduplicate
+        seen_actor_ids = set()
+        unique_views = []
+        for v in all_views:
+            if v["actor_id"] not in seen_actor_ids:
+                seen_actor_ids.add(v["actor_id"])
+                unique_views.append(v)
+        
+        # Fetch user's starred actors for bookmarked filtering and applying is_starred
+        user_stars_cursor = db.actor_stars.find({"user_id": current_user['id']})
+        starred_actor_ids = {star["actor_id"] for star in await user_stars_cursor.to_list(10000)}
+
+        # Fetch user's run stats for these actors
+        run_pipeline = [
+            {"$match": {"user_id": current_user['id'], "actor_id": {"$in": list(seen_actor_ids)}}},
+            {
+                "$group": {
+                    "_id": "$actor_id",
+                    "total_runs": {"$sum": 1},
+                    "last_run_started": {"$max": "$started_at"},
+                    "last_run_status": {"$last": "$status"},
+                    "last_run_duration": {"$last": "$duration_seconds"},
+                    "last_run_id": {"$last": "$id"}
+                }
+            }
+        ]
+        run_stats_cursor = db.runs.aggregate(run_pipeline)
+        run_stats_list = await run_stats_cursor.to_list(1000)
+        run_stats_map = {stat["_id"]: stat for stat in run_stats_list}
+
+        # Get actor details and filter
+        filtered_actors = []
+        for view in unique_views:
             actor = await db.actors.find_one({"id": view["actor_id"]}, {"_id": 0})
             if actor:
-                # Convert datetime strings if needed
+                stats = run_stats_map.get(view["actor_id"], {})
+                last_run_status = stats.get("last_run_status")
+                
+                # Apply filters
+                if search:
+                    search_lower = search.lower()
+                    if not (
+                        search_lower in actor.get('name', '').lower() or
+                        search_lower in actor.get('description', '').lower() or
+                        search_lower in actor.get('category', '').lower()
+                    ):
+                        continue
+                
+                if pricingModel and pricingModel != 'all':
+                    if actor.get('pricing_tier') != pricingModel:
+                        continue
+                
+                is_starred = actor.get("id") in starred_actor_ids
+                if bookmarked and not is_starred:
+                    continue
+                
+                # Apply status filter against the run stats
+                if status and status != 'all':
+                    if last_run_status != status:
+                        continue
+
                 if isinstance(actor.get('created_at'), str):
                     actor['created_at'] = datetime.fromisoformat(actor['created_at'])
                 if isinstance(actor.get('updated_at'), str):
                     actor['updated_at'] = datetime.fromisoformat(actor['updated_at'])
                 
-                # Add view timestamp
                 actor['last_viewed_at'] = view['viewed_at']
-                result.append(actor)
+                actor['is_starred'] = is_starred
+                
+                # Add run stats
+                actor['total_runs'] = stats.get("total_runs", 0)
+                actor['last_run_started'] = stats.get("last_run_started")
+                actor['last_run_status'] = last_run_status
+                actor['last_run_duration'] = stats.get("last_run_duration")
+                actor['last_run_id'] = stats.get("last_run_id")
+                
+                filtered_actors.append(actor)
         
-        return result
+        total = len(filtered_actors)
+        
+        # Slicing for pagination
+        start = (page - 1) * limit
+        end = start + limit
+        paged_actors = filtered_actors[start:end]
+        
+        return {
+            "actors": paged_actors,
+            "total": total
+        }
     except Exception as e:
         logger.error(f"Error getting recently viewed actors: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -461,11 +549,54 @@ async def get_actor(actor_id: str, current_user: Optional[dict] = Depends(get_op
 async def update_actor(actor_id: str, updates: ActorUpdate, current_user: dict = Depends(get_current_user)):
     """Update an actor."""
     db = get_db()
+    
+    # Check what fields are being updated
+    update_data = {k: v for k, v in updates.model_dump(exclude_unset=True).items() if v is not None}
+    
+    # Special handling for is_starred
+    if "is_starred" in update_data and len(update_data) == 1:
+        # The user is only trying to star/unstar the actor
+        # Check if actor exists globally
+        actor = await db.actors.find_one({"id": actor_id})
+        if not actor:
+            raise HTTPException(status_code=404, detail="Actor not found")
+        
+        is_starred = update_data["is_starred"]
+        
+        # Track the star setting for this specific user
+        if is_starred:
+            await db.actor_stars.update_one(
+                {"user_id": current_user['id'], "actor_id": actor_id},
+                {"$set": {"starred_at": datetime.now(timezone.utc).isoformat()}},
+                upsert=True
+            )
+        else:
+            await db.actor_stars.delete_one({"user_id": current_user['id'], "actor_id": actor_id})
+            
+        # Return the modified actor just for this user request
+        actor["is_starred"] = is_starred
+        if isinstance(actor.get('created_at'), str):
+            actor['created_at'] = datetime.fromisoformat(actor['created_at'])
+        if isinstance(actor.get('updated_at'), str):
+            actor['updated_at'] = datetime.fromisoformat(actor['updated_at'])
+        return actor
+
+    # For other updates, strictly enforce ownership
     actor = await db.actors.find_one({"id": actor_id, "user_id": current_user['id']})
     if not actor:
-        raise HTTPException(status_code=404, detail="Actor not found")
+        raise HTTPException(status_code=404, detail="Actor not found or you don't have permission to edit it.")
     
-    update_data = {k: v for k, v in updates.model_dump(exclude_unset=True).items() if v is not None}
+    # Remove is_starred from update_data if it's there (we handle it above or we just let it update the master record if they own it)
+    if "is_starred" in update_data:
+        is_starred = update_data.pop("is_starred")
+        if is_starred:
+            await db.actor_stars.update_one(
+                {"user_id": current_user['id'], "actor_id": actor_id},
+                {"$set": {"starred_at": datetime.now(timezone.utc).isoformat()}},
+                upsert=True
+            )
+        else:
+            await db.actor_stars.delete_one({"user_id": current_user['id'], "actor_id": actor_id})
     update_data['updated_at'] = datetime.now(timezone.utc).isoformat()
     
     await db.actors.update_one({"id": actor_id}, {"$set": update_data})
@@ -488,15 +619,24 @@ async def delete_actor(actor_id: str, current_user: dict = Depends(get_current_u
     return {"message": "Actor deleted successfully"}
 
 @router.get("/actors-used")
-async def get_actors_used(current_user: dict = Depends(get_current_user)):
-    """Get actors used by the current user with run statistics."""
+async def get_actors_used(
+    page: int = 1,
+    limit: int = 10,
+    search: Optional[str] = None,
+    status: Optional[str] = 'all',
+    pricingModel: Optional[str] = 'all',
+    bookmarked: bool = False,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get actors used by the current user with run statistics (paginated & searchable)."""
     db = get_db()
     try:
-        # Aggregation pipeline to get actors with run statistics
+        # Match runs for this user
+        match_query = {"user_id": current_user['id']}
+        
+        # Build aggregation pipeline to get actor stats
         pipeline = [
-            # Match runs for this user
-            {"$match": {"user_id": current_user['id']}},
-            # Group by actor_id to get statistics
+            {"$match": match_query},
             {
                 "$group": {
                     "_id": "$actor_id",
@@ -507,36 +647,92 @@ async def get_actors_used(current_user: dict = Depends(get_current_user)):
                     "last_run_id": {"$last": "$id"}
                 }
             },
-            # Sort by last run (most recent first)
-            {"$sort": {"last_run_started": -1}}
+            # Lookup actor details to allow searching by name/category
+            {
+                "$lookup": {
+                    "from": "actors",
+                    "localField": "_id",
+                    "foreignField": "id",
+                    "as": "actor_details"
+                }
+            },
+            {"$unwind": "$actor_details"}
         ]
         
-        run_stats = await db.runs.aggregate(pipeline).to_list(1000)
+        # Add search filter if provided
+        match_conditions = {}
         
-        # Get actor details for each actor_id
+        if search:
+            match_conditions["$or"] = [
+                {"actor_details.name": {"$regex": search, "$options": "i"}},
+                {"actor_details.description": {"$regex": search, "$options": "i"}},
+                {"actor_details.category": {"$regex": search, "$options": "i"}}
+            ]
+            
+        if status and status != 'all':
+            match_conditions["last_run_status"] = status
+            
+        if pricingModel and pricingModel != 'all':
+            match_conditions["actor_details.pricing_tier"] = pricingModel
+
+        # Fetch user's starred actors
+        user_stars_cursor = db.actor_stars.find({"user_id": current_user['id']})
+        starred_actor_ids = {star["actor_id"] for star in await user_stars_cursor.to_list(10000)}
+
+        if bookmarked:
+            match_conditions["actor_details.id"] = {"$in": list(starred_actor_ids)}
+
+        if match_conditions:
+            pipeline.append({"$match": match_conditions})
+
+        # Get total count after potential filters
+        count_pipeline = pipeline + [{"$count": "total"}]
+        count_result = await db.runs.aggregate(count_pipeline).to_list(1)
+        total = count_result[0]['total'] if count_result else 0
+
+        # Sort, Skip, and Limit
+        skip = (page - 1) * limit
+        pipeline.extend([
+            {"$sort": {"last_run_started": -1}},
+            {"$skip": skip},
+            {"$limit": limit}
+        ])
+        
+        run_stats = await db.runs.aggregate(pipeline).to_list(limit)
+        
+        # Format result
         result = []
         for stat in run_stats:
-            actor = await db.actors.find_one({"id": stat["_id"]}, {"_id": 0})
-            if actor:
-                # Convert datetime strings if needed
-                if isinstance(actor.get('created_at'), str):
-                    actor['created_at'] = datetime.fromisoformat(actor['created_at'])
-                if isinstance(actor.get('updated_at'), str):
-                    actor['updated_at'] = datetime.fromisoformat(actor['updated_at'])
-                
-                # Add run statistics
-                actor_with_stats = {
-                    **actor,
-                    "total_runs": stat["total_runs"],
-                    "last_run_started": stat["last_run_started"],
-                    "last_run_status": stat["last_run_status"],
-                    "last_run_duration": stat["last_run_duration"],
-                    "last_run_id": stat["last_run_id"]
-                }
-                result.append(actor_with_stats)
-        
-        return result
+            actor = stat["actor_details"]
+            # Remove _id which is an ObjectId and not JSON serializable
+            actor.pop("_id", None)
+            
+            # Convert datetime strings
+            if isinstance(actor.get('created_at'), str):
+                actor['created_at'] = datetime.fromisoformat(actor['created_at'])
+            if isinstance(actor.get('updated_at'), str):
+                actor['updated_at'] = datetime.fromisoformat(actor['updated_at'])
+            
+            # Combine with stats
+            actor_with_stats = {
+                **actor,
+                "is_starred": actor.get("id") in starred_actor_ids,
+                "total_runs": stat["total_runs"],
+                "last_run_started": stat["last_run_started"],
+                "last_run_status": stat["last_run_status"],
+                "last_run_duration": stat["last_run_duration"],
+                "last_run_id": stat["last_run_id"]
+            }
+            result.append(actor_with_stats)
+        return {
+            "actors": result,
+            "total": total
+        }
     except Exception as e:
+        import traceback
+        import time
+        with open("/tmp/actors_error.log", "a") as f:
+            f.write(f"{time.time()}: Error getting actors used: {str(e)}\n{traceback.format_exc()}\n")
         logger.error(f"Error getting actors used: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -550,23 +746,27 @@ async def track_actor_view(actor_id: str, current_user: dict = Depends(get_curre
         if not actor:
             raise HTTPException(status_code=404, detail="Actor not found")
         
-        # Create or update actor view record
-        actor_view = ActorView(
-            user_id=current_user['id'],
-            actor_id=actor_id,
-            viewed_at=datetime.now(timezone.utc)
+        # Use upsert to create or update the view timestamp atomically
+        # This prevents race conditions where multiple rapid requests create duplicate entries
+        viewed_at = datetime.now(timezone.utc).isoformat()
+        
+        await db.actor_views.update_one(
+            {
+                "user_id": current_user['id'],
+                "actor_id": actor_id
+            },
+            {
+                "$set": {
+                    "viewed_at": viewed_at
+                },
+                "$setOnInsert": {
+                    "id": str(uuid.uuid4()),
+                    "user_id": current_user['id'],
+                    "actor_id": actor_id
+                }
+            },
+            upsert=True
         )
-        
-        # Remove old view from this user for this actor (to update the timestamp)
-        await db.actor_views.delete_many({
-            "user_id": current_user['id'],
-            "actor_id": actor_id
-        })
-        
-        # Insert new view record
-        doc = actor_view.model_dump()
-        doc['viewed_at'] = doc['viewed_at'].isoformat()
-        await db.actor_views.insert_one(doc)
         
         return {"message": "View tracked successfully"}
     except HTTPException:

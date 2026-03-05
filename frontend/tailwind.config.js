@@ -73,11 +73,16 @@ module.exports = {
                                         to: {
                                                 height: '0'
                                         }
+                                },
+                                'scrapi-modal-enter': {
+                                        '0%': { opacity: '0', transform: 'translateY(20px) scale(0.97)' },
+                                        '100%': { opacity: '1', transform: 'translateY(0) scale(1)' }
                                 }
                         },
                         animation: {
                                 'accordion-down': 'accordion-down 0.2s ease-out',
-                                'accordion-up': 'accordion-up 0.2s ease-out'
+                                'accordion-up': 'accordion-up 0.2s ease-out',
+                                'scrapi-modal-enter': 'scrapi-modal-enter 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards'
                         }
                 }
         },

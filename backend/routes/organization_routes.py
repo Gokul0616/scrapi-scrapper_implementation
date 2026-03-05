@@ -10,6 +10,7 @@ from auth import get_current_user
 import logging
 import re
 import uuid
+from utils.id_utils import generate_org_id
 
 logger = logging.getLogger(__name__)
 
@@ -146,7 +147,9 @@ async def create_organization(
     billing_email = org_data.billing_email or user_doc.get('email')
     
     # Create organization
+    org_id = generate_org_id(org_data.name)
     organization = Organization(
+        id=org_id,
         name=org_data.name,
         display_name=org_data.display_name,
         description=org_data.description,
@@ -212,7 +215,7 @@ async def convert_to_organization(
     # Generate organization name from username
     org_name = re.sub(r'[^a-z0-9-]', '-', username.lower()).strip('-')
     if not org_name or len(org_name) < 3:
-        org_name = f"org_{uuid.uuid4().hex[:8]}"
+        org_name = f"org-{uuid.uuid4().hex[:8]}" # Changed underscore to hyphen for consistency
         
     # Check if name exists, append suffix if needed
     base_name = org_name
@@ -222,7 +225,9 @@ async def convert_to_organization(
         counter += 1
         
     # Create organization
+    org_id = generate_org_id(org_name)
     organization = Organization(
+        id=org_id,
         name=org_name,
         display_name=username,  # Use username as display name
         description=f"Converted from personal account of {username}",

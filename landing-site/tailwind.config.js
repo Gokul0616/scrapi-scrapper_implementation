@@ -12,7 +12,7 @@ export default {
                 display: ['Inter', 'sans-serif'],
             },
             colors: {
-                apify: {
+                scrapi: {
                     primary: '#2BC56B',
                     dark: '#1B1D1F',
                     gray: '#6B7280',

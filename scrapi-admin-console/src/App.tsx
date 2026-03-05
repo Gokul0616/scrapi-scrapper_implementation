@@ -17,6 +17,7 @@ import { TerminalPage } from './pages/TerminalPage';
 import { PoliciesPage } from './pages/Policies';
 import { ApiDocsPage } from './pages/ApiDocs';
 import { AuditLogs } from './pages/AuditLogs';
+import { PromosPage } from './pages/Promos';
 import { NotFound } from './pages/NotFound';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -109,11 +110,8 @@ function App() {
                 <Route path="documentation" element={<ApiDocsPage />} />
                 <Route path="settings" element={<SettingsPage />} />
                 <Route path="audit-logs" element={<AuditLogs />} />
-                <Route path="team" element={
-                  <PermissionRoute requiredRole="owner">
-                    <TeamPage />
-                  </PermissionRoute>
-                } />
+                <Route path="promos" element={<PromosPage />} />
+                <Route path="team" element={<PermissionRoute requiredRole="owner"><TeamPage /></PermissionRoute>} />
                 <Route path="terminal" element={
                   <PermissionRoute requiredPermission="terminal_access">
                     <TerminalPage />

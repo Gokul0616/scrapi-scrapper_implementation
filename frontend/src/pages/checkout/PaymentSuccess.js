@@ -64,7 +64,9 @@ const PaymentSuccess = () => {
                         plan_data: {
                             plan: savedState.plan,
                             is_annual: savedState.is_annual,
-                            addons: savedState.addons
+                            addons: savedState.addons,
+                            proration_discount: savedState.proration_discount,
+                            account_balance_used: savedState.account_balance_used
                         },
                         billing_details: savedState.billing_details
                     }, {
@@ -83,6 +85,12 @@ const PaymentSuccess = () => {
                     console.error("Capture error:", err);
                     setStatus('error');
                 }
+            } else if (location.state) {
+                setTimeout(() => {
+                    setDetails(location.state);
+                    setStatus('success');
+                    triggerCelebration();
+                }, 1500);
             } else {
                 // Mock success for testing if no URL params
                 setStatus('success');
@@ -130,7 +138,7 @@ const PaymentSuccess = () => {
                 <p className="text-sm text-muted-foreground max-w-sm mb-8">
                     We encountered a problem while processing your payment. Please check your billing dashboard or contact support.
                 </p>
-                <button onClick={() => navigate('/settings?tab=billing')} className="px-5 py-2 bg-foreground text-background text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity">
+                <button onClick={() => navigate('/billing')} className="px-5 py-2 bg-foreground text-background text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity">
                     Go to Billing
                 </button>
             </div>
@@ -173,7 +181,7 @@ const PaymentSuccess = () => {
                         alt="Scrapi Logo"
                         className="w-8 h-8 object-contain dark:invert transition-all grayscale"
                     />
-                    <span className="text-sm font-bold text-foreground">Scrapi</span>
+                    <span className="text-xl font-semibold text-foreground">Scrapi</span>
                 </div>
                 <div className="flex items-center gap-2 ml-auto">
                     <button onClick={() => navigate('/')} className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-lg hover:bg-muted/50">Return home</button>
@@ -215,7 +223,15 @@ const PaymentSuccess = () => {
                         <Section icon={CreditCard} label="Transaction summary" className="h-full">
                             <Row label="Total Paid" value={`$${details?.amount?.toFixed(2) || '0.00'} USD`} highlight />
                             <Row label="Plan Subtotal" value={`$${details?.subtotal?.toFixed(2) || '0.00'}`} />
-                            <Row label="Subtotal (Add-ons)" value={`$${(details?.amount - (details?.subtotal || 0)).toFixed(2)}`} />
+                            {typeof details?.proration_discount === 'number' && details.proration_discount > 0 && (
+                                <Row label="Proration Discount" value={`-$${details.proration_discount.toFixed(2)}`} />
+                            )}
+                            {typeof details?.account_balance_used === 'number' && details.account_balance_used > 0 && (
+                                <Row label="Credit Balance Applied" value={`-$${details.account_balance_used.toFixed(2)}`} />
+                            )}
+                            {typeof details?.overflow_credited === 'number' && details.overflow_credited > 0 && (
+                                <Row label="Credit Balance Saved" value={`+$${details.overflow_credited.toFixed(2)}`} />
+                            )}
                             {/* Detailed Addons Breakdown */}
                             {details?.addons && Object.entries(details.addons).some(([, q]) => q > 0) && (
                                 <div className="mt-2 pt-2 border-t border-border/40 space-y-1">
@@ -225,7 +241,8 @@ const PaymentSuccess = () => {
                                         .map(([id, qty]) => {
                                             const addonConfig = configs.addons[id] || {};
                                             const label = addonConfig.label || id.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                                            const totalAddon = qty * (addonConfig.price || 0);
+                                            const pricePerUnit = (addonConfig.price || 0);
+                                            const totalAddon = qty * pricePerUnit;
 
                                             return (
                                                 <div key={id} className="flex items-center justify-between text-[13px]">
@@ -242,10 +259,25 @@ const PaymentSuccess = () => {
                             )}
 
                             <div className="mt-4 pt-4 border-t border-border/50">
-                                <Row label="Method" value="PayPal" />
-                                <Row label="Order ID" value={details?.paypal_order_id?.slice(0, 12).toUpperCase() || 'TX-PENDING'} />
+                                <Row label="Method" value={
+                                    details?.payment_method === 'credit_balance' ? 'Credit Balance' :
+                                        details?.payment_method === 'paypal' ? 'PayPal' :
+                                            (details?.payment_method || 'Unknown').toUpperCase()
+                                } />
+
+                                {details?.payment_method === 'paypal' ? (
+                                    <Row label="Order ID" value={details?.paypal_order_id?.slice(0, 12).toUpperCase() || 'TX-PENDING'} />
+                                ) : details?.payment_method === 'credit_balance' ? (
+                                    <Row label="Ref ID" value={`INT-${(details?.invoice_id || '').slice(0, 8).toUpperCase()}`} />
+                                ) : null}
+
                                 <Row label="Invoice" value={details?.invoice_no || 'Pending'} />
-                                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium mt-3">Payment secured via PayPal</p>
+
+                                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium mt-3">
+                                    {details?.payment_method === 'paypal' ? 'Payment secured via PayPal' :
+                                        details?.payment_method === 'credit_balance' ? 'Internal Account Transfer' :
+                                            'Payment Processed Successfully'}
+                                </p>
                             </div>
                         </Section>
                     </div>

@@ -90,14 +90,14 @@ const UpgradeModal = () => {
       title={<span className="text-[17px] font-bold text-gray-900 dark:text-white">Select account</span>}
       size="sm"
       showCloseButton={true}
-      className="!rounded-[14px] !max-w-[500px]"
+      className="!max-w-[500px]"
     >
-      <div className="p-4 pt-3">
-        <p className={`text-[15px] font-semibold mb-3 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-800'}`}>
+      <div className="p-3.5 pt-2">
+        <p className={`text-[15px] font-semibold mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-800'}`}>
           Which account do you want to subscribe with?
         </p>
 
-        <div className="space-y-2">
+        <div className="space-y-1.5 max-h-[300px] overflow-y-auto pr-1">
           {personalAccount && (
             <div>
               {renderWorkspaceOption(personalAccount)}
@@ -105,11 +105,11 @@ const UpgradeModal = () => {
           )}
 
           {orgAccounts.length > 0 && (
-            <div className="pt-1">
-              <h4 className={`text-[13px] font-semibold mb-1 pl-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+            <div className="pt-0.5">
+              <h4 className={`text-[13px] font-semibold mb-0.5 pl-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
                 Organizations
               </h4>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {orgAccounts.map(renderWorkspaceOption)}
               </div>
             </div>
@@ -123,11 +123,11 @@ const UpgradeModal = () => {
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-2.5 mt-5">
+        <div className="flex justify-end gap-2.5 mt-4">
           <button
             type="button"
             onClick={closeModal}
-            className={`px-4 py-2.5 rounded-lg text-sm font-semibold border transition-colors ${theme === 'dark'
+            className={`px-4 py-2 rounded-lg text-sm font-semibold border transition-colors ${theme === 'dark'
               ? 'border-gray-700 text-gray-300 hover:bg-white/10 bg-transparent'
               : 'border-gray-300 text-gray-700 hover:bg-gray-50 bg-white'
               }`}
@@ -138,7 +138,7 @@ const UpgradeModal = () => {
             type="button"
             onClick={handleConfirm}
             disabled={!selectedWorkspace}
-            className="px-5 py-2.5 rounded-lg text-sm font-semibold bg-[#0d66d0] text-white hover:bg-[#0b5cbe] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-5 py-2 rounded-lg text-sm font-semibold bg-[#0d66d0] text-white hover:bg-[#0b5cbe] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Confirm
           </button>

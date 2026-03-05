@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useModal } from '../contexts/ModalContext';
@@ -8,20 +8,27 @@ import { Input } from '../components/ui/input';
 import { Check, ArrowLeft, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import OTPInput from '../components/OTPInput';
 import CustomValidationTooltip from '../components/CustomValidationTooltip';
+import SecureShield from '../components/auth/SecureShield';
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || '';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login, setUser, setToken, lastPath } = useAuth();
+  const { login, setUser, setToken, lastPath, user, loading } = useAuth();
   const { openModal } = useModal();
   const { showMessage } = useMessage();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     email: '',
     otp: '',
-    password: ''
+    password: '',
+    website_check: '', // Honeypot
+    captcha_id: '',
+    captcha_answer: '',
+    shield_nonce: '',
+    shield_solution: null,
+    fingerprint: null
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -36,6 +43,15 @@ const Login = () => {
   const [deletionInfo, setDeletionInfo] = useState(null);
   const [isReactivating, setIsReactivating] = useState(false);
   const [showValidationTooltip, setShowValidationTooltip] = useState(false);
+  const [authProvider, setAuthProvider] = useState(null);
+  const [redirected, setRedirected] = useState(false);
+
+  useEffect(() => {
+    if (!loading && user && !redirected) {
+      setRedirected(true);
+      navigate(lastPath || '/home');
+    }
+  }, [user, loading, navigate, lastPath, redirected]);
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
@@ -58,7 +74,8 @@ const Login = () => {
         return;
       }
 
-      setStep(2);
+      setAuthProvider(response.data.auth_provider);
+      setStep(2); // Move to CAPTCHA step
     } catch (error) {
       // Check if error has a response with data
       if (error.response && error.response.data) {
@@ -76,7 +93,11 @@ const Login = () => {
     setPasswordError('');
     setIsLoading(true);
 
-    const result = await login(formData.email, formData.password);
+    const result = await login(formData.email, formData.password, {
+      nonce: formData.shield_nonce,
+      solution: formData.shield_solution,
+      fingerprint: formData.fingerprint
+    });
 
     if (result.success) {
       // Check if account is pending deletion
@@ -93,6 +114,32 @@ const Login = () => {
 
     setIsLoading(false);
   };
+
+  const handleCaptchaVerify = useCallback((shieldDataOrId, solutionOrAnswer) => {
+    // Check if it's the new Shield data or old Captcha
+    if (typeof shieldDataOrId === 'object') {
+      const { nonce, solution, fingerprint } = shieldDataOrId;
+      setFormData(prev => ({
+        ...prev,
+        shield_nonce: nonce,
+        shield_solution: solution,
+        fingerprint: fingerprint
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        captcha_id: shieldDataOrId,
+        captcha_answer: solutionOrAnswer
+      }));
+    }
+
+    // Auto-advance to next step
+    if (usePasswordless) {
+      setStep(4);
+    } else {
+      setStep(3);
+    }
+  }, [usePasswordless]);
 
   const handleReactivate = async () => {
     setIsReactivating(true);
@@ -138,7 +185,7 @@ const Login = () => {
     // Just navigate to Send OTP screen, don't send OTP yet
     setUsePasswordless(true);
     setPasswordError('');
-    setStep(3);
+    setStep(4);
   };
 
   const handleSendOTP = async () => {
@@ -147,14 +194,21 @@ const Login = () => {
     setOtpSuccessMessage('');
 
     try {
-      const response = await axios.post(`${API_URL}/api/auth/send-otp`, {
+      const payload = {
         email: formData.email,
-        purpose: 'login'
-      });
+        purpose: 'login',
+        captcha_id: formData.captcha_id,
+        captcha_answer: formData.captcha_answer,
+        shield_nonce: formData.shield_nonce,
+        shield_solution: formData.shield_solution,
+        fingerprint: formData.fingerprint
+      }
+
+      const response = await axios.post(`${API_URL}/api/auth/send-otp`, payload);
 
       // OTP sent successfully, show success message and move to OTP input step
       setOtpSuccessMessage('OTP sent successfully to your email');
-      setStep(4);
+      setStep(5); // Shifted due to new step
     } catch (error) {
       // Check if error has a response with data
       if (error.response && error.response.data) {
@@ -177,7 +231,12 @@ const Login = () => {
     try {
       const response = await axios.post(`${API_URL}/api/auth/send-otp`, {
         email: formData.email,
-        purpose: 'login'
+        purpose: 'login',
+        captcha_id: formData.captcha_id,
+        captcha_answer: formData.captcha_answer,
+        shield_nonce: formData.shield_nonce,
+        shield_solution: formData.shield_solution,
+        fingerprint: formData.fingerprint
       });
 
       setOtpSuccessMessage('OTP sent successfully to your email');
@@ -253,22 +312,52 @@ const Login = () => {
     }
   };
 
-  const handleOAuthLogin = (provider) => {
-    showMessage(`${provider} login is coming soon!`, 'success');
+  const handleOAuthLogin = async (provider) => {
+    if (provider === 'Google') {
+      try {
+        const response = await axios.get(`${API_URL}/api/auth/google/url`);
+        if (response.data && response.data.url) {
+          window.location.href = response.data.url;
+        } else {
+          showMessage('Failed to initialize Google login', 'error');
+        }
+      } catch (error) {
+        console.error('Failed to get Google auth URL:', error);
+        showMessage('Unable to start Google login. Please try again.', 'error');
+      }
+    } else if (provider === 'GitHub') {
+      try {
+        const response = await axios.get(`${API_URL}/api/auth/github/url`);
+        if (response.data && response.data.url) {
+          window.location.href = response.data.url;
+        } else {
+          showMessage('Failed to initialize GitHub login', 'error');
+        }
+      } catch (error) {
+        console.error('Failed to get GitHub auth URL:', error);
+        showMessage('Unable to start GitHub login. Please try again.', 'error');
+      }
+    } else {
+      showMessage(`${provider} login is coming soon!`, 'success');
+    }
   };
 
   const handleBack = () => {
-    if (step === 5) {
+    if (step === 6) {
       // From reactivation back to password
-      setStep(2);
-      setDeletionInfo(null);
-    } else if (step === 4 && usePasswordless) {
-      // From OTP input back to Send OTP screen
       setStep(3);
-    } else if (step === 3 && usePasswordless) {
+      setDeletionInfo(null);
+    } else if (step === 5 && usePasswordless) {
+      // From OTP input back to Send OTP screen
+      setStep(4);
+    } else if (step === 4 && usePasswordless) {
       // From Send OTP screen back to password
       setUsePasswordless(false);
-      setStep(2);
+      setStep(3);
+    } else if (step === 3) {
+      setStep(2); // Back to CAPTCHA
+    } else if (step === 2) {
+      setStep(1); // Back to Email
     } else if (step > 1) {
       setStep(step - 1);
     }
@@ -443,10 +532,11 @@ const Login = () => {
 
           <h2 className="text-[22px] leading-[28px] font-semibold text-gray-900 mb-6">
             {step === 1 && 'Log in to your account'}
-            {step === 2 && 'Enter your password'}
-            {step === 3 && 'Verify your email'}
-            {step === 4 && 'Enter verification code'}
-            {step === 5 && 'Account Deletion Pending'}
+            {step === 2 && 'Security check'}
+            {step === 3 && 'Enter your password'}
+            {step === 4 && 'Verify your email'}
+            {step === 5 && 'Enter verification code'}
+            {step === 6 && 'Account Deletion Pending'}
           </h2>
 
           {step === 1 && (
@@ -495,6 +585,16 @@ const Login = () => {
                   <label htmlFor="email" className="block text-[13px] font-medium text-gray-700 mb-1.5">
                     Email
                   </label>
+                  {/* Honeypot field - hidden from users */}
+                  <input
+                    type="text"
+                    name="website_check"
+                    value={formData.website_check}
+                    onChange={(e) => setFormData({ ...formData, website_check: e.target.value })}
+                    style={{ display: 'none' }}
+                    tabIndex="-1"
+                    autoComplete="off"
+                  />
                   <CustomValidationTooltip
                     show={showValidationTooltip}
                     message="Please fill out this field."
@@ -533,6 +633,13 @@ const Login = () => {
           )}
 
           {step === 2 && (
+            <SecureShield
+              onVerify={handleCaptchaVerify}
+              email={formData.email}
+            />
+          )}
+
+          {step === 3 && (
             <>
               <p className="text-[13px] text-gray-600 mb-6">
                 <span className="font-medium text-gray-900">{formData.email}</span>
@@ -569,6 +676,34 @@ const Login = () => {
                       {passwordError}
                     </p>
                   )}
+                  {authProvider === 'google' && (
+                    <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-md">
+                      <p className="text-[12px] text-blue-700 leading-relaxed">
+                        <strong>Tip:</strong> This account was created with Google. We recommend signing in with Google, or you can use <strong>"Continue without password"</strong> to sign in using a one-time code.
+                      </p>
+                      <Button
+                        type="button"
+                        onClick={() => handleOAuthLogin('Google')}
+                        className="w-full mt-2 bg-white border border-blue-600 text-blue-600 hover:bg-blue-50 h-[32px] text-[12px] font-medium rounded-md"
+                      >
+                        Sign in with Google
+                      </Button>
+                    </div>
+                  )}
+                  {authProvider === 'github' && (
+                    <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
+                      <p className="text-[12px] text-gray-700 leading-relaxed">
+                        <strong>Tip:</strong> This account was created with GitHub. We recommend signing in with GitHub, or you can use <strong>"Continue without password"</strong> to sign in using a one-time code.
+                      </p>
+                      <Button
+                        type="button"
+                        onClick={() => handleOAuthLogin('GitHub')}
+                        className="w-full mt-2 bg-white border border-gray-600 text-gray-600 hover:bg-gray-50 h-[32px] text-[12px] font-medium rounded-md"
+                      >
+                        Sign in with GitHub
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 <Button
@@ -592,7 +727,7 @@ const Login = () => {
             </>
           )}
 
-          {step === 3 && usePasswordless && (
+          {step === 4 && usePasswordless && (
             <>
               {isEditingEmail ? (
                 <div className="space-y-4">
@@ -677,7 +812,7 @@ const Login = () => {
             </>
           )}
 
-          {step === 4 && usePasswordless && (
+          {step === 5 && usePasswordless && (
             <>
               <p className="text-[13px] text-gray-600 mb-6">
                 Verification code sent to<br />
@@ -741,7 +876,7 @@ const Login = () => {
             </>
           )}
 
-          {step === 5 && deletionInfo && (
+          {step === 6 && deletionInfo && (
             <div className="space-y-4">
               {/* Warning Banner */}
               <div className="flex items-start gap-2 p-3 bg-gray-50 border border-gray-300 rounded-lg">

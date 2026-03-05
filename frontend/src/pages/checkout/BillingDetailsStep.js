@@ -4,15 +4,18 @@ import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
 import { useModal } from '../../contexts/ModalContext';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
+import { Country, State, City } from 'country-state-city';
 import CustomTooltip from '../../components/CustomTooltip';
+import CustomDropdown from '../../components/CustomDropdown';
 import CheckoutSummary from './CheckoutSummary';
 import GlobalModal from '../../components/GlobalModal';
+import Checkbox from '../../components/ui/CustomCheckbox';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 const API = `${BACKEND_URL}/api`;
 
 // ─── Country list ─────────────────────────────────────────────────────────────
-const COUNTRIES = ['Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Antigua & Barbuda', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan', 'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados', 'Belarus', 'Belgium', 'Belize', 'Benin', 'Bhutan', 'Bolivia', 'Bosnia & Herzegovina', 'Botswana', 'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi', 'Cambodia', 'Cameroon', 'Canada', 'Cape Verde', 'Central African Republic', 'Chad', 'Chile', 'China', 'Colombia', 'Comoros', 'Congo', 'Costa Rica', 'Croatia', 'Cuba', 'Cyprus', 'Czech Republic', 'Denmark', 'Djibouti', 'Dominica', 'Dominican Republic', 'Ecuador', 'Egypt', 'El Salvador', 'Equatorial Guinea', 'Eritrea', 'Estonia', 'Ethiopia', 'Fiji', 'Finland', 'France', 'Gabon', 'Gambia', 'Georgia', 'Germany', 'Ghana', 'Greece', 'Grenada', 'Guatemala', 'Guinea', 'Guinea-Bissau', 'Guyana', 'Haiti', 'Honduras', 'Hungary', 'Iceland', 'India', 'Indonesia', 'Iran', 'Iraq', 'Ireland', 'Israel', 'Italy', 'Jamaica', 'Japan', 'Jordan', 'Kazakhstan', 'Kenya', 'Kiribati', 'Kuwait', 'Kyrgyzstan', 'Laos', 'Latvia', 'Lebanon', 'Lesotho', 'Liberia', 'Libya', 'Liechtenstein', 'Lithuania', 'Luxembourg', 'Madagascar', 'Malawi', 'Malaysia', 'Maldives', 'Mali', 'Malta', 'Marshall Islands', 'Mauritania', 'Mauritius', 'Mexico', 'Micronesia', 'Moldova', 'Monaco', 'Mongolia', 'Montenegro', 'Morocco', 'Mozambique', 'Myanmar', 'Namibia', 'Nauru', 'Nepal', 'Netherlands', 'New Zealand', 'Nicaragua', 'Niger', 'Nigeria', 'North Korea', 'North Macedonia', 'Norway', 'Oman', 'Pakistan', 'Palau', 'Palestine', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru', 'Philippines', 'Poland', 'Portugal', 'Qatar', 'Romania', 'Russia', 'Rwanda', 'Saint Kitts & Nevis', 'Saint Lucia', 'Samoa', 'San Marino', 'Saudi Arabia', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leone', 'Singapore', 'Slovakia', 'Slovenia', 'Solomon Islands', 'Somalia', 'South Africa', 'South Korea', 'South Sudan', 'Spain', 'Sri Lanka', 'Sudan', 'Suriname', 'Sweden', 'Switzerland', 'Syria', 'Taiwan', 'Tajikistan', 'Tanzania', 'Thailand', 'Timor-Leste', 'Togo', 'Tonga', 'Trinidad & Tobago', 'Tunisia', 'Turkey', 'Turkmenistan', 'Tuvalu', 'Uganda', 'Ukraine', 'United Arab Emirates', 'United Kingdom', 'United States', 'Uruguay', 'Uzbekistan', 'Vanuatu', 'Venezuela', 'Vietnam', 'Yemen', 'Zambia', 'Zimbabwe'];
+// (Removed static COUNTRIES list, now using country-state-city)
 
 // ─── Key mapping helpers ──────────────────────────────────────────────────────
 const fromBackend = (d) => ({
@@ -23,6 +26,7 @@ const fromBackend = (d) => ({
     billingContact: d.billing_contact || '',
     streetAddress: d.street_address || '',
     city: d.city || '',
+    state: d.state || '',
     postalCode: d.postal_code || '',
     country: d.country || 'India',
     billingEmail: d.billing_email || '',
@@ -38,6 +42,7 @@ const toBackend = (d) => ({
     billing_contact: d.billingContact || null,
     street_address: d.streetAddress || null,
     city: d.city || null,
+    state: d.state || null,
     postal_code: d.postalCode || null,
     country: d.country || null,
     billing_email: d.billingEmail || null,
@@ -48,7 +53,7 @@ const toBackend = (d) => ({
 const detailsChanged = (current, saved) => {
     if (!saved) return false;
     const keys = ['fullName', 'company', 'taxId', 'registrationNo', 'billingContact',
-        'streetAddress', 'city', 'postalCode', 'country',
+        'streetAddress', 'city', 'state', 'postalCode', 'country',
         'billingEmail', 'customAddressText', 'customGoodsText'];
     return keys.some(k => (current[k] || '') !== (saved[k] || ''));
 };
@@ -137,12 +142,82 @@ const BillingDetailsStep = ({
         if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' }));
     };
 
+    const findCountryCode = (countryName) => {
+        if (!countryName) return '';
+        const countries = Country.getAllCountries();
+        const found = countries.find(c => c.name?.toLowerCase() === countryName.toLowerCase());
+        return found ? found.isoCode : '';
+    };
+
+    const handleCountryChange = (countryName) => {
+        setBillingDetails(prev => ({
+            ...prev,
+            country: countryName,
+            state: '',
+            city: ''
+        }));
+    };
+
+    const handleStateChange = (stateName) => {
+        setBillingDetails(prev => ({
+            ...prev,
+            state: stateName,
+            city: ''
+        }));
+    };
+
+    const handlePostalCodeChange = async (value) => {
+        handleChange('postalCode', value);
+
+        if (value.length >= 5) {
+            try {
+                const countryCode = findCountryCode(billingDetails.country) || 'IN';
+                const token = localStorage.getItem('token');
+                const response = await axios.get(`${API}/billing/pincode-lookup`, {
+                    params: { country_code: countryCode, pincode: value },
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (response.data && response.data.places && response.data.places.length > 0) {
+                    const place = response.data.places[0];
+                    setBillingDetails(prev => ({
+                        ...prev,
+                        city: place['place name'],
+                        state: place['state'],
+                        country: response.data['country'] || prev.country
+                    }));
+                }
+            } catch (err) {
+                console.debug('Pincode lookup failed:', err);
+            }
+        }
+    };
+
+    const handleStateCode = (stateName, countryName) => {
+        if (!stateName || !countryName) return '';
+        const cCode = findCountryCode(countryName);
+        if (!cCode) return '';
+        const states = State.getStatesOfCountry(cCode);
+        const found = states.find(s => s.name?.toLowerCase() === stateName.toLowerCase());
+        return found ? found.isoCode : '';
+    };
+
+    const getCityOptions = () => {
+        const cCode = findCountryCode(billingDetails.country);
+        const sCode = handleStateCode(billingDetails.state, billingDetails.country);
+        if (!cCode || !sCode) return [];
+        return City.getCitiesOfState(cCode, sCode).map(c => ({
+            label: c.name,
+            value: c.name
+        }));
+    };
+
     // ── Validation ────────────────────────────────────────────────────────────
     const validate = () => {
         const e = {};
         if (!billingDetails.fullName?.trim()) e.fullName = isOrg ? 'Organisation name is required' : 'Full name is required';
         if (!billingDetails.streetAddress?.trim()) e.streetAddress = 'Street address is required';
         if (!billingDetails.city?.trim()) e.city = 'City is required';
+        if (!billingDetails.state?.trim()) e.state = 'State is required';
         if (!billingDetails.postalCode?.trim()) e.postalCode = 'Postal code / ZIP is required';
         if (!billingDetails.country?.trim()) e.country = 'Country is required';
         // Org-required
@@ -210,8 +285,8 @@ const BillingDetailsStep = ({
     };
 
     // ── Styles ────────────────────────────────────────────────────────────────
-    const baseInput = 'w-full px-3 py-2 rounded-lg border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 transition-colors';
-    const okInput = `${baseInput} border-border focus:ring-blue-500/40 focus:border-blue-500`;
+    const baseInput = 'w-full px-3 py-2 rounded-lg border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 transition-all';
+    const okInput = `${baseInput} border-border focus:ring-blue-500/20 focus:border-blue-500`;
     const errInput = `${baseInput} border-red-400 bg-red-50 dark:bg-red-950/20 focus:ring-red-400/30 focus:border-red-400`;
     const lbl = 'block text-sm font-medium text-foreground mb-1.5';
 
@@ -305,28 +380,59 @@ const BillingDetailsStep = ({
                                 <FieldError field="streetAddress" />
                             </div>
 
+                            {/* Country + State */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label className={lbl}>Country</label>
+                                    <CustomDropdown
+                                        value={billingDetails.country || 'India'}
+                                        onChange={handleCountryChange}
+                                        options={Country.getAllCountries().map(c => ({
+                                            label: c.name,
+                                            value: c.name
+                                        }))}
+                                        placeholder="Select country..."
+                                        searchable={true}
+                                    />
+                                    <FieldError field="country" />
+                                </div>
+                                <div>
+                                    <label className={lbl}>State</label>
+                                    <CustomDropdown
+                                        value={billingDetails.state || ''}
+                                        onChange={handleStateChange}
+                                        options={billingDetails.country ? State.getStatesOfCountry(findCountryCode(billingDetails.country)).map(s => ({
+                                            label: s.name,
+                                            value: s.name
+                                        })) : []}
+                                        placeholder="Select state..."
+                                        searchable={true}
+                                        disabled={!billingDetails.country}
+                                    />
+                                    <FieldError field="state" />
+                                </div>
+                            </div>
+
                             {/* City + Postal */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className={lbl}>City</label>
-                                    <input type="text" value={billingDetails.city || ''} onChange={e => handleChange('city', e.target.value)} className={inp('city')} />
+                                    <CustomDropdown
+                                        value={billingDetails.city || ''}
+                                        onChange={val => handleChange('city', val)}
+                                        options={getCityOptions()}
+                                        placeholder="Select city..."
+                                        searchable={true}
+                                        className="w-full"
+                                        disabled={!billingDetails.state}
+                                    />
                                     <FieldError field="city" />
                                 </div>
                                 <div>
                                     <label className={lbl}>Postal code / ZIP</label>
-                                    <input type="text" value={billingDetails.postalCode || ''} onChange={e => handleChange('postalCode', e.target.value)} className={inp('postalCode')} />
+                                    <input type="text" value={billingDetails.postalCode || ''} onChange={e => handlePostalCodeChange(e.target.value)} className={inp('postalCode')} />
                                     <FieldError field="postalCode" />
                                 </div>
-                            </div>
-
-                            {/* Country */}
-                            <div>
-                                <label className={lbl}>Country</label>
-                                <select value={billingDetails.country || 'India'} onChange={e => handleChange('country', e.target.value)} className={inp('country')}>
-                                    <option value="">Select country…</option>
-                                    {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
-                                </select>
-                                <FieldError field="country" />
                             </div>
 
                             {/* Customize invoicing */}
@@ -370,21 +476,12 @@ const BillingDetailsStep = ({
                             </div>
 
                             {/* ── Save for next time (Stripe-style checkbox) ─ */}
-                            <label className="flex items-start gap-3 cursor-pointer group select-none py-1">
-                                <div className="relative flex-shrink-0 mt-0.5">
-                                    <input
-                                        type="checkbox"
+                            <label className="flex items-start gap-4 cursor-pointer group select-none py-1.5">
+                                <div className="mt-0.5">
+                                    <Checkbox
                                         checked={saveChecked}
                                         onChange={e => setSaveChecked(e.target.checked)}
-                                        className="sr-only peer"
                                     />
-                                    <div className="w-4 h-4 rounded border-2 border-border peer-checked:border-blue-600 peer-checked:bg-blue-600 transition-colors flex items-center justify-center">
-                                        {saveChecked && (
-                                            <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 12 9" fill="none">
-                                                <path d="M1 4.5L4.5 8L11 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                            </svg>
-                                        )}
-                                    </div>
                                 </div>
                                 <div>
                                     <span className="text-sm font-medium text-foreground">

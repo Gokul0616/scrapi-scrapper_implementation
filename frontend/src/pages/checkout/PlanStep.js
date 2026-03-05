@@ -77,15 +77,24 @@ const CellVal = ({ value }) => {
 };
 
 // ─── PlanStep ─────────────────────────────────────────────────────────────────
-const PlanStep = ({ selectedPlan, setSelectedPlan, isAnnual, setIsAnnual, onNext, configs }) => {
+const PlanStep = ({ selectedPlan, setSelectedPlan, isAnnual, setIsAnnual, onNext, configs, currentPlanId, currentPlanRank, currentPlanPeriod }) => {
     const [storageOpen, setStorageOpen] = useState(false);
+
+    const planHierarchy = {
+        'free': 0,
+        'starter': 1,
+        'growth': 2,
+        'scale': 3,
+        'enterprise': 4
+    };
 
     // Derive PLANS from configs
     const PLANS = Object.entries(configs.plans || {}).map(([id, p]) => ({
         id,
         name: p.name,
         monthlyPrice: p.price,
-        isCurrent: id === 'free', // Minimal default logic
+        isCurrent: id === currentPlanId,
+        rank: planHierarchy[id] || 0,
         gradient: p.gradient,
         payg: p.payg,
         tier: p.tier
@@ -97,7 +106,7 @@ const PlanStep = ({ selectedPlan, setSelectedPlan, isAnnual, setIsAnnual, onNext
     const getPrice = p => {
         if (p.monthlyPrice === null) return null;
         if (p.monthlyPrice === 0) return 0;
-        return isAnnual ? Math.round(p.monthlyPrice * 0.9) : p.monthlyPrice;
+        return isAnnual ? (p.monthlyPrice * 0.9) : p.monthlyPrice;
     };
 
     const Row = ({ label, sublabel, tooltip, values }) => (
@@ -157,6 +166,9 @@ const PlanStep = ({ selectedPlan, setSelectedPlan, isAnnual, setIsAnnual, onNext
                 <span className={`text-sm font-medium ${isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}>Annual billing</span>
                 <Tip tooltip="Annual billing reduces cost by 10%" />
                 <span className="text-xs font-semibold text-green-600 dark:text-green-400">Save 10%</span>
+                <span className="text-[11px] font-medium text-muted-foreground bg-muted/50 px-2 py-0.5 rounded border border-border/50">
+                    Valid {isAnnual ? '365' : '28'} days
+                </span>
             </div>
 
             {/* Plan grid */}
@@ -190,7 +202,7 @@ const PlanStep = ({ selectedPlan, setSelectedPlan, isAnnual, setIsAnnual, onNext
                                         <div className="flex justify-center items-end" style={{ height: BADGE_H }}>
                                             {plan.isCurrent && (
                                                 <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 tracking-widest uppercase bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 px-2.5 py-0.5 rounded-full">
-                                                    CURRENT PLAN
+                                                    CURRENT PLAN {currentPlanPeriod && `(${currentPlanPeriod})`}
                                                 </span>
                                             )}
                                         </div>
@@ -202,20 +214,29 @@ const PlanStep = ({ selectedPlan, setSelectedPlan, isAnnual, setIsAnnual, onNext
                                                 {isEnt ? (
                                                     <p className="text-sm font-semibold text-foreground">Custom</p>
                                                 ) : (
-                                                    <p className="flex items-baseline gap-0.5 mb-3">
-                                                        <span className="text-lg font-bold text-foreground">${price}</span>
-                                                        <span className="text-xs text-muted-foreground">/ month</span>
-                                                    </p>
+                                                    <div className="mb-3">
+                                                        <p className="flex items-baseline gap-0.5">
+                                                            <span className="text-lg font-bold text-foreground">${typeof price === 'number' ? (price % 1 === 0 ? price : price.toFixed(2)) : price}</span>
+                                                            <span className="text-xs text-muted-foreground">/ month</span>
+                                                        </p>
+                                                        {isAnnual && price > 0 && (
+                                                            <p className="text-[10px] text-green-600 dark:text-green-400 font-semibold uppercase tracking-wider">
+                                                                Billed annually (${(price * 12).toFixed(2)}/yr)
+                                                            </p>
+                                                        )}
+                                                    </div>
                                                 )}
                                                 <div className="mb-2">
                                                     {plan.isCurrent ? (
                                                         <button disabled className="w-full py-2 rounded-lg text-sm font-medium bg-muted text-muted-foreground border border-border cursor-default">Current plan</button>
+                                                    ) : plan.rank < currentPlanRank ? (
+                                                        <button disabled className="w-full py-2 rounded-lg text-sm font-medium bg-muted/50 text-muted-foreground/60 border border-border/50 cursor-not-allowed">Unavailable</button>
                                                     ) : isEnt ? (
                                                         <button className="w-full py-2 rounded-lg text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors">Contact us</button>
                                                     ) : (
                                                         <button
                                                             onClick={() => {
-                                                                setSelectedPlan(plan.id === selectedPlan ? null : plan.id);
+                                                                setSelectedPlan(plan.id);
                                                                 onNext();
                                                             }}
                                                             className={`w-full py-2 rounded-lg text-sm font-semibold transition-colors ${isSel ? 'bg-blue-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
@@ -262,17 +283,21 @@ const PlanStep = ({ selectedPlan, setSelectedPlan, isAnnual, setIsAnnual, onNext
                             <span className="text-sm font-semibold text-foreground">Storage and data transfer</span>
                             {storageOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
                         </button>
-                        {storageOpen && STORAGE.groups.map(g => (
-                            <React.Fragment key={g.groupTitle}>
-                                <SubGroup title={g.groupTitle} />
-                                {g.subs.map(sub => (
-                                    <React.Fragment key={sub.name || 'sub'}>
-                                        {sub.name && <SubName name={sub.name} />}
-                                        {sub.rows.map((row, ri) => <Row key={ri} {...row} />)}
+                        <div className={`grid transition-all duration-300 ease-in-out ${storageOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                            <div className="overflow-hidden">
+                                {STORAGE.groups.map(g => (
+                                    <React.Fragment key={g.groupTitle}>
+                                        <SubGroup title={g.groupTitle} />
+                                        {g.subs.map(sub => (
+                                            <React.Fragment key={sub.name || 'sub'}>
+                                                {sub.name && <SubName name={sub.name} />}
+                                                {sub.rows.map((row, ri) => <Row key={ri} {...row} />)}
+                                            </React.Fragment>
+                                        ))}
                                     </React.Fragment>
                                 ))}
-                            </React.Fragment>
-                        ))}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

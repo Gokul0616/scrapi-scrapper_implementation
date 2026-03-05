@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useModal } from '../contexts/ModalContext';
@@ -8,16 +8,17 @@ import { Input } from '../components/ui/input';
 import { Check, ArrowLeft, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import OTPInput from '../components/OTPInput';
 import CustomValidationTooltip from '../components/CustomValidationTooltip';
+import SecureShield from '../components/auth/SecureShield';
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || '';
 
 const Register = () => {
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { register, user, loading } = useAuth();
   const { openModal } = useModal();
   const { showMessage } = useMessage();
-  const [step, setStep] = useState(1); // 1: Email, 2: OTP, 3: Details, 4: Password
+  const [step, setStep] = useState(1); // 1: Email, 2: CAPTCHA, 3: OTP, 4: Details, 5: Password
   const [formData, setFormData] = useState({
     email: '',
     otp: '',
@@ -26,8 +27,22 @@ const Register = () => {
     lastName: '',
     organizationName: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    website_check: '', // Honeypot
+    captcha_id: '',
+    captcha_answer: '',
+    shield_nonce: '',
+    shield_solution: null,
+    fingerprint: null
   });
+  const [redirected, setRedirected] = useState(false);
+
+  useEffect(() => {
+    if (!loading && user && !redirected) {
+      setRedirected(true);
+      navigate('/home');
+    }
+  }, [user, loading, navigate, redirected]);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -63,16 +78,7 @@ const Register = () => {
         return;
       }
 
-      // Send OTP via backend
-      const response = await axios.post(`${API_URL}/api/auth/send-otp`, {
-        email: formData.email,
-        purpose: 'register'
-      });
-
-      // OTP sent successfully, show success message and move to OTP step
-      setOtpSuccessMessage('OTP sent successfully to your email');
-      setStep(2);
-
+      setStep(2); // Move to CAPTCHA step
     } catch (error) {
       // Check if error has a response with data
       if (error.response && error.response.data) {
@@ -85,6 +91,50 @@ const Register = () => {
       setIsLoading(false);
     }
   };
+
+  const handleCaptchaVerify = useCallback(async (shieldDataOrId, solutionOrAnswer) => {
+    setIsLoading(true);
+    setOtpError('');
+
+    // Check if it's the new Shield data or old Captcha
+    let shieldData = {};
+    let captchaData = {};
+
+    if (typeof shieldDataOrId === 'object') {
+      shieldData = shieldDataOrId;
+    } else {
+      captchaData = { id: shieldDataOrId, answer: solutionOrAnswer };
+    }
+
+    try {
+      // Send OTP only AFTER successful CAPTCHA/Shield
+      await axios.post(`${API_URL}/api/auth/send-otp`, {
+        email: formData.email,
+        purpose: 'register',
+        captcha_id: captchaData.id,
+        captcha_answer: captchaData.answer,
+        shield_nonce: shieldData.nonce,
+        shield_solution: shieldData.solution,
+        fingerprint: shieldData.fingerprint
+      });
+
+      setFormData(prev => ({
+        ...prev,
+        captcha_id: captchaData.id,
+        captcha_answer: captchaData.answer,
+        shield_nonce: shieldData.nonce,
+        shield_solution: shieldData.solution,
+        fingerprint: shieldData.fingerprint
+      }));
+
+      setOtpSuccessMessage('OTP sent successfully to your email');
+      setStep(3); // Move to OTP step
+    } catch (error) {
+      showMessage(error.response?.data?.detail || 'Failed to send OTP. Please try again.', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [formData.email, showMessage]);
 
   const handleOTPSubmit = async (e) => {
     e.preventDefault();
@@ -106,7 +156,7 @@ const Register = () => {
       });
 
       if (response.status === 200 && response.data.success) {
-        setStep(3); // Move to details step (skip account type selection)
+        setStep(4); // Move to details step (was 3)
       } else {
         // Display the backend error message
         const errorMessage = response.data.detail || response.data.message || 'Invalid verification code';
@@ -137,7 +187,7 @@ const Register = () => {
       setLastNameError('Last name is required');
       return;
     }
-    setStep(4); // Move to password step
+    setStep(5); // Move to password step (was 4)
   };
 
   const handlePasswordSubmit = async (e) => {
@@ -165,7 +215,12 @@ const Register = () => {
       formData.firstName,
       formData.lastName,
       formData.organizationName,
-      formData.accountType
+      formData.accountType,
+      {
+        nonce: formData.shield_nonce,
+        solution: formData.shield_solution,
+        fingerprint: formData.fingerprint
+      }
     );
 
     if (result.success) {
@@ -177,8 +232,34 @@ const Register = () => {
     setIsLoading(false);
   };
 
-  const handleOAuthSignup = (provider) => {
-    showMessage(`${provider} signup is coming soon!`, 'success');
+  const handleOAuthSignup = async (provider) => {
+    if (provider === 'Google') {
+      try {
+        const response = await axios.get(`${API_URL}/api/auth/google/url`);
+        if (response.data && response.data.url) {
+          window.location.href = response.data.url;
+        } else {
+          showMessage('Failed to initialize Google signup', 'error');
+        }
+      } catch (error) {
+        console.error('Failed to get Google auth URL:', error);
+        showMessage('Unable to start Google signup. Please try again.', 'error');
+      }
+    } else if (provider === 'GitHub') {
+      try {
+        const response = await axios.get(`${API_URL}/api/auth/github/url`);
+        if (response.data && response.data.url) {
+          window.location.href = response.data.url;
+        } else {
+          showMessage('Failed to initialize GitHub signup', 'error');
+        }
+      } catch (error) {
+        console.error('Failed to get GitHub auth URL:', error);
+        showMessage('Unable to start GitHub signup. Please try again.', 'error');
+      }
+    } else {
+      showMessage(`${provider} signup is coming soon!`, 'info');
+    }
   };
 
   const handleBack = () => {
@@ -197,7 +278,12 @@ const Register = () => {
     try {
       const response = await axios.post(`${API_URL}/api/auth/send-otp`, {
         email: formData.email,
-        purpose: 'register'
+        purpose: 'register',
+        captcha_id: formData.captcha_id,
+        captcha_answer: formData.captcha_answer,
+        shield_nonce: formData.shield_nonce,
+        shield_solution: formData.shield_solution,
+        fingerprint: formData.fingerprint
       });
 
       setOtpSuccessMessage('OTP sent successfully to your email');
@@ -302,9 +388,10 @@ const Register = () => {
 
           <h2 className="text-[22px] leading-[28px] font-semibold text-gray-900 mb-6">
             {step === 1 && 'Create your account'}
-            {step === 2 && 'Enter verification code'}
-            {step === 3 && 'Complete your profile'}
-            {step === 4 && 'Set your password'}
+            {step === 2 && 'Security check'}
+            {step === 3 && 'Enter verification code'}
+            {step === 4 && 'Complete your profile'}
+            {step === 5 && 'Set your password'}
           </h2>
 
           {step === 1 && (
@@ -353,6 +440,16 @@ const Register = () => {
                   <label htmlFor="email" className="block text-[13px] font-medium text-gray-700 mb-1.5">
                     Email
                   </label>
+                  {/* Honeypot field - hidden from users */}
+                  <input
+                    type="text"
+                    name="website_check"
+                    value={formData.website_check}
+                    onChange={(e) => setFormData({ ...formData, website_check: e.target.value })}
+                    style={{ display: 'none' }}
+                    tabIndex="-1"
+                    autoComplete="off"
+                  />
                   <CustomValidationTooltip
                     show={showValidationTooltip}
                     message="Please fill out this field."
@@ -391,6 +488,13 @@ const Register = () => {
           )}
 
           {step === 2 && (
+            <SecureShield
+              onVerify={handleCaptchaVerify}
+              email={formData.email}
+            />
+          )}
+
+          {step === 3 && (
             <>
               <p className="text-[13px] text-gray-600 mb-6 text-center">
                 We sent a verification code to<br />
@@ -452,7 +556,7 @@ const Register = () => {
             </>
           )}
 
-          {step === 3 && (
+          {step === 4 && (
             <>
               <form onSubmit={handleDetailsSubmit} className="space-y-4">
                 <div>
@@ -513,7 +617,7 @@ const Register = () => {
             </>
           )}
 
-          {step === 4 && (
+          {step === 5 && (
             <>
               <form onSubmit={handlePasswordSubmit} className="space-y-4">
                 <div>

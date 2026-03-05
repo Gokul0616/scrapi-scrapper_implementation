@@ -45,6 +45,14 @@ class SchedulerService:
             self._initialized = True
             logger.info("✅ Scheduler started successfully")
             
+            # Start Data Retention Cron
+            self.scheduler.add_job(
+                func=self._run_data_retention_cleanup,
+                trigger=CronTrigger(hour=0, minute=0, timezone=pytz.UTC), # Run daily at midnight
+                id="system_data_retention_cleanup",
+                replace_existing=True
+            )
+            
             # Load and schedule existing enabled schedules
             await self._load_schedules()
             
@@ -250,6 +258,67 @@ class SchedulerService:
         except Exception as e:
             logger.error(f"Failed to calculate next run: {str(e)}")
             return datetime.now(timezone.utc)
+            
+    async def _run_data_retention_cleanup(self):
+        """Background job to clean up old datasets and runs based on plan retention limits."""
+        try:
+            logger.info("🧹 Starting daily data retention cleanup")
+            from datetime import timedelta
+            
+            # 1. Get all workspaces and their retention limits
+            workspaces = []
+            
+            async for user in self.db.users.find({}, {"id": 1, "limits": 1, "plan": 1}):
+                retention_days = user.get("limits", {}).get("data_retention_days", 7)
+                workspaces.append(("personal", user["id"], retention_days))
+                
+            async for org in self.db.organizations.find({}, {"id": 1, "limits": 1, "plan": 1}):
+                retention_days = org.get("limits", {}).get("data_retention_days", 7)
+                workspaces.append(("organization", org["id"], retention_days))
+                
+            now = datetime.now(timezone.utc)
+            total_deleted_runs = 0
+            total_deleted_datasets = 0
+            
+            for ws_type, ws_id, retention_days in workspaces:
+                cutoff_date = now - timedelta(days=retention_days)
+                cutoff_iso = cutoff_date.isoformat()
+                
+                query = {
+                    "user_id" if ws_type == "personal" else "organization_id": ws_id,
+                    "created_at": {"$lt": cutoff_iso}
+                }
+                
+                # Delete old UNNAMED datasets and their associated items
+                dataset_query = dict(query)
+                dataset_query["name"] = None
+                
+                datasets_to_delete = await self.db.datasets.find(dataset_query, {"id": 1, "run_id": 1}).to_list(None)
+                if datasets_to_delete:
+                    dataset_ids = [d["id"] for d in datasets_to_delete]
+                    run_ids_for_items = [d["run_id"] for d in datasets_to_delete if "run_id" in d]
+                    
+                    if run_ids_for_items:
+                        await self.db.dataset_items.delete_many({"run_id": {"$in": run_ids_for_items}})
+                        
+                    del_ds = await self.db.datasets.delete_many({"id": {"$in": dataset_ids}})
+                    total_deleted_datasets += del_ds.deleted_count
+                
+                # We skip deleting runs that are attached to preserved (named) datasets.
+                # Find runs we can safely delete
+                datasets_preserved = await self.db.datasets.find({"name": {"$ne": None}}).to_list(None)
+                preserved_run_ids = [d["run_id"] for d in datasets_preserved if "run_id" in d]
+                
+                run_query = dict(query)
+                if preserved_run_ids:
+                    run_query["id"] = {"$nin": preserved_run_ids}
+                    
+                del_runs = await self.db.runs.delete_many(run_query)
+                total_deleted_runs += del_runs.deleted_count
+                
+            logger.info(f"✅ Data retention cleanup finished. Deleted {total_deleted_runs} runs and {total_deleted_datasets} datasets.")
+        except Exception as e:
+            logger.error(f"❌ Error during data retention cleanup: {str(e)}")
     
     def get_human_readable_cron(self, cron_expression: str) -> str:
         """Convert cron expression to human-readable format."""

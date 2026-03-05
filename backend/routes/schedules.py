@@ -45,6 +45,40 @@ async def create_schedule(
     organization_id = None
     if workspace_type == 'organization' and workspace_id:
         organization_id = workspace_id
+        
+    # Check max_schedules limit
+    from services.billing_service import billing_service
+    try:
+        target_ws_id = workspace_id if workspace_id else current_user['id']
+        billing_info = await billing_service.get_billing_summary(target_ws_id, workspace_type)
+        
+        limits = billing_info.get("limits", {})
+        max_schedules = limits.get("max_schedules", 0)
+        
+        if max_schedules == 0:
+            raise HTTPException(
+                status_code=403,
+                detail="Your current plan does not support Scheduled Runs. Please upgrade to create schedules."
+            )
+            
+        # Count existing schedules
+        query = {"user_id": current_user['id']}
+        if organization_id:
+            query = {"organization_id": organization_id}
+            
+        current_schedules_count = await db.schedules.count_documents(query)
+        
+        if current_schedules_count >= max_schedules:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Scheduled runs limit reached ({max_schedules}). Upgrade your plan to create more schedules."
+            )
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error checking schedule limits: {e}")
+        raise HTTPException(status_code=500, detail="Failed to verify plan limits for scheduling.")
     
     # Create schedule
     schedule = Schedule(

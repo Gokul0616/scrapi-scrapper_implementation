@@ -1,0 +1,11 @@
+Here is the default PayPal Sandbox buyer account provided in your .env:
+
+Email: sb-23iej49656326@personal.example.com
+Password: Test1234!
+
+To test the Credit/Debit card form directly (ACDC), you can use the official PayPal Sandbox cards:
+https://developer.paypal.com/tools/sandbox/card-testing/
+
+Card Number: 4111 1111 1111 1111
+Expiry: 12 / 29
+CVV: 123

@@ -38,6 +38,7 @@ import CreateOrganizationModal from './components/CreateOrganizationModal';
 import UpgradeCheckout from './pages/UpgradeCheckout';
 import PaymentSuccess from './pages/checkout/PaymentSuccess';
 import InvoiceDetail from './pages/InvoiceDetail';
+import AuthCallback from './pages/AuthCallback';
 
 // Component to handle root redirect based on last path
 const RootRedirect = () => {
@@ -96,7 +97,7 @@ const DashboardLayout = ({ children }) => {
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
       <main className={`flex-1 overflow-y-auto transition-colors ${theme === 'dark' ? 'bg-[#0F1014]' : 'bg-gray-50'}`}>{children}</main>
-      <GlobalChat />
+      {/* <GlobalChat /> */}
     </div>
   );
 };
@@ -108,6 +109,7 @@ function AppRoutes() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
         <Route
           path="/"
           element={
@@ -213,6 +215,8 @@ function AppRoutes() {
     </>
   );
 }
+
+const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
 
 function App() {
   return (

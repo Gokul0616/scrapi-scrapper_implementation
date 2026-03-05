@@ -28,6 +28,7 @@ export const AuthProvider = ({ children }) => {
       }
       setLoading(false);
     } else if (token) {
+      setLoading(true);
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       fetchUser();
       fetchLastPath();
@@ -37,6 +38,7 @@ export const AuthProvider = ({ children }) => {
   }, [token]);
 
   const fetchUser = async () => {
+    setLoading(true);
     try {
       const response = await axios.get(`${API}/auth/me`);
       setUser(response.data);
@@ -95,9 +97,15 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (username, password) => {
+  const login = async (username, password, shieldData = {}) => {
     try {
-      const response = await axios.post(`${API}/auth/login`, { username, password });
+      const response = await axios.post(`${API}/auth/login`, {
+        username,
+        password,
+        shield_nonce: shieldData.nonce,
+        shield_solution: shieldData.solution,
+        fingerprint: shieldData.fingerprint
+      });
 
       // Check if account is pending deletion
       if (response.data.account_status === 'pending_deletion') {
@@ -143,7 +151,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (username, email, password, firstName, lastName, organizationName, accountType) => {
+  const register = async (username, email, password, firstName, lastName, organizationName, accountType, shieldData = {}) => {
     try {
       const response = await axios.post(`${API}/auth/register`, {
         username,
@@ -152,7 +160,10 @@ export const AuthProvider = ({ children }) => {
         first_name: firstName,
         last_name: lastName,
         organization_name: organizationName,
-        account_type: accountType || 'personal'
+        account_type: accountType || 'personal',
+        shield_nonce: shieldData.nonce,
+        shield_solution: shieldData.solution,
+        fingerprint: shieldData.fingerprint
       });
       const { access_token, user } = response.data;
       setToken(access_token);
@@ -164,7 +175,6 @@ export const AuthProvider = ({ children }) => {
       return { success: false, error: error.response?.data?.detail || 'Registration failed' };
     }
   };
-
   const logout = () => {
     setToken(null);
     setUser(null);
@@ -188,12 +198,12 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, updateUser, login, register, logout, loading, lastPath, updateLastPath, setToken }}>
+    <AuthContext.Provider value={{ user, setUser, updateUser, login, register, logout, loading, lastPath, updateLastPath, token, setToken }}>
       {children}
     </AuthContext.Provider>
   );
 };
-
+  
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

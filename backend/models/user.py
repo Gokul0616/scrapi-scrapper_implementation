@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional
+from typing import Optional, Dict, Any
 from datetime import datetime, timezone
 import uuid
 
@@ -9,10 +9,22 @@ class UserCreate(BaseModel):
     password: str
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+    website_check: Optional[str] = None  # Honeypot
+    captcha_id: Optional[str] = None
+    captcha_answer: Optional[str] = None
+    shield_nonce: Optional[str] = None
+    shield_solution: Optional[int] = None
+    fingerprint: Optional[Dict[str, Any]] = None
 
 class UserLogin(BaseModel):
     username: str
     password: str
+    website_check: Optional[str] = None  # Honeypot
+    captcha_id: Optional[str] = None
+    captcha_answer: Optional[str] = None
+    shield_nonce: Optional[str] = None
+    shield_solution: Optional[int] = None
+    fingerprint: Optional[Dict[str, Any]] = None
 
 class User(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -27,6 +39,8 @@ class User(BaseModel):
     subscription_id: Optional[str] = None
     stripe_customer_id: Optional[str] = None
     platform_credits: float = 5.0
+    limits: dict = Field(default_factory=dict)
+    spending_limit: Optional[float] = None
     role: str = "user"  # Normal user from scraper website - default is user
     is_active: bool = True
     account_status: str = "active"  # "active", "pending_deletion", "deleted"
@@ -38,6 +52,14 @@ class User(BaseModel):
     last_path: Optional[str] = None  # Store last visited path for redirect after login
     profile_color: Optional[str] = None  # Store user's profile avatar color
     theme_preference: str = "light"  # Theme preference: "light", "dark", or "system"
+    auth_provider: str = "email"  # "email", "google", "github" etc.
+    google_id: Optional[str] = None # Google's unique subject ID
+    github_id: Optional[str] = None # GitHub's unique user ID
+    github_username: Optional[str] = None # GitHub's login/username
+    github_access_token: Optional[str] = None # Store to access repos later
+    expires_at: Optional[datetime] = None # Subscription expiration date
+    billing_period: str = "monthly" # "monthly" or "yearly"
+    expiry_reminder_sent: dict = Field(default_factory=dict) # Track sent reminders: {"5d": bool, "2d": bool, "0d": bool}
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     
 class UserResponse(BaseModel):

@@ -10,6 +10,7 @@ import { Badge } from '../components/ui/badge';
 import LoadingScreen from '../components/LoadingScreen'; // Added this import
 import { Search, Download, ArrowLeft, MessageSquare, X, Send, Mail, Phone, CheckCircle2, FileText, MapPin, ExternalLink, Settings, Eye, Table as TableIcon, MoreHorizontal, Star, ChevronLeft, ChevronRight, Play } from 'lucide-react';
 import ErrorDisplay, { showError } from '../components/ErrorDisplay';
+import Checkbox from '../components/ui/CustomCheckbox';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -2004,11 +2005,9 @@ const DatasetV2 = () => {
               <div className="space-y-2">
                 {/* Fixed columns */}
                 <label className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={visibleColumns.number}
                     onChange={(e) => setVisibleColumns(prev => ({ ...prev, number: e.target.checked }))}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
                   <span className="text-sm text-gray-900 font-medium">#</span>
                 </label>
@@ -2016,11 +2015,9 @@ const DatasetV2 = () => {
                 {/* Dynamic columns from data */}
                 {allColumns.map(colKey => (
                   <label key={colKey} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={visibleColumns[colKey]}
                       onChange={(e) => setVisibleColumns(prev => ({ ...prev, [colKey]: e.target.checked }))}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     />
                     <span className="text-sm text-gray-900">{formatColumnName(colKey)}</span>
                   </label>
@@ -2028,11 +2025,9 @@ const DatasetV2 = () => {
 
                 {/* Actions column */}
                 <label className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={visibleColumns.actions}
                     onChange={(e) => setVisibleColumns(prev => ({ ...prev, actions: e.target.checked }))}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
                   <span className="text-sm text-gray-900 font-medium">Actions</span>
                 </label>

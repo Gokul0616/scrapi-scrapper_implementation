@@ -686,3 +686,64 @@ async def delete_proxy(proxy_id: str, current_user: dict = Depends(get_current_u
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Proxy not found")
     return {"message": "Proxy deleted successfully"}
+
+# ============= Affiliate Links (Promo Codes) Routes =============
+
+from pydantic import BaseModel
+
+class AttachedOffer(BaseModel):
+    type: str # 'limit' or 'addon'
+    id: str   # 'max_ram_gb', 'concurrent_runs', 'platform_credits', etc.
+    qty: float
+
+class AffiliateLinkCreate(BaseModel):
+    code: str
+    commission_rate: float
+    attached_offers: Optional[List[AttachedOffer]] = []
+    applicable_plans: Optional[List[str]] = [] # Allowed plans e.g. ['starter', 'growth'] or empty for all
+    expiry_date: Optional[str] = None # ISO Format Data
+
+@router.get("/admin/promo")
+async def get_all_affiliate_links(current_user: dict = Depends(check_admin_or_owner_role)):
+    """Fetch all promo and referral affiliate links currently active."""
+    db = get_db()
+    links = await db.affiliate_links.find({}, {"_id": 0}).to_list(1000)
+    return links
+
+@router.post("/admin/promo")
+async def create_affiliate_link(link_data: AffiliateLinkCreate, current_user: dict = Depends(check_admin_or_owner_role)):
+    """Generate a new distinct Affiliate Link or Promo Code binding its usage tracking."""
+    db = get_db()
+    
+    code = link_data.code.strip().upper()
+    existing = await db.affiliate_links.find_one({"code": code})
+    if existing:
+        raise HTTPException(status_code=400, detail="Promo code already exists")
+        
+    doc = {
+        "id": str(uuid.uuid4()),
+        "code": code,
+        "owner_user_id": current_user.get("id"),
+        "commission_rate": link_data.commission_rate,
+        "clicks": 0,
+        "conversions": 0,
+        "attached_offers": [offer.model_dump() for offer in link_data.attached_offers],
+        "applicable_plans": link_data.applicable_plans,
+        "expiry_date": link_data.expiry_date,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.affiliate_links.insert_one(doc)
+    doc_response = dict(doc)
+    if "_id" in doc_response:
+        del doc_response["_id"]
+    return doc_response
+
+@router.delete("/admin/promo/{code}")
+async def delete_affiliate_link(code: str, current_user: dict = Depends(check_admin_or_owner_role)):
+    """Remove an administrative affiliate active promo code payload."""
+    db = get_db()
+    result = await db.affiliate_links.delete_one({"code": code.upper()})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Promo code not found")
+    return {"message": "Promo code deleted successfully"}

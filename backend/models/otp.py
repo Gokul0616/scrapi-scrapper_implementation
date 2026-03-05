@@ -27,6 +27,11 @@ class SendOTPRequest(BaseModel):
     """Request to send OTP."""
     email: EmailStr
     purpose: str = "login"  # 'login' or 'register'
+    captcha_id: Optional[str] = None
+    captcha_answer: Optional[str] = None
+    shield_nonce: Optional[str] = None
+    shield_solution: Optional[int] = None
+    fingerprint: Optional[dict] = None
 
 class VerifyOTPRequest(BaseModel):
     """Request to verify OTP."""

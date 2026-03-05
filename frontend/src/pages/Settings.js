@@ -9,11 +9,10 @@ import { useWorkspace } from '../contexts/WorkspaceContext';
 import { Switch } from '../components/ui/switch';
 import { Textarea } from '../components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../components/ui/alert-dialog';
+import CustomTooltip from '../components/CustomTooltip';
 import { HelpCircle, Upload, Trash2, ExternalLink, Check, Sun, Moon, Monitor, Eye, EyeOff, Building2, Plus, User, LogOut, Settings as SettingsIcon } from 'lucide-react';
 import { getUserInitials, getProfileColor, getUserDisplayName } from '../utils/userUtils';
-import AlertModal from '../components/AlertModal';
+import { useToast } from '../hooks/use-toast';
 import ApiIntegrations from '../components/ApiIntegrations';
 import axios from 'axios';
 
@@ -50,6 +49,7 @@ Here are some ideas to get you started:
   const [twitter, setTwitter] = useState('');
   const [linkedin, setLinkedin] = useState('');
   const [discord, setDiscord] = useState('');
+  const [loading, setLoading] = useState(true);
   const [isPublic, setIsPublic] = useState(false);
   const [showEmail, setShowEmail] = useState(false);
   const [profilePicture, setProfilePicture] = useState(null);
@@ -61,28 +61,12 @@ Here are some ideas to get you started:
   const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 });
 
 
-  const [deleteConfirmText, setDeleteConfirmText] = useState('');
-  const [deletePassword, setDeletePassword] = useState('');
-  const [deleteFeedbackReason, setDeleteFeedbackReason] = useState('');
-  const [deleteFeedbackText, setDeleteFeedbackText] = useState('');
-  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [showDeletePassword, setShowDeletePassword] = useState(false);
-  const [showDeleteSuccessAlert, setShowDeleteSuccessAlert] = useState(false);
 
 
   const [savingUsername, setSavingUsername] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-
-  const [showAlert, setShowAlert] = useState(false);
-  const [alertConfig, setAlertConfig] = useState({
-    title: '',
-    message: '',
-    type: 'info'
-  });
+  const { toast } = useToast();
 
 
   const [usernameValidation, setUsernameValidation] = useState({
@@ -357,22 +341,17 @@ Here are some ideas to get you started:
         headers: { Authorization: `Bearer ${token}` }
       });
 
-
-      if (updateUser) {
-        updateUser({
-          first_name: firstName,
-          last_name: lastName,
-          theme_preference: localThemePreference
-        });
-      }
+      toast({
+        title: 'Profile Saved',
+        description: 'Your profile has been updated successfully.',
+      });
     } catch (error) {
       console.error('Failed to save profile:', error);
-      setAlertConfig({
+      toast({
         title: 'Failed to Save Profile',
-        message: 'Failed to save profile.',
-        type: 'error'
+        description: 'Failed to save profile.',
+        variant: 'destructive',
       });
-      setShowAlert(true);
     } finally {
       setSavingProfile(false);
     }
@@ -424,21 +403,17 @@ Here are some ideas to get you started:
       }
 
 
-      setTimeout(() => {
-
-        window.dispatchEvent(new CustomEvent('profilePictureUpdated', {
-          detail: { profile_picture: newProfilePicture }
-        }));
-      }, 100);
-
+      toast({
+        title: 'Success',
+        description: 'Profile picture updated successfully.',
+      });
     } catch (error) {
       console.error('Failed to upload image:', error);
-      setAlertConfig({
+      toast({
         title: 'Upload Failed',
-        message: 'Failed to upload image.',
-        type: 'error'
+        description: 'Failed to upload image.',
+        variant: 'destructive',
       });
-      setShowAlert(true);
     }
   };
 
@@ -459,58 +434,8 @@ Here are some ideas to get you started:
     }
   };
 
-  const handleDeleteAccount = async () => {
-    if (deleteConfirmText !== user?.email) {
-      setAlertConfig({
-        title: 'Confirmation Required',
-        message: 'Please type your email correctly to confirm deletion.',
-        type: 'warning'
-      });
-      setShowAlert(true);
-      return;
-    }
-
-    if (!deletePassword) {
-      setAlertConfig({
-        title: 'Password Required',
-        message: 'Please enter your password to confirm deletion.',
-        type: 'warning'
-      });
-      setShowAlert(true);
-      return;
-    }
-
-    setIsDeleting(true);
-    try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`${API_URL}/api/settings/account`, {
-        headers: { Authorization: `Bearer ${token}` },
-        data: {
-          confirmation_text: deleteConfirmText,
-          password: deletePassword,
-          feedback_reason: deleteFeedbackReason || null,
-          feedback_text: deleteFeedbackText || null
-        }
-      });
-
-
-      setShowDeleteSuccessAlert(true);
-
-
-      setTimeout(() => {
-        localStorage.removeItem('token');
-        window.location.href = '/login';
-      }, 3000);
-    } catch (error) {
-      console.error('Failed to delete account:', error);
-      setAlertConfig({
-        title: 'Deletion Failed',
-        message: error.response?.data?.detail || 'Failed to delete account.',
-        type: 'error'
-      });
-      setShowAlert(true);
-      setIsDeleting(false);
-    }
+  const handleDeleteAccount = () => {
+    openModal('delete-account');
   };
 
   const handleExportData = async () => {
@@ -530,14 +455,17 @@ Here are some ideas to get you started:
       link.download = `scrapi-data-export-${new Date().toISOString().split('T')[0]}.json`;
       link.click();
       URL.revokeObjectURL(url);
+      toast({
+        title: 'Export Started',
+        description: 'Your data export is ready and downloading.',
+      });
     } catch (error) {
       console.error('Failed to export data:', error);
-      setAlertConfig({
+      toast({
         title: 'Export Failed',
-        message: 'Failed to export data. Please try again.',
-        type: 'error'
+        description: 'Failed to export data. Please try again.',
+        variant: 'destructive',
       });
-      setShowAlert(true);
     } finally {
       setIsExporting(false);
     }
@@ -554,16 +482,9 @@ Here are some ideas to get you started:
       </span>
       <span className="text-sm text-muted-foreground">(optional)</span>
       {tooltip && (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <HelpCircle className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
-            </TooltipTrigger>
-            <TooltipContent side="top" className="bg-popover text-popover-foreground">
-              <p className="text-xs max-w-xs">{tooltip}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <CustomTooltip content={tooltip}>
+          <HelpCircle className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+        </CustomTooltip>
       )}
     </div>
   );
@@ -1006,16 +927,9 @@ Here are some ideas to get you started:
                           <span className="text-sm font-medium text-foreground">
                             Make profile publicly visible
                           </span>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <HelpCircle className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="bg-popover text-popover-foreground">
-                                <p className="text-xs">Allow others to see your profile.</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          <CustomTooltip content="Allow others to see your profile.">
+                            <HelpCircle className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                          </CustomTooltip>
                         </div>
                         <Switch
                           checked={isPublic}
@@ -1029,16 +943,9 @@ Here are some ideas to get you started:
                           <span className={`text-sm font-medium ${isPublic ? 'text-foreground' : 'text-muted-foreground'}`}>
                             Show my contact email
                           </span>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <HelpCircle className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="bg-popover text-popover-foreground">
-                                <p className="text-xs">Display your email on your public profile.</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          <CustomTooltip content="Display your email on your public profile.">
+                            <HelpCircle className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                          </CustomTooltip>
                         </div>
                         <Switch
                           checked={showEmail}
@@ -1131,172 +1038,14 @@ Here are some ideas to get you started:
                       </p>
                     </div>
 
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          data-testid="delete-account-btn"
-                          onClick={() => {
-                            setDeleteConfirmText('');
-                            setDeletePassword('');
-                            setDeleteFeedbackReason('');
-                            setDeleteFeedbackText('');
-                            setShowFeedbackForm(false);
-                          }}
-                          className="border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive bg-transparent"
-                        >
-                          Delete account
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent
-                        className="max-w-[480px] bg-background border border-border"
-                      >
-                        <AlertDialogHeader>
-                          <AlertDialogTitle className="text-lg font-bold text-foreground">
-                            Delete account
-                          </AlertDialogTitle>
-                        </AlertDialogHeader>
-
-                        <div className="space-y-3 py-3">
-                          <div className="space-y-2 text-sm text-foreground">
-                            <p>
-                              Do you <span className="font-semibold">really</span> want to{' '}
-                              <span className="font-semibold text-destructive">
-                                delete your account?
-                              </span>
-                            </p>
-
-                            <div className="p-3 rounded-lg border bg-muted/50 border-border">
-                              <p className="font-semibold mb-1 text-sm">Grace Period: 7 days</p>
-                              <p className="text-xs">Your account will be scheduled for deletion. You'll have 7 days to reactivate by simply logging in.</p>
-                            </div>
-
-                            <p className="text-xs text-muted-foreground">
-                              All Actors, Actor tasks, schedules, results, datasets, and API keys will be deleted.
-                            </p>
-                          </div>
-
-
-                          <div className="pt-3 border-t border-border">
-                            <button
-                              onClick={() => setShowFeedbackForm(!showFeedbackForm)}
-                              className="text-xs font-medium mb-2 text-primary hover:text-primary/80"
-                            >
-                              {showFeedbackForm ? '▼' : '▶'} Tell us why you're leaving (optional)
-                            </button>
-
-                            {showFeedbackForm && (
-                              <div className="space-y-2">
-                                <div className="space-y-1.5">
-                                  {[
-                                    { value: 'too_expensive', label: 'Too expensive' },
-                                    { value: 'lack_features', label: 'Lack of features I need' },
-                                    { value: 'found_alternative', label: 'Found a better alternative' },
-                                    { value: 'privacy_concerns', label: 'Privacy concerns' },
-                                    { value: 'other', label: 'Other reason' }
-                                  ].map((reason) => (
-                                    <label key={reason.value} className="flex items-center gap-2 cursor-pointer">
-                                      <input
-                                        type="radio"
-                                        name="feedback_reason"
-                                        value={reason.value}
-                                        checked={deleteFeedbackReason === reason.value}
-                                        onChange={(e) => setDeleteFeedbackReason(e.target.value)}
-                                        className="w-3.5 h-3.5"
-                                      />
-                                      <span className="text-xs text-foreground">
-                                        {reason.label}
-                                      </span>
-                                    </label>
-                                  ))}
-                                </div>
-                                <Textarea
-                                  value={deleteFeedbackText}
-                                  onChange={(e) => setDeleteFeedbackText(e.target.value)}
-                                  placeholder="Additional feedback (optional)"
-                                  className="min-h-[60px] text-xs bg-background border-input text-foreground placeholder:text-muted-foreground"
-                                  maxLength={500}
-                                />
-                              </div>
-                            )}
-                          </div>
-
-
-                          <div className="pt-3 border-t border-border">
-                            <label
-                              htmlFor="delete-password-input"
-                              className="block text-xs font-medium mb-1.5 text-foreground"
-                            >
-                              Enter your password to confirm
-                            </label>
-                            <div className="relative">
-                              <Input
-                                id="delete-password-input"
-                                type={showDeletePassword ? 'text' : 'password'}
-                                value={deletePassword}
-                                onChange={(e) => setDeletePassword(e.target.value)}
-                                placeholder="Your password"
-                                autoComplete="current-password"
-                                data-testid="delete-password-input"
-                                className="w-full text-sm pr-10 bg-secondary border-input text-foreground focus:border-ring focus:ring-ring"
-                              />
-                              <div
-                                onClick={() => setShowDeletePassword(!showDeletePassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-muted-foreground hover:text-foreground"
-                              >
-                                {showDeletePassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                              </div>
-                            </div>
-                          </div>
-
-
-                          <div className="pt-3 border-t border-border">
-                            <label
-                              htmlFor="delete-confirm-input"
-                              className="block text-xs font-medium mb-1.5 text-foreground"
-                            >
-                              Type <span className="font-bold select-none" style={{ userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none' }}>{user?.email}</span> to confirm
-                            </label>
-                            <Input
-                              id="delete-confirm-input"
-                              type="text"
-                              value={deleteConfirmText}
-                              onChange={(e) => setDeleteConfirmText(e.target.value)}
-                              placeholder=""
-                              autoComplete="off"
-                              data-testid="delete-confirm-input"
-                              className="w-full text-sm bg-secondary border-input text-foreground focus:border-ring focus:ring-ring"
-                            />
-                          </div>
-                        </div>
-
-                        <AlertDialogFooter className="gap-2">
-                          <AlertDialogCancel
-                            disabled={isDeleting}
-                            className="text-sm py-1.5 bg-muted text-muted-foreground hover:bg-muted/80 border-border"
-                            onClick={() => {
-                              setDeleteConfirmText('');
-                              setDeletePassword('');
-                              setDeleteFeedbackReason('');
-                              setDeleteFeedbackText('');
-                            }}
-                          >
-                            Cancel
-                          </AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={handleDeleteAccount}
-                            disabled={deleteConfirmText !== user?.email || !deletePassword || isDeleting}
-                            data-testid="confirm-delete-btn"
-                            className={`text-sm py-1.5 ${deleteConfirmText !== user?.email || !deletePassword || isDeleting
-                              ? 'opacity-50 cursor-not-allowed bg-muted text-muted-foreground'
-                              : 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
-                              } font-semibold`}
-                          >
-                            {isDeleting ? 'Scheduling deletion...' : 'Schedule deletion'}
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    <Button
+                      variant="outline"
+                      data-testid="delete-account-btn"
+                      onClick={() => openModal('delete-account')}
+                      className="border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive bg-transparent"
+                    >
+                      Delete account
+                    </Button>
                     <p className="mt-2 text-xs text-muted-foreground">
                       Completely remove your account, Actors, tasks, schedules, data, everything. This is sad 😢
                     </p>
@@ -1406,27 +1155,8 @@ Here are some ideas to get you started:
         </div>
 
 
-        <AlertModal
-          show={showDeleteSuccessAlert}
-          onClose={() => {
-            setShowDeleteSuccessAlert(false);
-            localStorage.removeItem('token');
-            window.location.href = '/login';
-          }}
-          title="Account Deletion Scheduled"
-          message="Your account has been scheduled for deletion. You have 7 days to reactivate by simply logging in."
-          type="success"
-          confirmText="OK"
-        />
 
 
-        <AlertModal
-          show={showAlert}
-          onClose={() => setShowAlert(false)}
-          title={alertConfig.title}
-          message={alertConfig.message}
-          type={alertConfig.type}
-        />
       </div>
     </>
   );

@@ -81,8 +81,7 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
         setSelectedYear(y);
     };
 
-    const handleMonthChange = (e) => {
-        const val = e.target.value;
+    const handleMonthChange = (val) => {
         const [y, m] = val.split('-');
         setSelectedYear(parseInt(y));
         setSelectedMonth(parseInt(m));

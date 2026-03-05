@@ -489,6 +489,10 @@ class EmailService:
         payment_method: str,
         issued_date: str,
         billing_name: str = None,
+        proration_discount: float = 0.0,
+        account_balance_used: float = 0.0,
+        total_addon_cost: float = 0.0,
+        overflow_credited: float = 0.0,
         pdf_content: bytes = None,
         invoice_filename: str = "invoice.pdf"
     ):
@@ -596,13 +600,28 @@ class EmailService:
                   <td style="padding:12px 20px;font-size:14px;color:#64748b;">Issued Date</td>
                   <td style="padding:12px 20px;font-size:14px;font-weight:700;color:#0f172a;text-align:right;">{issued_date}</td>
                 </tr>
+                {f'''
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                  <td style="padding:12px 20px;font-size:14px;color:#059669;">Unused Plan Credit</td>
+                  <td style="padding:12px 20px;font-size:14px;font-weight:700;color:#059669;text-align:right;">-${proration_discount:.2f}</td>
+                </tr>''' if proration_discount > 0 else ''}
+                {f'''
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                  <td style="padding:12px 20px;font-size:14px;color:#2563eb;">Credit Balance Applied</td>
+                  <td style="padding:12px 20px;font-size:14px;font-weight:700;color:#2563eb;text-align:right;">-${account_balance_used:.2f}</td>
+                </tr>''' if account_balance_used > 0 else ''}
+                {f'''
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                  <td style="padding:12px 20px;font-size:14px;color:#2563eb;">Credit Balance Saved</td>
+                  <td style="padding:12px 20px;font-size:14px;font-weight:700;color:#2563eb;text-align:right;">+${overflow_credited:.2f}</td>
+                </tr>''' if overflow_credited > 0 else ''}
                 <tr style="border-bottom:1px solid #f1f5f9;background:#fafbfc;">
                   <td style="padding:12px 20px;font-size:14px;color:#64748b;">Plan Subtotal</td>
                   <td style="padding:12px 20px;font-size:14px;font-weight:700;color:#0f172a;text-align:right;">${subtotal:.2f}</td>
                 </tr>
                 <tr style="border-bottom:1px solid #f1f5f9;">
                   <td style="padding:12px 20px;font-size:14px;color:#64748b;">Subtotal (Add-ons)</td>
-                  <td style="padding:12px 20px;font-size:14px;font-weight:700;color:#0f172a;text-align:right;">${(amount - subtotal):.2f}</td>
+                  <td style="padding:12px 20px;font-size:14px;font-weight:700;color:#0f172a;text-align:right;">${total_addon_cost:.2f}</td>
                 </tr>
                 <tr style="background:#f0f7ff;">
                   <td style="padding:16px 20px;font-size:15px;font-weight:800;color:#0f172a;">Total Paid</td>
@@ -699,7 +718,10 @@ Payment Method: {payment_method.capitalize()}
 Date          : {issued_date}
 
 Plan Subtotal : ${subtotal:.2f} USD
-Add-ons Total : ${(amount - subtotal):.2f} USD
+{f"Unused Credit : -${proration_discount:.2f} USD" if proration_discount > 0 else ""}
+{f"Credit Balance Applied : -${account_balance_used:.2f} USD" if account_balance_used > 0 else ""}
+{f"Credit Balance Saved : +${overflow_credited:.2f} USD" if overflow_credited > 0 else ""}
+Add-ons Total : ${total_addon_cost:.2f} USD
 Total Paid    : ${amount:.2f} USD
 
 View Invoice  : {invoice_url}

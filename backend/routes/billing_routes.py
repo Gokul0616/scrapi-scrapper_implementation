@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
+import requests
 from auth.auth import get_current_user
 from middleware.workspace import get_workspace_context
 from services.billing_service import billing_service
@@ -28,6 +29,11 @@ class PayPalCaptureRequest(BaseModel):
     plan_data: dict
     billing_details: Optional[dict] = None
 
+class UpgradeConfirmRequest(BaseModel):
+    workspace_id: str
+    workspace_type: str
+    plan_data: dict
+
 @router.get("/summary")
 async def get_summary(
     request: Request,
@@ -39,6 +45,20 @@ async def get_summary(
         return summary
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/proration")
+async def get_proration(
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    try:
+        workspace = get_workspace_context(request)
+        discount = await billing_service.get_proration_discount(workspace['workspace_id'], workspace['workspace_type'])
+        summary = await billing_service.get_billing_summary(workspace['workspace_id'], workspace['workspace_type'])
+        account_balance = summary.get("account_balance", 0.0)
+        return {"discount": discount, "account_balance": account_balance}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -102,6 +122,7 @@ class BillingDetailsModel(BaseModel):
     billing_contact: Optional[str] = None     # Billing contact person
     street_address: Optional[str] = None
     city: Optional[str] = None
+    state: Optional[str] = None
     postal_code: Optional[str] = None
     country: Optional[str] = None
     billing_email: Optional[str] = None
@@ -131,6 +152,8 @@ async def get_billing_details(
 @router.post("/details")
 async def save_billing_details(
     data: BillingDetailsModel,
+    workspace_id: Optional[str] = None,
+    workspace_type: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
     """Save billing details for the current user + workspace (upsert)."""
@@ -140,10 +163,20 @@ async def save_billing_details(
     payload = data.model_dump(exclude_none=True)
     payload["user_id"]    = user_id
     payload["updated_at"] = datetime.now(timezone.utc)
+    
+    # Priority: Query Param > Body > None
+    wid = workspace_id or data.workspace_id
+    wtype = workspace_type or data.workspace_type
+    
     # Upsert per user + workspace so personal and org details are stored separately
     match_filter = {"user_id": user_id}
-    if data.workspace_id:   match_filter["workspace_id"]   = data.workspace_id
-    if data.workspace_type: match_filter["workspace_type"] = data.workspace_type
+    if wid:   
+        match_filter["workspace_id"] = wid
+        payload["workspace_id"] = wid
+    if wtype: 
+        match_filter["workspace_type"] = wtype
+        payload["workspace_type"] = wtype
+        
     await db.billing_details.update_one(match_filter, {"$set": payload}, upsert=True)
     return {"message": "Billing details saved"}
 
@@ -159,6 +192,7 @@ class SubscriptionSetupModel(BaseModel):
     billing_company: Optional[str] = None
     billing_street_address: Optional[str] = None
     billing_city: Optional[str] = None
+    billing_state: Optional[str] = None
     billing_postal_code: Optional[str] = None
     billing_country: Optional[str] = None
     workspace_id: Optional[str] = None
@@ -185,6 +219,8 @@ async def get_subscription_setup(
 @router.post("/subscription")
 async def save_subscription_setup(
     data: SubscriptionSetupModel,
+    workspace_id: Optional[str] = None,
+    workspace_type: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
     """Save (mock) confirmed subscription setup for the current user + workspace."""
@@ -194,16 +230,147 @@ async def save_subscription_setup(
     payload = data.model_dump(exclude_none=True)
     payload["user_id"]      = user_id
     payload["confirmed_at"] = datetime.now(timezone.utc)
+    
+    # Priority: Query Param > Body > None
+    wid = workspace_id or data.workspace_id
+    wtype = workspace_type or data.workspace_type
+    
     # Upsert per user + workspace so personal and org setups are stored separately
     match_filter = {"user_id": user_id}
-    if data.workspace_id:   match_filter["workspace_id"]   = data.workspace_id
-    if data.workspace_type: match_filter["workspace_type"] = data.workspace_type
+    if wid:   
+        match_filter["workspace_id"]   = wid
+        payload["workspace_id"] = wid
+    if wtype: 
+        match_filter["workspace_type"] = wtype
+        payload["workspace_type"] = wtype
+        
     await db.billing_subscriptions.update_one(
         match_filter,
         {"$set": payload},
         upsert=True
     )
     return {"message": "Subscription setup saved"}
+
+@router.delete("/payment-method")
+async def delete_payment_method(
+    workspace_id: Optional[str] = None,
+    workspace_type: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Deletes the payment method and card details from the current subscription setup."""
+    if db is None:
+        raise HTTPException(status_code=503, detail="Database not initialised")
+    
+    user_id = current_user.get("id")
+    match_filter = {"user_id": user_id}
+    if workspace_id:   match_filter["workspace_id"]   = workspace_id
+    if workspace_type: match_filter["workspace_type"] = workspace_type
+    
+    await db.billing_subscriptions.update_one(
+        match_filter,
+        {"$unset": {"payment_method": "", "card_last4": "", "card_expiry": "", "paypal_order_id": ""}}
+    )
+    return {"message": "Payment method deleted successfully"}
+
+@router.get("/page-details")
+async def get_page_details(
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """Unified endpoint to fetch summary, billing details, and subscription setup in one call."""
+    if db is None:
+        raise HTTPException(status_code=503, detail="Database not initialised")
+        
+    try:
+        workspace = get_workspace_context(request)
+        workspace_id = workspace['workspace_id']
+        workspace_type = workspace['workspace_type']
+        
+        # Fetch summary (which hits db.runs, db.users/orgs, etc)
+        summary = await billing_service.get_billing_summary(workspace_id, workspace_type)
+        
+        # Fetch billing details (manual address)
+        user_id = current_user.get("id")
+        docs_query = {"user_id": user_id, "workspace_id": workspace_id, "workspace_type": workspace_type}
+        
+        details_doc = await db.billing_details.find_one(docs_query, {"_id": 0, "user_id": 0})
+        # fallback to personal user details if workspace specific doesn't exist
+        if not details_doc and workspace_type != "personal":
+             details_doc = await db.billing_details.find_one({"user_id": user_id}, {"_id": 0, "user_id": 0})
+             
+        # Fetch subscription setup (payment methods, plan active, etc)
+        sub_doc = await db.billing_subscriptions.find_one(docs_query, {"_id": 0, "user_id": 0})
+        if not sub_doc and workspace_type != "personal":
+             sub_doc = await db.billing_subscriptions.find_one({"user_id": user_id}, {"_id": 0, "user_id": 0})
+             
+        return {
+            "summary": summary,
+            "billing_details": details_doc or {},
+            "subscription": sub_doc or {}
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+class PromoValidateRequest(BaseModel):
+    code: str
+
+@router.post("/promo/validate")
+async def validate_promo_code(
+    req: PromoValidateRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    from datetime import datetime, timezone
+    """Validates user-submitted promo code, updates click analytics, and returns attached offers."""
+    if db is None:
+        raise HTTPException(status_code=503, detail="Database not initialised")
+        
+    code = req.code.strip().upper()
+    
+    # Track the 'click' attempt directly 
+    await db.affiliate_links.update_one(
+        {"code": code},
+        {"$inc": {"clicks": 1}}
+    )
+    
+    link = await db.affiliate_links.find_one({"code": code}, {"_id": 0})
+    if not link:
+        # Fallback: check if 'code' matches a username (case-insensitive)
+        # We use the raw input for username matching to be more natural
+        raw_code = req.code.strip()
+        user_match = await db.users.find_one({"username": {"$regex": f"^{raw_code}$", "$options": "i"}})
+        if user_match:
+            # Return a standardized referral object for user-to-user referrals
+            return {
+                "code": user_match['username'],
+                "type": "referral",
+                "commission_rate": 0.20,  # Standard 20% commission for user referrals
+                "attached_offers": [
+                    {"type": "addon", "id": "platform_credits", "qty": 5.0} # $5 free credit
+                ],
+                "is_active": True,
+                "owner_user_id": user_match.get("id")
+            }
+        raise HTTPException(status_code=404, detail="Invalid promo code")
+        
+    # Check expiry
+    expiry = link.get("expiry_date")
+    if expiry:
+        try:
+            if datetime.now(timezone.utc) > datetime.fromisoformat(expiry):
+                raise HTTPException(status_code=400, detail="Promo code has expired")
+        except ValueError:
+            pass # Ignore malformed dates
+            
+    return {
+        "valid": True,
+        "code": link.get("code"),
+        "commission_rate": link.get("commission_rate"),
+        "attached_offers": link.get("attached_offers", []),
+        "applicable_plans": link.get("applicable_plans", []),
+        "expiry_date": link.get("expiry_date")
+    }
 
 # ── PayPal Integration ───────────────────────────────────────────────────────
 
@@ -241,15 +408,46 @@ async def paypal_capture_order(
         print(f"PayPal Capture Order Error: {str(e)}\n{error_tb}")
         raise HTTPException(status_code=500, detail=f"Failed to capture PayPal order: {str(e)}")
 
+@router.post("/upgrade/confirm")
+async def upgrade_confirm(
+    req: UpgradeConfirmRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    try:
+        user_id = current_user.get("id")
+        result = await billing_service.apply_zero_dollar_upgrade(
+            user_id,
+            req.workspace_id,
+            req.workspace_type,
+            req.plan_data
+        )
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        import traceback
+        error_tb = traceback.format_exc()
+        print(f"Upgrade Confirm Error: {str(e)}\n{error_tb}")
+        raise HTTPException(status_code=500, detail=f"Failed to confirm upgrade: {str(e)}")
+
 @router.get("/invoices")
 async def get_invoices(
     request: Request,
+    page: int = 1,
+    limit: int = 10,
+    search: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
     try:
         workspace = get_workspace_context(request)
-        invoices = await billing_service.get_invoices(workspace['workspace_id'], workspace['workspace_type'])
-        return invoices
+        result = await billing_service.get_invoices(
+            workspace['workspace_id'], 
+            workspace['workspace_type'], 
+            page, 
+            limit,
+            search
+        )
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -293,3 +491,85 @@ async def get_invoice_pdf(
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Failed to generate PDF: {str(e)}")
+
+@router.get("/pincode-lookup")
+async def pincode_lookup(
+    country_code: str,
+    pincode: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Multi-provider proxy for pincode lookup with universal fallback."""
+    try:
+        # 1. Try Zippopotam (Good for Global)
+        zip_url = f"https://api.zippopotam.us/{country_code}/{pincode}"
+        try:
+            r = requests.get(zip_url, timeout=3)
+            if r.status_code == 200:
+                return r.json()
+        except Exception:
+            pass
+
+        # 2. Level 2: Provider-specific fallbacks
+        if country_code.upper() == 'IN':
+            # PostOffice IN is dedicated for India
+            india_url = f"https://api.postalpincode.in/pincode/{pincode}"
+            try:
+                r = requests.get(india_url, timeout=3)
+                if r.status_code == 200:
+                    data = r.json()
+                    if data and data[0]['Status'] == 'Success':
+                        po = data[0]['PostOffice'][0]
+                        return {
+                            "post code": pincode,
+                            "country": "India",
+                            "country abbreviation": "IN",
+                            "places": [{
+                                "place name": po['Name'],
+                                "longitude": "",
+                                "state": po['State'],
+                                "state abbreviation": "",
+                                "latitude": ""
+                            }]
+                        }
+            except Exception:
+                pass
+
+        # 3. Universal Fallback: Nominatim (OpenStreetMap)
+        # Covers almost everything global if other sources fail
+        osm_url = f"https://nominatim.openstreetmap.org/search"
+        params = {
+            "postalcode": pincode,
+            "country": country_code,
+            "format": "jsonv2",
+            "addressdetails": 1,
+            "limit": 1
+        }
+        headers = {
+            "User-Agent": "Scrapi-App-Billing-Lookup/1.0 (contact@scrapi.custom)"
+        }
+        try:
+            r = requests.get(osm_url, params=params, headers=headers, timeout=5)
+            if r.status_code == 200:
+                data = r.json()
+                if data:
+                    addr = data[0].get('address', {})
+                    # Try to find a sensible 'place name'
+                    city = addr.get('city') or addr.get('town') or addr.get('village') or addr.get('suburb') or addr.get('municipality')
+                    return {
+                        "post code": pincode,
+                        "country": addr.get('country') or "",
+                        "country abbreviation": addr.get('country_code', '').upper(),
+                        "places": [{
+                            "place name": city or addr.get('county') or "",
+                            "longitude": data[0].get('lon', ''),
+                            "state": addr.get('state') or "",
+                            "state abbreviation": addr.get('ISO3166-2-lvl4', '').split('-')[-1],
+                            "latitude": data[0].get('lat', '')
+                        }]
+                    }
+        except Exception:
+            pass
+
+        return {"places": []}
+    except Exception as e:
+        return {"error": str(e), "places": []}

@@ -45,10 +45,11 @@ const GlobalModal = ({
   // Size configurations
   const sizeClasses = {
     sm: 'max-w-md',
+    xs: 'max-w-xl',
     md: 'max-w-2xl',
     lg: 'max-w-4xl',
     xl: 'max-w-6xl',
-    full: 'max-w-[95vw]'
+    full: 'w-screen h-screen max-w-none rounded-none' // True fullscreen matching Scrapi Out-Of-Layout modals
   };
 
   const handleBackdropClick = (e) => {
@@ -61,33 +62,44 @@ const GlobalModal = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black/70 flex items-center justify-center z-[10000] p-4 backdrop-blur-[2px]"
+      className={`fixed inset-0 bg-black/70 flex items-center justify-center z-[10000] backdrop-blur-[2px] animate-in fade-in duration-300 ${size === 'full' ? 'p-0' : 'p-4'}`}
       onClick={handleBackdropClick}
       data-testid={`${modalId}-backdrop`}
     >
       <div
-        className={`w-full ${sizeClasses[size]} rounded-xl shadow-2xl bg-white dark:bg-[#0F1014] border border-gray-200 dark:border-white/10 ${className} overflow-hidden`}
+        className={`w-full animate-scrapi-modal-enter ${sizeClasses[size]} ${size !== 'full' ? 'rounded-xl shadow-2xl overflow-hidden' : ''} bg-white dark:bg-[#0F1014] border border-gray-200 dark:border-white/10 ${className} flex flex-col`}
         onClick={(e) => e.stopPropagation()}
         data-testid={`${modalId}-container`}
       >
         {/* Header */}
         {(title || customHeader || showCloseButton) && (
           <div
-            className="flex items-center justify-between px-5 py-3 border-b border-gray-200 dark:border-white/10"
+            className={`flex items-center justify-between px-5 py-3 border-b border-gray-200 dark:border-white/10 ${size === 'full' ? 'relative' : ''}`}
           >
-            {customHeader ? (
-              customHeader
-            ) : (
-              <h2
-                className="text-[17px] font-bold text-gray-900 dark:text-gray-50"
-              >
-                {title}
-              </h2>
+            {/* Full screen Logo on the left */}
+            {size === 'full' && (
+              <div className="absolute left-6 flex items-center gap-2">
+                <img src="/logo.png" alt="Logo" className="w-5 h-5 object-contain" />
+                <span className="font-bold text-foreground text-[16px] tracking-tight">Scrapi</span>
+              </div>
             )}
+
+            <div className={`flex-1 ${size === 'full' ? 'flex justify-center' : ''}`}>
+              {customHeader ? (
+                customHeader
+              ) : (
+                <h2
+                  className={`text-[17px] font-bold text-gray-900 dark:text-gray-50 ${size === 'full' ? 'text-center' : ''}`}
+                >
+                  {title}
+                </h2>
+              )}
+            </div>
+
             {showCloseButton && (
               <button
                 onClick={closeModal}
-                className="p-1 rounded transition-colors text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="p-1 rounded transition-colors text-muted-foreground hover:bg-muted hover:text-foreground relative z-10"
                 data-testid={`${modalId}-close-button`}
               >
                 <X className="w-4 h-4" />
@@ -97,7 +109,7 @@ const GlobalModal = ({
         )}
 
         {/* Content */}
-        <div className={contentClassName}>
+        <div className={`${contentClassName} ${size === 'full' ? 'flex-1 overflow-y-auto' : ''}`}>
           {children}
         </div>
 

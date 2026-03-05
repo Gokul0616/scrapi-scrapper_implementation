@@ -29,21 +29,21 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, lin
 const FeaturesSection: React.FC = () => {
     const features: FeatureCardProps[] = [
         {
-            icon: 'https://apify.com/img/homepage/marketplace.svg',
+            icon: '/logo.png',
             title: 'Ready-to-use Scrapers',
             description: 'Access powerful prebuilt scrapers for Google Maps, Amazon, SEO analysis, and more. Start extracting data in minutes.',
             linkText: 'Explore scrapers',
             linkHref: '#',
         },
         {
-            icon: 'https://apify.com/img/homepage/platform.svg',
+            icon: '/logo.png',
             title: 'Scalable Infrastructure',
             description: 'Built on robust cloud infrastructure with automatic scaling, proxy rotation, and unblocking capabilities.',
             linkText: 'Learn more',
             linkHref: '#',
         },
         {
-            icon: 'https://apify.com/img/homepage/professional-services.svg',
+            icon: '/logo.png',
             title: 'Developer-friendly API',
             description: 'Integrate scraping into your workflow with our RESTful API, webhooks, and comprehensive documentation.',
             linkText: 'View API docs',

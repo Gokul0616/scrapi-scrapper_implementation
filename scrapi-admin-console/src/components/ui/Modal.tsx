@@ -44,61 +44,61 @@ export const Modal: React.FC<ModalProps> = ({
 
   const variantConfig = {
     primary: {
-      btn: 'bg-[#ec7211] hover:bg-[#eb5f07] text-white border-transparent', // AWS Orange
+      btn: 'bg-blue-600 hover:bg-blue-700 text-white border-transparent',
       icon: null
     },
     danger: {
-      btn: 'bg-[#ec7211] hover:bg-[#eb5f07] text-white border-transparent', // AWS typically uses Orange for actions, even destructive ones, unless critical
-      icon: <AlertTriangle className="h-5 w-5 text-[#d13212] mr-2" /> // Red icon for danger context
+      btn: 'bg-red-600 hover:bg-red-700 text-white border-transparent',
+      icon: <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
     },
     warning: {
-      btn: 'bg-[#ec7211] hover:bg-[#eb5f07] text-white border-transparent',
-      icon: <AlertTriangle className="h-5 w-5 text-[#ec7211] mr-2" />
+      btn: 'bg-yellow-600 hover:bg-yellow-700 text-white border-transparent',
+      icon: <AlertTriangle className="h-5 w-5 text-yellow-500 mr-2" />
     },
     success: {
-      btn: 'bg-[#ec7211] hover:bg-[#eb5f07] text-white border-transparent',
-      icon: <CheckCircle className="h-5 w-5 text-[#1d8102] mr-2" />
+      btn: 'bg-green-600 hover:bg-green-700 text-white border-transparent',
+      icon: <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
     }
   };
 
   const style = variantConfig[variant];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-24" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 animate-in fade-in duration-300" aria-labelledby="modal-title" role="dialog" aria-modal="true">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-[#16191f] bg-opacity-50 transition-opacity backdrop-blur-[1px]"
+        className="fixed inset-0 bg-black/70 backdrop-blur-[2px]"
         onClick={() => !isLoading && onClose()}
       />
 
       {/* Modal Content */}
-      <div className="relative w-full max-w-lg bg-white shadow-xl rounded-2xl transform transition-all flex flex-col max-h-[90vh]">
+      <div className="relative w-full max-w-2xl bg-card shadow-2xl rounded-xl animate-scrapi-modal-enter flex flex-col max-h-[90vh] border border-border overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#eaeded] bg-[#fdfdfd] rounded-t-2xl">
-          <h3 className="text-lg font-bold text-[#16191f] flex items-center" id="modal-title">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-card rounded-t-xl">
+          <h3 className="text-[17px] font-bold text-foreground flex items-center" id="modal-title">
             {style.icon}
             {title}
           </h3>
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="text-[#545b64] hover:text-[#16191f] focus:outline-none transition-colors p-1"
+            className="p-1 rounded transition-colors text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <span className="sr-only">Close</span>
-            <X className="h-5 w-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="px-6 py-6 overflow-y-auto text-sm text-[#16191f] leading-relaxed">
+        <div className="px-5 py-6 overflow-y-auto text-sm text-foreground leading-relaxed">
           {children}
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-[#fdfdfd] border-t border-[#eaeded] flex justify-end gap-3 rounded-b-2xl">
+        <div className="px-5 py-3 bg-muted/30 border-t border-border flex justify-end gap-3 rounded-b-xl">
           <button
             type="button"
-            className="px-4 py-1.5 text-sm font-bold text-[#16191f] bg-white border border-[#545b64] rounded-sm hover:bg-[#f2f3f3] hover:border-[#16191f] focus:outline-none focus:ring-2 focus:ring-[#0073bb] focus:ring-offset-1 transition-all"
+            className="px-4 py-1.5 text-sm font-semibold text-foreground bg-card border border-border rounded hover:bg-muted focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-all"
             onClick={onClose}
             disabled={isLoading}
           >
@@ -106,7 +106,7 @@ export const Modal: React.FC<ModalProps> = ({
           </button>
           <button
             type="button"
-            className={`px-4 py-1.5 text-sm font-bold rounded-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0073bb] focus:ring-offset-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${style.btn}`}
+            className={`px-4 py-1.5 text-sm font-semibold rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${style.btn}`}
             onClick={onConfirm}
             disabled={isLoading}
           >

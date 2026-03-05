@@ -41,6 +41,9 @@ const UpgradeCheckout = () => {
     // Saved setup fetched from backend (used for restore prompt)
     const [savedSetup, setSavedSetup] = useState(null);
     const [configs, setConfigs] = useState({ plans: {}, addons: {} });
+    const [currentPlanRank, setCurrentPlanRank] = useState(-1);
+    const [currentPlanId, setCurrentPlanId] = useState('free');
+    const [currentPlanPeriod, setCurrentPlanPeriod] = useState('monthly');
 
     // ── Fetch billing configuration on mount ──────────────────────────────────
     useEffect(() => {
@@ -52,8 +55,40 @@ const UpgradeCheckout = () => {
                 console.error("Failed to fetch billing configs:", err);
             }
         };
+
+        const fetchUserPlan = async () => {
+            // In the frontend workspace context, currentWorkspace dictates personal or organization tier
+            try {
+                const token = localStorage.getItem('token');
+                if (token && currentWorkspace) {
+                    const billingRes = await axios.get(`${API}/billing/summary`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+
+                    const userPlanId = billingRes.data?.plan?.toLowerCase() || 'free';
+                    setCurrentPlanId(userPlanId);
+                    setCurrentPlanPeriod(billingRes.data?.plan_period || 'monthly');
+
+                    // Rank mapping to lock downgrades 
+                    const planHierarchy = {
+                        'free': 0,
+                        'starter': 1,
+                        'growth': 2,
+                        'scale': 3,
+                        'enterprise': 4
+                    };
+                    const currentRank = planHierarchy[userPlanId] || 0;
+                    setCurrentPlanRank(currentRank);
+
+                }
+            } catch (err) {
+                console.error("Failed to fetch user plan summary:", err);
+            }
+        };
+
         fetchConfigs();
-    }, []);
+        if (currentWorkspace) fetchUserPlan();
+    }, [currentWorkspace]);
 
     const goNext = () => setCurrentStep(s => Math.min(s + 1, STEPS.length - 1));
     const goBack = () => setCurrentStep(s => Math.max(s - 1, 0));
@@ -143,7 +178,10 @@ const UpgradeCheckout = () => {
             setIsAnnual,
             configs,
             addonCost,
-            addons
+            addons,
+            currentPlanId,
+            currentPlanRank,
+            currentPlanPeriod
         };
 
         switch (currentStep) {
@@ -175,7 +213,7 @@ const UpgradeCheckout = () => {
                             alt="Scrapi"
                             className={`h-6 w-auto object-contain ${isDark ? 'invert brightness-200' : ''}`}
                         />
-                        <span className="text-sm font-bold text-foreground tracking-tight">Scrapi</span>
+                        <span className="text-lg font-semibold text-foreground tracking-tight">Scrapi</span>
                     </div>
                     <h1 className="text-[15px] font-semibold text-foreground absolute left-1/2 -translate-x-1/2 pointer-events-none">
                         New subscription
@@ -229,7 +267,7 @@ const UpgradeCheckout = () => {
             {renderStep()}
 
             {/* ── Footer ───────────────────────────────────────────────────── */}
-            <div className="flex-shrink-0 flex justify-center items-center py-3 border-t border-border bg-background">
+            <div className="flex-shrink-0 flex justify-center items-center py-3  bg-background">
                 <p className="text-sm text-muted-foreground">
                     Need help?{' '}
                     <a href="mailto:support@scrapi.io" className="text-blue-500 hover:text-blue-600 font-medium transition-colors">Contact support</a>

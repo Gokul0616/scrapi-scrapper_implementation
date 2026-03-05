@@ -14,7 +14,7 @@ const LearnCodeConnect: React.FC = () => {
     const cards: Card[] = [
         {
             title: 'Learn.',
-            image: 'https://apify.com/_next/image?url=%2Fimg%2Fhomepage%2Facademy.webp&w=640&q=75',
+            image: '/logo.png',
             heading: 'Documentation',
             description: 'Comprehensive guides for beginners and experts. Learn about web scraping with our detailed documentation.',
             link: 'View docs',
@@ -22,7 +22,7 @@ const LearnCodeConnect: React.FC = () => {
         },
         {
             title: 'Code.',
-            image: 'https://apify.com/_next/image?url=%2Fimg%2Fhomepage%2Ftemplates.webp&w=640&q=75',
+            image: '/logo.png',
             heading: 'API Reference',
             description: 'Python and JavaScript examples to quick-start your web scraping integration with Scrapi.',
             link: 'View API',
@@ -30,7 +30,7 @@ const LearnCodeConnect: React.FC = () => {
         },
         {
             title: 'Connect.',
-            image: 'https://apify.com/_next/image?url=%2Fimg%2Fhomepage%2Fdiscord.webp&w=640&q=75',
+            image: '/logo.png',
             heading: 'Get Support',
             description: 'Need help? Our support team is here to assist you with any questions or issues.',
             link: 'Contact us',

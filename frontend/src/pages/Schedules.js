@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import ErrorDisplay, { showError } from '../components/ErrorDisplay';
 import AlertModal from '../components/AlertModal';
+import Checkbox from '../components/ui/CustomCheckbox';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
@@ -449,11 +450,9 @@ const Schedules = () => {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-4 py-3">
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={selectedSchedules.length === filteredSchedules.length && filteredSchedules.length > 0}
                       onChange={toggleSelectAll}
-                      className="w-4 h-4 text-black border-gray-300 rounded focus:ring-gray-800"
                     />
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -483,11 +482,9 @@ const Schedules = () => {
                 {filteredSchedules.map((schedule) => (
                   <tr key={schedule.id} className="hover:bg-gray-50">
                     <td className="px-4 py-4">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={selectedSchedules.includes(schedule.id)}
                         onChange={() => toggleSelectSchedule(schedule.id)}
-                        className="w-4 h-4 text-black border-gray-300 rounded focus:ring-gray-800"
                       />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -748,11 +745,9 @@ const DynamicInputField = ({ fieldKey, schema, value, onChange, required }) => {
   if (fieldType === 'boolean') {
     return (
       <div className="flex items-start gap-3">
-        <input
-          type="checkbox"
+        <Checkbox
           checked={value ?? defaultValue ?? false}
           onChange={(e) => onChange(e.target.checked)}
-          className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
         />
         <div>
           <label className="text-sm font-medium text-gray-700">
@@ -1104,12 +1099,10 @@ const ScheduleModal = ({ isEdit, schedule, actors, onClose, onSuccess }) => {
           </div>
 
           <div className="flex items-center">
-            <input
-              type="checkbox"
+            <Checkbox
               id="is_enabled"
               checked={formData.is_enabled}
               onChange={(e) => setFormData({ ...formData, is_enabled: e.target.checked })}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
             <label htmlFor="is_enabled" className="ml-2 text-sm text-gray-700">
               Enable schedule immediately

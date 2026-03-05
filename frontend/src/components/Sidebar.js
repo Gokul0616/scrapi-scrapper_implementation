@@ -56,7 +56,7 @@ const Sidebar = () => {
   const { theme, toggleTheme } = useTheme();
   const { openModal, closeModal, isModalOpen, currentModal } = useModal();
   const { unreadCount } = useNotifications();
-  const { currentWorkspace } = useWorkspace();
+  const { currentWorkspace, selectWorkspace } = useWorkspace();
   const navigate = useNavigate();
   const location = useLocation();
   const [billingData, setBillingData] = useState(null);
@@ -623,12 +623,34 @@ const Sidebar = () => {
                 </div>
 
                 {/* Upgrade Button */}
-                <button
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors bg-card text-card-foreground hover:bg-muted border border-border"
-                >
-                  <span>Upgrade to Starter</span>
-                  <ChevronRight className="w-4 h-4" />
-                </button>
+                {(() => {
+                  const currentPlan = billingData?.plan?.toLowerCase() || 'free';
+                  if (currentPlan === 'enterprise') return null;
+
+                  const upgrades = {
+                    'free': 'Starter',
+                    'starter': 'Growth',
+                    'growth': 'Scale',
+                    'scale': 'Enterprise'
+                  };
+
+                  const targetPlan = upgrades[currentPlan] || 'Starter';
+
+                  return (
+                    <button
+                      onClick={() => {
+                        if (currentWorkspace) {
+                          selectWorkspace(currentWorkspace);
+                        }
+                        navigate('/upgrade-checkout');
+                      }}
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors bg-card text-card-foreground hover:bg-muted border border-border"
+                    >
+                      <span>Upgrade to {targetPlan}</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  );
+                })()}
 
                 {/* Scrapi Logo */}
                 <div className="flex items-center justify-between mt-2.5 pt-2.5 border-t border-border">

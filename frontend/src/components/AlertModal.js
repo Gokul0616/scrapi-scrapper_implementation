@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from './ui/button';
 import {
   AlertCircle,
@@ -90,27 +91,27 @@ const AlertModal = ({
   const typeConfig = {
     success: {
       icon: CheckCircle2,
-      iconBgColor: 'bg-green-50',
-      iconColor: 'text-green-600',
-      confirmBgColor: 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
+      iconBgColor: 'bg-green-500/10',
+      iconColor: 'text-green-500',
+      confirmBgColor: 'bg-blue-600 hover:bg-blue-700'
     },
     error: {
       icon: XCircle,
-      iconBgColor: 'bg-red-50',
-      iconColor: 'text-red-600',
-      confirmBgColor: 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800'
+      iconBgColor: 'bg-destructive/10',
+      iconColor: 'text-destructive',
+      confirmBgColor: 'bg-destructive hover:bg-destructive/90'
     },
     warning: {
       icon: AlertTriangle,
-      iconBgColor: 'bg-orange-50',
-      iconColor: 'text-orange-600',
-      confirmBgColor: 'bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800'
+      iconBgColor: 'bg-orange-500/10',
+      iconColor: 'text-orange-500',
+      confirmBgColor: 'bg-orange-600 hover:bg-orange-700'
     },
     info: {
       icon: Info,
-      iconBgColor: 'bg-gray-50',
-      iconColor: 'text-gray-700',
-      confirmBgColor: 'bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800'
+      iconBgColor: 'bg-blue-500/10',
+      iconColor: 'text-blue-500',
+      confirmBgColor: 'bg-blue-600 hover:bg-blue-700'
     }
   };
 
@@ -139,91 +140,80 @@ const AlertModal = ({
     }
   };
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 bg-black/70 flex items-center justify-center z-[100] backdrop-blur-[2px]"
+      className="fixed inset-0 w-screen h-screen bg-black/70 flex items-center justify-center z-[100000] backdrop-blur-[2px] p-4 m-0 animate-in fade-in duration-300"
       onClick={handleBackdropClick}
     >
       <div
-        className={`bg-white rounded-xl shadow-2xl p-6 ${modalSizeClass} w-full mx-4 animate-in fade-in zoom-in duration-200 border border-gray-200`}
+        className={`w-full ${modalSizeClass} bg-white dark:bg-[#0F1014] rounded-xl shadow-2xl overflow-hidden border border-gray-200 dark:border-white/10 animate-scrapi-modal-enter`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start gap-4">
-          {/* Icon */}
-          <div className={`flex-shrink-0 w-12 h-12 rounded-full ${config.iconBgColor} flex items-center justify-center ring-2 ring-offset-2 ${type === 'success' ? 'ring-green-200' :
-              type === 'error' ? 'ring-red-200' :
-                type === 'warning' ? 'ring-orange-200' :
-                  'ring-gray-200'
-            }`}>
-            <IconComponent className={`w-6 h-6 ${config.iconColor}`} />
-          </div>
-
-          {/* Content */}
-          <div className="flex-1">
-            {/* Title */}
-            {title && (
-              <h3 className="text-lg font-bold text-gray-900 mb-2">
-                {title}
-              </h3>
+        {/* Header (Optional based on title) */}
+        {title && (
+          <div className="px-4 py-2 border-b border-gray-200 dark:border-white/10 flex items-center justify-between">
+            <h2 className="text-[15px] font-bold text-gray-900 dark:text-gray-50">
+              {title}
+            </h2>
+            {!showCancel && (
+              <button
+                onClick={onClose}
+                className="p-1 rounded transition-colors text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             )}
+          </div>
+        )}
 
+        <div className="px-4 py-3.5">
+          {/* Content */}
+          <div className="min-w-0">
             {/* Message */}
             {message && (
-              <p className="text-sm text-gray-700 mb-4 leading-relaxed">
+              <p className="text-[13.5px] text-gray-700 dark:text-gray-300 leading-relaxed font-semibold">
                 {message}
               </p>
             )}
 
             {/* Details Section */}
             {details.length > 0 && (
-              <div className="bg-gray-50 rounded-lg p-4 mb-4 space-y-3 border border-gray-200">
+              <div className="mt-2.5 bg-muted/50 rounded-lg p-2.5 space-y-1.5 border border-border">
                 {details.map((detail, index) => (
                   <div key={index}>
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">
                       {detail.label}
                     </p>
-                    <p className="text-sm font-mono text-gray-900 break-all bg-white px-2 py-1 rounded border border-gray-200">
+                    <p className="text-[12px] font-mono text-foreground break-all bg-background px-2 py-0.5 rounded border border-border">
                       {detail.value}
                     </p>
                   </div>
                 ))}
               </div>
             )}
-
-            {/* Action Buttons */}
-            <div className="flex items-center gap-3 justify-end mt-6">
-              {showCancel && (
-                <Button
-                  onClick={onClose}
-                  variant="outline"
-                  size="sm"
-                  className="px-5 py-2 border-gray-300 hover:bg-gray-50 text-gray-700 font-medium"
-                >
-                  {cancelText}
-                </Button>
-              )}
-              <Button
-                onClick={handleConfirm}
-                size="sm"
-                className={`px-5 py-2 ${confirmButtonClass || config.confirmBgColor} text-white font-medium shadow-md hover:shadow-lg transition-all`}
-              >
-                {confirmText}
-              </Button>
-            </div>
           </div>
 
-          {/* Close button (optional, for non-confirmation modals) */}
-          {!showCancel && (
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2 justify-end mt-4">
+            {showCancel && (
+              <button
+                onClick={onClose}
+                className="px-4 py-2 text-[13px] font-semibold text-foreground hover:bg-muted/50 rounded-lg transition-colors"
+              >
+                {cancelText}
+              </button>
+            )}
             <button
-              onClick={onClose}
-              className="flex-shrink-0 text-gray-400 hover:text-gray-700 transition-colors hover:bg-gray-100 rounded-full p-1"
+              onClick={handleConfirm}
+              className={`px-5 py-2 text-[13px] font-semibold text-white rounded-lg transition-colors shadow-sm active:scale-95 ${confirmButtonClass || config.confirmBgColor}`}
             >
-              <X className="w-5 h-5" />
+              {confirmText}
             </button>
-          )}
+          </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

@@ -173,7 +173,8 @@ const PaymentStep = ({
         : cvc.length >= 3;
 
     const cardComplete = cardNumberComplete && expiryValid && cvcComplete;
-    const canContinue = method === METHODS.PAYPAL || cardComplete;
+    // Disabling card payment progression temporarily
+    const canContinue = method === METHODS.PAYPAL;
 
     // ── Handlers ──────────────────────────────────────────────────────────────
     const handleCardNumberChange = (e) => {
@@ -249,9 +250,24 @@ const PaymentStep = ({
                                 <span className={`text-sm font-medium transition-colors ${method === METHODS.CARD ? 'text-blue-600' : 'text-foreground'}`}>Card</span>
                             </div>
 
-                            <div className={`grid transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${method === METHODS.CARD ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                            <div className={`grid transition-all duration-250 ease-[cubic-bezier(0.4,0,0.2,1)] ${method === METHODS.CARD ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
                                 <div className="overflow-hidden">
                                     <div className="border-t border-border px-4 py-5 space-y-4 bg-muted/20 dark:bg-muted/10">
+
+                                        {/* ── Temporary Card Unavailability Notice ── */}
+                                        <div className="rounded-xl border border-rose-200/60 bg-gradient-to-br from-rose-50 to-red-50/50 dark:border-rose-500/20 dark:from-rose-500/10 dark:to-red-500/5 p-3 shadow-sm mx-1">
+                                            <div className="flex items-start gap-3">
+                                                <div className="bg-rose-100 dark:bg-rose-500/20 p-1.5 rounded-full text-rose-600 dark:text-rose-400 shadow-sm border border-rose-200/50 dark:border-rose-500/30">
+                                                    <AlertCircle className="w-3.5 h-3.5" strokeWidth={2.5} />
+                                                </div>
+                                                <div className="flex-1 pt-0.5">
+                                                    <h4 className="text-[13px] font-semibold text-rose-900 dark:text-rose-200 tracking-tight">Card processing temporarily paused</h4>
+                                                    <p className="text-xs text-rose-800/80 dark:text-rose-300/80 mt-1 leading-relaxed">
+                                                        We are optimizing our secure payment gateways. Please use <button type="button" onClick={() => setMethod(METHODS.PAYPAL)} className="font-semibold underline decoration-rose-300 hover:decoration-rose-500 dark:decoration-rose-600 dark:hover:decoration-rose-400 underline-offset-4 hover:text-rose-950 dark:hover:text-rose-100 transition-all">PayPal</button> to complete your checkout today (Credit & Debit cards are fully supported).
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
 
                                         {/* ── Credit / Debit toggle ──────────── */}
                                         <div>
