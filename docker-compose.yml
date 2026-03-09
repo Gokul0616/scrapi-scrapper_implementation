@@ -1,0 +1,187 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: scrapi-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-password}
+      MONGO_INITDB_DATABASE: ${DB_NAME:-scrapi}
+    volumes:
+      - mongodb_data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - scrapi-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis - Message broker for Celery
+  redis:
+    image: redis:7-alpine
+    container_name: scrapi-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - scrapi-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: scrapi-backend
+    restart: unless-stopped
+    environment:
+      # MongoDB
+      MONGO_URL: mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASSWORD:-password}@mongodb:27017/${DB_NAME:-scrapi}?authSource=admin
+      DB_NAME: ${DB_NAME:-scrapi}
+      
+      # Redis / Celery
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: db+mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASSWORD:-password}@mongodb:27017/${DB_NAME:-scrapi}?authSource=admin
+      
+      # Security
+      SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
+      
+      # CORS
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost}
+      
+      # App Environment
+      APP_ENV: ${APP_ENV:-production}
+      
+      # Optional AI Services
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - scrapi-network
+    volumes:
+      - backend_logs:/app/logs
+
+  # Celery Worker - Processes scraping tasks
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: scrapi-celery-worker
+    restart: unless-stopped
+    command: celery -A celery_app worker --loglevel=info --queues=scraping --concurrency=2 -n worker@%h
+    environment:
+      # MongoDB
+      MONGO_URL: mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASSWORD:-password}@mongodb:27017/${DB_NAME:-scrapi}?authSource=admin
+      DB_NAME: ${DB_NAME:-scrapi}
+      
+      # Redis / Celery
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: db+mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASSWORD:-password}@mongodb:27017/${DB_NAME:-scrapi}?authSource=admin
+      
+      # Security
+      SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
+      
+      # App Environment
+      APP_ENV: ${APP_ENV:-production}
+      
+      # Playwright browsers path for containerized environment
+      PLAYWRIGHT_BROWSERS_PATH: /pw-browsers
+      
+      # Worker settings
+      CELERY_WORKER_CONCURRENCY: "2"
+    depends_on:
+      - backend
+      - redis
+      - mongodb
+    networks:
+      - scrapi-network
+    volumes:
+      - backend_logs:/app/logs
+    deploy:
+      replicas: ${CELERY_WORKER_REPLICAS:-2}
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 512M
+
+  # Flower - Celery Monitoring Dashboard
+  flower:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: scrapi-flower
+    restart: unless-stopped
+    command: celery -A celery_app flower --port=5555 --url_prefix=flower
+    environment:
+      # MongoDB
+      MONGO_URL: mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASSWORD:-password}@mongodb:27017/${DB_NAME:-scrapi}?authSource=admin
+      DB_NAME: ${DB_NAME:-scrapi}
+      
+      # Redis / Celery
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: db+mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASSWORD:-password}@mongodb:27017/${DB_NAME:-scrapi}?authSource=admin
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+      - celery-worker
+    networks:
+      - scrapi-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5555/flower/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # React Frontend (optional - for full-stack deployment)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: scrapi-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - scrapi-network
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+    profiles:
+      - fullstack  # Only start with: docker-compose --profile fullstack up
+
+volumes:
+  mongodb_data:
+    driver: local
+  redis_data:
+    driver: local
+  backend_logs:
+    driver: local
+
+networks:
+  scrapi-network:
+    driver: bridge

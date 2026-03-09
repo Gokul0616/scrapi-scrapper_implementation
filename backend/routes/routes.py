@@ -585,117 +585,6 @@ async def get_actors_used(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 # ============= Run Routes =============
-async def execute_scraping_job(run_id: str, actor_id: str, user_id: str, input_data: dict):
-    """Background task to execute scraping."""
-    try:
-        logger.info(f"🔧 Executing scraping job for run {run_id}")
-        logger.info(f"   Input data type: {type(input_data)}")
-        logger.info(f"   Input data: {input_data}")
-        
-        # Update run status to running
-        await db.runs.update_one(
-            {"id": run_id},
-            {
-                "$set": {
-                    "status": "running",
-                    "started_at": datetime.now(timezone.utc).isoformat()
-                }
-            }
-        )
-        
-        # Initialize scraper engine
-        engine = ScraperEngine(proxy_manager)
-        await engine.initialize()
-        
-        try:
-            # Get actor details
-            actor = await db.actors.find_one({"id": actor_id})
-            
-            results = []
-            
-            # Built-in scraper - use registry
-            scraper_registry = get_scraper_registry()
-            actor_name = actor.get('name') if actor else None
-            
-            if not actor_name:
-                raise ValueError("Actor not found or has no name")
-            
-            logger.info(f"   Looking for built-in scraper: {actor_name}")
-            scraper = scraper_registry.get_scraper(actor_name, engine)
-            
-            if not scraper:
-                logger.error(f"❌ No scraper found for: {actor_name}")
-                raise ValueError(f"No scraper registered for actor: {actor_name}")
-            
-            logger.info(f"✅ Found scraper: {type(scraper).__name__}")
-            logger.info(f"   Calling scraper.scrape() with input_data: {input_data}")
-            
-            # Progress callback for logging
-            async def progress_callback(message: str):
-                await db.runs.update_one(
-                    {"id": run_id},
-                    {"$push": {"logs": f"{datetime.now(timezone.utc).isoformat()}: {message}"}}
-                )
-                logger.info(f"Run {run_id}: {message}")
-            
-            # Execute built-in scraper
-            results = await scraper.scrape(input_data, progress_callback)
-            
-            # Create dataset and store results
-            from models import Dataset
-            dataset = Dataset(run_id=run_id, user_id=user_id, item_count=len(results))
-            dataset_doc = dataset.model_dump()
-            dataset_doc['created_at'] = dataset_doc['created_at'].isoformat()
-            await db.datasets.insert_one(dataset_doc)
-            
-            # Store dataset items
-            for result in results:
-                item = DatasetItem(run_id=run_id, data=result)
-                item_doc = item.model_dump()
-                item_doc['created_at'] = item_doc['created_at'].isoformat()
-                await db.dataset_items.insert_one(item_doc)
-            
-            # Calculate duration
-            run_doc = await db.runs.find_one({"id": run_id})
-            started_at = datetime.fromisoformat(run_doc['started_at'])
-            finished_at = datetime.now(timezone.utc)
-            duration = int((finished_at - started_at).total_seconds())
-            
-            # Update run as succeeded
-            await db.runs.update_one(
-                {"id": run_id},
-                {
-                    "$set": {
-                        "status": "succeeded",
-                        "finished_at": finished_at.isoformat(),
-                        "duration_seconds": duration,
-                        "results_count": len(results),
-                        "dataset_id": dataset.id
-                    }
-                }
-            )
-            
-            # Update actor runs count
-            await db.actors.update_one({"id": actor_id}, {"$inc": {"runs_count": 1}})
-            
-            logger.info(f"Run {run_id} completed successfully with {len(results)} results")
-        
-        finally:
-            await engine.cleanup()
-    
-    except Exception as e:
-        logger.error(f"Run {run_id} failed: {str(e)}")
-        await db.runs.update_one(
-            {"id": run_id},
-            {
-                "$set": {
-                    "status": "failed",
-                    "finished_at": datetime.now(timezone.utc).isoformat(),
-                    "error_message": str(e)
-                }
-            }
-        )
-
 @router.post("/runs", response_model=Run)
 async def create_run(
     run_data: RunCreate,
@@ -734,12 +623,9 @@ async def create_run(
     # Start scraping in parallel using task manager
     await task_manager.start_task(
         run.id,
-        execute_scraping_job(
-            run.id,
-            run_data.actor_id,
-            current_user['id'],
-            run_data.input_data
-        )
+        actor_id=run_data.actor_id,
+        user_id=current_user['id'],
+        input_data=run_data.input_data
     )
     
     logger.info(f"Run {run.id} queued. Currently running: {task_manager.get_running_count()} tasks")
@@ -1348,12 +1234,9 @@ async def global_chat(
                     # Use task manager for parallel execution
                     await task_manager.start_task(
                         run_id,
-                        execute_scraping_job(
-                            run_id,
-                            actor_id,
-                            current_user['id'],
-                            input_data
-                        )
+                        actor_id=actor_id,
+                        user_id=current_user['id'],
+                        input_data=input_data
                     )
                     logger.info(f"✓ Run {run_id} started by AI Agent. Active tasks: {task_manager.get_running_count()}")
                 else:
@@ -1369,12 +1252,9 @@ async def global_chat(
             # Use task manager for parallel execution
             await task_manager.start_task(
                 run_id,
-                execute_scraping_job(
-                    run_id,
-                    actor_id,
-                    current_user['id'],
-                    input_data
-                )
+                actor_id=actor_id,
+                user_id=current_user['id'],
+                input_data=input_data
             )
             logger.info(f"✓ Run {run_id} started by AI Agent. Active tasks: {task_manager.get_running_count()}")
         
@@ -1790,12 +1670,9 @@ async def run_schedule_now(
     from services.task_manager import task_manager
     await task_manager.start_task(
         run.id,
-        execute_scraping_job(
-            run.id,
-            schedule['actor_id'],
-            current_user['id'],
-            schedule['input_data']
-        )
+        actor_id=schedule['actor_id'],
+        user_id=current_user['id'],
+        input_data=schedule['input_data']
     )
     
     # Update schedule statistics for manual runs

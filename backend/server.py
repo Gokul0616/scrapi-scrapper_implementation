@@ -326,6 +326,13 @@ Extracts: URL, status code, title, meta description, meta keywords, canonical UR
         logger.info("✅ Scheduler service initialized successfully")
     except Exception as e:
         logger.error(f"❌ Failed to initialize scheduler: {str(e)}", exc_info=True)
+    
+    # Log Celery status
+    try:
+        from celery_app import celery_app
+        logger.info("✅ Celery app available - tasks will be processed by workers")
+    except Exception as e:
+        logger.warning(f"⚠️ Celery not available: {e}")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
@@ -338,6 +345,15 @@ async def shutdown_db_client():
         logger.info("✅ Scheduler stopped")
     except Exception as e:
         logger.warning(f"Failed to stop scheduler: {str(e)}")
+    
+    # Shutdown task manager
+    try:
+        from services import get_task_manager
+        task_manager = get_task_manager()
+        task_manager.shutdown()
+        logger.info("✅ Task manager shutdown")
+    except Exception as e:
+        logger.warning(f"Failed to shutdown task manager: {str(e)}")
     
     # Close MongoDB client
     client.close()

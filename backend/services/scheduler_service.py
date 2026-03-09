@@ -179,19 +179,15 @@ class SchedulerService:
             
             logger.info(f"✅ Created scheduled run {run.id} for schedule {schedule_id}")
             
-            # Import task manager and execute function
+            # Import task manager and start Celery-backed task
             from services.task_manager import task_manager
-            from routes.routes import execute_scraping_job
             
-            # Start the scraping task
+            # Start the scraping task via Celery
             await task_manager.start_task(
                 run.id,
-                execute_scraping_job(
-                    run.id,
-                    actor_id,
-                    user_id,
-                    input_data
-                )
+                actor_id=actor_id,
+                user_id=user_id,
+                input_data=input_data
             )
             
             # Update schedule with last run info
