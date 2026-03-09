@@ -11,9 +11,7 @@ export default defineConfig({
             'localhost',
             '.emergentagent.com',
         ],
-        hmr: {
-            clientPort: 443,
-        },
+        hmr: true,
         proxy: {
             '/api': {
                 target: "http://localhost:8001",

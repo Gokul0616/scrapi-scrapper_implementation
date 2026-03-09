@@ -162,7 +162,7 @@ const App: React.FC = () => {
     return (
         <Router>
             <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-gray-100 transition-colors duration-200">
-                <React.Suspense fallback={<LoadingScreen />}>
+                <React.Suspense fallback={<LoadingScreen text='Loading...!' />}>
                     <Routes>
                         <Route
                             path="/"
@@ -176,7 +176,6 @@ const App: React.FC = () => {
                         <Route path="*" element={<NotFound onOpenCookieSettings={handleOpenCookieSettings} />} />
                     </Routes>
                 </React.Suspense>
-
                 <ConsentPopup
                     onOpenSettings={handleOpenCookieSettings}
                     onAcceptAll={handleAcceptAllCookies}

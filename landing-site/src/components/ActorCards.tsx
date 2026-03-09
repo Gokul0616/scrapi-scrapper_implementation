@@ -33,7 +33,6 @@ const ActorCard: React.FC<ActorCardProps> = ({ actor }) => {
                         </p>
                     </div>
                 </div>
-
                 {/* Description */}
                 <p className="text-[13px] text-gray-600 dark:text-gray-300 line-clamp-3 leading-snug mt-1">
                     {actor.description}
@@ -49,10 +48,10 @@ const ActorCard: React.FC<ActorCardProps> = ({ actor }) => {
                             ? <img src={actor.authorAvatar} alt={actor.author} className="w-[18px] h-[18px] rounded-full object-cover shrink-0" />
                             : <span className="text-base leading-none shrink-0">{actor.authorAvatar}</span>
                         : <div className="w-[18px] h-[18px] rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-[9px] font-bold shrink-0">
-                            {(actor.author || 'U')[0].toUpperCase()}
+                            {(actor.author_name || 'U')[0].toUpperCase()}
                         </div>
                     }
-                    <span className="truncate max-w-[80px] text-gray-800 dark:text-gray-200">{actor.author}</span>
+                    <span className="truncate max-w-[80px] text-gray-800 dark:text-gray-200">{actor.author_name}</span>
                 </div>
 
                 {/* Metrics */}
@@ -64,7 +63,7 @@ const ActorCard: React.FC<ActorCardProps> = ({ actor }) => {
                     <span className="text-gray-300 dark:text-zinc-600">|</span>
                     <span className="flex items-center gap-1.5">
                         <Users className="w-3.5 h-3.5" />
-                        <span className="text-gray-800 dark:text-gray-200">{actor.users}</span>
+                        <span className="text-gray-800 dark:text-gray-200">{actor.runs_count || 0}</span>
                     </span>
                 </div>
             </div>

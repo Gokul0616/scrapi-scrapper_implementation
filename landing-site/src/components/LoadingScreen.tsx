@@ -1,68 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { Loader2 } from 'lucide-react';
 
-const LOADING_TEXTS = [
-    "Initializing Scrapi Engine...",
-    "Connecting to Proxy Network...",
-    "Loading Actor Configuration...",
-    "Preparing Data Pipelines...",
-    "Almost there..."
-];
+interface LoadingScreenProps {
+    text?: string;
+}
 
-const LoadingScreen: React.FC = () => {
-    const [textIndex, setTextIndex] = useState(0);
-    const [displayedText, setDisplayedText] = useState("");
-    const [isDeleting, setIsDeleting] = useState(false);
-
-    useEffect(() => {
-        const currentText = LOADING_TEXTS[textIndex];
-        const typeSpeed = isDeleting ? 30 : 50;
-        const pauseTime = 1500;
-
-        const timer = setTimeout(() => {
-            if (!isDeleting && displayedText === currentText) {
-                // Finished typing, wait before deleting
-                setTimeout(() => setIsDeleting(true), pauseTime);
-            } else if (isDeleting && displayedText === "") {
-                // Finished deleting, move to next text
-                setIsDeleting(false);
-                setTextIndex((prev) => (prev + 1) % LOADING_TEXTS.length);
-            } else {
-                // Typing or deleting
-                const nextText = isDeleting
-                    ? currentText.substring(0, displayedText.length - 1)
-                    : currentText.substring(0, displayedText.length + 1);
-                setDisplayedText(nextText);
-            }
-        }, typeSpeed);
-
-        return () => clearTimeout(timer);
-    }, [displayedText, isDeleting, textIndex]);
-
+const LoadingScreen: React.FC<LoadingScreenProps> = ({ text = "" }) => {
     return (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white dark:bg-black transition-colors duration-200">
-            <div className="relative flex items-center justify-center mb-8">
-                {/* Background Track */}
-                <div className="w-16 h-16 rounded-full border-[3px] border-gray-100 dark:border-zinc-800"></div>
+        <div className="flex-1 flex items-center justify-center min-h-[100vh]">
+            <div className="flex flex-col items-center">
+                <Loader2 className="w-12 h-12 animate-spin text-blue-500" />
 
-                {/* Active Spinner */}
-                <div className="absolute w-16 h-16 rounded-full border-[3px] border-transparent border-t-[#3083ED] animate-spin"></div>
-
-                {/* Centered Logo */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <img
-                        src="/logo.png"
-                        alt="Scrapi"
-                        className="w-7 h-7 object-contain dark:brightness-0 dark:invert"
-                    />
-                </div>
-            </div>
-
-            {/* Typing Text */}
-            <div className="h-6 flex items-center justify-center">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 font-mono">
-                    {displayedText}
-                    <span className="animate-pulse ml-1">|</span>
-                </p>
+                {text && (
+                    <p className="mt-4 text-sm font-medium text-gray-500 dark:text-gray-400">
+                        {text}
+                    </p>
+                )}
             </div>
         </div>
     );

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, MoreVertical, Shield, ShieldOff, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Search, Filter, MoreVertical, Shield, ShieldOff, X } from 'lucide-react';
 import type { User } from '../types';
 import { useAlert } from '../context/AlertContext';
 import { Modal } from '../components/ui/Modal';
+import DataTable from '../components/ui/DataTable';
+import type { Column } from '../components/ui/DataTable';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
 
@@ -30,45 +32,6 @@ const PLAN_OPTIONS = [
     { value: 'Enterprise', label: 'Enterprise' }
 ];
 
-// Table Skeleton
-const TableSkeleton = () => (
-    <div className="space-y-6 animate-pulse">
-        <div className="flex justify-between items-center mb-4">
-            <div className="h-8 w-48 bg-gray-200 rounded"></div>
-            <div className="h-9 w-24 bg-gray-200 rounded"></div>
-        </div>
-
-        <div className="bg-card shadow-sm rounded border border-border overflow-hidden">
-            {/* Toolbar Skeleton */}
-            <div className="p-4 border-b border-border flex flex-col sm:flex-row gap-4 justify-between items-center bg-muted/30">
-                <div className="h-9 w-full sm:w-96 bg-muted rounded"></div>
-                <div className="h-9 w-24 bg-muted rounded"></div>
-            </div>
-
-            {/* Table Header */}
-            <div className="bg-muted/30 px-6 py-3 border-b border-border flex gap-4">
-                {[1, 2, 3, 4, 5].map(i => (
-                    <div key={i} className="h-4 bg-muted rounded flex-1"></div>
-                ))}
-            </div>
-
-            {/* Rows */}
-            <div className="divide-y divide-border">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div key={i} className="px-6 py-4 flex gap-4 items-center">
-                        <div className="h-8 w-8 bg-muted rounded-full"></div>
-                        <div className="flex-1 space-y-2">
-                            <div className="h-4 w-32 bg-muted rounded"></div>
-                            <div className="h-3 w-48 bg-muted/50 rounded"></div>
-                        </div>
-                        <div className="h-6 w-20 bg-muted rounded-full"></div>
-                        <div className="h-4 w-24 bg-muted rounded"></div>
-                    </div>
-                ))}
-            </div>
-        </div>
-    </div>
-);
 
 
 export const UsersPage: React.FC = () => {
@@ -82,7 +45,7 @@ export const UsersPage: React.FC = () => {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalUsers, setTotalUsers] = useState(0);
-    const limit = 20;
+    const [limit, setLimit] = useState(20);
 
     // Filter State
     const [showFilters, setShowFilters] = useState(false);
@@ -105,7 +68,7 @@ export const UsersPage: React.FC = () => {
 
     useEffect(() => {
         fetchUsers();
-    }, [page, searchTerm, statusFilter, roleFilter, planFilter]); // Refetch when filters change
+    }, [page, searchTerm, statusFilter, roleFilter, planFilter, limit]); // Refetch when filters change
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -231,8 +194,73 @@ export const UsersPage: React.FC = () => {
         return <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>;
     };
 
-    if (loading && users.length === 0) return <TableSkeleton />;
     if (error && users.length === 0) return <div className="p-6 text-red-600">{error}</div>;
+
+    const columns: Column<User>[] = [
+        {
+            header: 'User',
+            id: 'user',
+            cell: ({ row }) => (
+                <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs ring-1 ring-border shadow-sm shrink-0">
+                        {row.username.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                        <div className="text-sm font-medium text-foreground">{row.username}</div>
+                        <div className="text-[13px] text-muted-foreground">{row.email}</div>
+                        {row.organization_name && <div className="text-[12px] text-muted-foreground/70">{row.organization_name}</div>}
+                    </div>
+                </div>
+            ),
+        },
+        {
+            header: 'Role',
+            accessorKey: 'role',
+            cell: ({ row }) => (
+                <span className={`px-2 inline-flex text-[12px] leading-5 font-semibold rounded-full ${row.role === 'owner' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400'
+                    : row.role === 'admin' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
+                        : 'bg-muted text-foreground'}`}>
+                    {row.role}
+                </span>
+            ),
+        },
+        {
+            header: 'Plan',
+            accessorKey: 'plan',
+        },
+        {
+            header: 'Status',
+            id: 'status',
+            cell: ({ row }) => getStatusBadge(row),
+        },
+        {
+            header: 'Joined',
+            accessorKey: 'created_at',
+            cell: ({ row }) => <span className="text-muted-foreground">{new Date(row.created_at).toLocaleDateString()}</span>,
+        },
+        {
+            header: '',
+            id: 'actions',
+            cellClassName: 'text-right',
+            cell: ({ row }) => (
+                <div className="flex items-center justify-end space-x-3">
+                    {row.account_status !== 'deleted' && row.account_status !== 'pending_deletion' && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); confirmToggleStatus(row); }}
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                            title={row.is_active ? 'Suspend User' : 'Activate User'}
+                            data-testid={`toggle-status-${row.id}`}
+                        >
+                            {row.is_active ? <ShieldOff size={16} /> : <Shield size={16} />}
+                        </button>
+                    )}
+                    <button className="text-muted-foreground hover:text-foreground transition-colors">
+                        <MoreVertical size={16} />
+                    </button>
+                </div>
+            ),
+        },
+    ];
 
     return (
         <div className="space-y-6">
@@ -260,8 +288,8 @@ export const UsersPage: React.FC = () => {
                     <button
                         onClick={() => setShowFilters(!showFilters)}
                         className={`flex items-center space-x-2 px-3 py-1.5 border rounded-sm text-sm font-medium transition-colors ${hasActiveFilters
-                                ? 'text-white bg-blue-600 border-blue-600'
-                                : 'text-foreground hover:text-blue-500 border-border bg-card'
+                            ? 'text-white bg-blue-600 border-blue-600'
+                            : 'text-foreground hover:text-blue-500 border-border bg-card'
                             }`}
                     >
                         <Filter className="h-4 w-4" />
@@ -327,124 +355,18 @@ export const UsersPage: React.FC = () => {
                     </div>
                 )}
 
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-border table-fixed">
-                        <thead className="bg-muted/30">
-                            <tr>
-                                <th scope="col" className="px-6 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                    User
-                                </th>
-                                <th scope="col" className="px-6 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                    Role
-                                </th>
-                                <th scope="col" className="px-6 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                    Plan
-                                </th>
-                                <th scope="col" className="px-6 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                    Status
-                                </th>
-                                <th scope="col" className="px-6 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                    Joined
-                                </th>
-                                <th scope="col" className="relative px-6 py-3">
-                                    <span className="sr-only">Actions</span>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-card divide-y divide-border">
-                            {users.map((user) => (
-                                <tr key={user.id} className="hover:bg-muted/50 transition-colors">
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="flex items-center">
-                                            <div className="flex-shrink-0 h-8 w-8">
-                                                <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs ring-1 ring-border shadow-sm">
-                                                    {user.username.charAt(0).toUpperCase()}
-                                                </div>
-                                            </div>
-                                            <div className="ml-4">
-                                                <div className="text-sm font-medium text-foreground hover:underline cursor-pointer">{user.username}</div>
-                                                <div className="text-[13px] text-muted-foreground">{user.email}</div>
-                                                {user.organization_name && (
-                                                    <div className="text-[12px] text-muted-foreground/70">{user.organization_name}</div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`px-2 inline-flex text-[12px] leading-5 font-semibold rounded-full ${user.role === 'owner' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400' :
-                                            user.role === 'admin' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400' :
-                                                'bg-muted text-foreground'
-                                            }`}>
-                                            {user.role}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-[13px] text-foreground">
-                                        {user.plan}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        {getStatusBadge(user)}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-[13px] text-muted-foreground">
-                                        {new Date(user.created_at).toLocaleDateString()}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <div className="flex items-center justify-end space-x-3">
-                                            {user.account_status !== 'deleted' && user.account_status !== 'pending_deletion' && (
-                                                <button
-                                                    onClick={() => confirmToggleStatus(user)}
-                                                    className={`text-muted-foreground hover:${user.is_active ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'} transition-colors`}
-                                                    title={user.is_active ? "Suspend User" : "Activate User"}
-                                                    data-testid={`toggle-status-${user.id}`}
-                                                >
-                                                    {user.is_active ? <ShieldOff size={16} /> : <Shield size={16} />}
-                                                </button>
-                                            )}
-                                            <button className="text-muted-foreground hover:text-foreground transition-colors">
-                                                <MoreVertical size={16} />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                            {users.length === 0 && (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-4 text-center text-muted-foreground">
-                                        No users found
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* Pagination Controls */}
-                <div className="bg-card px-4 py-3 border-t border-border sm:px-6">
-                    <div className="flex items-center justify-between">
-                        <div className="text-[13px] text-muted-foreground">
-                            Showing <span className="font-medium text-foreground">{(page - 1) * limit + 1}</span> to <span className="font-medium text-foreground">{Math.min(page * limit, totalUsers)}</span> of <span className="font-medium text-foreground">{totalUsers}</span> results
-                        </div>
-                        <div className="flex-1 flex justify-end space-x-3">
-                            <button
-                                onClick={() => setPage(p => Math.max(1, p - 1))}
-                                disabled={page === 1}
-                                className={`relative inline-flex items-center px-4 py-1.5 border border-border text-sm font-medium rounded-sm bg-card 
-                                    ${page === 1 ? 'text-muted-foreground cursor-not-allowed opacity-50' : 'text-foreground hover:bg-muted/50 transition-colors'}`}
-                            >
-                                <ChevronLeft className="h-4 w-4 mr-1" />
-                                Previous
-                            </button>
-                            <button
-                                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                                disabled={page === totalPages || totalPages === 0}
-                                className={`relative inline-flex items-center px-4 py-1.5 border border-border text-sm font-medium rounded-sm bg-card
-                                    ${(page === totalPages || totalPages === 0) ? 'text-muted-foreground cursor-not-allowed opacity-50' : 'text-foreground hover:bg-muted/50 transition-colors'}`}
-                            >
-                                Next
-                                <ChevronRight className="h-4 w-4 ml-1" />
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <DataTable
+                    columns={columns}
+                    data={users}
+                    loading={loading && users.length === 0}
+                    emptyState="No users found."
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onPageChange={setPage}
+                    itemsPerPage={limit}
+                    onItemsPerPageChange={(n) => { setLimit(n); setPage(1); }}
+                    totalItems={totalUsers}
+                />
             </div>
 
             <Modal

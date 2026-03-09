@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Search, Plus, X, Tag, Trash2 } from 'lucide-react';
 import { Modal } from '../components/ui/Modal';
 import { useAlert } from '../context/AlertContext';
+import DataTable from '../components/ui/DataTable';
+import type { Column } from '../components/ui/DataTable';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
 
@@ -152,6 +154,73 @@ export const PromosPage: React.FC = () => {
 
     const filteredPromos = promos.filter(p => p.code.toLowerCase().includes(searchTerm.toLowerCase()));
 
+    const columns: Column<PromoCode>[] = [
+        {
+            header: 'Code',
+            accessorKey: 'code',
+            cell: ({ row }) => (
+                <div className="flex items-center space-x-2">
+                    <Tag size={16} className="text-blue-500" />
+                    <span className="font-bold text-foreground">{row.code}</span>
+                </div>
+            ),
+        },
+        {
+            header: 'Comm. Rate',
+            accessorKey: 'commission_rate',
+            cell: ({ row }) => <span>{row.commission_rate}%</span>,
+        },
+        {
+            header: 'Clicks / Conv.',
+            id: 'stats',
+            cell: ({ row }) => (
+                <span className="text-muted-foreground">
+                    <span className="text-foreground font-semibold">{row.clicks}</span> / <span className="text-green-600 font-semibold">{row.conversions}</span>
+                </span>
+            ),
+        },
+        {
+            header: 'Attached Offers',
+            id: 'offers',
+            cell: ({ row }) => row.attached_offers.length === 0 ? (
+                <span className="text-xs text-muted-foreground">None</span>
+            ) : (
+                <div className="flex flex-col space-y-1">
+                    {row.attached_offers.map((offer, idx) => (
+                        <span key={idx} className="text-xs font-mono bg-muted px-2 py-0.5 rounded text-foreground inline-block w-max">
+                            {offer.type}:{offer.id} = {offer.qty}
+                        </span>
+                    ))}
+                </div>
+            ),
+        },
+        {
+            header: 'Valid Plans',
+            id: 'plans',
+            cell: ({ row }) => <span>{row.applicable_plans?.length > 0 ? row.applicable_plans.join(', ') : 'All'}</span>,
+        },
+        {
+            header: 'Expiry',
+            accessorKey: 'expiry_date',
+            cell: ({ row }) => <span className="text-muted-foreground">{row.expiry_date ? new Date(row.expiry_date).toLocaleDateString() : 'Never'}</span>,
+        },
+        {
+            header: 'Created At',
+            accessorKey: 'created_at',
+            cell: ({ row }) => <span className="text-muted-foreground">{new Date(row.created_at).toLocaleDateString()}</span>,
+        },
+        {
+            header: '',
+            id: 'actions',
+            cellClassName: 'text-right',
+            cell: ({ row }) => (
+                <button onClick={() => handleDelete(row.code)} className="text-red-500 hover:text-red-700 transition-colors" title="Delete Promo">
+                    <Trash2 size={16} />
+                </button>
+            ),
+        },
+    ];
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -181,81 +250,12 @@ export const PromosPage: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-border table-fixed">
-                        <thead className="bg-muted/30">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase">Code</th>
-                                <th className="px-6 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase">Comm. Rate</th>
-                                <th className="px-6 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase">Clicks / Conv.</th>
-                                <th className="px-6 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase">Attached Offers</th>
-                                <th className="px-6 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase">Valid Plans</th>
-                                <th className="px-6 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase">Expiry</th>
-                                <th className="px-6 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase">Created At</th>
-                                <th className="px-6 py-3"></th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-card divide-y divide-border">
-                            {loading && (
-                                <tr><td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">Loading...</td></tr>
-                            )}
-                            {!loading && filteredPromos.map((p) => (
-                                <tr key={p.id} className="hover:bg-muted/50 transition-colors">
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="flex items-center space-x-2">
-                                            <Tag size={16} className="text-blue-500" />
-                                            <span className="font-bold text-foreground">{p.code}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                                        {p.commission_rate}%
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                                        <span className="text-foreground font-semibold">{p.clicks}</span> / <span className="text-green-600 font-semibold">{p.conversions}</span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="flex flex-col space-y-1">
-                                            {p.attached_offers.length === 0 ? (
-                                                <span className="text-xs text-muted-foreground">None</span>
-                                            ) : (
-                                                p.attached_offers.map((offer, idx) => (
-                                                    <span key={idx} className="text-xs font-mono bg-muted px-2 py-0.5 rounded text-foreground inline-block w-max">
-                                                        {offer.type}:{offer.id} = {offer.qty}
-                                                    </span>
-                                                ))
-                                            )}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                                        {p.applicable_plans && p.applicable_plans.length > 0 ? p.applicable_plans.join(', ') : 'All'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                                        {p.expiry_date ? new Date(p.expiry_date).toLocaleDateString() : 'Never'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                                        {new Date(p.created_at).toLocaleDateString()}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                        <button
-                                            onClick={() => handleDelete(p.code)}
-                                            className="text-red-500 hover:text-red-700 transition-colors"
-                                            title="Delete Promo"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                            {!loading && filteredPromos.length === 0 && (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
-                                        No promos found.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                <DataTable
+                    columns={columns}
+                    data={filteredPromos}
+                    loading={loading}
+                    emptyState="No promo codes found."
+                />
             </div>
 
             <Modal

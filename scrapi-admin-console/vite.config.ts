@@ -8,16 +8,10 @@ export default defineConfig({
     port: 3000,
     host: '0.0.0.0',
     allowedHosts: [
-      'admin-host-setup.preview.emergentagent.com',
-      'visual-crawler-2.preview.emergentagent.com',
-      'admin-backend-verify.cluster-0.preview.emergentcf.cloud',
       'localhost',
       '.emergentagent.com',
-      '.emergentcf.cloud'
     ],
-    hmr: {
-      clientPort: 443,
-    },
+    hmr: true,
     proxy: {
       // Only proxy API endpoints (not frontend routes like /api-docs)
       '^/api/': {
