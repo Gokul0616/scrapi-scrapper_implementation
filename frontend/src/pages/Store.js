@@ -4,6 +4,7 @@ import { Search, Star, Users, ArrowLeft, X } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { SkeletonGrid } from '../components/SkeletonLoader';
 import CustomDropdown from '../components/CustomDropdown';
+import ActorCard from '../components/ActorCard';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
@@ -127,57 +128,7 @@ function Store() {
     }
   };
 
-  const ActorCard = ({ actor }) => (
-    <div
-      onClick={() => navigate(`/actor/${actor.id}`)}
-      data-testid={`actor-card-${actor.id}`}
-      className={`border rounded-xl p-5 transition-all cursor-pointer group hover:shadow-lg hover:-translate-y-1 ${theme === 'dark'
-        ? 'bg-card border-border hover:border-muted-foreground/30'
-        : 'bg-white border-gray-200 hover:border-gray-300'
-        }`}
-    >
-      {/* Actor Icon and Info */}
-      <div className="flex items-start gap-3 mb-4">
-        <div
-          className={`w-12 h-12 rounded flex items-center justify-center text-2xl flex-shrink-0 border ${theme === 'dark' ? 'bg-card border-border' : 'bg-white border-gray-200'
-            }`}
-        >
-          {actor.icon || '🗺️'}
-        </div>
-        <div className="flex-1 min-w-0">
-          <h3 className={`font-semibold text-[15px] leading-tight mb-1 transition-colors ${theme === 'dark' ? 'text-card-foreground' : 'text-gray-900'
-            }`}>
-            {actor.name}
-          </h3>
-          <p className={`text-[12px] ${theme === 'dark' ? 'text-muted-foreground' : 'text-gray-500'}`}>
-            {actor.author_name || 'unknown'}
-          </p>
-        </div>
-      </div>
 
-      {/* Description */}
-      <p className={`text-[13px] leading-[1.6] mb-4 line-clamp-3 min-h-[62px] ${theme === 'dark' ? 'text-muted-foreground' : 'text-gray-600'
-        }`}>
-        {actor.description || 'No description available'}
-      </p>
-
-      {/* Stats */}
-      <div className={`flex items-center gap-5 text-[12px] font-medium ${theme === 'dark' ? 'text-muted-foreground' : 'text-gray-600'
-        }`}>
-        <div className="flex items-center gap-1.5">
-          <Users className="w-3.5 h-3.5" />
-          <span>{(actor.runs_count || 0).toLocaleString()}</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-          <span className={theme === 'dark' ? 'text-foreground' : 'text-gray-900'}>{actor.rating || '4.7'}</span>
-          <span className={theme === 'dark' ? 'text-muted-foreground font-normal' : 'text-gray-500 font-normal'}>
-            ({(actor.reviews_count || 0).toLocaleString()})
-          </span>
-        </div>
-      </div>
-    </div>
-  );
 
   // Landing View
   if (view === 'landing') {
@@ -258,9 +209,10 @@ function Store() {
             {loading ? (
               <SkeletonGrid count={6} columns={3} />
             ) : featuredActors.length > 0 ? (
-              <div className="grid grid-cols-3 gap-6" data-testid="featured-actors-grid">
-                {featuredActors.map((actor) => (
+              <div className="flex flex-wrap gap-4 p-2 -m-2" data-testid="featured-actors-grid">
+                {featuredActors.map((actor) => (<>
                   <ActorCard key={actor.id} actor={actor} />
+                </>
                 ))}
               </div>
             ) : (
@@ -402,7 +354,7 @@ function Store() {
         {loading ? (
           <SkeletonGrid count={12} columns={3} />
         ) : actors.length > 0 ? (
-          <div className="grid grid-cols-3 gap-6" data-testid="all-actors-grid">
+          <div className="flex flex-wrap gap-4 p-2 -m-2" data-testid="all-actors-grid">
             {actors.map((actor) => (
               <ActorCard key={actor.id} actor={actor} />
             ))}

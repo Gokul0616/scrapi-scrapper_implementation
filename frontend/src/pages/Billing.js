@@ -228,8 +228,23 @@ const Billing = () => {
         <h3 className="text-base font-semibold mb-3 text-foreground">Platform usage breakdown by services</h3>
 
         {/* Visual Bar */}
-        <div className="h-6 bg-blue-400 rounded-lg mb-4 overflow-hidden">
-          {/* This would be dynamically split based on actual usage */}
+        <div className="h-6 bg-muted rounded-full mb-4 overflow-hidden flex w-full border border-border">
+          {billingData.totalUsage > 0 ? (
+            billingData.services.map((service, index) => {
+              const percentage = (service.amount / billingData.totalUsage) * 100;
+              if (percentage === 0) return null;
+              return (
+                <div
+                  key={index}
+                  className={`h-full ${service.color} transition-all duration-300`}
+                  style={{ width: `${percentage}%` }}
+                  title={`${service.name}: $${service.amount.toFixed(2)}`}
+                />
+              );
+            })
+          ) : (
+            <div className="h-full w-full bg-muted" title="No usage recorded yet" />
+          )}
         </div>
 
         {/* Service List */}
@@ -757,47 +772,237 @@ const Billing = () => {
     );
   };
 
-  const renderLimits = () => (
-    <div className="space-y-4">
-      <div className="rounded-lg border border-border bg-card p-4">
-        <h3 className="text-base font-semibold mb-3 text-foreground">Usage Limits</h3>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between py-2 border-b border-border">
-            <span className="text-sm text-foreground">Platform credits per month</span>
-            <span className="text-sm font-semibold text-foreground">${billingData?.limits?.platform_credits?.toFixed(2) || '5.00'}</span>
+  const renderLimits = () => {
+    // Utility for safely calculating percentage widths
+    const getPercent = (used, total) => {
+      if (!total || total === 0) return 0;
+      return Math.min(100, Math.max(0, (used / total) * 100));
+    };
+
+    // Extract limits with safe defaults
+    const limits = billingData?.limits || {};
+    const usage = billingData?.currentUsage || {};
+    const planName = billingData?.plan?.toLowerCase() || 'free';
+
+    // 1. Storage / RAM limit
+    const usedRam = billingData?.ramUsage?.used_mb || 0;
+    const maxRamMb = billingData?.ramUsage?.limit_mb || (limits.max_ram_gb ? limits.max_ram_gb * 1024 : 8192);
+    // Convert to GB for display if clean, otherwise MB
+    const formatRam = (mb) => mb >= 1024 && mb % 1024 === 0 ? `${mb / 1024} GB` : `${mb} MB`;
+
+    // 2. Actors limit
+    const usedActors = usage.actors || 0;
+    const maxActors = limits.max_actors || (planName === 'free' ? 10 : 500);
+
+    // 3. Schedules limit
+    const usedSchedules = usage.schedules || 0;
+    const maxSchedules = limits.max_schedules || 0;
+
+    // 4. Tasks limit
+    const usedTasks = usage.tasks || 0;
+    const maxTasks = limits.max_tasks || (planName === 'free' ? 100 : 5000);
+
+    // 5. Concurrent Runs limit
+    const usedConcurrent = usage.running_concurrently || 0;
+    const maxConcurrent = limits.max_concurrent_runs || 1;
+
+    // 6. Platform Usage
+    const freeUsed = billingData?.planConsumption?.freeUsed || 0;
+    const freeTotal = billingData?.planConsumption?.freeTotal || 5.0;
+
+    // Retention helper
+    const retentionDays = limits.data_retention_days || 7;
+
+    return (
+      <div className="space-y-5">
+
+        {/* Top Grid: Plan Limits & Data Retention */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+          {/* Plan Limits Box (2/3 width) */}
+          <div className="lg:col-span-2 rounded-lg border border-border bg-card p-5">
+            <h2 className="text-lg font-bold text-foreground mb-1.5">Plan limits</h2>
+            <p className="text-[13px] text-muted-foreground mb-6">
+              These limits come from your subscription plan. To increase the limits, please <a href="#" onClick={(e) => { e.preventDefault(); handleUpgrade(); }} className="text-blue-500 hover:text-blue-600">upgrade</a> your plan or contact support.
+            </p>
+
+            <div className="space-y-4">
+              {/* RAM Row */}
+              <div>
+                <div className="flex justify-between text-[13px] mb-1.5">
+                  <div className="flex items-center gap-1.5 text-foreground font-medium">
+                    Total Actor RAM
+                    <CustomTooltip content="Total memory allocated across all currently running Actors in this workspace.">
+                      <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/60 cursor-help" />
+                    </CustomTooltip>
+                  </div>
+                  <div className="text-foreground font-medium">{formatRam(usedRam)} of {formatRam(maxRamMb)}</div>
+                </div>
+                <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-blue-500 rounded-full" style={{ width: `${getPercent(usedRam, maxRamMb)}%` }}></div>
+                </div>
+              </div>
+
+              {/* Actors Row */}
+              <div>
+                <div className="flex justify-between text-[13px] mb-1.5">
+                  <div className="flex items-center gap-1.5 text-foreground font-medium">
+                    Number of Actors
+                    <CustomTooltip content="Maximum number of customized Actors available in your workspace.">
+                      <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/60 cursor-help" />
+                    </CustomTooltip>
+                  </div>
+                  <div className="text-foreground font-medium">{usedActors} of {maxActors}</div>
+                </div>
+                <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-blue-500 rounded-full" style={{ width: `${getPercent(usedActors, maxActors)}%` }}></div>
+                </div>
+              </div>
+
+              {/* Schedules Row */}
+              <div>
+                <div className="flex justify-between text-[13px] mb-1.5">
+                  <div className="flex items-center gap-1.5 text-foreground font-medium">
+                    Number of schedules
+                    <CustomTooltip content="Maximum number of automated periodic run slots.">
+                      <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/60 cursor-help" />
+                    </CustomTooltip>
+                  </div>
+                  <div className="text-foreground font-medium">{usedSchedules} of {maxSchedules}</div>
+                </div>
+                <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-blue-500 rounded-full" style={{ width: `${getPercent(usedSchedules, maxSchedules)}%` }}></div>
+                </div>
+              </div>
+
+              {/* Tasks Row */}
+              <div>
+                <div className="flex justify-between text-[13px] mb-1.5">
+                  <div className="flex items-center gap-1.5 text-foreground font-medium">
+                    Number of Actor tasks
+                    <CustomTooltip content="Saved parameterized configurations connected to your Actors.">
+                      <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/60 cursor-help" />
+                    </CustomTooltip>
+                  </div>
+                  <div className="text-foreground font-medium">{usedTasks} of {maxTasks}</div>
+                </div>
+                <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-blue-500 rounded-full" style={{ width: `${getPercent(usedTasks, maxTasks)}%` }}></div>
+                </div>
+              </div>
+
+              {/* Concurrent Runs Row */}
+              <div>
+                <div className="flex justify-between text-[13px] mb-1.5">
+                  <div className="flex items-center gap-1.5 text-foreground font-medium">
+                    Number of concurrent Actor runs
+                    <CustomTooltip content="Maximum number of scrapes that can execute parallelly at any exact instant.">
+                      <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/60 cursor-help" />
+                    </CustomTooltip>
+                  </div>
+                  <div className="text-foreground font-medium">{usedConcurrent} of {maxConcurrent}</div>
+                </div>
+                <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-blue-500 rounded-full" style={{ width: `${getPercent(usedConcurrent, maxConcurrent)}%` }}></div>
+                </div>
+              </div>
+
+              {/* Extra App Details: Build time & Proxy */}
+              <div className="grid grid-cols-2 gap-4 pt-3 border-t border-border/50">
+                <div>
+                  <div className="flex items-center gap-1.5 text-[13px] text-foreground font-medium mb-1">
+                    Max Actor build memory
+                    <CustomTooltip content="Peak memory allocation allowed during the building phase of a custom Actor.">
+                      <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/60 cursor-help" />
+                    </CustomTooltip>
+                  </div>
+                  <div className="text-[13px] font-semibold text-foreground">
+                    {limits.max_ram_gb >= 8 ? 'Unlimited' : '2 GB'}
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5 text-[13px] text-foreground font-medium mb-1">
+                    Max Actor build time
+                    <CustomTooltip content="Maximum allowed duration before a custom Actor build is force-aborted.">
+                      <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/60 cursor-help" />
+                    </CustomTooltip>
+                  </div>
+                  <div className="text-[13px] font-semibold text-foreground">
+                    {limits.max_actor_build_mins || 10} minutes
+                  </div>
+                </div>
+              </div>
+
+            </div>
           </div>
-          <div className="flex items-center justify-between py-2 border-b border-border">
-            <span className="text-sm text-foreground">Concurrent Actor runs</span>
-            <span className="text-sm font-semibold text-foreground">
-              {billingData?.limits?.max_concurrent_runs >= 9999 ? 'Unlimited' : (billingData?.limits?.max_concurrent_runs || 1)}
-            </span>
-          </div>
-          <div className="flex items-center justify-between py-2 border-b border-border">
-            <span className="text-sm text-foreground">Maximum RAM per Actor</span>
-            <span className="text-sm font-semibold text-foreground">
-              {billingData?.limits?.max_ram_gb >= 9999 ? 'Unlimited' : `${billingData?.limits?.max_ram_gb || 2} GB`}
-            </span>
-          </div>
-          <div className="flex items-center justify-between py-2 border-b border-border">
-            <span className="text-sm text-foreground">Data Retention Duration</span>
-            <span className="text-sm font-semibold text-foreground">
-              {billingData?.limits?.data_retention_days || 7} days
-            </span>
-          </div>
-          <div className="flex items-center justify-between py-2">
-            <span className="text-sm text-foreground">Scheduled Runs</span>
-            <span className="text-sm font-semibold text-foreground">
-              {billingData?.limits?.max_schedules === 0
-                ? '0 (Upgrade Required)'
-                : billingData?.limits?.max_schedules >= 9999
-                  ? 'Unlimited'
-                  : billingData?.limits?.max_schedules}
-            </span>
+
+          {/* Data Retention Box (1/3 width) */}
+          <div className="rounded-lg border border-border bg-card p-5 flex flex-col">
+            <h2 className="text-lg font-bold text-foreground mb-3">Data retention</h2>
+            <p className="text-[13px] text-muted-foreground leading-relaxed mb-6">
+              Scrapi securely stores your Actor runs and datasets based on your workspace's storage policy.
+              Data that exceeds the retention period below is automatically deleted to optimize platform performance.
+              Upgrade your current plan to keep your valuable scraping data stored for longer periods.{' '}
+              <a href="#" className="text-blue-500 hover:text-blue-600 inline-flex items-center gap-1">
+                Pricing details <ExternalLink className="w-3 h-3" />
+              </a>
+            </p>
+
+            <div className="mt-auto">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-2xl font-bold text-foreground">{retentionDays} days</span>
+                <CustomTooltip content="Duration your run datasets and logs are kept in storage before auto-deletion.">
+                  <HelpCircle className="w-4 h-4 text-muted-foreground/60 cursor-help" />
+                </CustomTooltip>
+              </div>
+              <button onClick={handleUpgrade} className="px-3 py-1.5 border border-border rounded bg-muted/30 text-[13px] font-semibold hover:bg-muted text-foreground transition-colors">
+                Upgrade retention
+              </button>
+
+              <div className="mt-5 pt-4 border-t border-border/50">
+                <h3 className="text-[13px] font-semibold text-foreground mb-2">Included Proxies</h3>
+                <div className="text-[13px] text-muted-foreground">
+                  {planName === 'starter' ? '30 Shared IPs' : planName === 'growth' ? '100 Shared IPs' : planName === 'scale' ? '500 Shared IPs' : '5 Shared IPs'}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+
+        {/* Bottom Full-Width: Custom Usage Limit */}
+        <div className="rounded-lg border border-border bg-card p-5">
+          <div className="flex items-start justify-between mb-3">
+            <div>
+              <h2 className="text-lg font-bold text-foreground mb-1.5">Custom usage limit</h2>
+              <p className="text-[13px] text-muted-foreground">
+                This hard limit helps protect your workspace against unexpected API charges and platform overuse.
+                You'll receive an email notification if your monthly credit consumption approaches the maximum.
+                If exceeded, Scrapi platform services will be temporarily paused to prevent billing overages.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <div className="flex justify-between items-end mb-1.5">
+              <div className="font-bold text-foreground text-[14px]">Total monthly platform usage</div>
+              <div className="flex items-center gap-3">
+                <span className="text-[13px] font-medium text-foreground text-right w-[150px]">
+                  ${freeUsed.toFixed(2)} of ${freeTotal.toFixed(2)}
+                </span>
+                <button onClick={handleUpgrade} className="px-3 py-1 border border-border rounded bg-muted/30 text-[12px] font-semibold hover:bg-muted transition-colors whitespace-nowrap">
+                  Upgrade
+                </button>
+              </div>
+            </div>
+            <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+              <div className="h-full bg-blue-500 rounded-full" style={{ width: `${getPercent(freeUsed, freeTotal)}%` }}></div>
+            </div>
+          </div>
+        </div>
+
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderTabContent = () => {
     switch (activeTab) {

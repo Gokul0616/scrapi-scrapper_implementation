@@ -1,5 +1,5 @@
-import React from 'react';
-import { Star, Users } from 'lucide-react';
+import React, { act } from 'react';
+import { Star, Users, MapPin } from 'lucide-react';
 import { Actor } from '../types';
 
 interface ActorCardProps {
@@ -10,51 +10,62 @@ const ActorCard: React.FC<ActorCardProps> = ({ actor }) => {
     return (
         <a
             href="#"
-            className="block p-5 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl hover:shadow-lg hover:border-gray-300 dark:hover:bg-zinc-900 dark:hover:border-gray-700 transition-all group"
+            className="flex flex-col rounded-xl bg-gray-100 dark:bg-zinc-900/60 border border-gray-200 dark:border-zinc-800 hover:shadow-xl transition-all group max-w-[350px]"
         >
-            <div className="flex gap-4">
-                {/* Icon */}
-                <div className="w-[52px] h-[52px] rounded-xl overflow-hidden flex-shrink-0">
-                    <img
-                        src={actor.icon}
-                        alt={actor.name}
-                        className="w-full h-full object-cover"
-                    />
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2 mb-1">
-                        <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-gray-700 dark:group-hover:text-gray-300">
+            {/* Inner White Card (Content) */}
+            <div className="flex-1 bg-white dark:bg-zinc-950 p-3 border-b border-gray-200 dark:border-zinc-800 rounded-t-xl flex flex-col">
+                {/* Header row: Icon + Title */}
+                <div className="flex items-start gap-2 mb-3">
+                    <div className="w-[38px] h-[38px] rounded-lg flex-shrink-0 flex border border-gray-200 dark:border-zinc-700 items-center justify-center overflow-hidden bg-gray-50 dark:bg-zinc-900">
+                        {actor.icon
+                            ? (actor.icon.toLowerCase().startsWith('http') || actor.icon.toLowerCase().startsWith('/'))
+                                ? <img src={actor.icon} alt={actor.name} className="w-full h-full object-cover" />
+                                : <span className="text-xl leading-none">{actor.icon}</span>
+                            : <MapPin className="w-5 h-5 text-red-500" />
+                        }
+                    </div>
+                    <div className="min-w-0 pt-0.5 flex-1">
+                        <h3 className="font-semibold text-[15px] text-gray-900 dark:text-white transition-colors truncate leading-tight">
                             {actor.name}
                         </h3>
+                        <p className="text-[12px] text-gray-500 dark:text-gray-400 truncate leading-none">
+                            {actor.author_name ? `${actor.author_name}/${actor.category || 'general'}` : `Viewed recently`}
+                        </p>
                     </div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{actor.slug}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-4">
-                        {actor.description}
-                    </p>
+                </div>
 
-                    {/* Footer */}
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <img
-                                src={actor.authorAvatar}
-                                alt={actor.author}
-                                className="w-5 h-5 rounded-full"
-                            />
-                            <span className="text-sm text-gray-600 dark:text-gray-400">{actor.author}</span>
+                {/* Description */}
+                <p className="text-[13px] text-gray-600 dark:text-gray-300 line-clamp-3 leading-snug mt-1">
+                    {actor.description}
+                </p>
+            </div>
+
+            {/* Outer Gray Strip (Footer Analytics) */}
+            <div className="p-1.5 flex items-center justify-between text-[13px] font-medium text-gray-600 dark:text-gray-400">
+                {/* Author */}
+                <div className="flex items-center gap-2">
+                    {actor.authorAvatar
+                        ? (actor.authorAvatar.toLowerCase().startsWith('http') || actor.authorAvatar.toLowerCase().startsWith('/'))
+                            ? <img src={actor.authorAvatar} alt={actor.author} className="w-[18px] h-[18px] rounded-full object-cover shrink-0" />
+                            : <span className="text-base leading-none shrink-0">{actor.authorAvatar}</span>
+                        : <div className="w-[18px] h-[18px] rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-[9px] font-bold shrink-0">
+                            {(actor.author || 'U')[0].toUpperCase()}
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                            <span className="flex items-center gap-1">
-                                <Users className="w-4 h-4" />
-                                {actor.users}
-                            </span>
-                            <span className="flex items-center gap-1">
-                                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                {actor.rating}
-                            </span>
-                        </div>
-                    </div>
+                    }
+                    <span className="truncate max-w-[80px] text-gray-800 dark:text-gray-200">{actor.author}</span>
+                </div>
+
+                {/* Metrics */}
+                <div className="flex items-center gap-3">
+                    <span className="flex items-center gap-1.5">
+                        <Star className="w-3.5 h-3.5 fill-transparent text-gray-400 group-hover:text-yellow-500 transition-colors" />
+                        <span className="text-gray-800 dark:text-gray-200">{actor.rating}</span>
+                    </span>
+                    <span className="text-gray-300 dark:text-zinc-600">|</span>
+                    <span className="flex items-center gap-1.5">
+                        <Users className="w-3.5 h-3.5" />
+                        <span className="text-gray-800 dark:text-gray-200">{actor.users}</span>
+                    </span>
                 </div>
             </div>
         </a>
@@ -69,7 +80,7 @@ const ActorCards: React.FC<ActorCardsProps> = ({ actors }) => {
     return (
         <section className="py-8 px-6">
             <div className="max-w-[1400px] mx-auto">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="flex flex-wrap gap-4 p-2 -m-2 justify-center">
                     {actors.map((actor) => (
                         <ActorCard key={actor.id} actor={actor} />
                     ))}
@@ -93,3 +104,4 @@ const ActorCards: React.FC<ActorCardsProps> = ({ actors }) => {
 };
 
 export default ActorCards;
+

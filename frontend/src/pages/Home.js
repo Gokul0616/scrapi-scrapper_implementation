@@ -17,6 +17,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { getProfileColor, getUserInitials, getUserDisplayName } from '../utils/userUtils';
 import { useTheme } from '../contexts/ThemeContext';
 import { RecentActorSkeleton, SuggestedActorSkeleton, RunRowSkeleton } from '../components/SkeletonLoader';
+import ActorCard from '../components/ActorCard';
 import DataTable from '../components/ui/DataTable';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
@@ -270,23 +271,7 @@ function Home() {
             ) : recentActors.length > 0 ? (
               <div className="grid grid-cols-4 gap-4">
                 {recentActors.slice(0, 4).map((actor, idx) => (
-                  <div
-                    key={actor.id}
-                    onClick={() => navigate(`/actor/${actor.id}`)}
-                    className="group border rounded-lg p-3 transition-all cursor-pointer flex items-start gap-3 h-[68px] hover:shadow-md hover:-translate-y-0.5 bg-card border-border hover:border-muted-foreground/30"
-                  >
-                    <div className="w-9 h-9 rounded flex items-center justify-center shrink-0 border bg-card border-border">
-                      {actor.icon || <Play className="w-4 h-4 text-blue-500 fill-blue-500" />}
-                    </div>
-                    <div className="min-w-0 flex flex-col justify-center h-full">
-                      <h3 className="font-semibold text-[13px] truncate leading-tight mb-0.5 text-card-foreground">
-                        {actor.name}
-                      </h3>
-                      <p className="text-[11px] truncate leading-tight text-muted-foreground">
-                        Last viewed {formatDate(actor.last_viewed_at || actor.last_run_at || new Date().toISOString())}
-                      </p>
-                    </div>
-                  </div>
+                  <ActorCard key={actor.id} actor={actor} recent={true} />
                 ))}
               </div>
             ) : (
@@ -316,46 +301,9 @@ function Home() {
                 ))}
               </div>
             ) : suggestedActors.length > 0 ? (
-              <div className="grid grid-cols-3 gap-6">
+              <div className="grid grid-cols-3 gap-3 p-2 -m-2">
                 {suggestedActors.map((actor, idx) => (
-                  <div
-                    key={actor.id}
-                    className="border rounded-xl p-5 transition-all cursor-pointer flex flex-col h-full hover:shadow-lg hover:-translate-y-1 bg-card border-border hover:border-muted-foreground/30"
-                    onClick={() => navigate(`/actor/${actor.id}`)}
-                  >
-
-                    <div className="flex items-start gap-4 mb-3">
-                      <div className="w-[40px] h-[40px] border rounded-lg flex items-center justify-center shrink-0 shadow-sm relative overflow-hidden bg-card border-border">
-                        {actor?.icon || <MapPin className="w-7 h-7 text-red-500" />}
-                      </div>
-                      <div className="min-w-0 pt-0.5">
-                        <h3 className="font-bold text-[15px] leading-tight mb-1 text-card-foreground">{actor.name}</h3>
-                        <div className="flex items-center text-[12px] gap-0.5 text-muted-foreground">
-                          <span className="font-medium text-foreground">{actor.author_name || 'unknown'}</span>
-                          <span className="text-muted-foreground">/</span>
-                          <span className="truncate">{actor.category || 'general'}</span>
-                        </div>
-                      </div>
-                    </div>
-
-
-                    <p className="text-[13.5px] leading-5 mb-5 line-clamp-3 text-muted-foreground">
-                      {actor.description}
-                    </p>
-
-
-                    <div className="mt-auto pt-4 border-t flex items-center gap-5 text-[12px] font-medium border-border text-muted-foreground">
-                      <div className="flex items-center gap-1.5">
-                        <Users className="w-3.5 h-3.5 text-muted-foreground" />
-                        <span>{actor.runs_count || '0'}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
-                        <span className="text-foreground">{actor.rating || '0.0'}</span>
-                        <span className="text-muted-foreground font-normal">({actor.reviews_count || '0'})</span>
-                      </div>
-                    </div>
-                  </div>
+                  <ActorCard key={actor.id} actor={actor} />
                 ))}
 
                 {suggestedActors.length === 2 && <div></div>}

@@ -20,8 +20,13 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
+import { useModal } from '../contexts/ModalContext';
+import GlobalModal from './GlobalModal';
 
-const GlobalSearch = ({ isOpen, onClose }) => {
+const GlobalSearch = () => {
+  const { isModalOpen, closeModal } = useModal();
+  const isOpen = isModalOpen('global-search');
+  const onClose = closeModal;
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [recentSearches, setRecentSearches] = useState([]);
@@ -344,22 +349,19 @@ const GlobalSearch = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-
   const allItems = [...(mode === 'actions' ? [] : recentSearches), ...results, ...quickActions];
   const hasRecentSearches = recentSearches.length > 0 && !query;
   const hasResults = results.length > 0;
   const hasQuickActions = quickActions.length > 0;
 
   return (
-    <div
-      className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh] px-4 backdrop-blur-sm animate-in fade-in duration-200 bg-black/40"
-    >
-      <div
-        ref={modalRef}
-        className="w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[70vh] animate-in zoom-in-95 duration-200 bg-background border border-border"
-      >
-        {/* Search Header */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
+    <GlobalModal
+      modalId="global-search"
+      size="md"
+      className="max-w-2xl bg-background"
+      showCloseButton={false}
+      customHeader={
+        <div className="flex items-center gap-3 w-full">
           <Search className="w-5 h-5 text-muted-foreground" />
           <input
             ref={inputRef}
@@ -373,65 +375,9 @@ const GlobalSearch = ({ isOpen, onClose }) => {
             ESC
           </kbd>
         </div>
-
-        {/* Results Area */}
-        <div className="flex-1 overflow-y-auto min-h-[200px] max-h-[calc(70vh-120px)]" ref={resultsRef}>
-          {(!hasResults && !hasRecentSearches && !hasQuickActions) ? (
-            renderEmptyState()
-          ) : (
-            <div className="p-2">
-              {/* Recent Searches */}
-              {hasRecentSearches && (
-                <div className="mb-3">
-                  <div className="px-3 py-1 text-xs font-semibold uppercase tracking-wide flex items-center justify-between text-muted-foreground">
-                    <span>Recent Searches</span>
-                    <span className="text-xs font-normal text-muted-foreground">
-                      {recentSearches.length} {recentSearches.length === 1 ? 'item' : 'items'}
-                    </span>
-                  </div>
-                  <div className="space-y-1 mt-1">
-                    {recentSearches.map((item, idx) => renderResult(item, idx))}
-                  </div>
-                </div>
-              )}
-
-              {/* Results */}
-              {hasResults && (
-                <div className="mb-3">
-                  {hasRecentSearches && (
-                    <div className="px-3 py-1 text-xs font-semibold uppercase tracking-wide flex items-center justify-between text-muted-foreground">
-                      <span>{mode === 'actions' ? 'Quick Actions' : 'Search Results'}</span>
-                      <span className="text-xs font-normal text-muted-foreground">
-                        {results.length} {results.length === 1 ? 'result' : 'results'}
-                      </span>
-                    </div>
-                  )}
-                  <div className="space-y-1 mt-1">
-                    {results.map((item, idx) => renderResult(item, idx + recentSearches.length))}
-                  </div>
-                </div>
-              )}
-
-              {/* Quick Actions */}
-              {hasQuickActions && (
-                <div>
-                  <div className="px-3 py-1 text-xs font-semibold uppercase tracking-wide flex items-center justify-between text-muted-foreground">
-                    <span>Quick Actions</span>
-                    <span className="text-xs font-normal text-muted-foreground">
-                      {quickActions.length} available
-                    </span>
-                  </div>
-                  <div className="space-y-1 mt-1">
-                    {quickActions.map((item, idx) => renderResult(item, idx + recentSearches.length + results.length))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="px-4 py-2 text-xs border-t flex items-center justify-between bg-muted/50 text-muted-foreground border-border">
+      }
+      customFooter={
+        <div className="flex items-center justify-between text-muted-foreground w-full">
           <div className="flex gap-4">
             <span className="flex items-center gap-1">
               <ArrowUp className="w-3 h-3" />
@@ -445,8 +391,64 @@ const GlobalSearch = ({ isOpen, onClose }) => {
           </div>
           <span>Scrapi Search</span>
         </div>
+      }
+    >
+      {/* Results Area */}
+      <div className="flex-1 overflow-y-auto min-h-[200px] max-h-[calc(70vh-120px)]" ref={resultsRef}>
+        {(!hasResults && !hasRecentSearches && !hasQuickActions) ? (
+          renderEmptyState()
+        ) : (
+          <div className="p-2">
+            {/* Recent Searches */}
+            {hasRecentSearches && (
+              <div className="mb-3">
+                <div className="px-3 py-1 text-xs font-semibold uppercase tracking-wide flex items-center justify-between text-muted-foreground">
+                  <span>Recent Searches</span>
+                  <span className="text-xs font-normal text-muted-foreground">
+                    {recentSearches.length} {recentSearches.length === 1 ? 'item' : 'items'}
+                  </span>
+                </div>
+                <div className="space-y-1 mt-1">
+                  {recentSearches.map((item, idx) => renderResult(item, idx))}
+                </div>
+              </div>
+            )}
+
+            {/* Results */}
+            {hasResults && (
+              <div className="mb-3">
+                {hasRecentSearches && (
+                  <div className="px-3 py-1 text-xs font-semibold uppercase tracking-wide flex items-center justify-between text-muted-foreground">
+                    <span>{mode === 'actions' ? 'Quick Actions' : 'Search Results'}</span>
+                    <span className="text-xs font-normal text-muted-foreground">
+                      {results.length} {results.length === 1 ? 'result' : 'results'}
+                    </span>
+                  </div>
+                )}
+                <div className="space-y-1 mt-1">
+                  {results.map((item, idx) => renderResult(item, idx + recentSearches.length))}
+                </div>
+              </div>
+            )}
+
+            {/* Quick Actions */}
+            {hasQuickActions && (
+              <div>
+                <div className="px-3 py-1 text-xs font-semibold uppercase tracking-wide flex items-center justify-between text-muted-foreground">
+                  <span>Quick Actions</span>
+                  <span className="text-xs font-normal text-muted-foreground">
+                    {quickActions.length} available
+                  </span>
+                </div>
+                <div className="space-y-1 mt-1">
+                  {quickActions.map((item, idx) => renderResult(item, idx + recentSearches.length + results.length))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
-    </div>
+    </GlobalModal>
   );
 };
 

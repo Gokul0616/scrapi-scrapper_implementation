@@ -8,10 +8,8 @@ export default defineConfig({
         port: 3000,
         host: '0.0.0.0',
         allowedHosts: [
-            'admin-host-setup.preview.emergentagent.com',
             'localhost',
             '.emergentagent.com',
-            "https://bash-launcher.preview.emergentagent.com/"
         ],
         hmr: {
             clientPort: 443,

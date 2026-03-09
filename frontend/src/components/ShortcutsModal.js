@@ -2,6 +2,7 @@ import React from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useModal } from '../contexts/ModalContext';
 import { Keyboard } from 'lucide-react';
+import GlobalModal from './GlobalModal';
 
 const ShortcutsModal = () => {
   const { theme } = useTheme();
@@ -63,16 +64,13 @@ const ShortcutsModal = () => {
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] px-4 backdrop-blur-[2px] bg-black/70"
-      onClick={closeModal}
-    >
-      <div
-        className="w-full max-w-3xl rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[75vh] animate-in fade-in zoom-in-95 duration-200 bg-background border border-border"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
+    <GlobalModal
+      modalId="shortcuts-modal"
+      size="md"
+      className="max-w-3xl"
+      showCloseButton={false}
+      customHeader={
+        <div className="flex items-center gap-3">
           <Keyboard className="w-5 h-5 text-muted-foreground" />
           <h2 className="flex-1 text-lg font-semibold text-foreground">
             Keyboard Shortcuts
@@ -81,68 +79,68 @@ const ShortcutsModal = () => {
             ESC
           </kbd>
         </div>
-
-        {/* Content Area - No Scrollbar */}
-        <div
-          className="flex-1 overflow-y-auto"
-          style={{
-            msOverflowStyle: 'none',
-            scrollbarWidth: 'none',
-          }}
-        >
-          <style>
-            {`
+      }
+      customFooter={
+        <div className="flex items-center justify-between text-muted-foreground w-full">
+          <span>Press any key combination to use</span>
+          <span className="hidden sm:inline">Use <span className="font-semibold text-foreground">Shift + ?</span> anytime</span>
+        </div>
+      }
+    >
+      {/* Content Area - No Scrollbar */}
+      <div
+        className="flex-1 overflow-y-auto max-h-[60vh]"
+        style={{
+          msOverflowStyle: 'none',
+          scrollbarWidth: 'none',
+        }}
+      >
+        <style>
+          {`
               .hide-scrollbar::-webkit-scrollbar {
                 display: none;
               }
             `}
-          </style>
+        </style>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 min-h-full hide-scrollbar">
-            {/* Left Side - Navigation */}
-            <div className="border-r border-border">
-              <div className="py-1.5">
-                <div className="px-5 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Navigation
-                </div>
-                {navigationShortcuts.map((s, i) => (
-                  <ShortcutRow key={i} {...s} />
-                ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 min-h-full hide-scrollbar">
+          {/* Left Side - Navigation */}
+          <div className="border-r border-border">
+            <div className="py-1.5">
+              <div className="px-5 py-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                Navigation
               </div>
+              {navigationShortcuts.map((s, i) => (
+                <ShortcutRow key={i} {...s} />
+              ))}
+            </div>
+          </div>
+
+          {/* Right Side - General & Settings */}
+          <div>
+            <div className="py-1.5">
+              <div className="px-5 py-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                General
+              </div>
+              {generalShortcuts.map((s, i) => (
+                <ShortcutRow key={i} {...s} />
+              ))}
             </div>
 
-            {/* Right Side - General & Settings */}
-            <div>
-              <div className="py-1.5">
-                <div className="px-5 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  General
-                </div>
-                {generalShortcuts.map((s, i) => (
-                  <ShortcutRow key={i} {...s} />
-                ))}
-              </div>
+            <div className="h-[1px] mx-5 bg-border my-1" />
 
-              <div className="h-[1px] mx-5 bg-border" />
-
-              <div className="py-1.5">
-                <div className="px-5 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Settings
-                </div>
-                {settingsShortcuts.map((s, i) => (
-                  <ShortcutRow key={i} {...s} />
-                ))}
+            <div className="py-1.5">
+              <div className="px-5 py-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                Settings
               </div>
+              {settingsShortcuts.map((s, i) => (
+                <ShortcutRow key={i} {...s} />
+              ))}
             </div>
           </div>
         </div>
-
-        {/* Footer */}
-        <div className="px-4 py-2 text-xs border-t flex items-center justify-between bg-muted/50 text-muted-foreground border-border">
-          <span>Press any key combination to use</span>
-          <span className="hidden sm:inline">Use <span className="font-semibold">Shift + ?</span> anytime</span>
-        </div>
       </div>
-    </div>
+    </GlobalModal>
   );
 };
 

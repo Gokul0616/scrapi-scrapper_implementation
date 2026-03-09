@@ -70,7 +70,6 @@ const Sidebar = () => {
   });
   const [searchFocused, setSearchFocused] = useState(false);
   const [activeSection, setActiveSection] = useState('scrapiStore');
-  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [profilePictureKey, setProfilePictureKey] = useState(0);
   const notificationButtonRef = useRef(null);
@@ -145,24 +144,6 @@ const Sidebar = () => {
   }, [isCollapsed, user]);
 
 
-  // Close search modal when any modal context modal opens
-  useEffect(() => {
-    if (currentModal) {
-      setIsSearchModalOpen(false);
-    }
-  }, [currentModal]);
-
-  // Prevent body scroll when search modal is open
-  useEffect(() => {
-    if (isSearchModalOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isSearchModalOpen]);
 
   const toggleSection = (section) => {
     setExpandedSections(prev => ({
@@ -201,9 +182,9 @@ const Sidebar = () => {
 
       // Check for Escape key to close any open modal
       if (e.key === 'Escape') {
-        if (isSearchModalOpen) {
+        if (currentModal === 'global-search') {
           e.preventDefault();
-          setIsSearchModalOpen(false);
+          closeModal();
           return;
         }
       }
@@ -211,9 +192,7 @@ const Sidebar = () => {
       // Check for Cmd+K (Mac) or Ctrl+K (Windows/Linux)
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        // Close any modal context modal before opening search
-        closeModal();
-        setIsSearchModalOpen(true);
+        openModal('global-search');
       }
 
       // Check for Cmd+B (Mac) or Ctrl+B (Windows/Linux) to toggle sidebar
@@ -231,13 +210,11 @@ const Sidebar = () => {
       // Check for Shift+? to show shortcuts modal
       if (e.shiftKey && e.key === '?') {
         e.preventDefault();
-        // Close search modal if open before opening shortcuts
-        setIsSearchModalOpen(false);
         openModal('shortcuts-modal');
       }
 
       // Handle S+Key shortcuts - ONLY when NOT typing in input and search modal is closed
-      if ((e.key === 's' || e.key === 'S') && !isTypingInInput && !isSearchModalOpen) {
+      if ((e.key === 's' || e.key === 'S') && !isTypingInInput && currentModal !== 'global-search') {
         const nextKey = new Promise((resolve) => {
           const handler = (nextE) => {
             resolve(nextE.key.toUpperCase());
@@ -276,7 +253,7 @@ const Sidebar = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate, toggleTheme, isSearchModalOpen, openModal, closeModal]);
+  }, [navigate, toggleTheme, currentModal, openModal, closeModal]);
 
   // Determine billing label based on workspace type
   const isOrganization = currentWorkspace?.workspace_type === 'organization';
@@ -371,7 +348,7 @@ const Sidebar = () => {
                 <div className="flex items-center space-x-2">
                   <div
                     className="relative flex-1 cursor-pointer"
-                    onClick={() => setIsSearchModalOpen(true)}
+                    onClick={() => openModal('global-search')}
                   >
                     <Search
                       className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
@@ -740,10 +717,7 @@ const Sidebar = () => {
         </div>
 
         {/* Global Search Modal */}
-        <GlobalSearch
-          isOpen={isSearchModalOpen}
-          onClose={() => setIsSearchModalOpen(false)}
-        />
+        <GlobalSearch />
 
         {/* Notification Dropdown */}
         <NotificationDropdown

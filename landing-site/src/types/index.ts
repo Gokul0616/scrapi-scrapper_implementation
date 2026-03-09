@@ -10,6 +10,7 @@ export interface Actor {
     rating: number;
     runs_count?: number;
     author_name?: string;
+    category?: string;
 }
 
 export interface Testimonial {

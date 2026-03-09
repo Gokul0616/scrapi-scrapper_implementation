@@ -614,7 +614,7 @@ Here are some ideas to get you started:
                     ref={(el) => (tabRefs.current[tab.value] = el)}
                     data-testid={`tab-${tab.value}`}
                     style={{ backgroundColor: 'transparent !important' }}
-                    className={`rounded-none border-b-2 border-transparent px-4 py-3 text-sm font-medium transition-colors !bg-transparent hover:!bg-transparent ${activeTab === tab.value
+                    className={`rounded-none px-4 py-3 text-sm font-medium transition-colors !bg-transparent hover:!bg-transparent ${activeTab === tab.value
                       ? 'text-foreground'
                       : 'text-muted-foreground hover:text-foreground'
                       }`}

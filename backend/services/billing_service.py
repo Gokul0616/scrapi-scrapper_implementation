@@ -168,6 +168,12 @@ class BillingService:
         max_ram_gb = plan_limits.get("max_ram_gb", 8)
         max_ram_mb = max_ram_gb * 1024
         
+        # Calculate current counts for Limits UI
+        workspace_query = {"user_id" if workspace_type == "personal" else "organization_id": workspace_id}
+        current_actors_count = await db.actors.count_documents(workspace_query)
+        current_schedules_count = await db.schedules.count_documents(workspace_query)
+        current_tasks_count = await db.tasks.count_documents(workspace_query)
+        
         return {
             "totalUsage": total_usage,
             "billingPeriod": {
@@ -189,7 +195,18 @@ class BillingService:
                 "max_ram_gb": max_ram_gb,
                 "max_actor_build_mins": plan_limits.get("max_actor_build_mins", 10),
                 "data_retention_days": plan_limits.get("data_retention_days", 7),
-                "max_schedules": plan_limits.get("max_schedules", 0)
+                "max_schedules": plan_limits.get("max_schedules", 0),
+                "max_actors": plan_limits.get("max_actors", 10 if plan_name == "free" else 500),
+                "max_tasks": plan_limits.get("max_tasks", 100 if plan_name == "free" else 5000)
+            },
+            "currentUsage": {
+                "actors": current_actors_count,
+                "schedules": current_schedules_count,
+                "tasks": current_tasks_count,
+                "running_concurrently": await db.runs.count_documents({
+                    "user_id" if workspace_type == "personal" else "organization_id": workspace_id,
+                    "status": "running"
+                })
             },
             "services": [
                 { "name": 'Actors', "color": 'bg-emerald-500', "amount": cu_cost, "icon": '●' },

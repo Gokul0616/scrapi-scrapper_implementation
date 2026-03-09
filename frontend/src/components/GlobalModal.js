@@ -67,14 +67,14 @@ const GlobalModal = ({
       data-testid={`${modalId}-backdrop`}
     >
       <div
-        className={`w-full animate-scrapi-modal-enter ${sizeClasses[size]} ${size !== 'full' ? 'rounded-xl shadow-2xl overflow-hidden' : ''} bg-white dark:bg-[#0F1014] border border-gray-200 dark:border-white/10 ${className} flex flex-col`}
+        className={`w-full animate-scrapi-modal-enter ${sizeClasses[size]} ${size !== 'full' ? 'rounded-xl shadow-2xl overflow-hidden' : ''} bg-background border border-border ${className} flex flex-col`}
         onClick={(e) => e.stopPropagation()}
         data-testid={`${modalId}-container`}
       >
         {/* Header */}
         {(title || customHeader || showCloseButton) && (
           <div
-            className={`flex items-center justify-between px-5 py-3 border-b border-gray-200 dark:border-white/10 ${size === 'full' ? 'relative' : ''}`}
+            className={`flex items-center justify-between px-5 py-3 border-b border-border ${size === 'full' ? 'relative' : ''}`}
           >
             {/* Full screen Logo on the left */}
             {size === 'full' && (
@@ -116,7 +116,7 @@ const GlobalModal = ({
         {/* Footer */}
         {customFooter && (
           <div
-            className="px-5 py-3 border-t border-gray-200 dark:border-white/10"
+            className="px-5 py-3 border-t border-border"
           >
             {customFooter}
           </div>
