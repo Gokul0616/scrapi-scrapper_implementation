@@ -332,13 +332,10 @@ function Store() {
               <button
                 onClick={handleClearFilters}
                 data-testid="clear-filters-button"
-                className={`flex items-center gap-2 px-4 h-10 rounded-lg text-[13px] font-medium transition-all ${theme === 'dark'
-                  ? 'bg-red-600/20 text-red-400 hover:bg-red-600/30'
-                  : 'bg-red-50 text-red-600 hover:bg-red-100'
-                  }`}
+                className={`flex items-center gap-2 px-4 h-10 rounded-lg text-[13px] font-medium transition-all`}
               >
-                <X className="w-4 h-4" />
-                Clear filters
+                <X className="w-4 h-4 font-bold" />
+                {/* Clear filters */}
               </button>
             )}
           </div>
@@ -374,7 +371,7 @@ function Store() {
         )}
 
       </div>
-    </div>
+    </div >
   );
 }
 

@@ -80,7 +80,7 @@ const GlobalModal = ({
             {size === 'full' && (
               <div className="absolute left-6 flex items-center gap-2">
                 <img src="/logo.png" alt="Logo" className="w-5 h-5 object-contain" />
-                <span className="font-bold text-foreground text-[16px] tracking-tight">Scrapi</span>
+                <span className="font-bold text-foreground text-[18px] tracking-tight">Scrapi</span>
               </div>
             )}
 
@@ -99,10 +99,10 @@ const GlobalModal = ({
             {showCloseButton && (
               <button
                 onClick={closeModal}
-                className="p-1 rounded transition-colors text-muted-foreground hover:bg-muted hover:text-foreground relative z-10"
+                className="p-1 rounded transition-colors text-muted-foreground relative z-10"
                 data-testid={`${modalId}-close-button`}
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" strokeWidth={2.5} />
               </button>
             )}
           </div>

@@ -216,7 +216,10 @@ const InvoiceDetail = () => {
                 <div className=" mx-auto px-5 h-14 flex items-center justify-between gap-4">
                     <button
                         onClick={() => navigate('/billing?tab=invoices')}
-                        className="flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                        className={`text-[14px] font-semibold flex items-center gap-1 transition-colors ${theme === 'dark'
+                            ? 'text-blue-400 hover:text-blue-300'
+                            : 'text-blue-600 hover:text-blue-700'
+                            }`}
                     >
                         <ChevronLeft className="w-4 h-4" />
                         Billing History

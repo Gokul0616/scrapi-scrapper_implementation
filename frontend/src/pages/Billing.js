@@ -17,6 +17,7 @@ import AddReferralModal from '../components/modals/AddReferralModal';
 import AddPromoModal from '../components/modals/AddPromoModal';
 import AlertModal from '../components/AlertModal';
 import DataTable from '../components/ui/DataTable';
+import LoadingScreen from '@/components/LoadingScreen';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -659,83 +660,75 @@ const Billing = () => {
     );
   };
 
-  const renderInvoices = () => {
-    const invoiceColumns = [
-      {
-        header: "Number",
-        accessorKey: "invoice_no",
-        cell: ({ row }) => (
-          <span className="text-[13px] font-medium text-foreground">#{row.invoice_no.split('-').pop()}</span>
-        )
-      },
-      {
-        header: "Amount",
-        accessorKey: "amount",
-        cell: ({ row }) => (
-          <span className="text-[13px] font-semibold text-foreground">${row.amount.toFixed(2)} USD</span>
-        )
-      },
-      {
-        header: "Issued on",
-        accessorKey: "created_at",
-        cell: ({ row }) => (
-          <span className="text-[13px] text-foreground">
-            {new Date(row.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-          </span>
-        )
-      },
-      {
-        header: "Due on",
-        accessorKey: "created_at",
-        cell: ({ row }) => (
-          <span className="text-[13px] text-foreground">
-            {new Date(row.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-          </span>
-        )
-      },
-      {
-        header: "Payment status",
-        cell: () => (
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 w-fit border border-emerald-100 dark:border-emerald-900/30">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Paid</span>
-          </div>
-        )
-      },
-      {
-        header: "Payment attempts",
-        cell: () => <span className="text-[13px] text-foreground">1</span>
-      },
-      {
-        header: "Invoice type",
-        accessorKey: "plan",
-        cell: ({ row }) => <span className="text-[13px] text-foreground capitalize">{row.plan} Subscription</span>
-      },
-      {
-        header: "View",
-        className: "text-right pr-6",
-        cellClassName: "text-right pr-6",
-        cell: ({ row }) => (
-          <button
-            className="text-[13px] font-semibold text-blue-600 hover:text-blue-700 transition-colors"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/billing/invoices/${row._id}`);
-            }}
-          >
-            View
-          </button>
-        )
-      }
-    ];
-
-    if (isLoadingInvoices) {
-      return (
-        <div className="flex flex-col items-center justify-center py-20 animate-pulse">
-          <div className="w-12 h-12 bg-muted rounded-full mb-4"></div>
-          <div className="h-4 bg-muted rounded w-48"></div>
+  const invoiceColumns = useMemo(() => [
+    {
+      header: "Number",
+      accessorKey: "invoice_no",
+      cell: ({ row }) => (
+        <span className="text-[13px] font-medium text-foreground">#{row.invoice_no.split('-').pop()}</span>
+      )
+    },
+    {
+      header: "Amount",
+      accessorKey: "amount",
+      cell: ({ row }) => (
+        <span className="text-[13px] font-semibold text-foreground">${row.amount.toFixed(2)} USD</span>
+      )
+    },
+    {
+      header: "Issued on",
+      accessorKey: "created_at",
+      cell: ({ row }) => (
+        <span className="text-[13px] text-foreground">
+          {new Date(row.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+        </span>
+      )
+    },
+    {
+      header: "Due on",
+      accessorKey: "created_at",
+      cell: ({ row }) => (
+        <span className="text-[13px] text-foreground">
+          {new Date(row.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+        </span>
+      )
+    },
+    {
+      header: "Payment status",
+      cell: () => (
+        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 w-fit border border-emerald-100 dark:border-emerald-900/30">
+          <span className="text-[11px] font-bold uppercase tracking-wider">Paid</span>
         </div>
-      );
+      )
+    },
+    {
+      header: "Payment attempts",
+      cell: () => <span className="text-[13px] text-foreground">1</span>
+    },
+    {
+      header: "Invoice type",
+      accessorKey: "plan",
+      cell: ({ row }) => <span className="text-[13px] text-foreground capitalize">{row.plan} Subscription</span>
+    },
+    {
+      header: "View",
+      className: "text-right pr-6",
+      cellClassName: "text-right pr-6",
+      cell: ({ row }) => (
+        <button
+          className="text-[13px] font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/billing/invoices/${row._id}`);
+          }}
+        >
+          View
+        </button>
+      )
     }
+  ], [navigate]);
+
+  const renderInvoices = () => {
 
     return (
       <div className="space-y-4">
@@ -1027,7 +1020,7 @@ const Billing = () => {
     <div className="flex-1 min-h-screen bg-background scrollbar-hide">
       {isLoading ? (
         <div className="flex items-center justify-center h-full pt-20">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+          <LoadingScreen />
         </div>
       ) : error ? (
         <div className="flex flex-col items-center justify-center h-full pt-20 text-center">

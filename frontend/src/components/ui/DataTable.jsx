@@ -11,6 +11,7 @@ import {
 import { cn } from '../../lib/utils';
 import { ChevronLeft, ChevronRight, ChevronDown, Check } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
+import LoadingScreen from '../LoadingScreen';
 
 const ItemsPerPageDropdown = ({ value, onChange, options }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -210,13 +211,13 @@ const DataTable = ({
                     </TableHeader>
                     <TableBody className="divide-y divide-border">
                         {loading ? (
-                            Array.from({ length: 5 }).map((_, idx) => (
-                                <TableRow key={idx}>
-                                    <TableCell colSpan={columns.length} className="px-4 py-6 border-b border-border">
-                                        <div className="h-6 bg-muted rounded w-full animate-pulse" />
-                                    </TableCell>
-                                </TableRow>
-                            ))
+                            <TableRow>
+                                <TableCell colSpan={columns.length} className="p-0">
+                                    <div className="bg-card">
+                                        <LoadingScreen className="min-h-[100px]" />
+                                    </div>
+                                </TableCell>
+                            </TableRow>
                         ) : data.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={columns.length} className="px-4 py-16 text-center text-muted-foreground text-sm">

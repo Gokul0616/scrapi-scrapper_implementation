@@ -85,7 +85,6 @@ const CustomDropdown = ({ value, onChange, options, placeholder = 'Select...', s
   };
 
   const isDark = theme === 'dark';
-
   const menuContent = coords && (
     <div
       id="custom-dropdown-portal-root"
@@ -93,8 +92,8 @@ const CustomDropdown = ({ value, onChange, options, placeholder = 'Select...', s
         position: 'absolute',
         top: coords.dropUp ? 'auto' : `${coords.top + 4}px`,
         bottom: coords.dropUp ? `${window.innerHeight - coords.top + 4}px` : 'auto',
-        left: `${Math.min(coords.left, window.innerWidth - Math.max(200, coords.width) - 16)}px`,
-        width: `${Math.max(coords.width, 200)}px`,
+        left: `${Math.min(coords.left, window.innerWidth - coords.width - 16)}px`,
+        minWidth: `${coords.width}px`,
         zIndex: 99999,
       }}
       className={`rounded-lg border shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top ${coords.dropUp ? 'origin-bottom' : 'origin-top'
@@ -127,26 +126,23 @@ const CustomDropdown = ({ value, onChange, options, placeholder = 'Select...', s
         </div>
       )}
 
-      <div className="max-h-[240px] overflow-y-auto py-1 custom-scrollbar">
+      <div className="max-h-[240px] overflow-y-auto py-1 scrollbar-thin p-1">
         {filteredOptions.length > 0 ? (
           filteredOptions.map((option) => (
             <button
               key={option.value}
               type="button"
               onClick={() => handleSelect(option.value)}
-              className={`w-full text-left px-3 py-2 text-[12px] transition-colors flex items-center justify-between group ${value === option.value
+              className={`w-full text-left px-3 py-1.5 text-[13px] mt-1  rounded-md transition-colors flex items-center justify-between group ${value === option.value
                 ? isDark
-                  ? 'bg-blue-600/20 text-blue-400 font-medium'
-                  : 'bg-blue-50 text-blue-600 font-medium'
+                  ? 'bg-gray-600/40 text-blue-400 font-medium'
+                  : 'bg-gray-100 text-blue-600 font-medium'
                 : isDark
                   ? 'text-foreground hover:bg-muted/50'
                   : 'text-gray-700 hover:bg-gray-100'
                 }`}
             >
               <span className="truncate">{option.label}</span>
-              {value === option.value && (
-                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"></div>
-              )}
             </button>
           ))
         ) : (

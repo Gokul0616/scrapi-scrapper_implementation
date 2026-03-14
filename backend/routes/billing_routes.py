@@ -563,12 +563,77 @@ async def pincode_lookup(
                             "place name": city or addr.get('county') or "",
                             "longitude": data[0].get('lon', ''),
                             "state": addr.get('state') or "",
-                            "state abbreviation": addr.get('ISO3166-2-lvl4', '').split('-')[-1],
+                            "state abbreviation": addr.get('ISO3166-2-lvl4', '').split('-')[-1] if 'ISO3166-2-lvl4' in addr else "",
                             "latitude": data[0].get('lat', '')
                         }]
                     }
         except Exception:
             pass
+            
+        # 4. Final Fallback for missing Zip Codes (often missing from OSM/Zippopotam globally)
+        try:
+            # Open-Meteo Geocoding API is free for non-commercial use, very reliable global data
+            om_url = f"https://geocoding-api.open-meteo.com/v1/search?name={pincode}&count=1&format=json"
+            r = requests.get(om_url, timeout=3)
+            if r.status_code == 200:
+                data = r.json()
+                results = data.get('results', [])
+                if results:
+                    # Optional: Verify it loosely matches the country code if provided, but trusting the zip is often fine
+                    res_country_code = results[0].get('country_code', '')
+                    if not country_code or res_country_code.upper() == country_code.upper():
+                        return {
+                            "post code": pincode,
+                            "country": results[0].get('country', country_code),
+                            "country abbreviation": res_country_code,
+                            "places": [{
+                                "place name": results[0].get('name', ''),
+                                "longitude": str(results[0].get('longitude', '')),
+                                "state": results[0].get('admin1', ''),
+                                "state abbreviation": "", # Open-Meteo gives full state name usually
+                                "latitude": str(results[0].get('latitude', ''))
+                            }]
+                        }
+        except Exception:
+            pass
+
+        # 5. Ultimate Fallback for US Zip Codes (PO Boxes like 37001 that no free API has)
+        if country_code.upper() == 'US' and pincode.isdigit() and len(pincode) == 5:
+            prefix = int(pincode[:3])
+            state_map = {
+                (0, 3):   ("Puerto Rico", "PR"), (10, 27): ("Massachusetts", "MA"), (28, 29): ("Rhode Island", "RI"), 
+                (30, 38): ("New Hampshire", "NH"), (39, 49): ("Maine", "ME"), (50, 59): ("Vermont", "VT"),
+                (60, 69): ("Connecticut", "CT"), (70, 89): ("New Jersey", "NJ"), (100, 149): ("New York", "NY"),
+                (150, 196): ("Pennsylvania", "PA"), (197, 199): ("Delaware", "DE"), (200, 205): ("District of Columbia", "DC"),
+                (206, 219): ("Maryland", "MD"), (220, 246): ("Virginia", "VA"), (247, 269): ("West Virginia", "WV"),
+                (270, 289): ("North Carolina", "NC"), (290, 299): ("South Carolina", "SC"), (300, 319): ("Georgia", "GA"),
+                (320, 349): ("Florida", "FL"), (350, 369): ("Alabama", "AL"), (370, 385): ("Tennessee", "TN"),
+                (386, 397): ("Mississippi", "MS"), (400, 427): ("Kentucky", "KY"), (430, 458): ("Ohio", "OH"),
+                (460, 479): ("Indiana", "IN"), (480, 499): ("Michigan", "MI"), (500, 528): ("Iowa", "IA"),
+                (530, 549): ("Wisconsin", "WI"), (550, 567): ("Minnesota", "MN"), (570, 577): ("South Dakota", "SD"),
+                (580, 588): ("North Dakota", "ND"), (590, 599): ("Montana", "MT"), (600, 629): ("Illinois", "IL"),
+                (630, 658): ("Missouri", "MO"), (660, 679): ("Kansas", "KS"), (680, 693): ("Nebraska", "NE"),
+                (700, 714): ("Louisiana", "LA"), (716, 729): ("Arkansas", "AR"), (730, 749): ("Oklahoma", "OK"),
+                (750, 799): ("Texas", "TX"), (800, 816): ("Colorado", "CO"), (820, 831): ("Wyoming", "WY"),
+                (832, 838): ("Idaho", "ID"), (840, 847): ("Utah", "UT"), (850, 865): ("Arizona", "AZ"),
+                (870, 884): ("New Mexico", "NM"), (889, 898): ("Nevada", "NV"), (900, 961): ("California", "CA"),
+                (967, 968): ("Hawaii", "HI"), (970, 979): ("Oregon", "OR"), (980, 994): ("Washington", "WA"),
+                (995, 999): ("Alaska", "AK")
+            }
+            for (low, high), (state_name, state_abbr) in state_map.items():
+                if low <= prefix <= high:
+                    return {
+                        "post code": pincode,
+                        "country": "United States",
+                        "country abbreviation": "US",
+                        "places": [{
+                            "place name": "", # City unknown purely from prefix
+                            "longitude": "",
+                            "state": state_name,
+                            "state abbreviation": state_abbr,
+                            "latitude": ""
+                        }]
+                    }
 
         return {"places": []}
     except Exception as e:
