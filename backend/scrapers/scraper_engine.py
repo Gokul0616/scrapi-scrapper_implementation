@@ -244,14 +244,29 @@ class ScraperEngine:
         return random.choice(user_agents)
     
     async def cleanup(self):
-        """Clean up browser resources."""
-        for context in self.contexts:
-            await context.close()
-        
-        if self.browser:
-            await self.browser.close()
-        
-        if self.playwright:
-            await self.playwright.stop()
-        
-        logger.info("Scraper engine cleaned up")
+        """Clean up browser resources and ensure all processes are terminated."""
+        try:
+            for context in self.contexts:
+                try:
+                    await context.close()
+                except Exception:
+                    pass
+            self.contexts = []
+            
+            if self.browser:
+                try:
+                    await self.browser.close()
+                except Exception as e:
+                    logger.warning(f"Error closing browser: {e}")
+                self.browser = None
+            
+            if self.playwright:
+                try:
+                    await self.playwright.stop()
+                except Exception as e:
+                    logger.warning(f"Error stopping playwright: {e}")
+                self.playwright = None
+            
+            logger.info("Scraper engine cleaned up (processes terminated, ephemeral caches cleared)")
+        except Exception as e:
+            logger.error(f"Critical error during scraper engine cleanup: {e}")

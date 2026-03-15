@@ -222,14 +222,16 @@ function Home() {
 
           <div className="flex gap-4 items-center">
             <div
-              className={`w-[45px] h-[45px] rounded-full flex items-center justify-center text-white text-[18px] font-medium shrink-0 shadow-sm ${currentWorkspace?.workspace_type === 'organization' ? 'bg-blue-600' : ''
+              className={`w-[45px] h-[45px] rounded-full flex items-center justify-center text-white text-[18px] font-medium shrink-0 overflow-hidden shadow-sm ${currentWorkspace?.workspace_type === 'organization' ? 'bg-blue-600' : ''
                 }`}
               style={{ background: currentWorkspace?.workspace_type === 'organization' ? undefined : user?.profile_color }}
             >
               {currentWorkspace?.workspace_type === 'organization' ? (
                 <Building2 className="w-6 h-6" />
+              ) : user?.profile_picture ? (
+                <img src={user?.profile_picture} alt="" />
               ) : (
-                userInitials || 'G'
+                userInitials || ''
               )}
             </div>
             <div className="pt-0.5">

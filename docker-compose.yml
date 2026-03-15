@@ -1,0 +1,83 @@
+version: "3.8"
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: scrapi_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: always
+
+  redis:
+    image: redis:alpine
+    container_name: scrapi_redis
+    ports:
+      - "6379:6379"
+    restart: always
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: scrapi_api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017
+      - REDIS_URL=redis://redis:6379/0
+      - DB_NAME=scrapi
+    depends_on:
+      - mongodb
+      - redis
+    command: uvicorn server:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: scrapi_worker
+    volumes:
+      - ./backend:/app
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017
+      - REDIS_URL=redis://redis:6379/0
+      - DB_NAME=scrapi
+    depends_on:
+      - mongodb
+      - redis
+    command: celery -A celery_app worker --loglevel=info -c 4
+    deploy:
+      mode: replicated
+      replicas: 2 # Scale horizontally!
+    restart: unless-stopped
+
+  flower:
+    image: mher/flower
+    container_name: scrapi_flower
+    ports:
+      - "5555:5555"
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+      - worker
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: scrapi_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  mongo_data:

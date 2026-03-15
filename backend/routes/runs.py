@@ -191,10 +191,22 @@ async def create_run(
     from services.billing_service import billing_service
     try:
         target_ws_id = workspace_id if workspace_id else current_user['id']
+        
+        # Fetch workspace document to avoid NameError
+        if workspace_type == 'organization':
+            workspace = await db.organizations.find_one({"id": target_ws_id})
+        else:
+            workspace = await db.users.find_one({"id": target_ws_id})
+            
+        if not workspace:
+            workspace = {} # Fallback
+
         billing_info = await billing_service.get_billing_summary(target_ws_id, workspace_type)
+        plan_consumption = billing_info.get("planConsumption", {})
+        free_remaining = plan_consumption.get("freeRemaining", 0)
         
         # === Check Plan Expiration ===
-        expires_at_str = workspace.get("expires_at")
+        expires_at_str = billing_info.get("expires_at")
         if expires_at_str:
             try:
                 expires_at = datetime.fromisoformat(expires_at_str.replace('Z', '+00:00'))
@@ -205,9 +217,7 @@ async def create_run(
                     # Plan expired! Force Free limits
                     logger.warning(f"⚠️ Plan for {target_ws_id} has expired on {expires_at_str}. Fallback to Free limits.")
                     # Temporarily override billing_info for this check
-                    plan_consumption["freeRemaining"] = workspace.get("platform_credits", 5.0) # Reset to free credits if needed? 
-                    # Actually, we should probably just use the free remaining from summary but warn
-                    # For now, let's keep it simple: if expired, we still check freeRemaining which might be 0 anyway.
+                    free_remaining = min(free_remaining, workspace.get("platform_credits", 5.0))
             except Exception as e:
                 logger.error(f"Error parsing expiry date: {e}")
 

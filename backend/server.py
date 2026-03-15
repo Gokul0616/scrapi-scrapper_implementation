@@ -11,20 +11,6 @@ from services.captcha_service import CaptchaService
 from services.access_control_service import AccessControlService
 from services.security_service import SecurityService
 
-# --- Mock Playwright to run backend without it ---
-import sys
-from unittest.mock import MagicMock
-class DummyType: pass
-sys.modules['playwright'] = MagicMock()
-playwright_async = MagicMock()
-playwright_async.Page = DummyType
-playwright_async.Browser = DummyType
-playwright_async.BrowserContext = DummyType
-playwright_async.TimeoutError = Exception
-sys.modules['playwright.async_api'] = playwright_async
-sys.modules['playwright_stealth'] = MagicMock()
-# -----------------------------------------------
-
 from models import Actor
 
 
@@ -41,10 +27,9 @@ try:
 except Exception as e:
     logging.warning(f"Could not auto-update Emergent key: {e}")
 
-# Set Playwright browsers path for containerized environment
-os.environ['PLAYWRIGHT_BROWSERS_PATH'] = '/pw-browsers'
-
-# MongoDB connection
+# Set Playwright browsers path to be local to the project
+ROOT_DIR = Path(__file__).parent
+os.environ['PLAYWRIGHT_BROWSERS_PATH'] = str(ROOT_DIR / 'pw-browsers')
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
