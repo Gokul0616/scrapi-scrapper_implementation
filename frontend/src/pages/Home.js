@@ -355,7 +355,11 @@ function Home() {
                 columns={columns}
                 data={recentRuns}
                 loading={loadingRuns}
-                onRowClick={(row) => navigate(`/runs/${row.id}`)}
+                onRowClick={(row) => {
+                  if (row?.results_count > 0) {
+                    navigate(`/dataset/${row.id}`);
+                  }
+                }}
                 emptyState="No recent runs found."
                 className="max-h-[500px]"
               />

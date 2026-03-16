@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTheme } from '../contexts/ThemeContext';
 
-const CustomTooltip = ({ content, children }) => {
+const CustomTooltip = ({ content, children, className = "inline-flex" }) => {
     const [isVisible, setIsVisible] = useState(false);
     const [position, setPosition] = useState({ top: 0, left: 0 });
     const [arrowStyle, setArrowStyle] = useState({});
@@ -83,7 +83,7 @@ const CustomTooltip = ({ content, children }) => {
                 ref={triggerRef}
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
-                className="inline-flex"
+                className={className}
             >
                 {children}
             </div>

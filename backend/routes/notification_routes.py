@@ -229,3 +229,20 @@ async def send_notification_to_user(user_id: str, notification: Notification):
                 await websocket.send_json(notification_data)
             except Exception as e:
                 logger.info(f"Failed to send notification to user {user_id}: {e}")
+
+# Broadcast usage update to user (e.g. for RAM/Credit sidebar refresh)
+async def broadcast_usage_update(user_id: str):
+    """Notify the frontend that usage data (RAM/Credits) has changed and should be re-fetched."""
+    print(f"DEBUG WebSocket: Attempting to broadcast usage update to user {user_id}")
+    if user_id in active_connections:
+        print(f"DEBUG WebSocket: User {user_id} has {len(active_connections[user_id])} active connections")
+        message = {"type": "usage_update"}
+        for websocket in active_connections[user_id]:
+            try:
+                await websocket.send_json(message)
+                print(f"DEBUG WebSocket: Successfully sent usage_update to a connection for {user_id}")
+            except Exception as e:
+                logger.info(f"Failed to send usage update to user {user_id}: {e}")
+                print(f"DEBUG WebSocket: Failed to send to a connection for {user_id}: {e}")
+    else:
+        print(f"DEBUG WebSocket: User {user_id} NOT found in active_connections. Current active users: {list(active_connections.keys())}")

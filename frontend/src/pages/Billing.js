@@ -19,6 +19,113 @@ import AlertModal from '../components/AlertModal';
 import DataTable from '../components/ui/DataTable';
 import LoadingScreen from '@/components/LoadingScreen';
 
+const BILLING_TOOLTIPS = {
+  // Service breakdown
+  "Actor compute units": {
+    what: "Resources consumed by your Actors (CPU & RAM).",
+    how: "Calculated as RAM (GB) * Duration (Hours) * Compute price per CU."
+  },
+  "Timed storage": {
+    what: "Cost for storing data over time (Datasets & KV Stores).",
+    how: "Calculated as Size (GB) * Retention duration (Hours) * Storage rate per GB-hour."
+  },
+  "Reads": {
+    what: "Data retrieval operations from storage.",
+    how: "Billed per 1,000 requests to fetch data from datasets."
+  },
+  "Writes": {
+    what: "Data saving operations to storage.",
+    how: "Billed per 1,000 items added or updated in datasets."
+  },
+  "Internal": {
+    what: "Data transfer between platform services.",
+    how: "Billed per GB transferred internally. Currently free on some plans."
+  },
+  "External": {
+    what: "Data transfer to external destinations (egress).",
+    how: "Billed per GB sent to external URLs or downloaded."
+  },
+  "SERP": {
+    what: "Search Engine Results Page proxy usage.",
+    how: "Billed per successful request made through SERP proxies."
+  },
+  "Residential": {
+    what: "Residential IP rotation proxy usage.",
+    how: "Billed per GB of data transferred through residential IPs."
+  },
+  // Limits / Subscription
+  "Total Actor RAM": {
+    what: "Peak memory allocation for running Actors.",
+    how: "Sum of RAM configuration for all currently active runs in your workspace."
+  },
+  "Number of Actors": {
+    what: "Limit on unique customized Actors.",
+    how: "The total number of Actors you can create or save in this workspace."
+  },
+  "Number of schedules": {
+    what: "Limit on automated tasks.",
+    how: "The total number of active automated triggers you can maintain."
+  },
+  "Number of Actor tasks": {
+    what: "Limit on saved configurations.",
+    how: "The total number of parameterized Actor configurations you can save."
+  },
+  "Number of concurrent Actor runs": {
+    what: "Parallel execution limit.",
+    how: "The maximum number of scrapers that can run at the same time."
+  },
+  "Max Actor build memory": {
+    what: "Memory allocation during builds.",
+    how: "The RAM limit for the environment where your custom Actors are built."
+  },
+  "Max Actor build time": {
+    what: "Duration limit for Actor builds.",
+    how: "The maximum time allowed to compile and package your custom Actor code."
+  },
+  "Data retention": {
+    what: "How long we keep your data.",
+    how: "Datasets and logs are automatically deleted after this many days."
+  },
+  "Free platform usage": {
+    what: "Monthly free credit allowance.",
+    how: "Recharged every month on your billing anniversary."
+  },
+  "Residential proxies": {
+    what: "Access to residential IP networks.",
+    how: "Calculated based on GB of data transferred through residential IPs."
+  },
+  "Proxy SERPs": {
+    what: "Access to search engine result proxies.",
+    how: "Billed per successful request to Google, Bing, etc."
+  },
+  "Support level": {
+    what: "Customer support coverage.",
+    how: "Determined by your current subscription tier."
+  },
+  "Plan usage credit": {
+    what: "Available platform credits.",
+    how: "Remaining balance of free usage provided by your current plan."
+  },
+  "Plan expiration": {
+    what: "End of current billing cycle.",
+    how: "The date when your current subscription will renew or expire."
+  }
+};
+
+const renderTooltipContent = (label) => {
+  const info = BILLING_TOOLTIPS[label];
+  return (
+    <div className="flex flex-col gap-1 text-[11px] text-left max-w-[250px]">
+      <div className="font-bold text-foreground">
+        {info?.what || "Usage details for this item."}
+      </div>
+      <div className="text-muted-foreground text-[10px] leading-relaxed">
+        {info?.how || "Calculated based on actual consumption."}
+      </div>
+    </div>
+  );
+};
+
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
@@ -58,6 +165,14 @@ const Billing = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(false);
   const [error, setError] = useState(null);
+  const [expandedServices, setExpandedServices] = useState({});
+
+  const toggleService = (serviceName) => {
+    setExpandedServices(prev => ({
+      ...prev,
+      [serviceName]: !prev[serviceName]
+    }));
+  };
   const [totalInvoices, setTotalInvoices] = useState(0);
 
   // Pagination state
@@ -173,8 +288,18 @@ const Billing = () => {
       {/* Platform Usage Header */}
       <div>
         <div className="flex items-center justify-between mb-1.5">
-          <h2 className="text-lg font-semibold text-foreground">
-            Platform usage in current billing period: <span className="font-bold">${billingData.totalUsage.toFixed(2)}</span>
+          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+            Platform usage in current billing period: <span className="font-bold">${billingData.totalUsage.toFixed(5)}</span>
+            <CustomTooltip 
+              content={
+                <div className="flex flex-col gap-1 text-[11px] text-left max-w-[250px]">
+                  <div className="font-bold text-foreground">Your total consumption so far.</div>
+                  <div className="text-muted-foreground text-[10px] leading-relaxed">Calculated based on your aggregate usage across all services since the start of the billing period.</div>
+                </div>
+              }
+            >
+              <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
+            </CustomTooltip>
           </h2>
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground">
@@ -195,7 +320,19 @@ const Billing = () => {
 
       {/* Plan Consumption */}
       <div className="rounded-lg border border-border bg-card p-4">
-        <h3 className="text-base font-semibold mb-3 text-foreground">Plan consumption</h3>
+        <h3 className="text-base font-semibold mb-3 text-foreground flex items-center gap-2">
+          Plan consumption
+          <CustomTooltip 
+            content={
+              <div className="flex flex-col gap-1 text-[11px] text-left max-w-[250px]">
+                <div className="font-bold text-foreground">Usage of your monthly pre-paid credits.</div>
+                <div className="text-muted-foreground text-[10px] leading-relaxed">Most plans include a monthly allowance of free platform usage credits.</div>
+              </div>
+            }
+          >
+            <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
+          </CustomTooltip>
+        </h3>
 
         {/* Progress Bar */}
         <div className="mb-2.5">
@@ -212,13 +349,13 @@ const Billing = () => {
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
             <span className="text-foreground font-medium">
-              Free usage ${billingData.planConsumption.freeUsed.toFixed(2)} / ${billingData.planConsumption.freeTotal.toFixed(2)}
+              Free usage ${billingData.planConsumption.freeUsed.toFixed(5)} / ${billingData.planConsumption.freeTotal.toFixed(5)}
             </span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-muted border-2 border-border"></span>
             <span className="text-muted-foreground">
-              Remaining free usage ${billingData.planConsumption.freeRemaining.toFixed(2)}
+              Remaining free usage ${billingData.planConsumption.freeRemaining.toFixed(5)}
             </span>
           </div>
         </div>
@@ -226,7 +363,19 @@ const Billing = () => {
 
       {/* Platform Usage Breakdown */}
       <div className="rounded-lg border border-border bg-card p-4">
-        <h3 className="text-base font-semibold mb-3 text-foreground">Platform usage breakdown by services</h3>
+        <h3 className="text-base font-semibold mb-3 text-foreground flex items-center gap-2">
+          Platform usage breakdown by services
+          <CustomTooltip 
+            content={
+              <div className="flex flex-col gap-1 text-[11px] text-left max-w-[250px]">
+                <div className="font-bold text-foreground">Granular breakdown of costs across platform components.</div>
+                <div className="text-muted-foreground text-[10px] leading-relaxed">Shows exactly where your consumption is coming from: Actors, Storage, Proxy, or Data Transfer.</div>
+              </div>
+            }
+          >
+            <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
+          </CustomTooltip>
+        </h3>
 
         {/* Visual Bar */}
         <div className="h-6 bg-muted rounded-full mb-4 overflow-hidden flex w-full border border-border">
@@ -239,7 +388,7 @@ const Billing = () => {
                   key={index}
                   className={`h-full ${service.color} transition-all duration-300`}
                   style={{ width: `${percentage}%` }}
-                  title={`${service.name}: $${service.amount.toFixed(2)}`}
+                  title={`${service.name}: $${service.amount.toFixed(5)}`}
                 />
               );
             })
@@ -250,22 +399,127 @@ const Billing = () => {
 
         {/* Service List */}
         <div className="space-y-0 border border-border rounded-lg overflow-hidden">
-          {billingData.services.map((service, index) => (
-            <div
-              key={service.name}
-              className={`flex items-center justify-between px-3 py-2.5 hover:bg-muted/50 transition-colors ${index !== billingData.services.length - 1 ? 'border-b border-border' : ''
-                }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                <span className={`w-2 h-2 rounded-full ${service.color}`}></span>
-                <span className="text-sm font-medium text-foreground">{service.name}</span>
+          {billingData.services.map((service, index) => {
+            const isExpanded = !!expandedServices[service.name];
+            return (
+              <div key={service.name} className={`${index !== billingData.services.length - 1 ? 'border-b border-border' : ''}`}>
+                <div
+                  onClick={() => toggleService(service.name)}
+                  className={`flex items-center justify-between px-3 py-2.5 hover:bg-muted/50 transition-colors cursor-pointer ${isExpanded ? 'bg-muted/30' : ''}`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    {isExpanded ? (
+                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    )}
+                    <span className={`w-2 h-2 rounded-full ${service.color}`}></span>
+                    <span className="text-sm font-bold text-foreground">{service.name}</span>
+                  </div>
+                  <span className="text-sm font-bold text-foreground">
+                    ${service.amount.toFixed(5)}
+                  </span>
+                </div>
+
+                <div className={`grid transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isExpanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                  <div className="overflow-hidden bg-muted/5 dark:bg-muted/10">
+                    {service.details && (
+                      <div className="px-3 pb-4 pt-1">
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-[12px] text-left border-collapse">
+                            <thead>
+                              <tr className="text-muted-foreground font-medium border-b border-border/50">
+                                <th className="py-2 font-semibold">Item</th>
+                                <th className="py-2 font-semibold text-right">Usage / Units</th>
+                                <th className="py-2 font-semibold text-right">Price per unit</th>
+                                <th className="py-2 font-semibold text-right">Cost</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border/30">
+                              {service.details.map((detail, dIdx) => {
+                                if (detail.is_header) {
+                                  return (
+                                    <tr key={`header-${dIdx}`}>
+                                      <td colSpan="4" className="py-3 font-bold text-foreground text-[13px] pt-4 flex items-center gap-1.5">
+                                        {detail.label}
+                                        {detail.label === "Pay per event" && (
+                                          <CustomTooltip 
+                                            content={
+                                              <div className="flex flex-col gap-1 text-[11px] text-left max-w-[250px]">
+                                                <div className="font-bold text-foreground">Fixed costs for specific Actor events.</div>
+                                                <div className="text-muted-foreground text-[10px] leading-relaxed">Some Actors charge a flat fee per start or for specific results generated.</div>
+                                              </div>
+                                            }
+                                          >
+                                            <HelpCircle className="w-3 h-3 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
+                                          </CustomTooltip>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  );
+                                }
+
+                            if (detail.type === 'run') {
+                              return (
+                                <tr key={detail.id || dIdx} className="hover:bg-muted/30 transition-colors">
+                                  <td className="py-2.5">
+                                    <div className="flex flex-col">
+                                      <span
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          navigate(`/actor/${detail.actor_id}`);
+                                        }}
+                                        className="text-blue-500 font-bold hover:underline cursor-pointer"
+                                      >
+                                        {detail.actor_name} - {detail.unit_label}
+                                      </span>
+                                      <span className="text-[10px] text-muted-foreground">
+                                        {new Date(detail.date).toLocaleString()}
+                                      </span>
+                                    </div>
+                                  </td>
+                                  <td className="py-2.5 text-right font-medium">{detail.units}</td>
+                                  <td className="py-2.5 text-right text-muted-foreground">{detail.price_per_unit}</td>
+                                  <td className="py-2.5 text-right font-bold text-foreground">${detail.cost.toFixed(5)}</td>
+                                </tr>
+                              );
+                            }
+
+                            return (
+                              <tr key={dIdx} className="hover:bg-muted/20 transition-colors">
+                                <td className="py-2.5 flex items-center gap-1.5 font-medium text-foreground">
+                                  {detail.label}
+                                  <CustomTooltip 
+                                    content={
+                                      <div className="flex flex-col gap-1 text-[11px] text-left max-w-[250px]">
+                                        <div className="font-bold text-foreground">
+                                          {BILLING_TOOLTIPS[detail.label]?.what || "Usage details for this service."}
+                                        </div>
+                                        <div className="text-muted-foreground text-[10px] leading-relaxed">
+                                          {BILLING_TOOLTIPS[detail.label]?.how || "Calculated based on actual consumption."}
+                                        </div>
+                                      </div>
+                                    }
+                                  >
+                                    <HelpCircle className="w-3 h-3 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
+                                  </CustomTooltip>
+                                </td>
+                                <td className="py-2.5 text-right font-medium text-foreground">{detail.value}</td>
+                                <td className="py-2.5 text-right text-muted-foreground">{detail.price || '-'}</td>
+                                <td className="py-2.5 text-right font-bold text-foreground">${detail.cost.toFixed(5)}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+                  </div>
+                </div>
               </div>
-              <span className="text-sm font-semibold text-foreground">
-                ${service.amount.toFixed(2)}
-              </span>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
@@ -825,7 +1079,7 @@ const Billing = () => {
                 <div className="flex justify-between text-[13px] mb-1.5">
                   <div className="flex items-center gap-1.5 text-foreground font-medium">
                     Total Actor RAM
-                    <CustomTooltip content="Total memory allocated across all currently running Actors in this workspace.">
+                    <CustomTooltip content={renderTooltipContent("Total Actor RAM")}>
                       <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/60 cursor-help" />
                     </CustomTooltip>
                   </div>
@@ -841,7 +1095,7 @@ const Billing = () => {
                 <div className="flex justify-between text-[13px] mb-1.5">
                   <div className="flex items-center gap-1.5 text-foreground font-medium">
                     Number of Actors
-                    <CustomTooltip content="Maximum number of customized Actors available in your workspace.">
+                    <CustomTooltip content={renderTooltipContent("Number of Actors")}>
                       <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/60 cursor-help" />
                     </CustomTooltip>
                   </div>
@@ -857,7 +1111,7 @@ const Billing = () => {
                 <div className="flex justify-between text-[13px] mb-1.5">
                   <div className="flex items-center gap-1.5 text-foreground font-medium">
                     Number of schedules
-                    <CustomTooltip content="Maximum number of automated periodic run slots.">
+                    <CustomTooltip content={renderTooltipContent("Number of schedules")}>
                       <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/60 cursor-help" />
                     </CustomTooltip>
                   </div>
@@ -873,7 +1127,7 @@ const Billing = () => {
                 <div className="flex justify-between text-[13px] mb-1.5">
                   <div className="flex items-center gap-1.5 text-foreground font-medium">
                     Number of Actor tasks
-                    <CustomTooltip content="Saved parameterized configurations connected to your Actors.">
+                    <CustomTooltip content={renderTooltipContent("Number of Actor tasks")}>
                       <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/60 cursor-help" />
                     </CustomTooltip>
                   </div>
@@ -889,7 +1143,7 @@ const Billing = () => {
                 <div className="flex justify-between text-[13px] mb-1.5">
                   <div className="flex items-center gap-1.5 text-foreground font-medium">
                     Number of concurrent Actor runs
-                    <CustomTooltip content="Maximum number of scrapes that can execute parallelly at any exact instant.">
+                    <CustomTooltip content={renderTooltipContent("Number of concurrent Actor runs")}>
                       <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/60 cursor-help" />
                     </CustomTooltip>
                   </div>
@@ -905,7 +1159,7 @@ const Billing = () => {
                 <div>
                   <div className="flex items-center gap-1.5 text-[13px] text-foreground font-medium mb-1">
                     Max Actor build memory
-                    <CustomTooltip content="Peak memory allocation allowed during the building phase of a custom Actor.">
+                    <CustomTooltip content={renderTooltipContent("Max Actor build memory")}>
                       <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/60 cursor-help" />
                     </CustomTooltip>
                   </div>
@@ -916,7 +1170,7 @@ const Billing = () => {
                 <div>
                   <div className="flex items-center gap-1.5 text-[13px] text-foreground font-medium mb-1">
                     Max Actor build time
-                    <CustomTooltip content="Maximum allowed duration before a custom Actor build is force-aborted.">
+                    <CustomTooltip content={renderTooltipContent("Max Actor build time")}>
                       <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/60 cursor-help" />
                     </CustomTooltip>
                   </div>
@@ -944,7 +1198,7 @@ const Billing = () => {
             <div className="mt-auto">
               <div className="flex items-center gap-2 mb-4">
                 <span className="text-2xl font-bold text-foreground">{retentionDays} days</span>
-                <CustomTooltip content="Duration your run datasets and logs are kept in storage before auto-deletion.">
+                <CustomTooltip content={renderTooltipContent("Data retention")}>
                   <HelpCircle className="w-4 h-4 text-muted-foreground/60 cursor-help" />
                 </CustomTooltip>
               </div>

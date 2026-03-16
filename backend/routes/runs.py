@@ -16,6 +16,7 @@ from models import (
     Run, RunCreate, Dataset, DatasetItem
 )
 from scrapers import ScraperEngine, get_scraper_registry
+from routes.notification_routes import broadcast_usage_update
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,9 @@ async def execute_scraping_job(run_id: str, actor_id: str, user_id: str, input_d
                 }
             }
         )
+        
+        # Real-time update: Run is now "running" (consuming logic RAM)
+        await broadcast_usage_update(user_id)
         
         # Initialize scraper engine
         engine = ScraperEngine(proxy_manager)
@@ -117,6 +121,8 @@ async def execute_scraping_job(run_id: str, actor_id: str, user_id: str, input_d
                     }
                 }
             )
+            # Real-time update: Run failed (cleaning up logic RAM)
+            await broadcast_usage_update(user_id)
             
             # Update actor runs count
             await db.actors.update_one({"id": actor_id}, {"$inc": {"runs_count": 1}})
@@ -126,22 +132,38 @@ async def execute_scraping_job(run_id: str, actor_id: str, user_id: str, input_d
             await billing_service.record_run_usage(run_id)
             
             logger.info(f"Run {run_id} completed successfully with {len(results)} results")
+            # Real-time update: Run finished (cleaning up logic RAM)
+            await broadcast_usage_update(user_id)
         
         finally:
             await engine.cleanup()
     
     except Exception as e:
         logger.error(f"Run {run_id} failed: {str(e)}")
-        await db.runs.update_one(
-            {"id": run_id},
-            {
-                "$set": {
-                    "status": "failed",
-                    "finished_at": datetime.now(timezone.utc).isoformat(),
-                    "error_message": str(e)
-                }
-            }
-        )
+        # Ensure run status is updated to failed and duration is recorded
+        finished_at = datetime.now(timezone.utc)
+        target_run = await db.runs.find_one({"id": run_id})
+        
+        update_data = {
+            "status": "failed",
+            "finished_at": finished_at.isoformat(),
+            "error_message": str(e)
+        }
+        
+        if target_run and target_run.get("started_at"):
+            started_at = parse_datetime_safe(target_run["started_at"])
+            if started_at:
+                duration = int(((finished_at if finished_at.tzinfo else finished_at.replace(tzinfo=timezone.utc)) - (started_at if started_at.tzinfo else started_at.replace(tzinfo=timezone.utc))).total_seconds())
+                update_data["duration_seconds"] = duration
+        
+        await db.runs.update_one({"id": run_id}, {"$set": update_data})
+        
+        # Record billing usage for failed run (CU only logic is in billing_summary/historical)
+        from services.billing_service import billing_service
+        await billing_service.record_run_usage(run_id)
+        
+        # Real-time update: Run failed (cleaning up logic RAM)
+        await broadcast_usage_update(user_id)
 
 # ============= Run Routes =============
 @router.post("/runs", response_model=Run)
@@ -410,17 +432,34 @@ async def abort_run(
             task_cancelled = await task_manager.cancel_task(run_id)
         
         # Update database status to aborted
+        finished_at = datetime.now(timezone.utc)
+        
+        # Calculate duration if started
+        started_at_str = run.get("started_at")
+        duration = run.get("duration_seconds") or 0
+        if started_at_str and not duration:
+            started_at = parse_datetime_safe(started_at_str)
+            if started_at:
+                duration = int((finished_at - started_at).total_seconds())
+
         result = await db.runs.update_one(
             {"id": run_id, "user_id": current_user['id']},
             {
                 "$set": {
                     "status": "aborted",
-                    "finished_at": datetime.now(timezone.utc).isoformat()
+                    "finished_at": finished_at.isoformat(),
+                    "duration_seconds": duration
                 }
             }
         )
         
+        # Record billing usage for aborted run (Full)
+        from services.billing_service import billing_service
+        await billing_service.record_run_usage(run_id)
+        
         if result.modified_count > 0:
+            # Real-time update: Run aborted (cleaning up logic RAM)
+            await broadcast_usage_update(current_user['id'])
             status_msg = "Run aborted and task cancelled" if task_cancelled else "Run status updated to aborted"
             logger.info(f"{status_msg}: {run_id}")
             return {
@@ -478,17 +517,32 @@ async def abort_multiple_runs(
                 task_cancelled = await task_manager.cancel_task(run_id)
                 
                 # Update database status
+                finished_at = datetime.now(timezone.utc)
+                
+                # Calculate duration if started
+                started_at_str = run.get("started_at")
+                duration = run.get("duration_seconds") or 0
+                if started_at_str and not duration:
+                    started_at = parse_datetime_safe(started_at_str)
+                    if started_at:
+                        duration = int((finished_at - started_at).total_seconds())
+
                 update_result = await db.runs.update_one(
                     {"id": run_id, "user_id": current_user['id']},
                     {
                         "$set": {
                             "status": "aborted",
-                            "finished_at": datetime.now(timezone.utc).isoformat()
+                            "finished_at": finished_at.isoformat(),
+                            "duration_seconds": duration
                         }
                     }
                 )
                 
                 if update_result.modified_count > 0:
+                    # Record billing usage for aborted run
+                    from services.billing_service import billing_service
+                    await billing_service.record_run_usage(run_id)
+
                     results["success"].append({
                         "run_id": run_id,
                         "task_cancelled": task_cancelled
@@ -500,6 +554,10 @@ async def abort_multiple_runs(
             except Exception as e:
                 logger.error(f"Error aborting run {run_id}: {str(e)}")
                 results["failed"].append(run_id)
+        
+        if len(results["success"]) > 0:
+            # Real-time update: Runs aborted (cleaning up logic RAM)
+            await broadcast_usage_update(current_user['id'])
         
         return {
             "success": True,
@@ -543,10 +601,9 @@ async def abort_all_runs(
             query["status"] = status_filter
         
         # Find all matching runs
-        runs = await db.runs.find(query, {"_id": 0, "id": 1}).to_list(length=None)
-        run_ids = [run["id"] for run in runs]
+        runs = await db.runs.find(query, {"_id": 0}).to_list(length=None)
         
-        if not run_ids:
+        if not runs:
             return {
                 "success": True,
                 "message": f"No {status_filter} runs found to abort",
@@ -559,21 +616,38 @@ async def abort_all_runs(
             "failed": []
         }
         
-        for run_id in run_ids:
+        for run in runs:
+            run_id = run["id"]
             try:
                 # Try to cancel the task
                 task_cancelled = await task_manager.cancel_task(run_id)
                 
                 # Update database status
+                finished_at = datetime.now(timezone.utc)
+                
+                # Calculate duration if started
+                started_at_str = run.get("started_at")
+                duration = run.get("duration_seconds") or 0
+                if started_at_str and not duration:
+                    started_at = parse_datetime_safe(started_at_str)
+                    if started_at:
+                        duration = int((finished_at - started_at).total_seconds())
+
                 update_result = await db.runs.update_one(
                     {"id": run_id, "user_id": current_user['id']},
                     {
                         "$set": {
                             "status": "aborted",
-                            "finished_at": datetime.now(timezone.utc).isoformat()
+                            "finished_at": finished_at.isoformat(),
+                            "duration_seconds": duration
                         }
                     }
                 )
+                
+                if update_result.modified_count > 0:
+                    # Record billing usage for aborted run
+                    from services.billing_service import billing_service
+                    await billing_service.record_run_usage(run_id)
                 
                 if update_result.modified_count > 0:
                     results["success"].append({
@@ -586,6 +660,10 @@ async def abort_all_runs(
             except Exception as e:
                 logger.error(f"Error aborting run {run_id}: {str(e)}")
                 results["failed"].append(run_id)
+        
+        if len(results["success"]) > 0:
+            # Real-time update: All runs aborted (cleaning up logic RAM)
+            await broadcast_usage_update(current_user['id'])
         
         return {
             "success": True,

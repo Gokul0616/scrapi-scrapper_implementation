@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import CustomTooltip from './CustomTooltip';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useModal } from '../contexts/ModalContext';
@@ -169,6 +170,31 @@ const Sidebar = () => {
     };
 
     fetchBillingData();
+  }, [currentWorkspace]);
+
+  // Listen for real-time usage updates from WebSocket (via NotificationContext)
+  useEffect(() => {
+    const handleUsageUpdate = () => {
+      console.log('Sidebar: Received usageUpdated event!');
+      console.log('Sidebar: Refreshing usage data due to real-time update');
+      const fetchBillingData = async () => {
+        try {
+          const token = localStorage.getItem('token');
+          if (token && currentWorkspace) {
+            const response = await axios.get(`${API}/billing/summary`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            setBillingData(response.data);
+          }
+        } catch (error) {
+          console.error('Failed to load billing summary:', error);
+        }
+      };
+      fetchBillingData();
+    };
+
+    window.addEventListener('usageUpdated', handleUsageUpdate);
+    return () => window.removeEventListener('usageUpdated', handleUsageUpdate);
   }, [currentWorkspace]);
 
   // Handle keyboard shortcut
@@ -585,19 +611,31 @@ const Sidebar = () => {
                 </div>
 
                 {/* Credit Usage */}
-                <div className="mb-3.5">
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="text-muted-foreground font-semibold">Credit Usage</span>
-                    <span className="font-semibold text-foreground">
-                      {billingData ? `$${billingData.planConsumption?.freeUsed.toFixed(2)} / $${billingData.planConsumption?.freeTotal.toFixed(2)}` : '$0.00 / $5.00'}
-                    </span>
+                <CustomTooltip
+                  className="block w-full"
+                  content={
+                    <div className="flex flex-col gap-1 text-[11px] text-left">
+                      <div className="font-bold text-foreground">Precise usage:</div>
+                      <div className="text-foreground ">
+                        {billingData ? `$${billingData.planConsumption?.freeUsed.toFixed(5)} / $${billingData.planConsumption?.freeTotal.toFixed(5)}` : '$0.00000 / $5.00000'}
+                      </div>
+                    </div>
+                  }
+                >
+                  <div className="mb-3.5 cursor-help">
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-muted-foreground font-semibold">Credit Usage</span>
+                      <span className="font-semibold text-foreground">
+                        {billingData ? `$${billingData.planConsumption?.freeUsed.toFixed(2)} / $${billingData.planConsumption?.freeTotal.toFixed(2)}` : '$0.00 / $5.00'}
+                      </span>
+                    </div>
+                    <Progress
+                      value={billingData ? Math.min(100, (billingData.planConsumption?.freeUsed / billingData.planConsumption?.freeTotal) * 100) : 0}
+                      className="h-1 bg-blue-500/20"
+                      indicatorColor="bg-blue-500"
+                    />
                   </div>
-                  <Progress
-                    value={billingData ? Math.min(100, (billingData.planConsumption?.freeUsed / billingData.planConsumption?.freeTotal) * 100) : 0}
-                    className="h-1 bg-blue-500/20"
-                    indicatorColor="bg-blue-500"
-                  />
-                </div>
+                </CustomTooltip>
 
                 {/* Upgrade Button */}
                 {(() => {

@@ -145,7 +145,7 @@ export const NotificationProvider = ({ children }) => {
     websocket.onopen = () => {
       console.log('WebSocket connection established');
       setIsConnected(true);
-      
+
       // Send periodic ping to keep connection alive
       const pingInterval = setInterval(() => {
         if (websocket.readyState === WebSocket.OPEN) {
@@ -162,15 +162,19 @@ export const NotificationProvider = ({ children }) => {
         if (event.data === 'pong') {
           return;
         }
-        
+
         const data = JSON.parse(event.data);
-        
+
         if (data.type === 'new_notification') {
           // Add new notification to the list
           setNotifications(prev => [data.notification, ...prev]);
           if (!data.notification.read) {
             setUnreadCount(prev => prev + 1);
           }
+        } else if (data.type === 'usage_update') {
+          // Trigger a global event to notify components like Sidebar that usage has changed
+          console.log('Usage update received from WebSocket');
+          window.dispatchEvent(new CustomEvent('usageUpdated'));
         }
       } catch (error) {
         console.error('Failed to parse WebSocket message:', error);

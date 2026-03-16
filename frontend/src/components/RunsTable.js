@@ -206,7 +206,7 @@ const RunsTable = ({
             cellClassName: "text-center",
             cell: ({ row }) => (
                 <span className="text-[13.5px] font-medium text-foreground">
-                    {row.cost ? `$${row.cost.toFixed(2)}` : '$0.00'}
+                    {row.cost ? `$${row.cost.toFixed(5)}` : '$0.00000'}
                 </span>
             )
         },

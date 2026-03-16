@@ -5,6 +5,16 @@ from database import get_db
 
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "sk_test_fake_key")
 
+def parse_datetime_safe(date_str):
+    if not date_str: return None
+    try:
+        if isinstance(date_str, datetime): return date_str
+        if date_str.endswith('Z'): date_str = date_str[:-1] + '+00:00'
+        dt = datetime.fromisoformat(date_str)
+        if dt.tzinfo is None: dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+    except: return None
+
 class BillingService:
     PLAN_DATA = {
         "free": {
@@ -122,35 +132,174 @@ class BillingService:
         else:
             expires_at = now + timedelta(days=28)
             
-        # For all plans (Annual or Monthly), credits and usage reset on the 1st of every calendar month
-        start_of_period = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        if start_of_period.month == 12:
-            end_of_period = start_of_period.replace(year=start_of_period.year + 1, month=1)
+        # For Paid plans, usage resets on the anniversary (calculated from expires_at)
+        # For Free plans or if anniversary is unknown, fallback to the 1st of the calendar month
+        if plan_name != "free" and expires_at_str:
+            # Current period starts exactly one month (or period) before expiration
+            # We use the day from expires_at
+            anniversary_day = expires_at.day
+            
+            # If today is after the anniversary day this month, start is this month's anniversary
+            if now.day >= anniversary_day:
+                start_of_period = now.replace(day=anniversary_day, hour=0, minute=0, second=0, microsecond=0)
+            else:
+                # Start was last month's anniversary
+                last_month = now.replace(day=1) - timedelta(days=1)
+                try:
+                    start_of_period = last_month.replace(day=anniversary_day, hour=0, minute=0, second=0, microsecond=0)
+                except ValueError:
+                    # Handle Feb 29/30/31 case
+                    start_of_period = last_month.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         else:
-            end_of_period = start_of_period.replace(month=start_of_period.month + 1)
+            # Fallback to 1st of month
+            start_of_period = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
-        # Aggregate usage from runs in this period
-        # Note: created_at is stored as ISO string in DB, so we need to compare strings
+        # End of period is always the next anniversary or 1st of next month
+        if plan_name != "free" and expires_at_str:
+            end_of_period = expires_at
+        else:
+            if start_of_period.month == 12:
+                end_of_period = start_of_period.replace(year=start_of_period.year + 1, month=1)
+            else:
+                end_of_period = start_of_period.replace(month=start_of_period.month + 1)
+
+        # Aggregate usage from runs in this period for "Actors" breakdown
         db = get_db()
-        runsCursor = db.runs.find({
+        runs_cursor = db.runs.find({
             "user_id" if workspace_type == "personal" else "organization_id": workspace_id,
             "created_at": {"$gte": start_of_period.isoformat()}
-        })
+        }).sort("created_at", -1) # Latest first
         
         compute_units_used = 0.0
-        async for run in runsCursor:
-            compute_units_used += run.get("compute_units_used", 0.0)
+        total_runs_in_period = 0
+        aggregated_actors = {}
+        
+        async for run in runs_cursor:
+            status = run.get("status", "succeeded")
+            if status == "queued": continue # Don't bill for queued runs yet
+            
+            # Calculate CU cost - if running, calculate based on time elapsed so far
+            cu = run.get("compute_units_used", 0.0)
+            if status == "running" or (cu == 0.0 and status in ["succeeded", "aborted", "failed"]):
+                # Calculate on the fly for running runs or runs missing CU data
+                started_at_str = run.get("started_at")
+                if started_at_str:
+                    started_at = parse_datetime_safe(started_at_str)
+                    if started_at:
+                        finished_at = parse_datetime_safe(run.get("finished_at")) or now
+                        duration_sec = (finished_at - started_at).total_seconds()
+                        cu = self.calculate_compute_units(int(duration_sec), run.get("ram_mb", 1024))
+            
+            compute_units_used += cu
+            total_runs_in_period += 1
+            
+            actor_id = run.get("actor_id")
+            # For now, we assume "Actor Start" is the event.
+            event_type = "Actor Start" 
+            
+            group_key = f"{actor_id}_{event_type}"
+            
+            if group_key not in aggregated_actors:
+                # Try to get author name from actor record
+                actor = await db.actors.find_one({"id": actor_id})
+                author = actor.get("author_name") if actor else "gokul"
+                if not author: author = "scrapi"
+                
+                aggregated_actors[group_key] = {
+                    "actor_id": actor_id,
+                    "actor_name": f"{author}/{run.get('actor_name')}",
+                    "event_type": event_type,
+                    "event_count": 0,
+                    "cost": 0.0,
+                    "date": run.get("started_at") or run.get("created_at")
+                }
+            
+            aggregated_actors[group_key]["event_count"] += 1
+            # Fees: $0.008 (standard), $0.004 (aborted), $0.0 (failed)
+            if status == "aborted":
+                aggregated_actors[group_key]["cost"] += 0.004
+            elif status != "failed":
+                aggregated_actors[group_key]["cost"] += 0.008
+            
+        actor_run_details = []
+        for key, data in aggregated_actors.items():
+            actor_run_details.append({
+                "actor_id": data["actor_id"],
+                "actor_name": data["actor_name"],
+                "unit_label": data["event_type"],
+                "date": data["date"],
+                "units": f"{data['event_count']} events",
+                "price_per_unit": "$0.008 per event",
+                "cost": data["cost"],
+                "type": "run"
+            })
             
         # CU Price roughly $0.50
         cu_cost = compute_units_used * 0.50
         
+        # Total cost for Actors service
+        actors_total_cost = sum(d["cost"] for d in actor_run_details) + cu_cost
+        
+        # Storage usage calculation
+        dataset_cursor = db.datasets.find({
+            "user_id" if workspace_type == "personal" else "organization_id": workspace_id
+        })
+        
+        total_items = 0
+        timed_storage_cost = 0.0
+        
+        async for ds in dataset_cursor:
+            items = ds.get("item_count", 0)
+            total_items += items
+            
+            # Timed Storage (GB-hours) 
+            # Assume 0.5KB per item
+            ds_size_gb = (items * 0.5) / (1024 * 1024)
+            
+            # Calculate hours since creation or within billing period
+            created_at = ds.get("created_at")
+            
+            if isinstance(created_at, str):
+                try:
+                    # Handle ISO format and 'Z' suffix
+                    created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+                except (ValueError, TypeError):
+                    created_at = None
+            
+            if not created_at:
+                created_at = start_of_period
+            
+            # Ensure it's timezone-aware
+            if created_at.tzinfo is None:
+                created_at = created_at.replace(tzinfo=timezone.utc)
+                
+            start_tz = start_of_period.replace(tzinfo=timezone.utc) if start_of_period.tzinfo is None else start_of_period
+            active_since = max(created_at, start_tz)
+            hours_active = (now - active_since).total_seconds() / 3600
+            hours_active = max(0.0, float(hours_active))
+            
+            cost = ds_size_gb * hours_active * 0.0010
+            timed_storage_cost += cost
+            
+        # Write operations: $0.005 per 1,000 writes
+        write_ops_cost = (total_items / 1000) * 0.005
+        # Read operations: $0.0004 per 1,000 reads (simulate 2 reads per item)
+        read_ops_cost = ((total_items * 2) / 1000) * 0.0004
+
+        storage_total_cost = timed_storage_cost + write_ops_cost + read_ops_cost
+
+        # Proxy and Data Transfer Simulation (based on runs for visual spikes/variety)
+        # In a real app, these would come from usage logs
+        # No simulated proxy or data transfer costs as per user request
+        proxy_total_cost = 0.0
+        data_transfer_total_cost = 0.0
+
+        total_usage = actors_total_cost + storage_total_cost + proxy_total_cost + data_transfer_total_cost
+
         # The frontend expects planConsumption
-        free_used = min(cu_cost, platform_credits)
         free_total = platform_credits
+        free_used = min(total_usage, free_total) 
         free_remaining = max(0, free_total - free_used)
-        
-        total_usage = cu_cost # Simplified total
-        
         
         # Calculate current active RAM usage
         running_runs_cursor = db.runs.find({
@@ -209,10 +358,47 @@ class BillingService:
                 })
             },
             "services": [
-                { "name": 'Actors', "color": 'bg-emerald-500', "amount": cu_cost, "icon": '●' },
-                { "name": 'Data transfer', "color": 'bg-purple-500', "amount": 0.00, "icon": '●' },
-                { "name": 'Proxy', "color": 'bg-orange-500', "amount": 0.00, "icon": '●' },
-                { "name": 'Storage', "color": 'bg-blue-500', "amount": 0.00, "icon": '●' }
+                { 
+                    "name": 'Actors', 
+                    "color": 'bg-green-500', 
+                    "amount": actors_total_cost, 
+                    "icon": '●',
+                    "details": [
+                        { "label": "Actor compute units", "value": f"{compute_units_used:.4f} CU", "cost": cu_cost },
+                        { "label": "Pay per event", "is_header": True },
+                        *actor_run_details[:10] # Top 10 recent runs
+                    ]
+                },
+                { 
+                    "name": 'Data transfer', 
+                    "color": 'bg-purple-500', 
+                    "amount": 0.0, 
+                    "icon": '●',
+                    "details": [
+                        { "label": "Item", "usage": "0.00 GB", "price": "-", "cost": 0.0 }
+                    ]
+                },
+                { 
+                    "name": 'Proxy', 
+                    "color": 'bg-orange-500', 
+                    "amount": 0.0, 
+                    "icon": '●',
+                    "details": [
+                        { "label": "Item", "usage": "0.00 GB", "price": "-", "cost": 0.0 }
+                    ]
+                },
+                { 
+                    "name": 'Storage', 
+                    "color": 'bg-blue-500', 
+                    "amount": storage_total_cost, 
+                    "icon": '●',
+                    "details": [
+                        { "label": "Datasets", "is_header": True },
+                        { "label": "Timed storage", "value": f"{(timed_storage_cost / 0.001):.5f} GB-hours", "price": "$0.0010 per GB-hour", "cost": timed_storage_cost },
+                        { "label": "Reads", "value": f"{total_items * 2}", "price": "$0.0004 per 1k", "cost": read_ops_cost },
+                        { "label": "Writes", "value": f"{total_items}", "price": "$0.0050 per 1k", "cost": write_ops_cost }
+                    ]
+                }
             ],
             "plan_period": workspace.get("billing_period", "monthly"),
             "expires_at": workspace.get("expires_at") or (datetime.now(timezone.utc) + timedelta(days=28)).isoformat(),
@@ -308,6 +494,46 @@ class BillingService:
         
         daily_usage = {}
         actor_usage = {}
+        hist_cu_total = 0.0
+        hist_storage_timed = 0.0
+        total_event_fees = 0.0
+        now = datetime.now(timezone.utc)
+        
+        # We need to estimate storage for this month
+        # Since we don't have historical item_count snapshots, we use current datasets
+        # and check if they existed during the requested period.
+        total_items_in_period = 0
+        dataset_cursor = db.datasets.find({
+            "user_id" if workspace_type == "personal" else "organization_id": workspace_id,
+            "created_at": {"$lt": end_date.isoformat()}
+        })
+        
+        async for ds in dataset_cursor:
+            created_at_str = ds.get("created_at")
+            if not created_at_str: continue
+            ds_created_at = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
+            if ds_created_at.tzinfo is None: ds_created_at = ds_created_at.replace(tzinfo=timezone.utc)
+            
+            # Intersection of dataset lifetime and requested month
+            period_start = max(ds_created_at, start_date)
+            # For current month, end at 'now'. For past months, end at 'end_date'.
+            period_boundary = now if (month == now.month and year == now.year) else end_date
+            period_end = min(period_boundary, now) # Cannot exceed current time
+            
+            if period_start < period_end:
+                items = ds.get("item_count", 0)
+                total_items_in_period += items
+                hours_in_period = (period_end - period_start).total_seconds() / 3600
+                ds_size_gb = (items * 0.5) / (1024 * 1024)
+                
+                # Accumulate actual cost during the loop for parity with get_billing_summary
+                cost = ds_size_gb * hours_in_period * 0.0010
+                hist_storage_timed += cost
+                
+        # Define current period boundary for reconstructing missing run durations
+        period_boundary = now if (month == now.month and year == now.year) else end_date
+        
+        daily_usage = {}
         
         # Pre-fill daily_usage with all days of the month to 0
         current_date = start_date
@@ -315,9 +541,17 @@ class BillingService:
             day_str = current_date.strftime("%Y-%m-%d")
             daily_usage[day_str] = {
                 "date": day_str,
+                "formattedDate": current_date.strftime("%b %d"),
                 "Actor compute units": 0.0,
-                # Other services could be added here if we had data for them
-                # "Proxy SERPs": 0.0,
+                "Actors - paid for events": 0.0,
+                "Dataset timed storage": 0.0,
+                "Dataset reads": 0.0,
+                "Dataset writes": 0.0,
+                "Proxy SERPs": 0.0,
+                "Proxy residential data transfer": 0.0,
+                "Data transfer internal": 0.0,
+                "Data transfer external": 0.0,
+                "total_usage": 0.0
             }
             if current_date.month == 12 and current_date.day == 31:
                 break
@@ -332,48 +566,139 @@ class BillingService:
 
         total_cost = 0.0
 
-        async for run in runsCursor:
-            # Parse created_at string back to datetime to get the day
+        # Convert cursor to list to get count and facilitate enumeration
+        # Use length=None to capture all runs in the specified period
+        runs_list = await runsCursor.to_list(length=None)
+        total_runs_count = len(runs_list)
+
+        # 1. Calculate Monthly Totals for Consistency (Matches get_billing_summary)
+        hist_storage_writes = (total_items_in_period / 1000) * 0.005
+        hist_storage_reads = (total_items_in_period * 2 / 1000) * 0.0004
+        hist_storage_total = hist_storage_timed + hist_storage_writes + hist_storage_reads
+        
+        # Consistent zeroing of proxy/data for historical parity
+        total_proxy_cost = 0.0
+        total_data_cost = 0.0
+
+        # 2. Distribute Shares
+        per_run_reads = hist_storage_reads / max(1, total_runs_count)
+        per_run_writes = hist_storage_writes / max(1, total_runs_count)
+
+        total_actors_cost = 0.0
+        
+        for run in runs_list:
             created_at_str = run.get("created_at")
-            if not created_at_str:
-                continue
-                
+            if not created_at_str: continue
             try:
-                # Handle possible missing timezone info or different formats
-                if created_at_str.endswith('Z'):
-                    created_at_str = created_at_str[:-1] + '+00:00'
+                if created_at_str.endswith('Z'): created_at_str = created_at_str[:-1] + '+00:00'
                 run_date = datetime.fromisoformat(created_at_str)
                 day_str = run_date.strftime("%Y-%m-%d")
-            except Exception:
-                # Fallback if unparseable
-                continue
+            except Exception: continue
                 
-            cost = run.get("cost", 0.0)
+            # Align with status rules: aborted/succeeded/running get fee, failed only get CU
+            status = run.get("status", "succeeded")
+            if status == "queued": continue
+            
+            cu_used = run.get("compute_units_used", 0.0)
+            # If historical run is missing CU doc, try to reconstruct it
+            if cu_used == 0.0:
+                started_at_str = run.get("started_at") or run.get("created_at")
+                if started_at_str:
+                    try:
+                        started_at = parse_datetime_safe(started_at_str)
+                        if started_at:
+                            finished_at_str = run.get("finished_at")
+                            if finished_at_str:
+                                finished_at = parse_datetime_safe(finished_at_str)
+                            elif status == "running":
+                                finished_at = period_boundary
+                            else:
+                                # Aborted/Failed/Succeeded but missing timestamp: 
+                                # Default to started_at to avoid month-long overcharges
+                                finished_at = started_at
+                            
+                            if finished_at:
+                                duration_sec = max(0, (finished_at - started_at).total_seconds())
+                                cu_used = self.calculate_compute_units(int(duration_sec), run.get("ram_mb", 1024))
+                    except: pass
+
+            cu_cost = cu_used * 0.50
+            # Fees: $0.008 (standard), $0.004 (aborted), $0.0 (failed)
+            if status == "aborted":
+                start_fee = 0.004
+            elif status != "failed":
+                start_fee = 0.008
+            else:
+                start_fee = 0.0
             
             if day_str in daily_usage:
-                daily_usage[day_str]["Actor compute units"] += cost
-                total_cost += cost
+                daily_usage[day_str]["Actor compute units"] = float(daily_usage[day_str].get("Actor compute units", 0.0)) + float(cu_cost)
+                daily_usage[day_str]["Actors - paid for events"] = float(daily_usage[day_str].get("Actors - paid for events", 0.0)) + float(start_fee)
+                daily_usage[day_str]["Dataset reads"] = float(daily_usage[day_str].get("Dataset reads", 0.0)) + float(per_run_reads)
+                daily_usage[day_str]["Dataset writes"] = float(daily_usage[day_str].get("Dataset writes", 0.0)) + float(per_run_writes)
+                
+                day_total = float(cu_cost + start_fee + per_run_reads + per_run_writes)
+                daily_usage[day_str]["total_usage"] = float(daily_usage[day_str].get("total_usage", 0.0)) + day_total
+                hist_cu_total += cu_used # Aggregate CU units 
+                total_event_fees += start_fee # Aggregate event fees
             
-            # Aggregate by actor
-            actor_name = run.get("actor_name", "Unknown Actor")
-            if actor_name not in actor_usage:
-                actor_usage[actor_name] = {
-                    "actor_name": actor_name,
+            # Aggregate by actor for table - Include ONLY Events for perfect parity with Current period "Pay per event" list
+            raw_actor_name = run.get("actor_name", "Unknown Actor")
+            # Align with get_billing_summary format: scrapi/name
+            author = "scrapi" 
+            display_actor_name = f"{author}/{raw_actor_name}"
+            
+            if display_actor_name not in actor_usage:
+                actor_usage[display_actor_name] = {
+                    "actor_name": display_actor_name,
                     "actor_id": run.get("actor_id"),
                     "actor_icon": run.get("actor_icon"),
-                    "total_usage": 0.0
+                    "total_usage": 0.0,
+                    "units": 0
                 }
-            actor_usage[actor_name]["total_usage"] += cost
-            
+            # The table cost should reflect ONLY the event fee to match Current period "Pay per event" breakdown
+            # and respect the failure waiving rule
+            actor_usage[display_actor_name]["total_usage"] += float(start_fee)
+            actor_usage[display_actor_name]["units"] += 1
+            # hist_cu_total is now properly summed above
+
+        # Distribute timed storage evenly
+        if daily_usage:
+            timed_share = hist_storage_timed / len(daily_usage)
+            for day in daily_usage:
+                daily_usage[day]["Dataset timed storage"] = timed_share
+                daily_usage[day]["total_usage"] += timed_share
+
+        # Final Calculation for Parity
+        total_event_cost = total_event_fees
+        total_cu_cost = hist_cu_total * 0.50
+        
+        # Grand total summation (Matches get_billing_summary logic)
+        total_actors_total = total_event_cost + total_cu_cost
+        grand_total = float(total_actors_total + hist_storage_total + total_proxy_cost + total_data_cost)
+
         return {
             "daily_usage": list(daily_usage.values()),
             "actor_usage": list(actor_usage.values()),
-            "total_cost": total_cost,
-            "period": {
-                "month": month,
-                "year": year
-            }
+            "compute_units_cost": float(total_cu_cost),
+            "storage_usage": {
+                "timed_storage": float(hist_storage_timed),
+                "reads": float(hist_storage_reads),
+                "writes": float(hist_storage_writes),
+                "total": float(hist_storage_total)
+            },
+            "total_cost": grand_total,
+            "period": { "month": month, "year": year }
         }
+
+    async def is_usage_limit_reached(self, workspace_id: str, workspace_type: str) -> bool:
+        """Check if current usage exceeds plan credits to block new runs"""
+        summary = await self.get_billing_summary(workspace_id, workspace_type)
+        consumption = summary.get("planConsumption", {})
+        free_remaining = float(consumption.get("freeRemaining", 0.0))
+        
+        # If no credits left and it's a paid plan that isn't overage-enabled
+        return free_remaining <= 0
 
     def calculate_compute_units(self, duration_seconds: int, ram_mb: int) -> float:
         """
@@ -393,15 +718,40 @@ class BillingService:
         if not run:
             return
             
-        duration = run.get("duration_seconds", 0)
+        duration = run.get("duration_seconds") or 0
+        started_at = parse_datetime_safe(run.get("started_at"))
+        finished_at = parse_datetime_safe(run.get("finished_at"))
+        
+        if not duration and started_at and finished_at:
+            duration = int((finished_at - started_at).total_seconds())
+        
         ram_mb = run.get("ram_mb", 1024)
+        status = run.get("status", "succeeded")
         
         cu_used = self.calculate_compute_units(duration, ram_mb)
-        cost = cu_used * 0.50  # Let's say 1 CU = $0.50
+        cu_cost = cu_used * 0.50  # 1 CU = $0.50
+        
+        # Actor Start fee: $0.008 (standard), $0.004 (aborted), $0.0 (failed)
+        if status == "failed":
+            event_fee = 0.0
+        elif status == "aborted":
+            event_fee = 0.004
+        else:
+            event_fee = 0.008
+        total_cost = cu_cost + event_fee
         
         # update run
-        db = get_db()
-        await db.runs.update_one({"id": run_id}, {"$set": {"compute_units_used": cu_used, "cost": cost}})
+        await db.runs.update_one(
+            {"id": run_id}, 
+            {
+                "$set": {
+                    "compute_units_used": cu_used, 
+                    "cost": total_cost, 
+                    "duration_seconds": duration,
+                    "event_cost": event_fee
+                }
+            }
+        )
 
     async def create_checkout_session(self, workspace_id: str, workspace_type: str, plan_type: str):
         """Generate a Stripe Checkout session to upgrade plan"""

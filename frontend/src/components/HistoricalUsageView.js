@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import CustomBarChart, { SERVICE_THEMES } from './CustomBarChart';
 import CustomDropdown from './CustomDropdown';
 import CustomTooltip from './CustomTooltip';
+import { useNavigate } from 'react-router-dom';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -12,6 +13,7 @@ const API = `${BACKEND_URL}/api`;
 const HistoricalUsageView = ({ currentWorkspace }) => {
     const { user } = useAuth();
     const [data, setData] = useState(null);
+    const navigate = useNavigate()
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -140,23 +142,54 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
     const chartData = useMemo(() => {
         if (!data || !data.daily_usage) return [];
 
+        const usageKeys = [
+            'Actor compute units',
+            'Actors - paid for events',
+            'Proxy SERPs',
+            'Proxy residential data transfer',
+            'Data transfer internal',
+            'Data transfer external',
+            'Dataset timed storage',
+            'Dataset reads',
+            'Dataset writes',
+            'Key-value store timed storage',
+            'Key-value store reads',
+            'Key-value store writes',
+            'Key-value store lists',
+            'Request queue timed storage',
+            'Request queue reads',
+            'Request queue writes',
+            'Paid Actors (monthly rental)',
+            'Actors - paid for results',
+            'Actors - paid for events'
+        ];
         let baseData = data.daily_usage;
+
         if (timeAgg === 'Monthly') {
-            const totalUnits = baseData.reduce((acc, curr) => acc + (curr['Actor compute units'] || 0), 0);
+            const totals = {};
+            usageKeys.forEach(key => {
+                totals[key] = data.daily_usage.reduce((acc, curr) => acc + (curr[key] || 0), 0);
+            });
             baseData = [{
                 date: `${selectedYear}-${selectedMonth.toString().padStart(2, '0')}`,
-                'Actor compute units': totalUnits
+                formattedDate: new Date(selectedYear, selectedMonth - 1).toLocaleString('default', { month: 'short' }),
+                ...totals
             }];
         }
 
         if (viewType === 'Cumulative') {
-            let cumulativeSum = 0;
+            const cumulativeTotals = {};
+            usageKeys.forEach(key => {
+                cumulativeTotals[key] = 0;
+            });
+
             return baseData.map(day => {
-                cumulativeSum += (day['Actor compute units'] || 0);
-                return {
-                    ...day,
-                    'Actor compute units': cumulativeSum
-                };
+                const dayWithCumulative = { ...day };
+                usageKeys.forEach(key => {
+                    cumulativeTotals[key] += (day[key] || 0);
+                    dayWithCumulative[key] = cumulativeTotals[key];
+                });
+                return dayWithCumulative;
             });
         }
 
@@ -174,7 +207,30 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
                 }
             });
         });
-        return Array.from(keys);
+
+        // Define a preferred order to match Apify's UI structure
+        const preferredOrder = [
+            'Actor compute units',
+            'Actors - paid for events',
+            'Proxy SERPs',
+            'Proxy residential data transfer',
+            'Data transfer internal',
+            'Data transfer external',
+            'Dataset timed storage',
+            'Dataset reads',
+            'Dataset writes',
+            'Key-value store timed storage',
+            'Key-value store reads',
+            'Key-value store writes',
+            'Key-value store lists',
+            'Request queue timed storage',
+            'Request queue reads',
+            'Request queue writes',
+            'Paid Actors (monthly rental)',
+            'Actors - paid for results'
+        ];
+
+        return preferredOrder.filter(k => keys.has(k));
     }, [chartData]);
 
     // Stable pattern-id helper matching CustomBarChart
@@ -205,8 +261,8 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
             <p className="text-sm text-muted-foreground leading-relaxed">
                 Here you can view your raw platform usage, which does not reflect free Actor compute units
                 or other discounts from your subscription plan. See actual billed amounts in the{' '}
-                <span className="text-blue-500 cursor-pointer hover:underline">Current period</span> or past{' '}
-                <span className="text-blue-500 cursor-pointer hover:underline">Invoices</span>.
+                <span className="text-blue-500 cursor-pointer hover:underline" onClick={() => navigate('/billing?tab=current')}>Current period</span> or past{' '}
+                <span className="text-blue-500 cursor-pointer hover:underline" onClick={() => navigate('/billing?tab=invoices')}>Invoices</span>.
             </p>
 
             {/* Month selector row – right-aligned, outside the chart card */}
@@ -354,12 +410,152 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
                                         </div>
                                     </td>
                                     <td className="px-4 py-2.5 text-right font-semibold text-foreground text-sm">
-                                        ${actor.total_usage.toFixed(2)}
+                                        ${actor.total_usage.toFixed(5)}
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
+                </div>
+            )}
+
+            {/* ── Actor Compute Units Row ────────────────────────────────────────── */}
+            {!isLoading && !error && data && data.compute_units_cost !== undefined && (
+                <div className="flex items-center justify-between p-4 bg-muted/20 border border-border rounded-lg mt-4">
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-foreground">Actor compute units</span>
+                        <CustomTooltip content="Total cost of platform compute resources (RAM/CPU) used by all runs.">
+                            <span className="text-muted-foreground w-3.5 h-3.5 flex items-center justify-center border border-muted-foreground rounded-full text-[10px] cursor-help">?</span>
+                        </CustomTooltip>
+                    </div>
+                    <span className="text-sm font-bold text-foreground">
+                        ${data.compute_units_cost.toFixed(5)}
+                    </span>
+                </div>
+            )}
+
+            {/* ── Storage Usage Table ─────────────────────────────────────────── */}
+            {!isLoading && !error && data && data.storage_usage && (
+                <div className="border border-border rounded-lg bg-card overflow-hidden mt-4">
+                    <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-sm text-foreground">Usage by Storage</h3>
+                            <CustomTooltip content="Includes timed storage (GB-hours) and API operations (reads/writes).">
+                                <span className="text-muted-foreground w-3.5 h-3.5 flex items-center justify-center border border-muted-foreground rounded-full text-[10px] cursor-help">?</span>
+                            </CustomTooltip>
+                        </div>
+                        <div className="text-sm font-bold text-foreground">
+                            ${data.storage_usage.total.toFixed(5)}
+                        </div>
+                    </div>
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr className="border-b border-border bg-muted/30 text-xs text-muted-foreground">
+                                <th className="px-4 py-2 font-medium">Service</th>
+                                <th className="px-4 py-2 font-medium text-right">Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr className="border-b border-border hover:bg-muted/30 transition-colors">
+                                <td className="px-4 py-2.5 text-sm text-foreground">Timed storage</td>
+                                <td className="px-4 py-2.5 text-right font-medium text-foreground text-sm">${data.storage_usage.timed_storage.toFixed(5)}</td>
+                            </tr>
+                            <tr className="border-b border-border hover:bg-muted/30 transition-colors">
+                                <td className="px-4 py-2.5 text-sm text-foreground">Reads</td>
+                                <td className="px-4 py-2.5 text-right font-medium text-foreground text-sm">${data.storage_usage.reads.toFixed(5)}</td>
+                            </tr>
+                            <tr className="last:border-0 hover:bg-muted/30 transition-colors">
+                                <td className="px-4 py-2.5 text-sm text-foreground">Writes</td>
+                                <td className="px-4 py-2.5 text-right font-medium text-foreground text-sm">${data.storage_usage.writes.toFixed(5)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            {/* ── Proxy Usage Table ────────────────────────────────────────────── */}
+            {!isLoading && !error && data && (
+                <div className="border border-border rounded-lg bg-card overflow-hidden mt-4">
+                    <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-sm text-foreground ">Usage by Proxy</h3>
+                        </div>
+                        <div className="text-sm font-bold text-foreground">
+                            $0.00000
+                        </div>
+                    </div>
+                    <table className="w-full text-left font-sans">
+                        <thead>
+                            <tr className="border-b border-border bg-muted/30 text-xs text-muted-foreground">
+                                <th className="px-4 py-2 font-medium">Item</th>
+                                <th className="px-4 py-2 font-medium text-right">Usage / Units</th>
+                                <th className="px-4 py-2 font-medium text-right">Price per unit</th>
+                                <th className="px-4 py-2 font-medium text-right">Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/50">
+                            <tr className="hover:bg-muted/30 transition-colors">
+                                <td className="px-4 py-2 text-sm text-foreground">SERP</td>
+                                <td className="px-4 py-2 text-right text-xs text-muted-foreground">0 requests</td>
+                                <td className="px-4 py-2 text-right text-xs text-muted-foreground">-</td>
+                                <td className="px-4 py-2 text-right font-medium text-foreground text-sm">$0.00000</td>
+                            </tr>
+                            <tr className="hover:bg-muted/30 transition-colors">
+                                <td className="px-4 py-2 text-sm text-foreground">Residential</td>
+                                <td className="px-4 py-2 text-right text-xs text-muted-foreground">0.00 GB</td>
+                                <td className="px-4 py-2 text-right text-xs text-muted-foreground">-</td>
+                                <td className="px-4 py-2 text-right font-medium text-foreground text-sm">$0.00000</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            {/* ── Data Transfer Usage Table ─────────────────────────────────────── */}
+            {!isLoading && !error && data && (
+                <div className="border border-border rounded-lg bg-card overflow-hidden mt-4">
+                    <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-sm text-foreground">Usage by Data Transfer</h3>
+                        </div>
+                        <div className="text-sm font-bold text-foreground">
+                            $0.00000
+                        </div>
+                    </div>
+                    <table className="w-full text-left font-sans">
+                        <thead>
+                            <tr className="border-b border-border bg-muted/30 text-xs text-muted-foreground">
+                                <th className="px-4 py-2 font-medium">Item</th>
+                                <th className="px-4 py-2 font-medium text-right">Usage / Units</th>
+                                <th className="px-4 py-2 font-medium text-right">Price per unit</th>
+                                <th className="px-4 py-2 font-medium text-right">Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/50">
+                            <tr className="hover:bg-muted/30 transition-colors">
+                                <td className="px-4 py-2 text-sm text-foreground">Internal</td>
+                                <td className="px-4 py-2 text-right text-xs text-muted-foreground">0.00 GB</td>
+                                <td className="px-4 py-2 text-right text-xs text-muted-foreground">-</td>
+                                <td className="px-4 py-2 text-right font-medium text-foreground text-sm">$0.00000</td>
+                            </tr>
+                            <tr className="hover:bg-muted/30 transition-colors">
+                                <td className="px-4 py-2 text-sm text-foreground">External</td>
+                                <td className="px-4 py-2 text-right text-xs text-muted-foreground">0.00 GB</td>
+                                <td className="px-4 py-2 text-right text-xs text-muted-foreground">-</td>
+                                <td className="px-4 py-2 text-right font-medium text-foreground text-sm">$0.00000</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            {/* ── Total Summary Footer ────────────────────────────────────────── */}
+            {!isLoading && !error && data && (
+                <div className="flex justify-end p-4 bg-muted/20 border border-border rounded-lg mt-4 items-center gap-3">
+                    <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Total Month Usage</span>
+                    <span className="text-xl font-bold text-foreground">
+                        ${data.total_cost.toFixed(5)}
+                    </span>
                 </div>
             )}
         </div>

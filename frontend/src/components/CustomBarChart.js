@@ -85,7 +85,7 @@ const HistoricalUsageTooltip = ({ active, payload, label, coordinate, viewBox })
                 gap: 24,
             }}>
                 <span>{label} UTC</span>
-                <span>${total.toFixed(2)}</span>
+                <span>${total.toFixed(5)}</span>
             </div>
 
             {/* Table */}
@@ -119,7 +119,7 @@ const HistoricalUsageTooltip = ({ active, payload, label, coordinate, viewBox })
                                     -
                                 </td>
                                 <td style={{ textAlign: 'right', paddingBottom: 5, fontWeight: 600, color: 'hsl(var(--foreground))', whiteSpace: 'nowrap' }}>
-                                    ${entry.value.toFixed(4)}
+                                    ${entry.value.toFixed(5)}
                                 </td>
                             </tr>
                         );
