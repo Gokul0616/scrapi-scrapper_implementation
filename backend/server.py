@@ -59,6 +59,34 @@ async def startup_event():
     await access_control_service.ensure_indexes()
     await security_service.ensure_indexes()
 
+    # Auto-start Redis if not already running
+    import subprocess
+    try:
+        result = subprocess.run(["redis-cli", "ping"], capture_output=True, text=True, timeout=2)
+        if result.stdout.strip() == "PONG":
+            logging.info("✅ Redis is already running")
+        else:
+            raise Exception("not running")
+    except Exception:
+        logging.info("🔴 Redis not running — starting Redis via Homebrew...")
+        try:
+            redis_conf = str(ROOT_DIR / "redis.conf")
+            subprocess.Popen(
+                ["redis-server", redis_conf],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+            import time
+            time.sleep(1)
+            result = subprocess.run(["redis-cli", "ping"], capture_output=True, text=True, timeout=2)
+            if result.stdout.strip() == "PONG":
+                logging.info("✅ Redis started successfully")
+                app.state.redis_started_by_us = True
+            else:
+                logging.warning("⚠️ Redis may not have started correctly")
+        except Exception as e:
+            logging.warning(f"⚠️ Could not start Redis automatically: {e}")
+
 # Add custom services to app state
 app.state.captcha_service = captcha_service
 app.state.access_control_service = access_control_service
@@ -944,3 +972,15 @@ async def shutdown_db_client():
     # Close MongoDB client
     client.close()
     logger.info("✅ MongoDB connection closed")
+
+    # Auto-stop Redis if we started it
+    try:
+        if getattr(app.state, "redis_started_by_us", False):
+            import subprocess
+            subprocess.run(["redis-cli", "shutdown", "nosave"], timeout=5,
+                           capture_output=True)
+            logger.info("✅ Redis stopped")
+        else:
+            logger.info("ℹ️ Redis was already running before startup — leaving it running")
+    except Exception as e:
+        logger.warning(f"⚠️ Could not stop Redis: {e}")

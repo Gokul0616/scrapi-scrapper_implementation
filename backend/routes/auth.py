@@ -144,6 +144,14 @@ async def register(user_data: UserCreate, request: Request):
             detail="This email is associated with a deleted account and cannot be used for registration. Please contact support if you need assistance."
         )
     
+    # Check if user document exists with 'deleted' status
+    existing_deleted = await db.users.find_one({"email": user_data.email, "account_status": "deleted"})
+    if existing_deleted:
+        raise HTTPException(
+            status_code=400,
+            detail="This email is associated with a deleted account. Please contact support."
+        )
+    
     # Check if email already exists
     existing_email = await db.users.find_one({"email": user_data.email})
     if existing_email:
@@ -211,8 +219,8 @@ async def register(user_data: UserCreate, request: Request):
             plan=user.plan,
             role=user.role,
             is_active=user.is_active,
-            created_at=user.created_at.isoformat(),
-            last_login_at=user.last_login_at.isoformat() if user.last_login_at else None,
+            created_at=user.created_at,
+            last_login_at=user.last_login_at,
             profile_color=user.profile_color,
             profile_picture=None,
             theme_preference=user.theme_preference
@@ -261,7 +269,13 @@ async def google_auth_callback(code: str):
         username = user_doc['username']
         role = user_doc.get('role', 'user')
         
-        # Update user with google info if it's their first time using Google but they had an email account
+        # Check if account is deleted
+        if user_doc.get("account_status") == "deleted":
+            raise HTTPException(
+                status_code=403, 
+                detail="This account has been permanently deleted and cannot be accessed."
+            )
+
         update_fields = {
             "last_login_at": datetime.now(timezone.utc).isoformat()
         }
@@ -276,6 +290,30 @@ async def google_auth_callback(code: str):
             {"id": user_id},
             {"$set": update_fields}
         )
+
+        # Check if account is pending deletion
+        if user_doc.get("account_status") == "pending_deletion":
+            deletion_scheduled_at = user_doc.get("deletion_scheduled_at")
+            permanent_deletion_at = user_doc.get("permanent_deletion_at")
+            
+            # Days remaining
+            days_remaining = 0
+            if permanent_deletion_at:
+                permanent_deletion_at = parse_datetime_safe(permanent_deletion_at)
+                days_remaining = max(0, (permanent_deletion_at - datetime.now(timezone.utc)).days)
+            
+            token = create_access_token({"sub": user_id, "username": username, "role": role})
+            frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+            
+            # Construct redirect URL with deletion info
+            redirect_url = f"{frontend_url}/auth/callback?token={token}&account_status=pending_deletion"
+            if deletion_scheduled_at:
+                redirect_url += f"&deletion_scheduled_at={deletion_scheduled_at}"
+            if permanent_deletion_at:
+                redirect_url += f"&permanent_deletion_at={permanent_deletion_at.isoformat()}"
+            redirect_url += f"&days_remaining={days_remaining}&username={username}&user_id={user_id}"
+            
+            return RedirectResponse(url=redirect_url)
 
         # Existing user - update profile picture if provided and not set
         if google_user.get("picture"):
@@ -314,7 +352,7 @@ async def google_auth_callback(code: str):
         )
         
         doc = new_user.model_dump()
-        doc['created_at'] = doc['created_at'].isoformat()
+        doc['created_at'] = doc['created_at']
         await db.users.insert_one(doc)
 
         # Create user settings for profile picture
@@ -322,7 +360,7 @@ async def google_auth_callback(code: str):
             await db.user_settings.insert_one({
                 "user_id": user_id,
                 "profile_picture": google_user["picture"],
-                "created_at": datetime.now(timezone.utc).isoformat()
+                "created_at": datetime.now(timezone.utc)
             })
         
         # Create welcome notification
@@ -397,6 +435,13 @@ async def github_auth_callback(code: str):
         username = user_doc['username']
         role = user_doc.get('role', 'user')
         
+        # Check if account is deleted
+        if user_doc.get("account_status") == "deleted":
+            raise HTTPException(
+                status_code=403, 
+                detail="This account has been permanently deleted and cannot be accessed."
+            )
+
         # Update user with github info
         update_fields = {
             "last_login_at": datetime.now(timezone.utc).isoformat(),
@@ -410,14 +455,30 @@ async def github_auth_callback(code: str):
             {"$set": update_fields}
         )
 
-        # Update profile picture if provided
-        if github_user.get("picture"):
-             await db.user_settings.update_one(
-                {"user_id": user_id},
-                {"$set": {"profile_picture": github_user["picture"]}},
-                upsert=True
-            )
-    else:
+        # Check if account is pending deletion
+        if user_doc.get("account_status") == "pending_deletion":
+            deletion_scheduled_at = user_doc.get("deletion_scheduled_at")
+            permanent_deletion_at = user_doc.get("permanent_deletion_at")
+            
+            # Days remaining
+            days_remaining = 0
+            if permanent_deletion_at:
+                permanent_deletion_at = parse_datetime_safe(permanent_deletion_at)
+                days_remaining = max(0, (permanent_deletion_at - datetime.now(timezone.utc)).days)
+            
+            token = create_access_token({"sub": user_id, "username": username, "role": role})
+            frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+            
+            # Construct redirect URL with deletion info
+            redirect_url = f"{frontend_url}/auth/callback?token={token}&account_status=pending_deletion"
+            if deletion_scheduled_at:
+                redirect_url += f"&deletion_scheduled_at={deletion_scheduled_at}"
+            if permanent_deletion_at:
+                redirect_url += f"&permanent_deletion_at={permanent_deletion_at.isoformat()}"
+            redirect_url += f"&days_remaining={days_remaining}&username={username}&user_id={user_id}"
+            
+            return RedirectResponse(url=redirect_url)
+
         # New user - register
         # Check if email is associated with a deleted account
         deleted_account = await db.deleted_accounts_legal_retention.find_one({"email": email})
@@ -448,7 +509,7 @@ async def github_auth_callback(code: str):
         )
         
         doc = new_user.model_dump()
-        doc['created_at'] = doc['created_at'].isoformat()
+        doc['created_at'] = doc['created_at']
         await db.users.insert_one(doc)
 
         # Create user settings for profile picture
@@ -456,7 +517,7 @@ async def github_auth_callback(code: str):
             await db.user_settings.insert_one({
                 "user_id": user_id,
                 "profile_picture": github_user["picture"],
-                "created_at": datetime.now(timezone.utc).isoformat()
+                "created_at": datetime.now(timezone.utc)
             })
         
         # Create welcome notification
@@ -533,6 +594,13 @@ async def login(credentials: UserLogin, request: Request):
         await access_control_service.record_failure(client_ip, credentials.username)
         raise HTTPException(status_code=401, detail="Invalid username or password")
         
+    # 🛡️ Block explicitly deleted accounts
+    if user_doc.get("account_status") == "deleted":
+        raise HTTPException(
+            status_code=403, 
+            detail="This account has been permanently deleted and cannot be accessed."
+        )
+        
     # Successful login, reset attempts
     await access_control_service.reset_attempts(client_ip, credentials.username)
     
@@ -554,7 +622,7 @@ async def login(credentials: UserLogin, request: Request):
     # Update last login
     await db.users.update_one(
         {"id": user_doc['id']},
-        {"$set": {"last_login_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {"last_login_at": datetime.now(timezone.utc)}}
     )
     
     # Create access token
@@ -606,11 +674,12 @@ async def login(credentials: UserLogin, request: Request):
             plan=user_doc.get('plan', 'Free'),
             role=user_doc.get('role', 'user'),
             is_active=user_doc.get('is_active', True),
-            created_at=user_doc.get('created_at', datetime.now(timezone.utc).isoformat()),
+            created_at=user_doc.get('created_at') or datetime.now(timezone.utc),
             last_login_at=user_doc.get('last_login_at'),
             profile_color=profile_color,
             profile_picture=profile_picture,
-            theme_preference=user_doc.get('theme_preference', 'light')
+            theme_preference=user_doc.get('theme_preference', 'light'),
+            auth_provider=user_doc.get('auth_provider', 'email')
         )
     }
 
@@ -663,9 +732,9 @@ async def admin_register(user_data: AdminUserCreate):
     )
     
     doc = admin_user.model_dump()
-    doc['created_at'] = doc['created_at'].isoformat()
-    if doc.get('last_login_at'):
-        doc['last_login_at'] = doc['last_login_at'].isoformat()
+    # doc['created_at'] = doc['created_at'].isoformat()  # Removed
+    # if doc.get('last_login_at'):
+    #     doc['last_login_at'] = doc['last_login_at'].isoformat()  # Removed
     await db.admin_users.insert_one(doc)
     
     # Create token
@@ -684,8 +753,8 @@ async def admin_register(user_data: AdminUserCreate):
             role=admin_user.role,
             permissions=admin_user.permissions,
             is_active=admin_user.is_active,
-            created_at=admin_user.created_at.isoformat(),
-            last_login_at=admin_user.last_login_at.isoformat() if admin_user.last_login_at else None
+            created_at=admin_user.created_at,
+            last_login_at=admin_user.last_login_at
         )
     }
 
@@ -711,7 +780,7 @@ async def admin_login(credentials: AdminUserLogin):
     # Update last login
     await db.admin_users.update_one(
         {"id": user_doc['id']},
-        {"$set": {"last_login_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {"last_login_at": datetime.now(timezone.utc)}}
     )
     
     # Check if user needs role selection (no role set or no owner exists)
@@ -737,7 +806,7 @@ async def admin_login(credentials: AdminUserLogin):
             role=user_doc.get('role', 'admin'),
             permissions=user_doc.get('permissions', []),
             is_active=user_doc.get('is_active', True),
-            created_at=user_doc.get('created_at', datetime.now(timezone.utc).isoformat()),
+            created_at=user_doc.get('created_at') or datetime.now(timezone.utc),
             last_login_at=user_doc.get('last_login_at')
         )
     }
@@ -794,7 +863,7 @@ async def admin_select_role(role_data: dict, current_user: dict = Depends(get_cu
             role=role,
             permissions=user_doc.get('permissions', []),
             is_active=user_doc.get('is_active', True),
-            created_at=user_doc.get('created_at', datetime.now(timezone.utc).isoformat()),
+            created_at=user_doc.get('created_at') or datetime.now(timezone.utc),
             last_login_at=user_doc.get('last_login_at')
         )
     }

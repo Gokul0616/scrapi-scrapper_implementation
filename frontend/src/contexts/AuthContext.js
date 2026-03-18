@@ -41,7 +41,13 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const response = await axios.get(`${API}/auth/me`);
-      setUser(response.data);
+      
+      // Only set user if account is fully active/not pending deletion
+      if (response.data.account_status !== 'pending_deletion') {
+        setUser(response.data);
+      } else {
+        setUser(null);
+      }
 
       // Load theme from backend if available
       if (response.data.theme_preference) {
@@ -181,6 +187,8 @@ export const AuthProvider = ({ children }) => {
     setLastPath(null);
     localStorage.removeItem('token');
     delete axios.defaults.headers.common['Authorization'];
+    // Clear history state to prevent location.state persistence
+    window.history.replaceState({}, document.title);
   };
 
   const updateUser = async (updatedData) => {
@@ -198,7 +206,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, updateUser, login, register, logout, loading, lastPath, updateLastPath, token, setToken }}>
+    <AuthContext.Provider value={{ user, setUser, updateUser, login, register, logout, loading, lastPath, updateLastPath, token, setToken, fetchUser }}>
       {children}
     </AuthContext.Provider>
   );

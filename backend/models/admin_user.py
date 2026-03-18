@@ -40,5 +40,5 @@ class AdminUserResponse(BaseModel):
     role: str = "admin"
     permissions: List[str] = []
     is_active: bool = True
-    created_at: str
-    last_login_at: Optional[str] = None
+    created_at: datetime
+    last_login_at: Optional[datetime] = None

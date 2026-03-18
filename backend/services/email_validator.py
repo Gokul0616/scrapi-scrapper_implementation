@@ -116,7 +116,8 @@ class DisposableEmailBlocklist:
         'temp', 'temporary', 'disposable', 'throwaway', 'fake',
         '10minute', '20minute', '30minute', 'minutemail', 'tempmail',
         'guerrilla', 'mailinator', 'maildrop', 'mailnesia', 'trashmail',
-        'yopmail', 'sharklasers', 'spam', 'burner', 'trash'
+        'yopmail', 'sharklasers', 'spam', 'burner', 'trash',
+        'example.com', 'test.com', 'invalid.com', 'example.org', 'example.net'
     ]
     
     CACHE_DURATION = timedelta(hours=24)  # Refresh daily
@@ -635,7 +636,7 @@ class EmailValidator:
                         return result
                     
                     # Add Risk Points for Untrusted Provider
-                    result.add_risk(1, "Untrusted email provider")
+                    result.add_risk(3, "Untrusted email provider")
                     result.add_warning(f"Note: {verify_reason}")
                 else:
                     logger.info(f"✅ Server verified: {email} on {provider_name}")
@@ -691,15 +692,8 @@ class EmailValidator:
                 pass
             
             # === FINAL RISK ASSESSMENT ===
-            # Threshold: 4
-            # e.g., witihek852@alexida.com:
-            # - Untrusted Provider (+1)
-            # - Single MX (+1)
-            # - No Website (+3)
-            # - Entropy > 3.0 (+1)
-            # Total: 6 -> BLOCK
-            
-            if result.risk_score >= 4:
+            # Threshold: 3 (Stricter for high-quality signups)
+            if result.risk_score >= 3:
                 result.add_error(f"Email rejected due to high risk score ({result.risk_score}/4). Please use a verified business email.")
                 logger.warning(f"🚫 Blocked high risk email: {email} (Score: {result.risk_score})")
                 return result

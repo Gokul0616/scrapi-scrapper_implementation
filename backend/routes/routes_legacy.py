@@ -227,7 +227,8 @@ async def register(user_data: UserCreate):
             last_login_at=user.last_login_at.isoformat() if user.last_login_at else None,
             profile_color=user.profile_color,
             profile_picture=None,
-            theme_preference=user.theme_preference
+            theme_preference=user.theme_preference,
+            auth_provider=user.auth_provider
         )
     }
 
@@ -349,7 +350,8 @@ async def login(credentials: UserLogin, request: Request):
             last_login_at=user_doc.get('last_login_at'),
             profile_color=profile_color,
             profile_picture=profile_picture,
-            theme_preference=user_doc.get('theme_preference', 'light')
+            theme_preference=user_doc.get('theme_preference', 'light'),
+            auth_provider=user_doc.get('auth_provider', 'email')
         )
     }
 
@@ -1034,7 +1036,20 @@ async def get_me(current_user: dict = Depends(get_current_user)):
     user_settings = await db.user_settings.find_one({"user_id": current_user['id']}, {"_id": 0, "profile_picture": 1})
     if user_settings:
         profile_picture = user_settings.get('profile_picture')
+        
+    # Deletion info
+    account_status = user_doc.get("account_status", "active")
+    deletion_scheduled_at = user_doc.get("deletion_scheduled_at")
+    permanent_deletion_at = user_doc.get("permanent_deletion_at")
+    days_remaining = None
     
+    if account_status == "pending_deletion" and permanent_deletion_at:
+        try:
+            p_del_at = parse_datetime_safe(permanent_deletion_at)
+            days_remaining = max(0, (p_del_at - datetime.now(timezone.utc)).days)
+        except Exception as e:
+            logger.error(f"Error calculating days remaining: {e}")
+
     return UserResponse(
         id=user_doc['id'],
         username=user_doc['username'],
@@ -1045,11 +1060,16 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         plan=user_doc.get('plan', 'Free'),
         role=user_doc.get('role', 'user'),
         is_active=user_doc.get('is_active', True),
-        created_at=user_doc.get('created_at', datetime.now(timezone.utc).isoformat()),
+        account_status=account_status,
+        deletion_scheduled_at=deletion_scheduled_at,
+        permanent_deletion_at=permanent_deletion_at,
+        days_remaining=days_remaining,
+        created_at=user_doc.get('created_at') or datetime.now(timezone.utc),
         last_login_at=user_doc.get('last_login_at'),
         profile_color=profile_color,
         profile_picture=profile_picture,
-        theme_preference=user_doc.get('theme_preference', 'light')
+        theme_preference=user_doc.get('theme_preference', 'light'),
+        auth_provider=user_doc.get('auth_provider', 'email')
     )
 
 @router.patch("/auth/last-path")
@@ -1338,6 +1358,13 @@ async def send_otp(otp_request: SendOTPRequest, request: Request):
         if otp_request.purpose == "login" and not user_exists:
             raise HTTPException(status_code=404, detail="No account found with this email")
         
+        # 🛡️ Block explicitly deleted accounts from requesting login OTP
+        if otp_request.purpose == "login" and user_exists.get("account_status") == "deleted":
+            raise HTTPException(
+                status_code=403, 
+                detail="This account has been permanently deleted and cannot be accessed."
+            )
+        
         if otp_request.purpose == "register" and user_exists:
             raise HTTPException(status_code=400, detail="Email already registered")
         
@@ -1426,6 +1453,13 @@ async def verify_otp(request: VerifyOTPRequest):
             user_doc = await db.users.find_one({"email": request.email}, {"_id": 0})
             if not user_doc:
                 raise HTTPException(status_code=404, detail="User not found")
+            
+            # 🛡️ Block explicitly deleted accounts from logging in via OTP
+            if user_doc.get("account_status") == "deleted":
+                raise HTTPException(
+                    status_code=403, 
+                    detail="This account has been permanently deleted and cannot be accessed."
+                )
             
             token = create_access_token({"sub": user_doc['id'], "username": user_doc['username']})
             

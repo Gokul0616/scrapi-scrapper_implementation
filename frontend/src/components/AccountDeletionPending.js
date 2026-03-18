@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { Button } from './ui/button';
 import { AlertCircle } from 'lucide-react';
@@ -10,6 +11,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const AccountDeletionPending = ({ deletionInfo, onReactivate }) => {
   const { theme } = useTheme();
+  const { logout, fetchUser } = useAuth();
   const navigate = useNavigate();
   const [isReactivating, setIsReactivating] = React.useState(false);
   const [showAlert, setShowAlert] = React.useState(false);
@@ -31,6 +33,9 @@ const AccountDeletionPending = ({ deletionInfo, onReactivate }) => {
         onReactivate();
       }
 
+      // Re-fetch user to update state from 'pending_deletion' to 'active'
+      await fetchUser();
+
       // Redirect to home after reactivation
       navigate('/home');
     } catch (error) {
@@ -47,7 +52,7 @@ const AccountDeletionPending = ({ deletionInfo, onReactivate }) => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    logout();
     navigate('/login');
   };
 

@@ -28,7 +28,7 @@ const DeleteAccountModal = () => {
     const [error, setError] = useState(null);
 
     if (!isOpen) return null;
-
+    console.log(user)
     const handleDeleteAccount = async () => {
         setError(null);
         if (deleteConfirmText !== user?.email) {
@@ -36,7 +36,9 @@ const DeleteAccountModal = () => {
             return;
         }
 
-        if (!deletePassword) {
+        const isOAuthUser = user?.auth_provider === 'google' || user?.auth_provider === 'github';
+
+        if (!isOAuthUser && !deletePassword) {
             setError('Please enter your password to confirm deletion.');
             return;
         }
@@ -172,35 +174,37 @@ const DeleteAccountModal = () => {
                                 )}
                             </div>
 
-                            <div className="pt-3 border-t border-border">
-                                <label
-                                    htmlFor="modal-delete-password-input"
-                                    className="block text-xs font-medium mb-1.5 text-foreground"
-                                >
-                                    Enter your password to confirm
-                                </label>
-                                <div className="relative">
-                                    <Input
-                                        id="modal-delete-password-input"
-                                        type={showDeletePassword ? 'text' : 'password'}
-                                        value={deletePassword}
-                                        onChange={(e) => {
-                                            setDeletePassword(e.target.value);
-                                            if (error) setError(null);
-                                        }}
-                                        placeholder="Your password"
-                                        autoComplete="current-password"
-                                        className={`w-full text-sm pr-10 bg-secondary border-input text-foreground focus-visible:ring-blue-500/20 focus-visible:border-blue-500 ${error && 'border-destructive/50'}`}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowDeletePassword(!showDeletePassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
+                            {!(user?.auth_provider === 'google' || user?.auth_provider === 'github') && (
+                                <div className="pt-3 border-t border-border">
+                                    <label
+                                        htmlFor="modal-delete-password-input"
+                                        className="block text-xs font-medium mb-1.5 text-foreground"
                                     >
-                                        {showDeletePassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                    </button>
+                                        Enter your password to confirm
+                                    </label>
+                                    <div className="relative">
+                                        <Input
+                                            id="modal-delete-password-input"
+                                            type={showDeletePassword ? 'text' : 'password'}
+                                            value={deletePassword}
+                                            onChange={(e) => {
+                                                setDeletePassword(e.target.value);
+                                                if (error) setError(null);
+                                            }}
+                                            placeholder="Your password"
+                                            autoComplete="current-password"
+                                            className={`w-full text-sm pr-10 bg-secondary border-input text-foreground focus-visible:ring-blue-500/20 focus-visible:border-blue-500 ${error && 'border-destructive/50'}`}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowDeletePassword(!showDeletePassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
+                                        >
+                                            {showDeletePassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             <div className="pt-3 border-t border-border">
                                 <label
@@ -227,8 +231,8 @@ const DeleteAccountModal = () => {
                         <div className="flex flex-col sm:flex-row-reverse gap-2 pt-2">
                             <Button
                                 onClick={handleDeleteAccount}
-                                disabled={deleteConfirmText !== user?.email || !deletePassword || isDeleting}
-                                className={`flex-1 sm:flex-none py-2 px-4 h-auto font-bold transition-all ${deleteConfirmText !== user?.email || !deletePassword || isDeleting
+                                disabled={deleteConfirmText !== user?.email || (!(user?.auth_provider === 'google' || user?.auth_provider === 'github') && !deletePassword) || isDeleting}
+                                className={`flex-1 sm:flex-none py-2 px-4 h-auto font-bold transition-all ${deleteConfirmText !== user?.email || (!(user?.auth_provider === 'google' || user?.auth_provider === 'github') && !deletePassword) || isDeleting
                                     ? 'opacity-50 cursor-not-allowed'
                                     : 'bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm'
                                     }`}

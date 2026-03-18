@@ -35,10 +35,14 @@ const Register = () => {
     shield_solution: null,
     fingerprint: null
   });
+  const [isShieldSolved, setIsShieldSolved] = useState(false);
   const [redirected, setRedirected] = useState(false);
-
   useEffect(() => {
     if (!loading && user && !redirected) {
+      // If account is pending deletion, don't redirect to home/dashboard
+      if (user.account_status === 'pending_deletion') {
+        return;
+      }
       setRedirected(true);
       navigate('/home');
     }
@@ -78,7 +82,7 @@ const Register = () => {
         return;
       }
 
-      setStep(2); // Move to CAPTCHA step
+      setStep(2); // Move to Security Check step
     } catch (error) {
       // Check if error has a response with data
       if (error.response && error.response.data) {
@@ -128,13 +132,13 @@ const Register = () => {
       }));
 
       setOtpSuccessMessage('OTP sent successfully to your email');
-      setStep(3); // Move to OTP step
+      if (step === 2) {
+        setStep(3); // Move to OTP step
+      }
     } catch (error) {
-      showMessage(error.response?.data?.detail || 'Failed to send OTP. Please try again.', 'error');
-    } finally {
-      setIsLoading(false);
     }
-  }, [formData.email, showMessage]);
+    setIsShieldSolved(true);
+  }, [formData.email, step, showMessage]);
 
   const handleOTPSubmit = async (e) => {
     e.preventDefault();
@@ -263,7 +267,12 @@ const Register = () => {
   };
 
   const handleBack = () => {
-    if (step > 1) {
+    if (step === 3) {
+      // From OTP back to email, skip security check
+      setStep(1);
+      setIsShieldSolved(false);
+      setFormData(prev => ({ ...prev, shield_nonce: '', shield_solution: null, fingerprint: null }));
+    } else if (step > 1) {
       setStep(step - 1);
     }
   };
@@ -372,13 +381,18 @@ const Register = () => {
         </div>
       )}
 
+      {/* Background Security Shield - Handled in Step 2 now */}
+
       {/* Right Column - Signup Form */}
       <div className={`w-full ${step === 1 ? 'lg:w-1/2' : ''} flex items-center justify-center p-8 bg-white`}>
         <div className="w-full max-w-[360px]">
           {/* Back button */}
           {step > 1 && (
             <button
-              onClick={handleBack}
+              onClick={() => {
+                if (step === 3) setStep(1);
+                else handleBack();
+              }}
               className="flex items-center text-gray-600 hover:text-gray-900 mb-4 text-[13px]"
             >
               <ArrowLeft className="w-4 h-4 mr-1" />
@@ -488,71 +502,83 @@ const Register = () => {
           )}
 
           {step === 2 && (
-            <SecureShield
-              onVerify={handleCaptchaVerify}
-              email={formData.email}
-            />
+            <div className="py-8">
+              <SecureShield
+                onVerify={handleCaptchaVerify}
+                email={formData.email}
+              />
+            </div>
           )}
 
           {step === 3 && (
             <>
-              <p className="text-[13px] text-gray-600 mb-6 text-center">
-                We sent a verification code to<br />
-                <span className="font-medium text-gray-900">{formData.email}</span>
-              </p>
-
-              {otpSuccessMessage && (
-                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
-                  <p className="text-[12px] text-green-600 flex items-center justify-center">
-                    <Check className="w-3.5 h-3.5 mr-1" />
-                    {otpSuccessMessage}
+              {!isShieldSolved ? (
+                <div className="flex flex-col items-center justify-center py-10">
+                  <div className="w-10 h-10 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+                  <p className="text-[14px] text-gray-600">Initializing secure connection...</p>
+                  <p className="text-[12px] text-gray-400 mt-1">This will only take a moment</p>
+                </div>
+              ) : (
+                <>
+                  <p className="text-[13px] text-gray-600 mb-6 text-center">
+                    We sent a verification code to<br />
+                    <span className="font-medium text-gray-900">{formData.email}</span>
                   </p>
-                </div>
-              )}
 
-              <form onSubmit={handleOTPSubmit} className="space-y-6">
-                <div>
-                  <label className="block text-[13px] font-medium text-gray-700 mb-3 text-center">
-                    Enter 6-digit code
-                  </label>
-                  <OTPInput
-                    length={6}
-                    value={formData.otp}
-                    onChange={(otp) => {
-                      setFormData({ ...formData, otp });
-                      setOtpError('');
-                      setOtpSuccessMessage('');
-                    }}
-                    disabled={isLoading}
-                  />
-                  {otpError && (
-                    <p className="mt-2 text-[12px] text-red-600 flex items-center justify-center">
-                      <AlertCircle className="w-3.5 h-3.5 mr-1" />
-                      {otpError}
-                    </p>
+                  {otpSuccessMessage && (
+                    <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+                      <p className="text-[12px] text-green-600 flex items-center justify-center">
+                        <Check className="w-3.5 h-3.5 mr-1" />
+                        {otpSuccessMessage}
+                      </p>
+                    </div>
                   )}
-                </div>
 
-                <Button
-                  type="submit"
-                  className="w-full bg-gray-900 hover:bg-gray-800 text-white h-[38px] text-[14px] font-medium rounded-md"
-                  disabled={isLoading || formData.otp.length !== 6}
-                >
-                  {isLoading ? 'Verifying...' : 'Verify'}
-                </Button>
+                  <form onSubmit={handleOTPSubmit} className="space-y-6">
+                    <div>
+                      <label className="block text-[13px] font-medium text-gray-700 mb-3 text-center">
+                        Enter 6-digit code
+                      </label>
+                      <OTPInput
+                        length={6}
+                        value={formData.otp}
+                        onChange={(otp) => {
+                          setFormData({ ...formData, otp });
+                          setOtpError('');
+                          setOtpSuccessMessage('');
+                        }}
+                        disabled={isLoading}
+                      />
+                      {otpError && (
+                        <p className="mt-2 text-[12px] text-red-600 flex items-center justify-center">
+                          <AlertCircle className="w-3.5 h-3.5 mr-1" />
+                          {otpError}
+                        </p>
+                      )}
+                    </div>
 
-                <p className="text-center text-[13px] text-gray-600">
-                  Didn't receive the code?{' '}
-                  <button
-                    type="button"
-                    onClick={handleResendOTP}
-                    className="text-blue-600 hover:underline font-medium"
-                    disabled={isLoading}
-                  >
-                    Resend
-                  </button>
-                </p>
-              </form>
+                    <Button
+                      type="submit"
+                      className="w-full bg-gray-900 hover:bg-gray-800 text-white h-[38px] text-[14px] font-medium rounded-md"
+                      disabled={isLoading || formData.otp.length !== 6}
+                    >
+                      {isLoading ? 'Verifying...' : 'Verify'}
+                    </Button>
+
+                    <p className="text-center text-[13px] text-gray-600">
+                      Didn't receive the code?{' '}
+                      <button
+                        type="button"
+                        onClick={handleResendOTP}
+                        className="text-blue-600 hover:underline font-medium"
+                        disabled={isLoading}
+                      >
+                        Resend
+                      </button>
+                    </p>
+                  </form>
+                </>
+              )}
             </>
           )}
 

@@ -50,6 +50,7 @@ class ProfileResponse(BaseModel):
     show_email: bool = False
     profile_picture: Optional[str] = None
     theme_preference: str = "system"
+    auth_provider: Optional[str] = None
 
 class UserPreferencesUpdate(BaseModel):
     theme_preference: Optional[str] = None
@@ -85,6 +86,7 @@ async def get_profile(current_user: dict = Depends(get_current_user)):
         "first_name": user.get("first_name"),
         "last_name": user.get("last_name"),
         "theme_preference": user.get("theme_preference", "light"),
+        "auth_provider": user.get("auth_provider", "email"),
     }
     
     if settings:
@@ -230,7 +232,7 @@ async def delete_profile_picture(current_user: dict = Depends(get_current_user))
 
 class AccountDeletionRequest(BaseModel):
     confirmation_text: str = Field(..., min_length=1)
-    password: str = Field(..., min_length=1)  # Re-authentication
+    password: Optional[str] = None  # Re-authentication (optional for OAuth users)
     feedback_reason: Optional[str] = None  # 'too_expensive', 'lack_features', 'found_alternative', 'privacy_concerns', 'other'
     feedback_text: Optional[str] = None
 
@@ -259,13 +261,15 @@ async def delete_account(
             detail="Confirmation text does not match your email address"
         )
     
-    # Verify password (re-authentication)
-    from auth import verify_password
-    if not verify_password(data.password, user.get("hashed_password")):
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid password. Please enter your correct password to confirm deletion."
-        )
+    # Verify password (re-authentication) - Skip for OAuth users
+    auth_provider = user.get("auth_provider")
+    if auth_provider not in ["google", "github"]:
+        from auth import verify_password
+        if not data.password or not verify_password(data.password, user.get("hashed_password")):
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid password. Please enter your correct password to confirm deletion."
+            )
     
     user_email = user.get("email")
     

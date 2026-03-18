@@ -1,7 +1,10 @@
 import os
 import stripe
+import logging
 from datetime import datetime, timezone, timedelta
 from database import get_db
+
+logger = logging.getLogger(__name__)
 
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "sk_test_fake_key")
 
@@ -164,81 +167,78 @@ class BillingService:
                 end_of_period = start_of_period.replace(month=start_of_period.month + 1)
 
         # Aggregate usage from runs in this period for "Actors" breakdown
-        db = get_db()
-        runs_cursor = db.runs.find({
+        # 1. Aggregate Terminated Runs (Using pre-calculated fields)
+        terminated_query = {
             "user_id" if workspace_type == "personal" else "organization_id": workspace_id,
-            "created_at": {"$gte": start_of_period.isoformat()}
-        }).sort("created_at", -1) # Latest first
+            "created_at": {"$gte": start_of_period.isoformat()},
+            "status": {"$in": ["succeeded", "aborted", "failed"]}
+        }
+        
+        # Breakdown by actor and Global Totals in one aggregation?
+        # Let's do breakdown first
+        actor_pipeline = [
+            {"$match": terminated_query},
+            {"$group": {
+                "_id": "$actor_id",
+                "actor_name": {"$first": "$actor_name"},
+                "event_count": {"$sum": 1},
+                "event_cost": {"$sum": "$event_cost"},
+                "total_cu": {"$sum": "$compute_units_used"},
+                "last_run": {"$max": "$started_at"}
+            }}
+        ]
+        
+        terminated_actors = await db.runs.aggregate(actor_pipeline).to_list(length=None)
         
         compute_units_used = 0.0
-        total_runs_in_period = 0
-        aggregated_actors = {}
-        
-        async for run in runs_cursor:
-            status = run.get("status", "succeeded")
-            if status == "queued": continue # Don't bill for queued runs yet
-            
-            # Calculate CU cost - if running, calculate based on time elapsed so far
-            cu = run.get("compute_units_used", 0.0)
-            if status == "running" or (cu == 0.0 and status in ["succeeded", "aborted", "failed"]):
-                # Calculate on the fly for running runs or runs missing CU data
-                started_at_str = run.get("started_at")
-                if started_at_str:
-                    started_at = parse_datetime_safe(started_at_str)
-                    if started_at:
-                        finished_at = parse_datetime_safe(run.get("finished_at")) or now
-                        duration_sec = (finished_at - started_at).total_seconds()
-                        cu = self.calculate_compute_units(int(duration_sec), run.get("ram_mb", 1024))
-            
-            compute_units_used += cu
-            total_runs_in_period += 1
-            
-            actor_id = run.get("actor_id")
-            # For now, we assume "Actor Start" is the event.
-            event_type = "Actor Start" 
-            
-            group_key = f"{actor_id}_{event_type}"
-            
-            if group_key not in aggregated_actors:
-                # Try to get author name from actor record
-                actor = await db.actors.find_one({"id": actor_id})
-                author = actor.get("author_name") if actor else "gokul"
-                if not author: author = "scrapi"
-                
-                aggregated_actors[group_key] = {
-                    "actor_id": actor_id,
-                    "actor_name": f"{author}/{run.get('actor_name')}",
-                    "event_type": event_type,
-                    "event_count": 0,
-                    "cost": 0.0,
-                    "date": run.get("started_at") or run.get("created_at")
-                }
-            
-            aggregated_actors[group_key]["event_count"] += 1
-            # Fees: $0.008 (standard), $0.004 (aborted), $0.0 (failed)
-            if status == "aborted":
-                aggregated_actors[group_key]["cost"] += 0.004
-            elif status != "failed":
-                aggregated_actors[group_key]["cost"] += 0.008
-            
+        total_event_cost = 0.0
         actor_run_details = []
-        for key, data in aggregated_actors.items():
+        
+        for actor_data in terminated_actors:
+            actor_id = actor_data["_id"]
+            compute_units_used += actor_data["total_cu"]
+            total_event_cost += actor_data["event_cost"]
+            
+            # Formulate detail row
+            actor_rec = await db.actors.find_one({"id": actor_id})
+            author = actor_rec.get("author_name") if actor_rec else "scrapi"
+            
             actor_run_details.append({
-                "actor_id": data["actor_id"],
-                "actor_name": data["actor_name"],
-                "unit_label": data["event_type"],
-                "date": data["date"],
-                "units": f"{data['event_count']} events",
+                "actor_id": actor_id,
+                "actor_name": f"{author}/{actor_data['actor_name']}",
+                "unit_label": "Actor Start",
+                "date": actor_data["last_run"],
+                "units": f"{actor_data['event_count']} events",
                 "price_per_unit": "$0.008 per event",
-                "cost": data["cost"],
+                "cost": actor_data["event_cost"],
                 "type": "run"
             })
             
-        # CU Price roughly $0.50
+        # 2. Estimate Running Runs (Real-time)
+        running_query = {
+            "user_id" if workspace_type == "personal" else "organization_id": workspace_id,
+            "created_at": {"$gte": start_of_period.isoformat()},
+            "status": "running"
+        }
+        running_runs = await db.runs.find(running_query).to_list(length=None)
+        
+        for run in running_runs:
+            started_at_str = run.get("started_at")
+            if started_at_str:
+                started_at = parse_datetime_safe(started_at_str)
+                if started_at:
+                    duration_sec = (now - started_at).total_seconds()
+                    cu = self.calculate_compute_units(int(duration_sec), run.get("ram_mb", 1024))
+                    compute_units_used += cu
+                    
+            # We don't add "running" jobs to the Pay Per Event list until they're finished/aborted
+            # because the event fee isn't locked in yet (could fail and be $0)
+            
+        # CU Price $0.50
         cu_cost = compute_units_used * 0.50
         
         # Total cost for Actors service
-        actors_total_cost = sum(d["cost"] for d in actor_run_details) + cu_cost
+        actors_total_cost = total_event_cost + cu_cost
         
         # Storage usage calculation
         dataset_cursor = db.datasets.find({
@@ -564,103 +564,85 @@ class BillingService:
                 else:
                     current_date = current_date.replace(month=current_date.month + 1, day=1)
 
-        total_cost = 0.0
+        # 1. Aggregate Terminated Runs by Day
+        daily_pipeline = [
+            {"$match": query},
+            {"$group": {
+                "_id": { "$substr": ["$created_at", 0, 10] },
+                "cu_cost": {"$sum": { "$multiply": ["$compute_units_used", 0.50] }},
+                "event_cost": {"$sum": "$event_cost"},
+                "cu_used": {"$sum": "$compute_units_used"},
+                "run_count": {"$sum": 1}
+            }}
+        ]
+        
+        daily_terminated = await db.runs.aggregate(daily_pipeline).to_list(length=None)
+        
+        # 2. Aggregate Terminated Runs by Actor
+        actor_pipeline = [
+            {"$match": query},
+            {"$group": {
+                "_id": "$actor_id",
+                "actor_name": {"$first": "$actor_name"},
+                "actor_icon": {"$first": "$actor_icon"},
+                "event_cost": {"$sum": "$event_cost"},
+                "total_runs": {"$sum": 1}
+            }}
+        ]
+        
+        actor_terminated = await db.runs.aggregate(actor_pipeline).to_list(length=None)
 
-        # Convert cursor to list to get count and facilitate enumeration
-        # Use length=None to capture all runs in the specified period
-        runs_list = await runsCursor.to_list(length=None)
-        total_runs_count = len(runs_list)
-
-        # 1. Calculate Monthly Totals for Consistency (Matches get_billing_summary)
+        # Consistent zeroing of proxy/data for historical parity
+        total_proxy_cost = 0.0
+        total_data_cost = 0.0
+        
+        # Calculate consistency metrics
+        total_runs_count = await db.runs.count_documents(query)
         hist_storage_writes = (total_items_in_period / 1000) * 0.005
         hist_storage_reads = (total_items_in_period * 2 / 1000) * 0.0004
         hist_storage_total = hist_storage_timed + hist_storage_writes + hist_storage_reads
         
-        # Consistent zeroing of proxy/data for historical parity
-        total_proxy_cost = 0.0
-        total_data_cost = 0.0
-
-        # 2. Distribute Shares
         per_run_reads = hist_storage_reads / max(1, total_runs_count)
         per_run_writes = hist_storage_writes / max(1, total_runs_count)
-
-        total_actors_cost = 0.0
         
-        for run in runs_list:
-            created_at_str = run.get("created_at")
-            if not created_at_str: continue
-            try:
-                if created_at_str.endswith('Z'): created_at_str = created_at_str[:-1] + '+00:00'
-                run_date = datetime.fromisoformat(created_at_str)
-                day_str = run_date.strftime("%Y-%m-%d")
-            except Exception: continue
-                
-            # Align with status rules: aborted/succeeded/running get fee, failed only get CU
-            status = run.get("status", "succeeded")
-            if status == "queued": continue
-            
-            cu_used = run.get("compute_units_used", 0.0)
-            # If historical run is missing CU doc, try to reconstruct it
-            if cu_used == 0.0:
-                started_at_str = run.get("started_at") or run.get("created_at")
-                if started_at_str:
-                    try:
-                        started_at = parse_datetime_safe(started_at_str)
-                        if started_at:
-                            finished_at_str = run.get("finished_at")
-                            if finished_at_str:
-                                finished_at = parse_datetime_safe(finished_at_str)
-                            elif status == "running":
-                                finished_at = period_boundary
-                            else:
-                                # Aborted/Failed/Succeeded but missing timestamp: 
-                                # Default to started_at to avoid month-long overcharges
-                                finished_at = started_at
-                            
-                            if finished_at:
-                                duration_sec = max(0, (finished_at - started_at).total_seconds())
-                                cu_used = self.calculate_compute_units(int(duration_sec), run.get("ram_mb", 1024))
-                    except: pass
-
-            cu_cost = cu_used * 0.50
-            # Fees: $0.008 (standard), $0.004 (aborted), $0.0 (failed)
-            if status == "aborted":
-                start_fee = 0.004
-            elif status != "failed":
-                start_fee = 0.008
-            else:
-                start_fee = 0.0
-            
+        hist_cu_total = 0.0
+        total_event_fees = 0.0
+        
+        # Populate daily_usage from aggregation results
+        for day_data in daily_terminated:
+            day_str = day_data["_id"]
             if day_str in daily_usage:
-                daily_usage[day_str]["Actor compute units"] = float(daily_usage[day_str].get("Actor compute units", 0.0)) + float(cu_cost)
-                daily_usage[day_str]["Actors - paid for events"] = float(daily_usage[day_str].get("Actors - paid for events", 0.0)) + float(start_fee)
-                daily_usage[day_str]["Dataset reads"] = float(daily_usage[day_str].get("Dataset reads", 0.0)) + float(per_run_reads)
-                daily_usage[day_str]["Dataset writes"] = float(daily_usage[day_str].get("Dataset writes", 0.0)) + float(per_run_writes)
+                cu_cost = day_data["cu_cost"]
+                start_fee = day_data["event_cost"]
+                run_count = day_data["run_count"]
                 
-                day_total = float(cu_cost + start_fee + per_run_reads + per_run_writes)
-                daily_usage[day_str]["total_usage"] = float(daily_usage[day_str].get("total_usage", 0.0)) + day_total
-                hist_cu_total += cu_used # Aggregate CU units 
-                total_event_fees += start_fee # Aggregate event fees
+                daily_usage[day_str]["Actor compute units"] = float(cu_cost)
+                daily_usage[day_str]["Actors - paid for events"] = float(start_fee)
+                
+                # Distribute storage items for THIS day's runs
+                day_reads = per_run_reads * run_count
+                day_writes = per_run_writes * run_count
+                daily_usage[day_str]["Dataset reads"] = float(day_reads)
+                daily_usage[day_str]["Dataset writes"] = float(day_writes)
+                
+                daily_usage[day_str]["total_usage"] = float(cu_cost + start_fee + day_reads + day_writes)
+                
+                hist_cu_total += day_data["cu_used"]
+                total_event_fees += start_fee
+
+        # Populate actor_usage from aggregation results
+        for actor_data in actor_terminated:
+            actor_id = actor_data["_id"]
+            raw_actor_name = actor_data["actor_name"] or "Unknown Actor"
+            display_actor_name = f"scrapi/{raw_actor_name}"
             
-            # Aggregate by actor for table - Include ONLY Events for perfect parity with Current period "Pay per event" list
-            raw_actor_name = run.get("actor_name", "Unknown Actor")
-            # Align with get_billing_summary format: scrapi/name
-            author = "scrapi" 
-            display_actor_name = f"{author}/{raw_actor_name}"
-            
-            if display_actor_name not in actor_usage:
-                actor_usage[display_actor_name] = {
-                    "actor_name": display_actor_name,
-                    "actor_id": run.get("actor_id"),
-                    "actor_icon": run.get("actor_icon"),
-                    "total_usage": 0.0,
-                    "units": 0
-                }
-            # The table cost should reflect ONLY the event fee to match Current period "Pay per event" breakdown
-            # and respect the failure waiving rule
-            actor_usage[display_actor_name]["total_usage"] += float(start_fee)
-            actor_usage[display_actor_name]["units"] += 1
-            # hist_cu_total is now properly summed above
+            actor_usage[display_actor_name] = {
+                "actor_name": display_actor_name,
+                "actor_id": actor_id,
+                "actor_icon": actor_data.get("actor_icon"),
+                "total_usage": float(actor_data["event_cost"]),
+                "units": actor_data["total_runs"]
+            }
 
         # Distribute timed storage evenly
         if daily_usage:
@@ -1855,5 +1837,28 @@ class BillingService:
             "account_balance_used": account_balance_used,
             "overflow_credited": overflow
         }
+
+    async def backfill_historical_costs(self, workspace_id: str = None):
+        """
+        One-time migration to populate 'cost', 'compute_units_used', and 'event_cost' 
+        for existing historical runs.
+        """
+        db = get_db()
+        query = {}
+        if workspace_id:
+            query = {"$or": [{"user_id": workspace_id}, {"organization_id": workspace_id}]}
+        
+        # Only backfill runs that lack the new 'event_cost' field
+        query["event_cost"] = {"$exists": False}
+        query["status"] = {"$in": ["succeeded", "aborted", "failed"]}
+        
+        cursor = db.runs.find(query)
+        count = 0
+        async for run in cursor:
+            await self.record_run_usage(run["id"])
+            count += 1
+        
+        logger.info(f"Backfilled {count} runs with historical cost data.")
+        return count
 
 billing_service = BillingService()

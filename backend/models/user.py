@@ -47,7 +47,7 @@ class User(BaseModel):
     deletion_scheduled_at: Optional[datetime] = None
     permanent_deletion_at: Optional[datetime] = None
     deletion_password_hash: Optional[str] = None  # Store for re-auth during grace period
-    deletion_reminder_sent: bool = False
+    deletion_reminder_sent: bool = False    
     last_login_at: Optional[datetime] = None
     last_path: Optional[str] = None  # Store last visited path for redirect after login
     profile_color: Optional[str] = None  # Store user's profile avatar color
@@ -72,8 +72,13 @@ class UserResponse(BaseModel):
     plan: str
     role: str = "user"
     is_active: bool = True
-    created_at: str
-    last_login_at: Optional[str] = None
+    account_status: str = "active"
+    deletion_scheduled_at: Optional[datetime] = None
+    permanent_deletion_at: Optional[datetime] = None
+    days_remaining: Optional[int] = None
+    created_at: datetime
+    last_login_at: Optional[datetime] = None
     profile_color: Optional[str] = None
     profile_picture: Optional[str] = None
     theme_preference: str = "light"
+    auth_provider: str = "email"
