@@ -25,17 +25,37 @@ const BILLING_TOOLTIPS = {
     what: "Resources consumed by your Actors (CPU & RAM).",
     how: "Calculated as RAM (GB) * Duration (Hours) * Compute price per CU."
   },
+  "Pay per event": {
+    what: "Fixed costs for specific Actor events.",
+    how: "Some Actors charge a flat fee per start or for specific results generated."
+  },
+  "Datasets": {
+    what: "Long-term scalable storage for structured tabular data.",
+    how: "Calculated from the sum of Timed storage volume, plus Reads and Writes ($0.0050/$0.0004 per 1k ops)."
+  },
+  "Key-value stores": {
+    what: "Storage for files, images, PDFs, or unstructured blobs.",
+    how: "Calculated from Timed storage volume, plus Reads, Writes, and Lists ($0.0050/$0.0004 per 1k ops)."
+  },
+  "Request queues": {
+    what: "Stateful queues managing URLs to scrape across distributed workers.",
+    how: "Calculated from Timed storage footprint, plus enqueueing and dequeueing ($0.0050/$0.0004 per 1k ops)."
+  },
   "Timed storage": {
-    what: "Cost for storing data over time (Datasets & KV Stores).",
-    how: "Calculated as Size (GB) * Retention duration (Hours) * Storage rate per GB-hour."
+    what: "Cost for retaining data footprint over time.",
+    how: "Calculated continuously based on Data Size (GB) * Duration (Hours) * storage rate."
   },
   "Reads": {
-    what: "Data retrieval operations from storage.",
-    how: "Billed per 1,000 requests to fetch data from datasets."
+    what: "Data retrieval and queue popping operations.",
+    how: "Billed per 1,000 requests to read records or dequeue URLs."
   },
   "Writes": {
-    what: "Data saving operations to storage.",
-    how: "Billed per 1,000 items added or updated in datasets."
+    what: "Data saving and queue pushing operations.",
+    how: "Billed per 1,000 items written, stored, or enqueued."
+  },
+  "Lists": {
+    what: "Retrieving keys and enumerating records in storage.",
+    how: "Billed per 1,000 requests to list available storage records."
   },
   "Internal": {
     what: "Data transfer between platform services.",
@@ -442,12 +462,12 @@ const Billing = () => {
                                     <tr key={`header-${dIdx}`}>
                                       <td colSpan="4" className="py-3 font-bold text-foreground text-[13px] pt-4 flex items-center gap-1.5">
                                         {detail.label}
-                                        {detail.label === "Pay per event" && (
+                                        {BILLING_TOOLTIPS[detail.label] && (
                                           <CustomTooltip 
                                             content={
                                               <div className="flex flex-col gap-1 text-[11px] text-left max-w-[250px]">
-                                                <div className="font-bold text-foreground">Fixed costs for specific Actor events.</div>
-                                                <div className="text-muted-foreground text-[10px] leading-relaxed">Some Actors charge a flat fee per start or for specific results generated.</div>
+                                                <div className="font-bold text-foreground">{BILLING_TOOLTIPS[detail.label].what}</div>
+                                                <div className="text-muted-foreground text-[10px] leading-relaxed">{BILLING_TOOLTIPS[detail.label].how}</div>
                                               </div>
                                             }
                                           >

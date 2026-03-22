@@ -17,6 +17,13 @@ from models import Actor
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
+# Configure logging at the top
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 # Auto-update Emergent LLM key if running in Emergent environment
 try:
     if os.environ.get('EMERGENT_UNIVERSAL_KEY'):
@@ -25,7 +32,7 @@ try:
         # Reload environment variables after update
         load_dotenv(ROOT_DIR / '.env', override=True)
 except Exception as e:
-    logging.warning(f"Could not auto-update Emergent key: {e}")
+    logger.warning(f"Could not auto-update Emergent key: {e}")
 
 # Set Playwright browsers path to be local to the project
 ROOT_DIR = Path(__file__).parent
@@ -53,7 +60,7 @@ app = FastAPI(
 )
 
 @app.on_event("startup")
-async def startup_event():
+async def startup_redis_and_indexes():
     # Ensure indexes for security services
     await captcha_service.ensure_indexes()
     await access_control_service.ensure_indexes()
@@ -61,31 +68,118 @@ async def startup_event():
 
     # Auto-start Redis if not already running
     import subprocess
+    import time
+    import asyncio
+    
+    redis_running = False
     try:
         result = subprocess.run(["redis-cli", "ping"], capture_output=True, text=True, timeout=2)
         if result.stdout.strip() == "PONG":
-            logging.info("✅ Redis is already running")
-        else:
-            raise Exception("not running")
+            logger.info("✅ Redis is already running")
+            redis_running = True
     except Exception:
-        logging.info("🔴 Redis not running — starting Redis via Homebrew...")
+        pass
+
+    if not redis_running:
+        logger.info("🔴 Redis not running — starting Redis via Homebrew...")
         try:
-            redis_conf = str(ROOT_DIR / "redis.conf")
-            subprocess.Popen(
-                ["redis-server", redis_conf],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
-            import time
-            time.sleep(1)
-            result = subprocess.run(["redis-cli", "ping"], capture_output=True, text=True, timeout=2)
-            if result.stdout.strip() == "PONG":
-                logging.info("✅ Redis started successfully")
-                app.state.redis_started_by_us = True
+            redis_conf = ROOT_DIR / "redis.conf"
+            cmd = ["redis-server"]
+            if redis_conf.exists():
+                cmd.append(str(redis_conf))
+                logger.info(f"📝 Using config file: {redis_conf}")
             else:
-                logging.warning("⚠️ Redis may not have started correctly")
+                logger.info("ℹ️ No redis.conf found, starting with defaults")
+            
+            app.state.redis_process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True # Added start_new_session
+            )
+            
+            # Retry loop for verification
+            started = False
+            for i in range(5):
+                await asyncio.sleep(1)
+                try:
+                    proc = await asyncio.create_subprocess_exec(
+                        "redis-cli", "ping",
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE
+                    )
+                    stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=2.0)
+                    if stdout.decode().strip() == "PONG":
+                        logger.info("✅ Redis started successfully")
+                        app.state.redis_started_by_us = True
+                        started = True
+                        break
+                except Exception:
+                    pass
+                if not started:
+                    logger.info(f"⏳ Waiting for Redis to start... (attempt {i+1}/5)")
+                
+            if not started:
+                logger.warning("⚠️ Redis may not have started correctly after 5 seconds")
         except Exception as e:
-            logging.warning(f"⚠️ Could not start Redis automatically: {e}")
+            logger.warning(f"⚠️ Could not start Redis automatically: {e}")
+            
+    # Auto-start Celery Worker locally
+    logger.info("🟢 Starting Celery Worker locally...")
+    try:
+        import os
+        app.state.celery_process = subprocess.Popen(
+            [
+                "celery", "-A", "celery_app", "worker", "-c", "2", "--loglevel=info",
+                "-Q", "celery,q_free,q_standard,q_priority,q_premium,q_scheduled,q_webhooks"
+            ],
+            cwd=str(ROOT_DIR),
+            start_new_session=True  # Isolate from Ctrl+C
+        )
+    except Exception as e:
+        logger.warning(f"⚠️ Could not start Celery automatically: {e}")
+
+@app.on_event("shutdown")
+async def shutdown_services():
+    import subprocess
+    if hasattr(app.state, "celery_process") and app.state.celery_process:
+        logger.info("🛑 Stopping Celery Worker...")
+        try:
+            import os, signal, asyncio
+            pgid = os.getpgid(app.state.celery_process.pid)
+            
+            # Send SIGTERM to the entire process group
+            try:
+                os.killpg(pgid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+            
+            # Wait at most 3 seconds for it to clean up
+            for _ in range(3):
+                if app.state.celery_process.poll() is not None:
+                    break
+                await asyncio.sleep(1)
+                
+            # Force kill if still lingering
+            if app.state.celery_process.poll() is None:
+                try:
+                    os.killpg(pgid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+            
+            try:
+                app.state.celery_process.wait(timeout=1)
+            except subprocess.TimeoutExpired:
+                pass
+                
+            logger.info("✅ All Celery workers stopped")
+        except Exception as e:
+            logger.error(f"Error stopping Celery worker: {e}")
+        
+    if getattr(app.state, "redis_started_by_us", False) and hasattr(app.state, "redis_process") and app.state.redis_process:
+        logger.info("🛑 Stopping Redis...")
+        app.state.redis_process.terminate()
+        app.state.redis_process.wait()
 
 # Add custom services to app state
 app.state.captcha_service = captcha_service
@@ -103,7 +197,16 @@ from routes.terminal_routes import router as terminal_router
 from routes.admin_users_routes import router as admin_users_router
 from routes.billing_routes import router as billing_router, set_billing_db
 from routes.routes_legacy import set_db as set_legacy_db
+from routes.storage_routes import router as storage_routes, set_storage_db
+from routes import keyval_routes
 set_db(db)
+set_search_db(db)
+set_settings_db(db)
+set_org_db(db)
+set_notification_db(db)
+set_legacy_db(db)
+set_billing_db(db)
+set_storage_db(db)
 set_search_db(db)
 set_settings_db(db)
 set_org_db(db)
@@ -125,6 +228,8 @@ api_router.include_router(notification_router)
 api_router.include_router(terminal_router)
 api_router.include_router(admin_users_router)
 api_router.include_router(billing_router)
+api_router.include_router(storage_routes)
+api_router.include_router(keyval_routes.router)
 
 # Include the router in the main app
 app.include_router(api_router)
@@ -611,15 +716,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# Logger already configured at top level
 
 @app.on_event("startup")
-async def startup_event():
+async def startup_initialize_services():
     """Initialize default actors and services on startup."""
     logger.info("🚀 Starting initialization...")
     

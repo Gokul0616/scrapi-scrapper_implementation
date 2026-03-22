@@ -65,6 +65,14 @@ class SEOMetadataScraper(BaseScraper):
                     "title": "Extract Links",
                     "description": "Analyze internal and external links (adds processing time)",
                     "default": False
+                },
+                "max_pages": {
+                    "type": "integer",
+                    "title": "Max Pages to Crawl",
+                    "description": "Maximum number of internal pages to analyze (requires Extract Links = true)",
+                    "default": 1,
+                    "minimum": 1,
+                    "maximum": 500
                 }
             }
         }
@@ -114,6 +122,7 @@ class SEOMetadataScraper(BaseScraper):
         extract_headings = config.get('extract_headings', True)
         extract_images = config.get('extract_images', True)
         extract_links = config.get('extract_links', False)
+        max_pages = int(config.get('max_pages', 1))
         
         if not url:
             raise ValueError("URL parameter is required")
@@ -121,63 +130,95 @@ class SEOMetadataScraper(BaseScraper):
         results = []
         page = None
         
+        # Build local mock queue for standalone tests outside celery runner
+        class MockQueue:
+            def __init__(self): self.q = []
+            async def add_requests(self, reqs): 
+                self.q.extend(reqs)
+                return {"added": len(reqs)}
+            async def fetch_requests(self, limit=1, **kw): 
+                return [self.q.pop(0)] if self.q else []
+            async def mark_handled(self, id): pass
+            
+        if not hasattr(self.engine, 'request_queue') or not self.engine.request_queue:
+            self.engine.request_queue = MockQueue()
+
         try:
             await self._log_progress(f"🔍 Starting SEO metadata extraction for: {url}", progress_callback)
             
             # Get a browser page from the engine
             page = await self.engine.new_page()
             
-            # Navigate to the URL with increased timeout and fallback strategy
-            await self._log_progress(f"📡 Loading page: {url}", progress_callback)
+            # Seed the initial URL
+            await self.engine.request_queue.add_requests([{"url": url}])
             
-            # Try with networkidle first, then fallback to domcontentloaded
-            response = None
-            status_code = None
+            pages_processed = 0
             
-            try:
-                response = await page.goto(url, wait_until='networkidle', timeout=90000)
-                status_code = response.status if response else None
-                await self._log_progress(f"✅ Page loaded with networkidle (status: {status_code})", progress_callback)
-            except Exception as e:
-                await self._log_progress(f"⚠️ Networkidle failed, trying domcontentloaded: {str(e)}", progress_callback)
+            while pages_processed < max_pages:
+                reqs = await self.engine.request_queue.fetch_requests(limit=1, timeout_ms=3000)
+                if not reqs:
+                    await self._log_progress("🏁 Request queue empty, finishing scrape.", progress_callback)
+                    break
+                    
+                current_req = reqs[0]
+                current_url = current_req["url"]
+                
+                await self._log_progress(f"📡 Loading page [{pages_processed+1}/{max_pages}]: {current_url}", progress_callback)
+                
+                # Try with networkidle first, then fallback to domcontentloaded
+                response = None
+                status_code = None
+                
                 try:
-                    response = await page.goto(url, wait_until='domcontentloaded', timeout=90000)
+                    response = await page.goto(current_url, wait_until='networkidle', timeout=60000)
                     status_code = response.status if response else None
-                    await self._log_progress(f"✅ Page loaded with domcontentloaded (status: {status_code})", progress_callback)
-                except Exception as e2:
-                    await self._log_progress(f"⚠️ Domcontentloaded failed, trying load: {str(e2)}", progress_callback)
-                    response = await page.goto(url, wait_until='load', timeout=90000)
-                    status_code = response.status if response else None
-                    await self._log_progress(f"✅ Page loaded with load (status: {status_code})", progress_callback)
-            
-            # Wait a bit more for dynamic content
-            try:
-                await page.wait_for_timeout(2000)  # Wait 2 seconds for any dynamic content
-            except Exception:
-                pass
-            
-            # Extract all metadata
-            await self._log_progress("📊 Extracting SEO metadata...", progress_callback)
-            metadata = await self._extract_metadata(page, url, status_code)
-            
-            # Extract headings if requested
-            if extract_headings:
-                await self._log_progress("📝 Extracting headings (H1-H6)...", progress_callback)
-                metadata['headings'] = await self._extract_headings(page)
-            
-            # Extract images if requested
-            if extract_images:
-                await self._log_progress("🖼️ Analyzing images...", progress_callback)
-                metadata['images'] = await self._extract_image_metadata(page, url)
-            
-            # Extract links if requested
-            if extract_links:
-                await self._log_progress("🔗 Analyzing links...", progress_callback)
-                metadata['links'] = await self._extract_links(page, url)
-            
-            results.append(metadata)
-            
-            await self._log_progress(f"✅ Successfully extracted SEO metadata from: {url}", progress_callback)
+                except Exception as e:
+                    try:
+                        response = await page.goto(current_url, wait_until='domcontentloaded', timeout=60000)
+                        status_code = response.status if response else None
+                    except Exception as e2:
+                        response = await page.goto(current_url, wait_until='load', timeout=60000)
+                        status_code = response.status if response else None
+                
+                # Wait a bit more for dynamic content
+                try:
+                    await page.wait_for_timeout(2000)
+                except Exception:
+                    pass
+                
+                # Extract all metadata
+                metadata = await self._extract_metadata(page, current_url, status_code)
+                
+                # Extract headings if requested
+                if extract_headings:
+                    metadata['headings'] = await self._extract_headings(page)
+                
+                # Extract images if requested
+                if extract_images:
+                    metadata['images'] = await self._extract_image_metadata(page, current_url)
+                
+                # Extract links if requested
+                if extract_links:
+                    metadata['links'] = await self._extract_links(page, current_url)
+                    
+                    # Enqueue discovered internal links for deep crawling!
+                    if metadata['links'].get('sample_links'):
+                        internal_urls = [
+                            {"url": l["url"], "unique_key": l["url"]} 
+                            for l in metadata['links']['sample_links'] 
+                            if l.get("type") == "internal"
+                        ]
+                        if internal_urls:
+                            await self.engine.request_queue.add_requests(internal_urls)
+                
+                results.append(metadata)
+                pages_processed += 1
+                
+                # Mark as processed in queue
+                if current_req.get("id"):
+                    await self.engine.request_queue.mark_handled(current_req["id"])
+                
+            await self._log_progress(f"✅ Successfully extracted {len(results)} pages", progress_callback)
             
         except Exception as e:
             logger.error(f"❌ Error scraping {url}: {str(e)}")

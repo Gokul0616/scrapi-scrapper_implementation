@@ -48,6 +48,19 @@ async def execute_scraping_job(run_id: str, actor_id: str, user_id: str, input_d
         
         # Initialize scraper engine
         engine = ScraperEngine(proxy_manager)
+        
+        # Attach the persistent RequestQueue for deep crawling support natively inside the actor
+        from database import get_redis
+        from services.request_queue import RequestQueue
+        redis_client = await get_redis()
+        engine.request_queue = RequestQueue(
+            redis_client, 
+            run_id, 
+            db=db, 
+            workspace_id=organization_id if organization_id else user_id
+        )
+        await engine.request_queue.initialize()
+        
         await engine.initialize()
         
         try:
@@ -81,8 +94,63 @@ async def execute_scraping_job(run_id: str, actor_id: str, user_id: str, input_d
                 )
                 logger.info(f"Run {run_id}: {message}")
             
-            # Execute built-in scraper
-            results = await scraper.scrape(input_data, progress_callback)
+            # Check if this run should use deep crawling via RequestQueue
+            max_pages = int(input_data.get('max_pages', 1))
+            use_queue = input_data.get('use_request_queue', False) or max_pages > 1
+            
+            results = []
+            
+            if use_queue:
+                logger.info(f"   Starting deep crawl loop (Max pages: {max_pages})")
+                # Seed the queue with the initial URL
+                initial_url = input_data.get('url')
+                if initial_url:
+                    await engine.request_queue.add_requests([{"url": initial_url}])
+                elif input_data.get('start_urls'):
+                    await engine.request_queue.add_requests(input_data.get('start_urls'))
+                    
+                pages_processed = 0
+                while pages_processed < max_pages:
+                    reqs = await engine.request_queue.fetch_requests(limit=1, timeout_ms=3000)
+                    if not reqs:
+                        await progress_callback("🏁 Request queue empty, finishing deep crawl.")
+                        break
+                        
+                    current_req = reqs[0]
+                    current_url = current_req["url"]
+                    
+                    await progress_callback(f"🔄 Processing [{pages_processed+1}/{max_pages}]: {current_url}")
+                    
+                    # Override the URL in input_data for this specific page scrape
+                    page_input_data = dict(input_data)
+                    page_input_data["url"] = current_url
+                    
+                    try:
+                        # Execute built-in scraper for this single page
+                        page_results = await scraper.scrape(page_input_data, progress_callback)
+                        if page_results:
+                            if isinstance(page_results, list):
+                                results.extend(page_results)
+                            else:
+                                results.append(page_results)
+                    except Exception as page_e:
+                        logger.error(f"   Error scraping page {current_url}: {page_e}")
+                        await progress_callback(f"⚠️ Error on {current_url}: {str(page_e)}")
+                    
+                    # Mark as handled regardless of error to prevent infinite retry loops
+                    if current_req.get("id"):
+                        await engine.request_queue.mark_handled(current_req["id"])
+                    
+                    pages_processed += 1
+            else:
+                # Standard single-page execution
+                logger.info("   Executing standalone scrape (No Deep Crawl)")
+                scrape_res = await scraper.scrape(input_data, progress_callback)
+                if scrape_res:
+                    if isinstance(scrape_res, list):
+                        results.extend(scrape_res)
+                    else:
+                        results.append(scrape_res)
             
             # Create dataset and store results
             dataset = Dataset(
@@ -101,6 +169,19 @@ async def execute_scraping_job(run_id: str, actor_id: str, user_id: str, input_d
                 item_doc = item.model_dump()
                 item_doc['created_at'] = item_doc['created_at'].isoformat()
                 await db.dataset_items.insert_one(item_doc)
+                
+            if results:
+                try:
+                    await db.storage_metrics.insert_one({
+                        "workspace_id": organization_id if organization_id else user_id,
+                        "store_id": dataset.id,
+                        "type": "dataset",
+                        "operation": "write",
+                        "count": len(results),
+                        "timestamp": datetime.now(timezone.utc).isoformat()
+                    })
+                except Exception:
+                    pass
             
             # Calculate duration
             run_doc = await db.runs.find_one({"id": run_id})
@@ -299,21 +380,29 @@ async def create_run(
     
     logger.info(f"✅ Run created: {run.id}")
     
-    # Start scraping in parallel using task manager
-    if task_manager:
-        await task_manager.start_task(
-            run.id,
-            execute_scraping_job(
-                run.id,
-                real_actor_id,
-                current_user['id'],
-                run_data.input_data,
-                organization_id  # Pass organization_id
-            )
+    # Start scraping via Celery
+    from tasks.scrape_tasks import run_actor, PLAN_QUEUE_MAP
+    
+    # Determine the queue based on user's plan (fallback to free)
+    # We fetch plan from the workspace document loaded during billing check
+    user_plan = workspace.get("plan", "free") if workspace else "free"
+    queue_name = PLAN_QUEUE_MAP.get(user_plan, "q_free")
+    
+    try:
+        run_actor.apply_async(
+            kwargs={
+                "run_id": run.id,
+                "actor_id": real_actor_id,
+                "user_id": current_user['id'],
+                "input_data": run_data.input_data,
+                "organization_id": organization_id
+            },
+            queue=queue_name,
+            task_id=run.id  # Set task_id = run.id so we can revoke it later easily
         )
-        logger.info(f"Run {run.id} queued. Currently running: {task_manager.get_running_count()} tasks")
-    else:
-        logger.warning(f"Task manager not initialized, run {run.id} created but not started")
+        logger.info(f"Run {run.id} queued via Celery on queue: {queue_name}")
+    except Exception as e:
+        logger.error(f"Failed to queue run {run.id} via Celery: {e}")
     
     return run
 
@@ -426,10 +515,14 @@ async def abort_run(
                 detail="Run not found or not in running/queued state"
             )
         
-        # Try to cancel the task in task_manager
+        # Try to cancel the task in Celery
         task_cancelled = False
-        if task_manager:
-            task_cancelled = await task_manager.cancel_task(run_id)
+        try:
+            from celery_app import celery_app
+            celery_app.control.revoke(run_id, terminate=True)
+            task_cancelled = True
+        except Exception as e:
+            logger.warning(f"Failed to revoke Celery task {run_id}: {e}")
         
         # Update database status to aborted
         finished_at = datetime.now(timezone.utc)
@@ -514,7 +607,13 @@ async def abort_multiple_runs(
                     continue
                 
                 # Try to cancel the task
-                task_cancelled = await task_manager.cancel_task(run_id)
+                task_cancelled = False
+                try:
+                    from celery_app import celery_app
+                    celery_app.control.revoke(run_id, terminate=True)
+                    task_cancelled = True
+                except Exception as e:
+                    logger.warning(f"Failed to revoke Celery task {run_id}: {e}")
                 
                 # Update database status
                 finished_at = datetime.now(timezone.utc)
@@ -620,7 +719,13 @@ async def abort_all_runs(
             run_id = run["id"]
             try:
                 # Try to cancel the task
-                task_cancelled = await task_manager.cancel_task(run_id)
+                task_cancelled = False
+                try:
+                    from celery_app import celery_app
+                    celery_app.control.revoke(run_id, terminate=True)
+                    task_cancelled = True
+                except Exception as e:
+                    logger.warning(f"Failed to revoke Celery task {run_id}: {e}")
                 
                 # Update database status
                 finished_at = datetime.now(timezone.utc)
@@ -726,6 +831,19 @@ async def get_dataset_items(
         {"_id": 0}
     ).skip(skip).limit(limit).to_list(limit)
     
+    if items:
+        try:
+            await db.storage_metrics.insert_one({
+                "workspace_id": current_user['id'] if 'organization_id' not in run else run['organization_id'],
+                "store_id": run.get("dataset_id", run_id),
+                "type": "dataset",
+                "operation": "read",
+                "count": len(items),
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+        except Exception:
+            pass
+    
     # Convert datetime strings
     for item in items:
         if isinstance(item.get('created_at'), str):
@@ -758,6 +876,19 @@ async def export_dataset(
         raise HTTPException(status_code=404, detail="Run not found")
     
     items = await db.dataset_items.find({"run_id": run_id}, {"_id": 0}).to_list(10000)
+    
+    if items:
+        try:
+            await db.storage_metrics.insert_one({
+                "workspace_id": current_user['id'] if 'organization_id' not in run else run['organization_id'],
+                "store_id": run.get("dataset_id", run_id),
+                "type": "dataset",
+                "operation": "read",
+                "count": len(items),
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+        except Exception:
+            pass
     
     if format == "json":
         content = json.dumps([item['data'] for item in items], indent=2)

@@ -281,12 +281,106 @@ class BillingService:
             cost = ds_size_gb * hours_active * 0.0010
             timed_storage_cost += cost
             
-        # Write operations: $0.005 per 1,000 writes
-        write_ops_cost = (total_items / 1000) * 0.005
-        # Read operations: $0.0004 per 1,000 reads (simulate 2 reads per item)
-        read_ops_cost = ((total_items * 2) / 1000) * 0.0004
+        # === Storage: Datasets Read/Write Metrics ===
+        ds_reads = 0
+        ds_writes = 0
+        
+        ds_metrics = await db.storage_metrics.aggregate([
+            { "$match": { "workspace_id": workspace_id, "type": "dataset", "timestamp": { "$gte": start_of_period.isoformat() } } },
+            { "$group": { "_id": "$operation", "count": { "$sum": "$count" } } }
+        ]).to_list(length=None)
+        
+        for metric in ds_metrics:
+            if metric["_id"] == "read": ds_reads += metric["count"]
+            elif metric["_id"] == "write": ds_writes += metric["count"]
+            
+        # Legacy Fallback for Data created prior to Storage Ledger release
+        if ds_reads == 0 and ds_writes == 0 and total_items > 0:
+            ds_reads = total_items * 2
+            ds_writes = total_items
+                
+        write_ops_cost = (ds_writes / 1000) * 0.005
+        read_ops_cost = (ds_reads / 1000) * 0.0004
 
-        storage_total_cost = timed_storage_cost + write_ops_cost + read_ops_cost
+        # === Storage: Key-Value Stores ===
+        kv_reads = 0
+        kv_writes = 0
+        kv_lists = 0
+        kv_timed_storage_cost = 0.0
+        
+        kv_metrics = await db.storage_metrics.aggregate([
+            { "$match": { "workspace_id": workspace_id, "type": "key_value", "timestamp": { "$gte": start_of_period.isoformat() } } },
+            { "$group": { "_id": "$operation", "count": { "$sum": 1 }, "bytes": { "$sum": "$bytes" } } }
+        ]).to_list(length=None)
+        
+        for metric in kv_metrics:
+            if metric["_id"] == "read": kv_reads += metric["count"]
+            elif metric["_id"] == "write": kv_writes += metric["count"]
+            elif metric["_id"] == "list": kv_lists += metric["count"]
+            
+        kv_cursor = db.key_value_stores.find({
+            "user_id" if workspace_type == "personal" else "organization_id": workspace_id
+        })
+        async for kv in kv_cursor:
+            created_at_str = kv.get("created_at")
+            if not created_at_str: continue
+            kv_created_at = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
+            if kv_created_at.tzinfo is None: kv_created_at = kv_created_at.replace(tzinfo=timezone.utc)
+            
+            start_tz = start_of_period.replace(tzinfo=timezone.utc) if start_of_period.tzinfo is None else start_of_period
+            active_since = max(kv_created_at, start_tz)
+            hours_active_kv = (now - active_since).total_seconds() / 3600
+            
+            total_bytes = kv.get("metrics", {}).get("total_bytes", 0)
+            kv_size_gb = total_bytes / (1024 * 1024 * 1024)
+            kv_timed_storage_cost += (kv_size_gb * max(0.0, float(hours_active_kv)) * 0.0010)
+                
+        kv_writes_cost = (kv_writes / 1000) * 0.005
+        kv_reads_cost = (kv_reads / 1000) * 0.0004
+        kv_lists_cost = (kv_lists / 1000) * 0.005
+        
+        # === Storage: Request Queues ===
+        rq_reads = 0
+        rq_writes = 0
+        rq_timed_storage_cost = 0.0
+        
+        rq_metrics = await db.storage_metrics.aggregate([
+            { "$match": { "workspace_id": workspace_id, "type": "request_queue", "timestamp": { "$gte": start_of_period.isoformat() } } },
+            { "$group": { "_id": "$operation", "count": { "$sum": "$count" } } }
+        ]).to_list(length=None)
+        
+        for metric in rq_metrics:
+            if metric["_id"] == "read": rq_reads += metric["count"]
+            elif metric["_id"] == "write": rq_writes += metric["count"]
+            
+        # Legacy Request Queues Metric Fallback
+        if rq_reads == 0 and rq_writes == 0:
+            rq_count = await db.request_queues.count_documents({
+                "user_id" if workspace_type == "personal" else "organization_id": workspace_id
+            })
+            if rq_count > 0:
+                rq_reads = rq_count * 1200
+                rq_writes = rq_count * 500
+        
+        # Estimate timed storage based on queue existence duration identically
+        rq_cursor = db.request_queues.find({
+            "user_id" if workspace_type == "personal" else "organization_id": workspace_id
+        })
+        
+        async for rq in rq_cursor:
+            hours_active_rq = (now - start_of_period.replace(tzinfo=timezone.utc)).total_seconds() / 3600
+            rq_gb = 0.02 # 20MB per queue roughly footprint
+            rq_timed_storage_cost += (rq_gb * max(0.0, float(hours_active_rq)) * 0.0040)
+            
+        rq_writes_cost = (rq_writes / 1000) * 0.005
+        rq_reads_cost = (rq_reads / 1000) * 0.0004
+        
+        # Sum costs independently
+        dataset_storage_total = timed_storage_cost + write_ops_cost + read_ops_cost
+        kv_storage_total = kv_timed_storage_cost + kv_writes_cost + kv_reads_cost + kv_lists_cost
+        rq_storage_total = rq_timed_storage_cost + rq_writes_cost + rq_reads_cost
+
+        storage_total_cost = dataset_storage_total + kv_storage_total + rq_storage_total
 
         # Proxy and Data Transfer Simulation (based on runs for visual spikes/variety)
         # In a real app, these would come from usage logs
@@ -394,9 +488,18 @@ class BillingService:
                     "icon": '●',
                     "details": [
                         { "label": "Datasets", "is_header": True },
-                        { "label": "Timed storage", "value": f"{(timed_storage_cost / 0.001):.5f} GB-hours", "price": "$0.0010 per GB-hour", "cost": timed_storage_cost },
-                        { "label": "Reads", "value": f"{total_items * 2}", "price": "$0.0004 per 1k", "cost": read_ops_cost },
-                        { "label": "Writes", "value": f"{total_items}", "price": "$0.0050 per 1k", "cost": write_ops_cost }
+                        { "label": "Timed storage", "value": f"{(timed_storage_cost / 0.0010):.4f} GB-hours", "price": "$0.0010 per GB-hour", "cost": timed_storage_cost },
+                        { "label": "Reads", "value": f"{ds_reads}", "price": "$0.0004 per 1k", "cost": read_ops_cost },
+                        { "label": "Writes", "value": f"{ds_writes}", "price": "$0.0050 per 1k", "cost": write_ops_cost },
+                        { "label": "Key-value stores", "is_header": True },
+                        { "label": "Timed storage", "value": f"{(kv_timed_storage_cost / 0.0010) if kv_timed_storage_cost else 0.0000:.4f} GB-hours", "price": "$0.0010 per GB-hour", "cost": kv_timed_storage_cost },
+                        { "label": "Reads", "value": f"{kv_reads}", "price": "$0.0004 per 1k", "cost": kv_reads_cost },
+                        { "label": "Writes", "value": f"{kv_writes}", "price": "$0.0050 per 1k", "cost": kv_writes_cost },
+                        { "label": "Lists", "value": "0", "price": "$0.0050 per 1k", "cost": 0.0 },
+                        { "label": "Request queues", "is_header": True },
+                        { "label": "Timed storage", "value": f"{(rq_timed_storage_cost / 0.0040) if rq_timed_storage_cost > 0 else 0.0000:.4f} GB-hours", "price": "$0.0040 per GB-hour", "cost": rq_timed_storage_cost },
+                        { "label": "Reads", "value": f"{rq_reads}", "price": "$0.0004 per 1k", "cost": rq_reads_cost },
+                        { "label": "Writes", "value": f"{rq_writes}", "price": "$0.0050 per 1k", "cost": rq_writes_cost }
                     ]
                 }
             ],
@@ -598,8 +701,18 @@ class BillingService:
         
         # Calculate consistency metrics
         total_runs_count = await db.runs.count_documents(query)
-        hist_storage_writes = (total_items_in_period / 1000) * 0.005
-        hist_storage_reads = (total_items_in_period * 2 / 1000) * 0.0004
+        hist_storage_writes = 0.0
+        hist_storage_reads = 0.0
+        
+        ds_h_metrics = await db.storage_metrics.aggregate([
+            { "$match": { "workspace_id": workspace_id, "type": "dataset", "timestamp": { "$gte": start_date.isoformat(), "$lt": end_date.isoformat() } } },
+            { "$group": { "_id": "$operation", "count": { "$sum": "$count" } } }
+        ]).to_list(length=None)
+        
+        for metric in ds_h_metrics:
+            if metric["_id"] == "read": hist_storage_reads = (metric["count"] / 1000) * 0.0004
+            elif metric["_id"] == "write": hist_storage_writes = (metric["count"] / 1000) * 0.005
+            
         hist_storage_total = hist_storage_timed + hist_storage_writes + hist_storage_reads
         
         per_run_reads = hist_storage_reads / max(1, total_runs_count)

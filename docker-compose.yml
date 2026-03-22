@@ -36,24 +36,68 @@ services:
     command: uvicorn server:app --host 0.0.0.0 --port 8000 --reload
     restart: unless-stopped
 
-  worker:
+  worker-premium:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: scrapi_worker
+    container_name: scrapi_worker_premium
     volumes:
       - ./backend:/app
-    environment:
-      - MONGO_URL=mongodb://mongodb:27017
-      - REDIS_URL=redis://redis:6379/0
-      - DB_NAME=scrapi
+    environment: &worker_env
+      MONGO_URL: mongodb://mongodb:27017
+      REDIS_URL: redis://redis:6379/0
+      DB_NAME: scrapi
     depends_on:
       - mongodb
       - redis
-    command: celery -A celery_app worker --loglevel=info -c 4
+    command: celery -A celery_app worker -Q celery,q_premium,q_priority -c 10 --loglevel=info
     deploy:
       mode: replicated
-      replicas: 2 # Scale horizontally!
+      replicas: 2
+    restart: unless-stopped
+
+  worker-standard:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: scrapi_worker_standard
+    volumes:
+      - ./backend:/app
+    environment: *worker_env
+    depends_on:
+      - mongodb
+      - redis
+    command: celery -A celery_app worker -Q q_standard,q_scheduled,q_webhooks -c 4 --loglevel=info
+    deploy:
+      mode: replicated
+      replicas: 3
+    restart: unless-stopped
+
+  worker-free:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: scrapi_worker_free
+    volumes:
+      - ./backend:/app
+    environment: *worker_env
+    depends_on:
+      - mongodb
+      - redis
+    command: celery -A celery_app worker -Q q_free -c 1 --loglevel=info
+    restart: unless-stopped
+
+  celery-beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: scrapi_celery_beat
+    volumes:
+      - ./backend:/app
+    environment: *worker_env
+    depends_on:
+      - redis
+    command: celery -A celery_app beat --loglevel=info
     restart: unless-stopped
 
   flower:
@@ -65,7 +109,7 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/0
     depends_on:
       - redis
-      - worker
+      - worker-standard
     restart: unless-stopped
 
   frontend:

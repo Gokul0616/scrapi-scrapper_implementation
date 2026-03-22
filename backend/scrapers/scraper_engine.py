@@ -21,37 +21,16 @@ class ScraperEngine:
         self.playwright = None
         self.browser: Optional[Browser] = None
         self.contexts: List[BrowserContext] = []
+        self.request_queue = None # Bound during run initialization for deep crawling
         
     async def initialize(self):
-        """Initialize the scraping engine with browser and proxy manager."""
-        self.playwright = await async_playwright().start()
-        
-        # Launch browser with anti-detection settings
-        # Use new headless mode (headless="new") for better bypass
-        self.browser = await self.playwright.chromium.launch(
-            headless=True,  # Keep headless for Docker environment
-            args=[
-                '--disable-blink-features=AutomationControlled',
-                '--disable-dev-shm-usage',
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-web-security',
-                '--disable-features=IsolateOrigins,site-per-process',
-                '--no-first-run',
-                '--no-default-browser-check',
-                '--disable-background-timer-throttling',
-                '--disable-backgrounding-occluded-windows',
-                '--disable-renderer-backgrounding',
-                '--window-size=1920,1080',
-                '--start-maximized',
-            ]
-        )
-        logger.info(f"Scraper engine initialized with enhanced anti-detection (Stealth: {HAS_STEALTH})")
+        """Initialize the scraping engine."""
+        logger.info(f"Scraper engine initialized with Shared Browser Pool (Stealth: {HAS_STEALTH})")
     
     async def create_context(self, use_proxy: bool = True, ultra_fast: bool = False) -> BrowserContext:
         """Create a new browser context with optional proxy and resource blocking for ultra-fast mode."""
-        if not self.browser:
-            await self.initialize()
+        from services.browser_pool import get_browser_pool
+        pool = await get_browser_pool()
         
         context_options = {
             "viewport": {"width": 1920, "height": 1080},
@@ -80,7 +59,7 @@ class ScraperEngine:
                 
                 logger.info(f"Using proxy: {parsed.hostname}:{parsed.port}")
         
-        context = await self.browser.new_context(**context_options)
+        context = await pool.get_context(**context_options)
         
         # Add resource blocking for ultra-fast mode (3-5x faster page loads)
         if ultra_fast:
@@ -244,7 +223,7 @@ class ScraperEngine:
         return random.choice(user_agents)
     
     async def cleanup(self):
-        """Clean up browser resources and ensure all processes are terminated."""
+        """Clean up browser contexts. Underlying browser is managed by BrowserPool."""
         try:
             for context in self.contexts:
                 try:
@@ -253,20 +232,6 @@ class ScraperEngine:
                     pass
             self.contexts = []
             
-            if self.browser:
-                try:
-                    await self.browser.close()
-                except Exception as e:
-                    logger.warning(f"Error closing browser: {e}")
-                self.browser = None
-            
-            if self.playwright:
-                try:
-                    await self.playwright.stop()
-                except Exception as e:
-                    logger.warning(f"Error stopping playwright: {e}")
-                self.playwright = None
-            
-            logger.info("Scraper engine cleaned up (processes terminated, ephemeral caches cleared)")
+            logger.info("Scraper engine cleaned up (ephemeral contexts closed)")
         except Exception as e:
             logger.error(f"Critical error during scraper engine cleanup: {e}")

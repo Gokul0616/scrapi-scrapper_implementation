@@ -4,11 +4,13 @@ Uses APScheduler for job scheduling and execution.
 """
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
+from apscheduler.jobstores.redis import RedisJobStore
 from apscheduler.jobstores.memory import MemoryJobStore
 from croniter import croniter
 from datetime import datetime, timezone
 import pytz
 import logging
+import os
 from typing import Optional, Dict, Any
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
@@ -31,9 +33,14 @@ class SchedulerService:
             return
             
         try:
-            # Create scheduler with memory job store
+            # Create scheduler with redis job store
             jobstores = {
-                'default': MemoryJobStore()
+                'default': RedisJobStore(
+                    host=os.environ.get('REDIS_HOST', 'localhost'),
+                    port=int(os.environ.get('REDIS_PORT', 6379)),
+                    db=2
+                ),
+                'memory': MemoryJobStore()
             }
             
             self.scheduler = AsyncIOScheduler(
@@ -45,11 +52,12 @@ class SchedulerService:
             self._initialized = True
             logger.info("✅ Scheduler started successfully")
             
-            # Start Data Retention Cron
+            # Start Data Retention Cron in memory store (to avoid unpicklable DB objects in Redis)
             self.scheduler.add_job(
                 func=self._run_data_retention_cleanup,
                 trigger=CronTrigger(hour=0, minute=0, timezone=pytz.UTC), # Run daily at midnight
                 id="system_data_retention_cleanup",
+                jobstore="memory",
                 replace_existing=True
             )
             
@@ -111,7 +119,7 @@ class SchedulerService:
             
             # Add job to scheduler
             self.scheduler.add_job(
-                func=self._execute_scheduled_run,
+                func=execute_scheduled_run,
                 trigger=trigger,
                 id=schedule_id,
                 kwargs={
@@ -147,69 +155,6 @@ class SchedulerService:
             logger.info(f"Removed schedule {schedule_id}")
         except Exception as e:
             logger.warning(f"Failed to remove schedule {schedule_id}: {str(e)}")
-    
-    async def _execute_scheduled_run(
-        self,
-        schedule_id: str,
-        user_id: str,
-        actor_id: str,
-        input_data: Dict[str, Any]
-    ):
-        """Execute a scheduled run."""
-        try:
-            logger.info(f"⏰ Executing scheduled run for schedule {schedule_id}")
-            
-            # Get actor details
-            actor = await self.db.actors.find_one({"id": actor_id})
-            if not actor:
-                logger.error(f"Actor {actor_id} not found for schedule {schedule_id}")
-                await self._update_schedule_status(schedule_id, "failed", None)
-                return
-            
-            # Import Run model here to avoid circular imports
-            from models import Run
-            
-            # Create run
-            run = Run(
-                user_id=user_id,
-                actor_id=actor_id,
-                actor_name=actor['name'],
-                actor_icon=actor.get('icon'),
-                input_data=input_data,
-                status="queued",
-                origin="Scheduler"
-            )
-            
-            # Save run to database
-            doc = run.model_dump()
-            doc['created_at'] = doc['created_at'].isoformat()
-            await self.db.runs.insert_one(doc)
-            
-            logger.info(f"✅ Created scheduled run {run.id} for schedule {schedule_id}")
-            
-            # Import task manager and execute function
-            from services.task_manager import task_manager
-            from routes.routes import execute_scraping_job
-            
-            # Start the scraping task
-            await task_manager.start_task(
-                run.id,
-                execute_scraping_job(
-                    run.id,
-                    actor_id,
-                    user_id,
-                    input_data
-                )
-            )
-            
-            # Update schedule with last run info
-            await self._update_schedule_status(schedule_id, "success", run.id)
-            
-            logger.info(f"✅ Scheduled run {run.id} started successfully")
-            
-        except Exception as e:
-            logger.error(f"❌ Failed to execute scheduled run for {schedule_id}: {str(e)}")
-            await self._update_schedule_status(schedule_id, "failed", None)
     
     async def _update_schedule_status(
         self,
@@ -351,6 +296,70 @@ class SchedulerService:
         except Exception:
             return cron_expression
 
+
+async def execute_scheduled_run(
+    schedule_id: str,
+    user_id: str,
+    actor_id: str,
+    input_data: Dict[str, Any]
+):
+    """Execute a scheduled run (module-level function for pickling)."""
+    try:
+        scheduler = get_scheduler()
+        db = scheduler.db
+        logger.info(f"⏰ Executing scheduled run for schedule {schedule_id}")
+        
+        # Get actor details
+        actor = await db.actors.find_one({"id": actor_id})
+        if not actor:
+            logger.error(f"Actor {actor_id} not found for schedule {schedule_id}")
+            await scheduler._update_schedule_status(schedule_id, "failed", None)
+            return
+        
+        from models import Run
+        run = Run(
+            user_id=user_id,
+            actor_id=actor_id,
+            actor_name=actor['name'],
+            actor_icon=actor.get('icon'),
+            input_data=input_data,
+            status="queued",
+            origin="Scheduler"
+        )
+        
+        doc = run.model_dump()
+        doc['created_at'] = doc['created_at'].isoformat()
+        await db.runs.insert_one(doc)
+        
+        logger.info(f"✅ Created scheduled run {run.id} for schedule {schedule_id}")
+        
+        from tasks.scrape_tasks import run_actor, PLAN_QUEUE_MAP
+        user_doc = await db.users.find_one({"id": user_id})
+        plan = user_doc.get("plan", "free") if user_doc else "free"
+        queue = PLAN_QUEUE_MAP.get(plan, "q_free")
+        
+        run_actor.apply_async(
+            kwargs={
+                "run_id": run.id,
+                "actor_id": actor_id,
+                "user_id": user_id,
+                "input_data": input_data,
+                "organization_id": None
+            },
+            queue=queue,
+            task_id=run.id
+        )
+        
+        await scheduler._update_schedule_status(schedule_id, "success", run.id)
+        logger.info(f"✅ Scheduled run {run.id} started successfully")
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to execute scheduled run for {schedule_id}: {str(e)}")
+        try:
+            scheduler = get_scheduler()
+            await scheduler._update_schedule_status(schedule_id, "failed", None)
+        except Exception:
+            pass
 
 # Global scheduler instance
 scheduler_service: Optional[SchedulerService] = None
