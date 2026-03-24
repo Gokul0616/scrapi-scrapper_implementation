@@ -44,7 +44,7 @@ const DataTable = ({
 
   const handleSort = (column) => {
     if (!column.sortable || !onSort) return;
-    
+
     const sortKey = column.sortKey || column.accessor;
     if (sortConfig.sortBy === sortKey) {
       onSort(sortKey, sortConfig.sortOrder === 'desc' ? 'asc' : 'desc');
@@ -101,18 +101,16 @@ const DataTable = ({
                 {columns.map((column, index) => (
                   <th
                     key={index}
-                    className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide ${
-                      column.width || ''
-                    } ${column.sortable ? 'cursor-pointer hover:text-gray-700' : ''}`}
+                    className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide ${column.width || ''
+                      } ${column.sortable ? 'cursor-pointer hover:text-gray-700' : ''}`}
                     onClick={() => handleSort(column)}
                   >
                     <div className="flex items-center gap-1">
                       {column.header}
                       {column.sortable && sortConfig.sortBy === (column.sortKey || column.accessor) && (
                         <ChevronDown
-                          className={`w-3 h-3 transition-transform ${
-                            sortConfig.sortOrder === 'asc' ? 'rotate-180' : ''
-                          }`}
+                          className={`w-3 h-3 transition-transform ${sortConfig.sortOrder === 'asc' ? 'rotate-180' : ''
+                            }`}
                         />
                       )}
                     </div>
@@ -124,9 +122,8 @@ const DataTable = ({
               {data.map((row, rowIndex) => (
                 <tr
                   key={rowIndex}
-                  className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
-                    isClickable(row) ? 'cursor-pointer' : ''
-                  }`}
+                  className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${isClickable(row) ? 'cursor-pointer' : ''
+                    }`}
                   onClick={() => isClickable(row) && onRowClick(row)}
                 >
                   {columns.map((column, colIndex) => (

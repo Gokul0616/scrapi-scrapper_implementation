@@ -48,17 +48,23 @@ class ScraperEngine:
         )
         logger.info(f"Scraper engine initialized with enhanced anti-detection (Stealth: {HAS_STEALTH})")
     
-    async def create_context(self, use_proxy: bool = True, ultra_fast: bool = False) -> BrowserContext:
-        """Create a new browser context with optional proxy and resource blocking for ultra-fast mode."""
+    async def create_context(self, use_proxy: bool = True, ultra_fast: bool = False, locale: Optional[str] = None, timezone_id: Optional[str] = None, geolocation: Optional[Dict[str, float]] = None) -> BrowserContext:
+        """Create a new browser context with optional proxy, locale, timezone, and geolocation."""
         if not self.browser:
             await self.initialize()
         
         context_options = {
             "viewport": {"width": 1920, "height": 1080},
             "user_agent": self._get_random_user_agent(),
-            "locale": "en-US",
-            "timezone_id": "America/New_York",
         }
+        
+        if locale:
+            context_options["locale"] = locale
+        if timezone_id:
+            context_options["timezone_id"] = timezone_id
+        if geolocation:
+            context_options["geolocation"] = geolocation
+            context_options["permissions"] = ["geolocation"]
         
         # Add proxy if available and requested
         if use_proxy and self.proxy_manager:

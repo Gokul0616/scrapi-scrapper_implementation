@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from typing import List, Optional
 from datetime import datetime, timezone
+import asyncio
 import io
 import json
 import csv
@@ -138,6 +139,21 @@ async def execute_scraping_job(run_id: str, actor_id: str, user_id: str, input_d
         finally:
             await engine.cleanup()
     
+    except asyncio.CancelledError:
+        logger.info(f"Run {run_id} was cancelled by user")
+        # Ensure run status is updated to failed (cancelled)
+        await db.runs.update_one(
+            {"id": run_id},
+            {
+                "$set": {
+                    "status": "failed",
+                    "finished_at": datetime.now(timezone.utc).isoformat(),
+                    "error_message": "Run cancelled by user"
+                }
+            }
+        )
+        raise  # Re-raise to let the task manager's callback know
+        
     except Exception as e:
         logger.error(f"Run {run_id} failed: {str(e)}")
         # Ensure run status is updated to failed and duration is recorded

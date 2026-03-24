@@ -62,7 +62,9 @@ class TaskManager:
         """Callback when a task completes."""
         self.task_locks.discard(run_id)
         
-        if task.exception():
+        if task.cancelled():
+            logger.info(f"Task {run_id} was cancelled")
+        elif task.exception():
             logger.error(f"Task {run_id} failed with exception: {task.exception()}")
         else:
             logger.info(f"Task {run_id} completed successfully")

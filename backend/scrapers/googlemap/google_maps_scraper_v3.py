@@ -29,6 +29,8 @@ class GoogleMapsScraperV3(BaseScraper):
     - Website Enrichment (Meta data, Socials, Deep Email Search)
     """
     
+    _location_cache = {} # Static cache to share resolved coordinates across runs
+    
     def __init__(self, scraper_engine: ScraperEngine):
         super().__init__(scraper_engine)
         self.base_url = "https://www.google.com/maps"
@@ -102,14 +104,53 @@ class GoogleMapsScraperV3(BaseScraper):
         extract_images = bool(config.get('extract_images', False))
         
         all_results = []
-        context = await self.engine.create_context(use_proxy=True)
+        
+        # Detect target country for optimization
+        target_country = self._detect_target_country(location, search_terms)
+        country_cfg = self._get_country_config(target_country)
+        
+        context = await self.engine.create_context(
+            use_proxy=True,
+            locale=country_cfg.get('locale'),
+            timezone_id=country_cfg.get('timezone'),
+            geolocation=country_cfg.get('geolocation')
+        )
         
         try:
             for term in search_terms:
-                if progress_callback:
-                    await progress_callback(f"🔍 Searching: {term} in {location}")
+                # 1. Resolve Location Automatically (No Hardcode!)
+                target_place_name = self._detect_target_country(location, [term])
+                resolved = None
+                if target_place_name:
+                    resolved = await self._resolve_location(context, target_place_name)
                 
-                search_query = f"{term} {location}" if location else term
+                # 2. Get Browser Config (Neutral start)
+                country_cfg = self._get_country_config(None)
+                
+                # Regional parameters for URL
+                hl = "en"
+                gl = "us"
+                
+                if resolved and resolved.get('geolocation'):
+                     # Use the resolved coordinates and zoom to force Map View
+                     country_cfg['geolocation'] = {
+                         **resolved['geolocation'],
+                         'zoom': resolved.get('zoom', 12)
+                     }
+                
+                region_params = f"&hl={hl}&gl={gl}"
+                
+                # 3. Clean up display and query
+                display_location = location
+                if display_location.lower().startswith("in "):
+                    display_location = display_location[3:].strip()
+                
+                if progress_callback:
+                    info = f" (Resolved: {target_place_name})" if resolved else " (Local IP)"
+                    await progress_callback(f"🔍 Searching: {term} in {display_location}{info}")
+                
+                # Build the actual search query
+                search_query = f"{term} in {display_location}" if display_location else term
                 
                 # Retry logic for incomplete results
                 attempt = 0
@@ -121,7 +162,14 @@ class GoogleMapsScraperV3(BaseScraper):
                         if progress_callback:
                             await progress_callback(f"🔄 Retry {attempt}/{max_attempts-1} - Found {len(places)}/{max_results}")
                     
-                    new_places = await self._search_places(context, search_query, max_results)
+                    # Pass geolocation to _search_places to avoid single-result redirects
+                    new_places = await self._search_places(
+                        context, 
+                        search_query, 
+                        max_results, 
+                        region_params,
+                        geolocation=country_cfg.get('geolocation')
+                    )
                     
                     # Merge and deduplicate
                     for place_url in new_places:
@@ -179,8 +227,10 @@ class GoogleMapsScraperV3(BaseScraper):
         
         return all_results
     
-    async def _search_places(self, context, query: str, max_results: int) -> List[str]:
-        """Enhanced search with better scrolling and pagination."""
+    async def _search_places(self, context, query: str, max_results: int, region_params: str = "", geolocation: Optional[Dict[str, float]] = None) -> List[str]:
+        """Enhanced search with better scrolling and pagination.
+        Using geolocation helps bypass single-result redirects by forcing a map view.
+        """
         page = await context.new_page()
         if stealth_async:
             await stealth_async(page)
@@ -188,13 +238,38 @@ class GoogleMapsScraperV3(BaseScraper):
         place_urls = set()
         
         try:
-            search_url = f"{self.base_url}/search/{query.replace(' ', '+')}"
+            # Construct search URL. If geolocation is provided, use it to force a list view.
+            # Format: /search/Query/@lat,lng,zoomZ/
+            q = query.replace(' ', '+')
+            if geolocation and 'latitude' in geolocation and 'longitude' in geolocation:
+                lat, lng = geolocation['latitude'], geolocation['longitude']
+                zoom = geolocation.get('zoom', 12) # Default to 12 if not provided
+                # Correct the URL to avoid double /maps/maps
+                search_url = f"{self.base_url}/search/{q}/@{lat},{lng},{zoom}z?{region_params.lstrip('&')}"
+            else:
+                search_url = f"{self.base_url}/search/{q}?{region_params.lstrip('&')}"
+            
+            logger.info(f"Navigating to search URL: {search_url}")
             await page.goto(search_url, wait_until="domcontentloaded", timeout=45000)
             
-            # Wait for results panel or list
+            # 1. Check if we were redirected to a single place directly
+            current_url = page.url
+            if '/maps/place/' in current_url:
+                logger.info(f"Direct redirect to single place: {current_url}")
+                clean_href = current_url.split('?')[0]
+                place_urls.add(clean_href)
+                return list(place_urls)
+
+            # 2. Wait for results panel or list
             try:
                 await page.wait_for_selector('div[role="feed"], div.m6QErb[aria-label]', timeout=15000)
             except:
+                # Re-check URL after wait just in case of slow redirect
+                if '/maps/place/' in page.url:
+                    clean_href = page.url.split('?')[0]
+                    place_urls.add(clean_href)
+                    return list(place_urls)
+                    
                 logger.info("Could not find standard feed, trying generic wait")
                 await asyncio.sleep(5)
             
@@ -284,7 +359,7 @@ class GoogleMapsScraperV3(BaseScraper):
             
             await asyncio.sleep(1.5) # Slight delay for dynamic content
             
-            place_data = {
+            place_data: Dict[str, Any] = {
                 'url': url,
                 'placeId': self._extract_place_id(url)
             }
@@ -405,35 +480,144 @@ class GoogleMapsScraperV3(BaseScraper):
             await page.close()
     
     def _parse_address(self, place_data: Dict[str, Any]):
-        """Helper to parse address components."""
+        """Completely automated address parsing without hardcoded maps."""
         try:
-            address_parts = place_data['address'].split(',')
-            if len(address_parts) >= 3:
-                place_data['city'] = address_parts[-2].strip()
-                state_zip = address_parts[-1].strip().split()
-                if state_zip:
-                    place_data['state'] = state_zip[0]
+            full_address = place_data.get('address', '')
+            if not full_address:
+                return
+                
+            address_parts = [p.strip() for p in full_address.split(',')]
             
-            # Simple country extraction
-            last_part = address_parts[-1].strip()
-            country_map = {
-                'USA': 'US', 'United States': 'US', 'US': 'US',
-                'India': 'IN', 'IN': 'IN',
-                'UK': 'GB', 'United Kingdom': 'GB',
-                'Canada': 'CA',
-                'Australia': 'AU'
-            }
+            # 1. Extract Country (usually the last part)
+            if len(address_parts) >= 1:
+                # If the last part is just a zip-like string (numbers), the previous part might be the country
+                last_part = address_parts[-1]
+                if any(char.isdigit() for char in last_part) and len(address_parts) >= 2:
+                    # Likely a zip/state, check one part back
+                    place_data['countryCode'] = address_parts[-2]
+                else:
+                    place_data['countryCode'] = last_part
             
-            for name, code in country_map.items():
-                if name in last_part:
-                    place_data['countryCode'] = code
-                    break
+            # 2. Extract City (usually the second to last or third to last)
+            if len(address_parts) >= 2:
+                # Basic heuristic: if we took -1 as country, -2 is likely city/state
+                potential_city = address_parts[-2]
+                # Split by space to remove zip/state if present
+                city_parts = potential_city.split()
+                if city_parts:
+                    place_data['city'] = city_parts[0]
+                    if len(city_parts) > 1:
+                        place_data['state'] = " ".join(city_parts[1:])
             
-            if 'countryCode' not in place_data and place_data.get('state'):
-                place_data['countryCode'] = 'US' # Default assumption
+            # Final cleaning: if country is "USA", "United States", etc., it's fine as is
+            # The goal is "no hardcode," so we return the name found in the address.
                 
         except Exception as e:
-            logger.debug(f"Address parsing error: {e}")
+            logger.debug(f"Automated address parsing error: {e}")
+
+    async def _resolve_location(self, context, location_name: str) -> Optional[Dict[str, Any]]:
+        """
+        Dynamically resolve any location name (Nigeria, Paris, etc.) to GPS coordinates.
+        This uses Google Maps' own geocoding through URL redirects.
+        """
+        if location_name.lower() in self._location_cache:
+            return self._location_cache[location_name.lower()]
+            
+        page = await context.new_page()
+        try:
+            # Quick search to resolve location
+            resolve_url = f"{self.base_url}/search/{location_name.replace(' ', '+')}?hl=en"
+            logger.info(f"Resolving location coordinates: {location_name}")
+            
+            await page.goto(resolve_url, wait_until="domcontentloaded", timeout=30000)
+            
+            # Wait for redirect to /@lat,lng format
+            for _ in range(15):
+                current_url = page.url
+                if '/@' in current_url:
+                    match = re.search(r'/@(-?\d+\.\d+),(-?\d+\.\d+),(\d+)z', current_url)
+                    if match:
+                        lat = float(match.group(1))
+                        lng = float(match.group(2))
+                        zoom = int(match.group(3))
+                        
+                        result = {
+                            'geolocation': {'latitude': lat, 'longitude': lng},
+                            'zoom': zoom,
+                            'country_hint': None
+                        }
+                        self._location_cache[location_name.lower()] = result
+                        logger.info(f"📍 Location '{location_name}' resolved to {lat}, {lng} (Zoom: {zoom})")
+                        return result
+                await asyncio.sleep(0.5)
+        except Exception as e:
+            logger.debug(f"Geolocation resolution failed for {location_name}: {e}")
+        finally:
+            await page.close()
+        return None
+
+    def _detect_target_country(self, location: str, search_terms: List[str]) -> str:
+        """Extract a location name from the query (e.g. 'in nigeria')."""
+        # 1. Check if location field is already provided and clean it
+        if location:
+            loc = location.strip()
+            if loc.lower().startswith("in "):
+                loc = loc[3:].strip()
+            return loc
+
+        # 2. Otherwise extract from search terms
+        combined = " ".join(search_terms).lower()
+        match = re.search(r'in\s+([a-zA-Z\s]+)', combined)
+        if match:
+            # Only take the first few words or until we hit a non-location word
+            # For simplicity, we just take what the regex found but trimmed
+            return match.group(1).strip()
+            
+        return ""
+
+    def _get_country_config(self, country_code: Optional[str]) -> Dict[str, Any]:
+        """Dynamically guess browser configuration for a country code."""
+        if not country_code:
+            return {}
+            
+        code = country_code.upper()
+        lang = country_code.lower()
+        
+        # 1. Base config based on code
+        config = {
+            'locale': f"en-{code}", # Default to English for the region
+            'hl': 'en',
+            'gl': lang,
+            'timezone': None,
+            'geolocation': None
+        }
+        
+        # 2. Comprehensive Overrides for Timezones and Geolocation
+        # This covers all major regions and helps bypass single-result redirects
+        overrides = {
+            'US': {'locale': 'en-US', 'timezone': 'America/New_York', 'hl': 'en', 'gl': 'us', 'geolocation': {'latitude': 37.0902, 'longitude': -95.7129}},
+            'IN': {'locale': 'en-IN', 'timezone': 'Asia/Kolkata', 'hl': 'en', 'gl': 'in', 'geolocation': {'latitude': 20.5937, 'longitude': 78.9629}},
+            'GB': {'locale': 'en-GB', 'timezone': 'Europe/London', 'hl': 'en', 'gl': 'gb', 'geolocation': {'latitude': 51.5074, 'longitude': -0.1278}},
+            'RU': {'locale': 'ru-RU', 'timezone': 'Europe/Moscow', 'hl': 'ru', 'gl': 'ru', 'geolocation': {'latitude': 55.7558, 'longitude': 37.6173}},
+            'NG': {'locale': 'en-NG', 'timezone': 'Africa/Lagos', 'hl': 'en', 'gl': 'ng', 'geolocation': {'latitude': 9.0820, 'longitude': 8.6753}},
+            'IT': {'locale': 'it-IT', 'timezone': 'Europe/Rome', 'hl': 'it', 'gl': 'it', 'geolocation': {'latitude': 41.9028, 'longitude': 12.4964}},
+            'FR': {'locale': 'fr-FR', 'timezone': 'Europe/Paris', 'hl': 'fr', 'gl': 'fr', 'geolocation': {'latitude': 48.8566, 'longitude': 2.3522}},
+            'DE': {'locale': 'de-DE', 'timezone': 'Europe/Berlin', 'hl': 'de', 'gl': 'de', 'geolocation': {'latitude': 52.5200, 'longitude': 13.4050}},
+            'AU': {'locale': 'en-AU', 'timezone': 'Australia/Sydney', 'hl': 'en', 'gl': 'au', 'geolocation': {'latitude': -33.8688, 'longitude': 151.2093}},
+            'CA': {'locale': 'en-CA', 'timezone': 'America/Toronto', 'hl': 'en', 'gl': 'ca', 'geolocation': {'latitude': 43.6532, 'longitude': -79.3832}},
+            'BR': {'locale': 'pt-BR', 'timezone': 'America/Sao_Paulo', 'hl': 'pt', 'gl': 'br', 'geolocation': {'latitude': -23.5505, 'longitude': -46.6333}},
+            'MX': {'locale': 'es-MX', 'timezone': 'America/Mexico_City', 'hl': 'es', 'gl': 'mx', 'geolocation': {'latitude': 19.4326, 'longitude': -99.1332}},
+            'JP': {'locale': 'ja-JP', 'timezone': 'Asia/Tokyo', 'hl': 'ja', 'gl': 'jp', 'geolocation': {'latitude': 35.6762, 'longitude': 139.6503}},
+            'CN': {'locale': 'zh-CN', 'timezone': 'Asia/Shanghai', 'hl': 'zh-CN', 'gl': 'cn', 'geolocation': {'latitude': 31.2304, 'longitude': 121.4737}},
+            'AE': {'locale': 'en-AE', 'timezone': 'Asia/Dubai', 'hl': 'en', 'gl': 'ae', 'geolocation': {'latitude': 25.2048, 'longitude': 55.2708}},
+            'ZA': {'locale': 'en-ZA', 'timezone': 'Africa/Johannesburg', 'hl': 'en', 'gl': 'za', 'geolocation': {'latitude': -26.2041, 'longitude': 28.0473}},
+            'SG': {'locale': 'en-SG', 'timezone': 'Asia/Singapore', 'hl': 'en', 'gl': 'sg', 'geolocation': {'latitude': 1.3521, 'longitude': 103.8198}},
+        }
+        
+        if code in overrides:
+            config.update(overrides[code])
+            
+        return config
 
     async def _enrich_place_data(self, place_data: Dict[str, Any]):
         """

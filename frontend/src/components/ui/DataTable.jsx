@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import {
     Table,
@@ -9,28 +9,25 @@ import {
     TableRow,
 } from './table';
 import { cn } from '../../lib/utils';
-import { ChevronLeft, ChevronRight, ChevronDown, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import LoadingScreen from '../LoadingScreen';
 
+// --- ITEMS PER PAGE DROPDOWN ---
 const ItemsPerPageDropdown = ({ value, onChange, options }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [coords, setCoords] = useState(null);
     const dropdownRef = useRef(null);
     const { theme } = useTheme();
+    const isDark = theme === 'dark';
 
     const updatePosition = () => {
         if (dropdownRef.current) {
             const rect = dropdownRef.current.getBoundingClientRect();
-            const spaceBelow = window.innerHeight - rect.bottom;
-            const menuHeight = Math.min(options.length * 36 + 10, 240);
-            const dropUp = spaceBelow < menuHeight && rect.top > menuHeight;
-
             setCoords({
-                top: dropUp ? rect.top + window.scrollY : rect.bottom + window.scrollY,
-                left: rect.left + window.scrollX,
-                width: rect.width,
-                dropUp
+                bottom: window.innerHeight - rect.top + 4,
+                left: rect.left,
+                width: rect.width, // FIX: Force exact width of the button (approx 68px)
             });
         }
     };
@@ -47,8 +44,8 @@ const ItemsPerPageDropdown = ({ value, onChange, options }) => {
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                const menu = document.getElementById('datatable-dropdown-portal-root');
-                if (menu && !menu.contains(event.target)) {
+                const portal = document.getElementById('items-per-page-portal');
+                if (portal && !portal.contains(event.target)) {
                     setIsOpen(false);
                 }
             }
@@ -56,57 +53,50 @@ const ItemsPerPageDropdown = ({ value, onChange, options }) => {
 
         if (isOpen) {
             document.addEventListener('mousedown', handleClickOutside);
-            window.addEventListener('scroll', updatePosition, true);
             window.addEventListener('resize', updatePosition);
+            window.addEventListener('scroll', updatePosition, true);
         }
 
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
-            window.removeEventListener('scroll', updatePosition, true);
             window.removeEventListener('resize', updatePosition);
+            window.removeEventListener('scroll', updatePosition, true);
         };
-    }, [isOpen, options.length]);
+    }, [isOpen]);
 
-    const handleSelect = (optionValue) => {
-        onChange(optionValue);
+    const handleSelect = (val) => {
+        onChange(val);
         setIsOpen(false);
     };
 
-    const isDark = theme === 'dark';
-
-    const menuContent = coords && (
+    const modalContent = coords && (
         <div
-            id="datatable-dropdown-portal-root"
+            id="items-per-page-portal"
             style={{
-                position: 'absolute',
-                top: coords.dropUp ? 'auto' : `${coords.top + 4}px`,
-                bottom: coords.dropUp ? `${window.innerHeight - coords.top + 4}px` : 'auto',
+                position: 'fixed',
+                bottom: `${coords.bottom + 2}px`,
                 left: `${coords.left}px`,
-                width: `${Math.max(coords.width, 80)}px`,
+                minWidth: `80px`,
                 zIndex: 99999,
             }}
-            className={`rounded-lg border shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top ${coords.dropUp ? 'origin-bottom' : 'origin-top'
-                } ${isDark ? 'bg-[#121212] border-border' : 'bg-white border-gray-200'}`}
+            className={cn(
+                "p-1 rounded-xl shadow-xl animate-in fade-in slide-in-from-bottom-2 duration-200",
+                isDark ? "bg-zinc-900 border-zinc-800 text-zinc-300" : "bg-white border-zinc-100 text-zinc-700 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.1)]"
+            )}
         >
-            <div className="py-1 custom-scrollbar">
+            <div className="flex flex-col gap-0.5">
                 {options.map((option) => (
                     <button
                         key={option.value}
-                        type="button"
                         onClick={() => handleSelect(option.value)}
-                        className={`w-full text-left px-3 py-1 text-[13px] transition-colors flex items-center justify-between group ${value === option.value
-                            ? isDark
-                                ? 'bg-blue-600/20 text-blue-400 font-medium'
-                                : 'bg-blue-50 text-blue-600 font-medium'
-                            : isDark
-                                ? 'text-foreground hover:bg-muted/50'
-                                : 'text-gray-700 hover:bg-gray-100'
-                            }`}
-                    >
-                        <span className="truncate">{option.label}</span>
-                        {value === option.value && (
-                            <Check className="w-3.5 h-3.5 ml-2 shrink-0" />
+                        className={cn(
+                            "w-full text-left px-3 py-1.5 text-[13px] transition-all rounded-lg",
+                            value === option.value
+                                ? (isDark ? "bg-zinc-800 text-white font-semibold" : "bg-zinc-300 text-black font-bold")
+                                : (isDark ? "text-zinc-400 hover:bg-zinc-800 hover:text-white" : "text-zinc-500 hover:bg-zinc-200/50 hover:text-black")
                         )}
+                    >
+                        {option.label}
                     </button>
                 ))}
             </div>
@@ -114,50 +104,56 @@ const ItemsPerPageDropdown = ({ value, onChange, options }) => {
     );
 
     return (
-        <div className="relative w-[80px]" ref={dropdownRef}>
+        <div className="relative inline-block" ref={dropdownRef}>
             <button
                 type="button"
                 onClick={toggleDropdown}
-                className={`appearance-none h-8 pl-3 pr-7 border rounded-md text-[13px] font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all w-full text-left truncate cursor-pointer ${isDark
-                    ? 'bg-card border-border text-foreground hover:bg-muted/50'
-                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                    }`}
+                className={cn(
+                    "h-8 px-2.5 flex items-center justify-between gap-2 border rounded-lg text-[13px] font-medium transition-all w-[72px]",
+                    isDark
+                        ? "bg-zinc-900 border-zinc-800 hover:bg-zinc-800 text-zinc-300 active:scale-95"
+                        : "bg-white border-zinc-200 hover:border-zinc-300 text-zinc-700 active:scale-95 shadow-sm"
+                )}
             >
-                <span className="truncate block">{options.find(o => o.value === value)?.label || value}</span>
-                <ChevronDown className={`absolute right-2 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 pointer-events-none transition-transform ${isOpen ? 'rotate-180' : ''
-                    } ${isDark ? 'text-muted-foreground' : 'text-gray-400'}`} />
+                <span>{value}</span>
+                <div className={cn(
+                    "transition-transform duration-200",
+                    isOpen ? "rotate-180" : "rotate-0 text-zinc-400"
+                )}>
+                    <ChevronDown className="w-3.5 h-3.5" />
+                </div>
             </button>
-            {isOpen && coords && createPortal(menuContent, document.body)}
+            {isOpen && createPortal(modalContent, document.body)}
         </div>
     );
 };
 
-/**
- * @typedef {Object} Column
- * @property {string} header - The display name of the column header.
- * @property {string} [accessorKey] - The key in the data object to access the value.
- * @property {string} [id] - Unique identifier for the column.
- * @property {function} [cell] - Custom render function for the cell. Receives { row }.
- * @property {string} [className] - Optional CSS classes for the header cell.
- * @property {string} [cellClassName] - Optional CSS classes for the body cell.
- */
+// --- SCROLLBAR STYLES (Scoped to DataTable) ---
+const ScrollbarStyles = ({ isDark }) => (
+    <style dangerouslySetInnerHTML={{ __html: `
+        .dt-custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        .dt-custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .dt-custom-scrollbar::-webkit-scrollbar-thumb {
+            background: ${isDark ? '#3f3f46' : '#d4d4d8'};
+            border-radius: 20px;
+        }
+        .dt-custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: ${isDark ? '#52525b' : '#a1a1aa'};
+        }
+        /* Firefox */
+        .dt-custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: ${isDark ? '#3f3f46' : '#a1a1aa'} transparent;
+        }
+    `}} />
+);
 
-/**
- * Generic DataTable component
- * @param {Object} props
- * @param {Column[]} props.columns - Column configuration.
- * @param {Object[]} props.data - Array of data objects to display.
- * @param {boolean} props.loading - Loading state.
- * @param {function} [props.onRowClick] - Optional callback for row clicks.
- * @param {string} [props.className] - Optional CSS classes for the table container.
- * @param {React.ReactNode} [props.emptyState] - Component to show when data is empty.
- * @param {number} [props.currentPage] - Current active page.
- * @param {number} [props.totalPages] - Total number of pages.
- * @param {function} [props.onPageChange] - Callback for page changes.
- * @param {number} [props.itemsPerPage] - Number of items displayed per page.
- * @param {function} [props.onItemsPerPageChange] - Callback for items per page changes.
- * @param {number} [props.totalItems] - Total number of items across all pages.
- */
+// --- MAIN DATATABLE COMPONENT ---
 const DataTable = ({
     columns,
     data,
@@ -171,8 +167,54 @@ const DataTable = ({
     itemsPerPage,
     onItemsPerPageChange,
     totalItems,
+    showShadow = false,
+    shadowWidth = "w-5",
+    stickyHeader = true,
 }) => {
     const [goToPageInput, setGoToPageInput] = useState('');
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
+
+    // SCROLL TRACKING
+    const tableRef = useRef(null);
+    const [showLeftShadow, setShowLeftShadow] = useState(false);
+    const [showRightShadow, setShowRightShadow] = useState(false);
+
+    const checkScroll = useCallback(() => {
+        // FIX: Grab the actual scrolling wrapper created by shadcn/ui
+        const scrollNode = tableRef.current?.parentElement;
+        if (!scrollNode) return;
+
+        const { scrollLeft, clientWidth, scrollWidth } = scrollNode;
+        const tolerance = 2; // small buffer for high DPI screens
+
+        setShowLeftShadow(scrollLeft > tolerance);
+        setShowRightShadow(Math.ceil(scrollLeft + clientWidth) < scrollWidth - tolerance);
+    }, []);
+
+    useEffect(() => {
+        const scrollNode = tableRef.current?.parentElement;
+        if (!scrollNode) return;
+
+        // Add specialized scrollbar class to the scrolling wrapper
+        scrollNode.classList.add('dt-custom-scrollbar');
+
+        const deferredCheck = () => requestAnimationFrame(checkScroll);
+        deferredCheck(); // Initial check after paint
+
+        const resizeObserver = new ResizeObserver(deferredCheck);
+        resizeObserver.observe(scrollNode);
+
+        // Attach listeners directly to the true scrolling element
+        scrollNode.addEventListener('scroll', deferredCheck);
+        window.addEventListener('resize', deferredCheck);
+
+        return () => {
+            resizeObserver.disconnect();
+            scrollNode.removeEventListener('scroll', deferredCheck);
+            window.removeEventListener('resize', deferredCheck);
+        };
+    }, [data, loading, checkScroll]);
 
     const handleGoToPage = () => {
         const pageNum = parseInt(goToPageInput);
@@ -183,68 +225,145 @@ const DataTable = ({
     };
 
     const itemsPerPageOptions = [
-        { label: '5', value: 5 },
         { label: '10', value: 10 },
-        { label: '15', value: 15 },
         { label: '20', value: 20 },
         { label: '50', value: 50 },
-        { label: '100', value: 100 }
+        { label: '100', value: 100 },
+        { label: '200', value: 200 }
     ];
 
     const showPagination = onPageChange && totalPages !== undefined;
 
+    // --- SMART STICKY COLUMN PROCESSING ---
+    const processedColumns = (() => {
+        const leftSticky = columns.filter(c => c.sticky === 'left');
+        const normal = columns.filter(c => !c.sticky || (c.sticky !== 'left' && c.sticky !== 'right'));
+        const rightSticky = columns.filter(c => c.sticky === 'right');
+
+        // Function to extract width from className or direct properties
+        const getColWidth = (c) => {
+            if (c.id === 'selection' || c.className?.includes('w-[50px]')) return 50;
+            // Check for w-[XXXpx] in className
+            const match = c.className?.match(/w-\[(\d+)px\]/);
+            if (match) return parseInt(match[1]);
+            // Check for min-w-[XXXpx] in className
+            const minMatch = c.className?.match(/min-w-\[(\d+)px\]/);
+            if (minMatch) return parseInt(minMatch[1]);
+            // Default widths
+            return 150;
+        };
+
+        const result = [];
+        
+        // 1. Process Left Sticky
+        let leftOffset = 0;
+        leftSticky.forEach(c => {
+            result.push({ ...c, stickyOffset: leftOffset });
+            leftOffset += getColWidth(c);
+        });
+
+        // 2. Process Normal
+        normal.forEach(c => result.push(c));
+
+        // 3. Process Right Sticky
+        let rightOffset = 0;
+        [...rightSticky].reverse().forEach(c => {
+            result.push({ ...c, stickyOffset: rightOffset });
+            rightOffset += getColWidth(c);
+        });
+
+        return result;
+    })();
+
     return (
-        <div className={cn("relative border border-border rounded-lg bg-card overflow-hidden flex flex-col h-full shadow-sm", className)}>
-            <div className="overflow-x-auto flex-1">
-                <Table className="min-w-max border-collapse">
-                    <TableHeader>
-                        <TableRow className="bg-muted/10 h-[44px] border-b border-border">
-                            {columns.map((column, index) => (
+        <div className={cn("relative border border-border rounded-lg bg-card flex flex-col shadow-sm overflow-hidden", className)}>
+            <ScrollbarStyles isDark={isDark} />
+
+            {/* FLOATING OVERLAY SHADOWS */}
+            {showShadow && (
+                <div className="absolute inset-0 pointer-events-none z-[60] overflow-hidden rounded-lg">
+                    <div
+                        style={{ background: isDark ? 'linear-gradient(to right, rgba(0,0,0,0.85), transparent)' : 'linear-gradient(to right, rgba(0,0,0,0.12), transparent)' }}
+                        className={cn(
+                            "absolute top-0 left-0 bottom-0 transition-opacity duration-200",
+                            shadowWidth,
+                            showLeftShadow ? "opacity-100" : "opacity-0"
+                        )}
+                    />
+                    <div
+                        style={{ background: isDark ? 'linear-gradient(to left, rgba(0,0,0,0.85), transparent)' : 'linear-gradient(to left, rgba(0,0,0,0.12), transparent)' }}
+                        className={cn(
+                            "absolute top-0 right-0 bottom-0 transition-opacity duration-200",
+                            shadowWidth,
+                            showRightShadow ? "opacity-100" : "opacity-0"
+                        )}
+                    />
+                </div>
+            )}
+
+            {/* MAIN TABLE AREA */}
+            <div className="flex-1 w-full min-w-0 bg-card">
+                <Table ref={tableRef} className="min-w-max w-full border-separate border-spacing-0">
+                    <TableHeader className={cn(stickyHeader && "sticky top-0 z-30")}>
+                        <TableRow className={cn("bg-card", isDark ? "hover:bg-transparent" : "bg-gray-50/50 hover:bg-gray-50/50")}>
+                            {processedColumns.map((column, index) => (
                                 <TableHead
-                                    key={column.id || column.accessorKey || index}
-                                    className={cn("px-4 py-2 text-[13px] font-semibold text-accent-foreground", column.className)}
+                                    key={column.id || index}
+                                    style={{
+                                        left: column.sticky === 'left' ? (column.stickyOffset || 0) : undefined,
+                                        right: column.sticky === 'right' ? (column.stickyOffset || 0) : undefined,
+                                    }}
+                                    className={cn(
+                                        "px-4 py-3.5 text-[13px] font-medium text-muted-foreground border-b border-border whitespace-nowrap",
+                                        column.sticky === 'left' && "sticky z-40 bg-card shadow-[1px_0_0_0_#e5e7eb] dark:shadow-[1px_0_0_0_#27272a]",
+                                        column.sticky === 'right' && "sticky z-40 bg-card shadow-[-1px_0_0_0_#e5e7eb] dark:shadow-[-1px_0_0_0_#27272a]",
+                                        column.className
+                                    )}
                                 >
                                     {column.header}
                                 </TableHead>
                             ))}
                         </TableRow>
                     </TableHeader>
-                    <TableBody className="divide-y divide-border">
+                    <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={columns.length} className="p-0">
-                                    <div className="bg-card">
-                                        <LoadingScreen className="min-h-[100px]" />
-                                    </div>
+                                <TableCell colSpan={columns.length} className="p-0 border-none">
+                                    <LoadingScreen className="min-h-[200px]" />
                                 </TableCell>
                             </TableRow>
                         ) : data.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={columns.length} className="px-4 py-16 text-center text-muted-foreground text-sm">
-                                    {emptyState || "No data items found."}
+                                <TableCell colSpan={columns.length} className="px-4 py-16 text-center text-muted-foreground text-sm border-none">
+                                    {emptyState || "No results found."}
                                 </TableCell>
                             </TableRow>
                         ) : (
                             data.map((row, rowIndex) => (
                                 <TableRow
                                     key={row.id || rowIndex}
-                                    className={cn(
-                                        "group transition-colors  hover:bg-muted/40",
-                                        onRowClick && "cursor-pointer"
-                                    )}
+                                    className={cn("group transition-colors hover:bg-muted/40", onRowClick && "cursor-pointer")}
                                     onClick={() => onRowClick && onRowClick(row)}
                                 >
-                                    {columns.map((column, colIndex) => {
-                                        const value = column.accessorKey ? row[column.accessorKey] : undefined;
-                                        return (
-                                            <TableCell
-                                                key={column.id || column.accessorKey || colIndex}
-                                                className={cn("px-4 py-3 align-middle text-[13px] text-foreground", column.cellClassName)}
-                                            >
-                                                {column.cell ? column.cell({ row }) : (value ?? "-")}
-                                            </TableCell>
-                                        );
-                                    })}
+                                    {processedColumns.map((column, colIndex) => (
+                                        <TableCell
+                                            key={column.id || colIndex}
+                                            style={{
+                                                left: column.sticky === 'left' ? (column.stickyOffset || 0) : undefined,
+                                                right: column.sticky === 'right' ? (column.stickyOffset || 0) : undefined,
+                                            }}
+                                            className={cn(
+                                                "px-4 py-3 align-middle text-[13px] text-foreground whitespace-nowrap",
+                                                // Only add border-b if it is NOT the last row
+                                                rowIndex !== data.length - 1 && "border-b border-border",
+                                                column.sticky === 'left' && "sticky z-20 bg-card group-hover:bg-muted font-medium shadow-[1px_0_0_0_#e5e7eb] dark:shadow-[1px_0_0_0_#27272a]",
+                                                column.sticky === 'right' && "sticky z-20 bg-card group-hover:bg-muted font-medium shadow-[-1px_0_0_0_#e5e7eb] dark:shadow-[-1px_0_0_0_#27272a]",
+                                                column.cellClassName
+                                            )}
+                                        >
+                                            {column.cell ? column.cell({ row }) : (row[column.accessorKey] ?? "-")}
+                                        </TableCell>
+                                    ))}
                                 </TableRow>
                             ))
                         )}
@@ -252,10 +371,11 @@ const DataTable = ({
                 </Table>
             </div>
 
+            {/* PAGINATION FOOTER */}
             {showPagination && (
-                <div className="px-3 py-2 border-t border-border bg-card flex items-center justify-between sm:flex-row flex-col gap-4">
+                <div className="px-4 py-3 border-t border-border bg-card flex items-center justify-between relative z-10">
                     <div className="flex items-center gap-3">
-                        <span className="text-[13px] text-muted-foreground whitespace-nowrap">Items per page:</span>
+                        <span className="text-[13px] text-muted-foreground">Items per page:</span>
                         {onItemsPerPageChange ? (
                             <ItemsPerPageDropdown
                                 value={itemsPerPage}
@@ -265,49 +385,56 @@ const DataTable = ({
                         ) : (
                             <span className="text-[13px] font-medium">{itemsPerPage}</span>
                         )}
-                        {totalItems !== undefined && (
-                            <span className="text-[13px] text-muted-foreground ml-1">
-                                Showing {totalItems > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} - {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems}
-                            </span>
-                        )}
                     </div>
 
                     <div className="flex items-center gap-6">
                         <div className="flex items-center gap-2">
-                            <span className="text-[13px] text-muted-foreground whitespace-nowrap">Go to page:</span>
-                            <input
+                            <span className="text-[13px] text-muted-foreground">Go to page:</span>
+                             <input
                                 type="text"
                                 value={goToPageInput}
                                 onChange={(e) => setGoToPageInput(e.target.value)}
                                 onKeyPress={(e) => e.key === 'Enter' && handleGoToPage()}
-                                placeholder={currentPage}
-                                className="w-[44px] h-8 px-2 text-[13px] text-center bg-card border border-border rounded focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder:text-muted-foreground"
+                                disabled={totalPages <= 1}
+                                className={cn(
+                                    "w-[44px] h-8 px-2 text-[13px] text-center border rounded transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500",
+                                    isDark ? "bg-zinc-900 border-zinc-800 text-zinc-300 placeholder:text-zinc-600" : "bg-white border-gray-200 text-gray-700 placeholder:text-gray-300",
+                                    totalPages <= 1 && "opacity-50 cursor-not-allowed bg-muted/20"
+                                )}
                             />
                             <button
                                 onClick={handleGoToPage}
-                                className="h-8 px-3 text-[13px] bg-white dark:bg-zinc-800 border border-border rounded shadow-sm hover:bg-muted transition-colors font-medium text-foreground"
+                                disabled={totalPages <= 1}
+                                className={cn(
+                                    "h-8 px-3 text-[13px] border rounded transition-colors font-medium",
+                                    isDark ? "bg-zinc-900 border-zinc-800 hover:bg-zinc-800 text-zinc-300" : "bg-white border-zinc-200 hover:bg-gray-50 text-gray-600",
+                                    totalPages <= 1 && "opacity-50 cursor-not-allowed"
+                                )}
                             >
                                 Go
                             </button>
                         </div>
 
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
                             <button
                                 onClick={() => onPageChange(Math.max(1, currentPage - 1))}
                                 disabled={currentPage === 1}
-                                className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                className="p-1 hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             >
-                                <ChevronLeft className="w-5 h-5" />
+                                <ChevronLeft className="w-4 h-4" />
                             </button>
-                            <div className="w-8 h-8 flex items-center justify-center text-black border border-border rounded-md text-[13px] font-bold shadow-sm">
+                            <div className={cn(
+                                "min-w-[28px] h-7 px-2 flex items-center justify-center rounded text-[13px] font-bold transition-all shadow-sm",
+                                "bg-blue-500 text-white"
+                            )}>
                                 {currentPage}
                             </div>
                             <button
                                 onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
                                 disabled={currentPage >= totalPages}
-                                className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                className="p-1 hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             >
-                                <ChevronRight className="w-5 h-5" />
+                                <ChevronRight className="w-4 h-4" />
                             </button>
                         </div>
                     </div>
