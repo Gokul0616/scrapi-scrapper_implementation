@@ -22,8 +22,8 @@ PROJECT_ROOT=$(pwd)
 
 echo -e "${YELLOW}>> Project Root detected as: $PROJECT_ROOT${NC}"
 
-# 1. System Dependencies (Redis Server, Node, Python)
-echo -e "${BLUE}[1/5]${NC} Checking System Dependencies (Redis)..."
+# 1. System Dependencies (Redis Server, MongoDB, Python)
+echo -e "${BLUE}[1/5]${NC} Checking System Dependencies (Redis & MongoDB)..."
 if ! command -v redis-server &> /dev/null; then
     echo -e "${YELLOW}   Installing Redis Server...${NC}"
     sudo apt-get update && sudo apt-get install -y redis-server
@@ -32,6 +32,29 @@ fi
 sudo systemctl enable redis-server 2>/dev/null || true
 sudo systemctl start redis-server 2>/dev/null || true
 echo -e "${GREEN}✓${NC} Redis is running"
+
+if ! command -v mongod &> /dev/null && ! command -v mongo &> /dev/null; then
+    echo -e "${YELLOW}   Installing MongoDB Server...${NC}"
+    sudo apt-get update && sudo apt-get install -y mongodb-server || sudo apt-get install -y mongodb
+fi
+# Ensure MongoDB is running
+sudo systemctl enable mongodb 2>/dev/null || true
+sudo systemctl start mongodb 2>/dev/null || true
+echo -e "${GREEN}✓${NC} MongoDB is running locally"
+
+# Configure .env to strictly map to the new local production MongoDB
+echo -e "${YELLOW}   Configuring Backend Database Environment to Local Production Database...${NC}"
+if [ -f "$PROJECT_ROOT/backend/.env" ]; then
+    # Update existing env entry
+    if grep -q "^MONGO_URL=" "$PROJECT_ROOT/backend/.env"; then
+        sed -i '' 's|^MONGO_URL=.*|MONGO_URL="mongodb://localhost:27017/scrapi"|' "$PROJECT_ROOT/backend/.env" 2>/dev/null || sed -i 's|^MONGO_URL=.*|MONGO_URL="mongodb://localhost:27017/scrapi"|' "$PROJECT_ROOT/backend/.env"
+    else
+        echo 'MONGO_URL="mongodb://localhost:27017/scrapi"' >> "$PROJECT_ROOT/backend/.env"
+    fi
+else
+    echo 'MONGO_URL="mongodb://localhost:27017/scrapi"' > "$PROJECT_ROOT/backend/.env"
+fi
+echo -e "${GREEN}✓${NC} Database Environment Configured"
 
 
 # 2. Backend Dependencies (Python + Celery)
@@ -73,8 +96,32 @@ fi
 echo -e "${GREEN}✓${NC} Frontend dependencies ready"
 
 
-# 5. Stop existing and BOOT everything!
-echo -e "${BLUE}[5/5]${NC} Booting Scrapi Multi-Architecture Stack..."
+# 5. Cloud Networking & Codespaces Linkage
+echo -e "${BLUE}[5/6]${NC} Configuring Cloud Network Routing..."
+if [ "$CODESPACES" = "true" ]; then
+    # In GitHub Codespaces, localhost ports are proxied through a specific GitHub Dev URL!
+    DYNAMIC_API_URL="https://${CODESPACE_NAME}-8001.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}"
+    echo -e "${GREEN}✓${NC} GitHub Codespaces detected! Bonding Frontend to: $DYNAMIC_API_URL"
+elif [ "$GITPOD_WORKSPACE_ID" ]; then
+    # In Gitpod, it creates a specific workspace URL
+    DYNAMIC_API_URL="$(gp url 8001)"
+    echo -e "${GREEN}✓${NC} Gitpod environment detected! Bonding Frontend to: $DYNAMIC_API_URL"
+elif [ -n "$VM_PUBLIC_IP" ]; then
+    # If the user explicitly provides an IP (e.g., EC2 instance)
+    DYNAMIC_API_URL="http://${VM_PUBLIC_IP}:8001"
+    echo -e "${GREEN}✓${NC} Cloud VM IP provided! Bonding Frontend to: $DYNAMIC_API_URL"
+else
+    # Fallback for standard local development (e.g., your MacBook)
+    DYNAMIC_API_URL="http://localhost:8001"
+    echo -e "${GREEN}✓${NC} Default Localhost mode! Bonding Frontend to: $DYNAMIC_API_URL"
+fi
+
+# Write it so the React compiler explicitly bakes it into the build
+echo "REACT_APP_BACKEND_URL=$DYNAMIC_API_URL" > "$PROJECT_ROOT/frontend/.env.local"
+
+
+# 6. Stop existing and BOOT everything!
+echo -e "${BLUE}[6/6]${NC} Booting Scrapi Multi-Architecture Stack..."
 cd "$PROJECT_ROOT"
 
 # Try supervisorctl for MongoDB if they use it locally
