@@ -8,9 +8,15 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
 import LoadingScreen from '../components/LoadingScreen'; // Added this import
-import { Search, Download, ArrowLeft, MessageSquare, X, Send, Mail, Phone, CheckCircle2, FileText, MapPin, ExternalLink, Settings, Eye, Table as TableIcon, MoreHorizontal, Star, ChevronLeft, ChevronRight, Play } from 'lucide-react';
+import { Search, Download, ArrowLeft, MessageSquare, X, Send, Mail, Phone, CheckCircle2, FileText, MapPin, ExternalLink, Settings, Eye, Table as TableIcon, MoreHorizontal, Star, ChevronLeft, ChevronRight, Play, Clock, ChevronDown } from 'lucide-react';
 import ErrorDisplay, { showError } from '../components/ErrorDisplay';
 import Checkbox from '../components/ui/CustomCheckbox';
+import DataTable from '../components/ui/DataTable';
+import { useTheme } from '../contexts/ThemeContext';
+// TooltipProvider removed as CustomTooltip uses a portal
+import { cn } from '../lib/utils';
+import CustomTooltip from '../components/CustomTooltip';
+import { Play as PlayIcon, Columns } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -202,18 +208,18 @@ const CustomVideoPlayer = ({ videoUrl, isHLS }) => {
 
       {/* Custom Controls */}
       <div
-        className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'
+        className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent ${isFullscreen ? 'p-6' : 'p-2.5'} transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'
           }`}
       >
         {/* Progress Bar */}
-        <div className="mb-3">
+        <div className={`${isFullscreen ? 'mb-4' : 'mb-2'} px-0.5`}>
           <div
-            className="relative h-1 bg-gray-600 rounded-full cursor-pointer hover:h-2 transition-all"
+            className={`relative ${isFullscreen ? 'h-1.5' : 'h-1'} bg-gray-600/50 rounded-full cursor-pointer hover:${isFullscreen ? 'h-2' : 'h-1.5'} transition-all`}
             onClick={handleSeek}
           >
             {/* Buffered */}
             <div
-              className="absolute h-full bg-gray-500 rounded-full"
+              className="absolute h-full bg-gray-500/50 rounded-full"
               style={{ width: `${buffered}%` }}
             />
             {/* Current Progress */}
@@ -225,37 +231,37 @@ const CustomVideoPlayer = ({ videoUrl, isHLS }) => {
         </div>
 
         {/* Controls Row */}
-        <div className="flex items-center gap-3 text-white">
+        <div className={`flex items-center ${isFullscreen ? 'gap-4' : 'gap-2'} text-white`}>
           {/* Play/Pause */}
           <button
             onClick={togglePlay}
             className="hover:text-red-500 transition-colors"
           >
             {isPlaying ? (
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+              <svg className={`${isFullscreen ? 'w-8 h-8' : 'w-5 h-5 shadow-sm'}`} fill="currentColor" viewBox="0 0 24 24">
                 <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
               </svg>
             ) : (
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+              <svg className={`${isFullscreen ? 'w-8 h-8' : 'w-5 h-5 shadow-sm'}`} fill="currentColor" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z" />
               </svg>
             )}
           </button>
 
           {/* Time */}
-          <div className="text-sm font-mono">
+          <div className={`${isFullscreen ? 'text-sm' : 'text-[11px]'} font-mono font-bold tracking-tight opacity-90`}>
             {formatTime(currentTime)} / {formatTime(duration)}
           </div>
 
           {/* Volume */}
-          <div className="flex items-center gap-2 ml-auto">
+          <div className={`flex items-center ${isFullscreen ? 'gap-2.5' : 'gap-1.5'} ml-auto`}>
             <button onClick={toggleMute} className="hover:text-red-500 transition-colors">
               {isMuted || volume === 0 ? (
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <svg className={`${isFullscreen ? 'w-6 h-6' : 'w-4 h-4'}`} fill="currentColor" viewBox="0 0 24 24">
                   <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
                 </svg>
               ) : (
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <svg className={`${isFullscreen ? 'w-6 h-6' : 'w-4 h-4'}`} fill="currentColor" viewBox="0 0 24 24">
                   <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z" />
                 </svg>
               )}
@@ -267,7 +273,7 @@ const CustomVideoPlayer = ({ videoUrl, isHLS }) => {
               step="0.1"
               value={volume}
               onChange={handleVolumeChange}
-              className="w-20 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+              className={`${isFullscreen ? 'w-24' : 'w-12'} h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer`}
               style={{
                 background: `linear-gradient(to right, #ef4444 0%, #ef4444 ${volume * 100}%, #4b5563 ${volume * 100}%, #4b5563 100%)`
               }}
@@ -280,11 +286,11 @@ const CustomVideoPlayer = ({ videoUrl, isHLS }) => {
             className="hover:text-red-500 transition-colors"
           >
             {isFullscreen ? (
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <svg className={`${isFullscreen ? 'w-6 h-6' : 'w-4 h-4'}`} fill="currentColor" viewBox="0 0 24 24">
                 <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z" />
               </svg>
             ) : (
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <svg className={`${isFullscreen ? 'w-6 h-6' : 'w-4 h-4'}`} fill="currentColor" viewBox="0 0 24 24">
                 <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
               </svg>
             )}
@@ -298,22 +304,132 @@ const CustomVideoPlayer = ({ videoUrl, isHLS }) => {
 // Helper Component for JSON Preview
 const JsonPreview = ({ data, label, color = "blue" }) => {
   const colorClasses = {
-    blue: "text-blue-600 bg-blue-50 border-blue-100 hover:bg-blue-100",
-    green: "text-green-600 bg-green-50 border-green-100 hover:bg-green-100",
-    purple: "text-purple-600 bg-purple-50 border-purple-100 hover:bg-purple-100",
-    orange: "text-orange-600 bg-orange-50 border-orange-100 hover:bg-orange-100",
-    gray: "text-gray-600 bg-gray-50 border-gray-100 hover:bg-gray-100",
+    blue: "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 border-blue-100 dark:border-blue-500/20 hover:bg-blue-100 dark:hover:bg-blue-500/20",
+    green: "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-500/10 border-green-100 dark:border-green-500/20 hover:bg-green-100 dark:hover:bg-green-500/20",
+    purple: "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-500/10 border-purple-100 dark:border-purple-500/20 hover:bg-purple-100 dark:hover:bg-purple-500/20",
+    orange: "text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-500/10 border-orange-100 dark:border-orange-500/20 hover:bg-orange-100 dark:hover:bg-orange-500/20",
+    gray: "text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-500/10 border-gray-100 dark:border-gray-500/20 hover:bg-gray-100 dark:hover:bg-gray-500/20",
   };
 
   return (
-    <div className="group relative inline-block max-w-full">
-      <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded border cursor-pointer transition-colors ${colorClasses[color] || colorClasses.blue}`}>
-        <span className="font-mono text-[10px] opacity-70 flex-shrink-0">{'{ }'}</span>
-        <span className="truncate max-w-[150px] font-medium">{label || 'View Data'}</span>
+    <CustomTooltip
+      content={
+        <div className="p-0 overflow-hidden">
+          <div className="bg-muted/50 px-3 py-1.5 border-b border-border text-[9px] font-bold text-muted-foreground uppercase tracking-widest flex justify-between">
+            <span>{label || 'JSON Preview'}</span>
+            <span className="font-mono opacity-50">.json</span>
+          </div>
+          <div className="p-2 max-h-80 overflow-auto scrollbar-thin scrollbar-thumb-zinc-500">
+            <pre className="text-[10px] font-mono text-foreground whitespace-pre-wrap break-all leading-relaxed">
+              {JSON.stringify(data, null, 2)}
+            </pre>
+          </div>
+        </div>
+      }
+    >
+      <div className={cn("flex items-center gap-1.5 text-[11px] px-2 py-1 rounded-md border cursor-help transition-all shadow-sm max-w-full",
+        colorClasses[color] || colorClasses.blue)}>
+        <span className="font-mono text-[9px] opacity-60 flex-shrink-0">{'{ }'}</span>
+        <span className="truncate max-w-[150px] font-bold tracking-tight">{label || 'View Data'}</span>
       </div>
-      <div className="hidden group-hover:block absolute left-0 top-full mt-1 z-50 w-80 bg-slate-900 text-slate-50 p-3 rounded-lg shadow-xl text-xs font-mono overflow-auto max-h-80 border border-slate-700">
-        <pre className="whitespace-pre-wrap break-all">{JSON.stringify(data, null, 2)}</pre>
+    </CustomTooltip>
+  );
+};
+
+// Recursive JSON Tree Node for Browser Console-like expansion
+const JsonTreeNode = ({ data, label, isLast = true, depth = 0 }) => {
+  const [isExpanded, setIsExpanded] = useState(depth < 2); // Auto-expand first 2 levels
+  const isObject = typeof data === 'object' && data !== null;
+  const isArray = Array.isArray(data);
+  const isCollapsible = isObject || isArray;
+
+  const toggleExpand = (e) => {
+    e.stopPropagation();
+    setIsExpanded(!isExpanded);
+  };
+
+  const renderValue = (val) => {
+    if (typeof val === 'string') {
+      const isUrl = val.startsWith('http') || val.includes('www.');
+      return (
+        <span className={cn("text-[#a31515] dark:text-[#ce9178] break-all", isUrl && "underline hover:text-red-800 cursor-pointer")}>
+          "{val}"
+        </span>
+      );
+    }
+    if (typeof val === 'number') return <span className="text-[#098658] dark:text-[#b5cea8]">{val}</span>;
+    if (typeof val === 'boolean') return <span className="text-[#0000ff] dark:text-[#569cd6] font-bold">{String(val)}</span>;
+    if (val === null) return <span className="text-[#0000ff] dark:text-[#569cd6] font-bold">null</span>;
+    return <span className="text-foreground">{String(val)}</span>;
+  };
+
+  if (!isCollapsible) {
+    return (
+      <div className="pl-4 group/json-line hover:bg-blue-50/30 dark:hover:bg-blue-900/5 rounded transition-colors select-text">
+        {label && (
+          <>
+            <span className="text-[#0000ff] dark:text-[#9cdcfe]">"{label}"</span>
+            <span className="text-foreground">: </span>
+          </>
+        )}
+        {renderValue(data)}
+        {!isLast && <span className="text-foreground">,</span>}
       </div>
+    );
+  }
+
+  const keys = isArray ? data : Object.keys(data);
+  const openBrace = isArray ? '[' : '{';
+  const closeBrace = isArray ? ']' : '}';
+
+  return (
+    <div className="pl-4">
+      <div 
+        className="flex items-center cursor-pointer group/json-header select-none hover:bg-blue-50/50 dark:hover:bg-blue-900/10 rounded -ml-4 pl-1"
+        onClick={toggleExpand}
+      >
+        <span className={cn(
+          "w-4 flex items-center justify-center text-zinc-400 dark:text-zinc-500 text-[10px] transition-transform duration-150", 
+          isExpanded ? 'rotate-90' : 'rotate-0'
+        )}>
+          ▶
+        </span>
+        {label && (
+          <div className="mr-1">
+            <span className="text-[#0000ff] dark:text-[#9cdcfe]">"{label}"</span>
+            <span className="text-foreground">: </span>
+          </div>
+        )}
+        <span className="text-[#008080] dark:text-[#4ec9b0] font-bold">{openBrace}</span>
+        {!isExpanded && (
+          <>
+            <span className="text-muted-foreground/50 text-[11px] px-1 font-sans font-bold">
+              {isArray ? ` ... ${data.length} items ` : ` ... ${keys.length} props `}
+            </span>
+            <span className="text-[#008080] dark:text-[#4ec9b0] font-bold">{closeBrace}</span>
+            {!isLast && <span className="text-foreground">,</span>}
+          </>
+        )}
+      </div>
+      
+      {isExpanded && (
+        <div className="border-l border-zinc-200 dark:border-zinc-800 ml-[7px] transition-all">
+          {isArray ? (
+            data.map((item, idx) => (
+              <JsonTreeNode key={idx} data={item} isLast={idx === data.length - 1} depth={depth + 1} />
+            ))
+          ) : (
+            Object.entries(data).map(([key, val], idx, arr) => (
+              <JsonTreeNode key={key} data={val} label={key} isLast={idx === arr.length - 1} depth={depth + 1} />
+            ))
+          )}
+          <div className="flex items-center -ml-[7px]">
+             <span className="w-4" />
+             <span className="text-[#008080] dark:text-[#4ec9b0] font-bold">{closeBrace}</span>
+             {!isLast && <span className="text-foreground">,</span>}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -321,6 +437,8 @@ const JsonPreview = ({ data, label, color = "blue" }) => {
 const DatasetV2 = () => {
   const { runId } = useParams();
   const navigate = useNavigate();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const [items, setItems] = useState([]);
   const [runDetails, setRunDetails] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -341,11 +459,15 @@ const DatasetV2 = () => {
   const [linksModalPosition, setLinksModalPosition] = useState({ x: 0, y: 0 });
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [imageModalPosition, setImageModalPosition] = useState({ x: 0, y: 0 });
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [videoThumbnails, setVideoThumbnails] = useState({});
   const [visibleColumns, setVisibleColumns] = useState({});
   const [allColumns, setAllColumns] = useState([]);
   const [showColumnSettings, setShowColumnSettings] = useState(false);
+  const [activeTopTab, setActiveTopTab] = useState('output');
+  const [activeSubTab, setActiveSubTab] = useState('overview');
+  const [viewMode, setViewMode] = useState('table'); // 'table' or 'json'
 
   // Detect all available columns from data
   useEffect(() => {
@@ -558,38 +680,33 @@ const DatasetV2 = () => {
     const buttonRect = event.currentTarget.getBoundingClientRect();
 
     // Estimate popup dimensions
-    const popupWidth = 320;
-    const popupHeight = 400; // max height
+    const popupWidth = 280;
+    const popupHeight = 300; // max height
 
     // Get viewport dimensions
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
-    // Calculate position with smart placement
-    let x = buttonRect.left;
-    let y = buttonRect.bottom + 5;
+      // Calculate position with smart placement
+      let x = buttonRect.left;
+      let y = buttonRect.bottom + 5;
 
-    // Check if popup goes off bottom - if yes, open above button
-    if (y + popupHeight > viewportHeight - 10) {
-      y = buttonRect.top - popupHeight - 5; // Open above button
-
-      // If still goes off top, position at top of viewport
-      if (y < 10) {
-        y = 10;
+      // Check if popup goes off bottom - if yes, open above button
+      if (y + popupHeight > viewportHeight - 20) {
+        y = buttonRect.top - popupHeight - 5;
       }
-    }
 
-    // Check if popup goes off right edge - if yes, align to right
-    if (x + popupWidth > viewportWidth - 10) {
-      x = buttonRect.right - popupWidth; // Align to right edge of button
+      // Final boundary checks
+      if (y < 10) y = 10;
+      if (y + popupHeight > viewportHeight - 10) y = 10;
 
-      // If still goes off left, position at left of viewport
-      if (x < 10) {
-        x = 10;
+      // Check if popup goes off right edge
+      if (x + popupWidth > viewportWidth - 10) {
+        x = viewportWidth - popupWidth - 10;
       }
-    }
+      if (x < 10) x = 10;
 
-    setLinksModalPosition({ x, y });
+      setLinksModalPosition({ x, y });
     setSelectedLinksItem(item);
     setShowLinksModal(true);
   };
@@ -599,7 +716,47 @@ const DatasetV2 = () => {
     setSelectedLinksItem(null);
   };
 
-  const openImageModal = (product) => {
+  const openImageModal = (product, event) => {
+    if (event) {
+      event.stopPropagation();
+      const buttonRect = event.currentTarget.getBoundingClientRect();
+
+      // Estimate popup dimensions
+      const popupWidth = 310;
+      const popupHeight = 460; // More realistic estimate with thumbnails and footer
+
+      // Get viewport dimensions
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+
+      // Calculate position with smart placement
+      let x = buttonRect.left;
+      let y = buttonRect.bottom + 5;
+
+      // Check if popup goes off bottom - if yes, open above button
+      if (y + popupHeight > viewportHeight - 20) {
+        y = buttonRect.top - popupHeight - 5;
+      }
+
+      // Final boundary checks to ensure it's always visible within the 10px viewport margin
+      if (y < 10) y = 10;
+      if (y + popupHeight > viewportHeight - 10) {
+        // If still too tall, let it be at the top and it will scroll due to maxHeight: 85vh
+        y = 10;
+      }
+
+      // Check if popup goes off right edge
+      if (x + popupWidth > viewportWidth - 10) {
+        x = viewportWidth - popupWidth - 10;
+      }
+      if (x < 10) x = 10;
+
+      setImageModalPosition({ x, y });
+    } else {
+      // Fallback to center if no event (though shouldn't happen)
+      setImageModalPosition({ x: window.innerWidth / 2 - 190, y: window.innerHeight / 2 - 225 });
+    }
+
     setSelectedProduct(product);
     setCurrentImageIndex(0);
     setShowImageModal(true);
@@ -1003,12 +1160,15 @@ const DatasetV2 = () => {
         // Check if it looks like a long text block (has spaces)
         if (value.includes(' ')) {
           return (
-            <div className="group relative cursor-help">
-              <div className="line-clamp-2 text-xs text-gray-700">{value}</div>
-              <div className="hidden group-hover:block absolute left-0 bottom-full mb-2 bg-gray-900 text-white p-3 rounded shadow-lg z-50 w-80 text-xs whitespace-pre-wrap max-h-64 overflow-y-auto">
+            <CustomTooltip content={
+              <p className="text-xs whitespace-pre-wrap max-h-64 overflow-y-auto leading-relaxed p-1">
                 {value}
+              </p>
+            }>
+              <div className="cursor-help transition-colors hover:text-foreground">
+                <div className="line-clamp-2 text-xs text-muted-foreground leading-relaxed italic">{value}</div>
               </div>
-            </div>
+            </CustomTooltip>
           );
         }
         // Long single word (like a hash or id)
@@ -1030,17 +1190,7 @@ const DatasetV2 = () => {
     );
   }
 
-  const tabs = [
-    { id: 'overview', label: 'Overview', count: totalCount },
-    { id: 'contact', label: 'Contact info' },
-    { id: 'social', label: 'Social media' },
-    { id: 'rating', label: 'Rating' },
-    { id: 'reviews', label: 'Reviews (if any)' },
-    { id: 'enrichment', label: 'Leads Enrichment' },
-    { id: 'all', label: 'All fields' },
-    { id: 'preview', label: 'Preview in new tab', icon: Eye },
-    { id: 'table', label: 'Table', icon: TableIcon }
-  ];
+  // Tab definitions removed to avoid redundancy with inline definitions
 
   // Get filtered columns based on active tab
   const getVisibleColumnsByTab = () => {
@@ -1140,1010 +1290,927 @@ const DatasetV2 = () => {
     return ordered;
   };
 
+
+  const tableConfig = [
+    {
+      id: 'number',
+      header: '#',
+      cell: ({ row }) => (
+        <span className="text-sm font-medium">
+          {(page - 1) * limit + items.indexOf(row) + 1}
+        </span>
+      )
+    },
+    ...getOrderedColumns().map(colKey => ({
+      id: colKey,
+      accessorKey: colKey,
+      header: formatColumnName(colKey),
+      cell: ({ row }) => {
+        const value = row.data[colKey];
+
+        if (colKey === 'socialMedia' && value && typeof value === 'object') {
+          return renderSocialMediaIcons(value, row);
+        }
+
+        if (colKey === 'title') {
+          return (
+            <div className="font-semibold text-foreground max-w-xs">
+              {value || '-'}
+            </div>
+          );
+        }
+
+        if (colKey === 'phone' && value) {
+          return (
+            <div className="flex items-center gap-2">
+              <Phone className="w-3 h-3 text-muted-foreground" />
+              <span>{value}</span>
+              {row.data.phoneVerified && (
+                <CheckCircle2 className="w-3 h-3 text-green-500" />
+              )}
+            </div>
+          );
+        }
+
+        if (colKey === 'email' && value) {
+          return (
+            <div className="flex items-center gap-2">
+              <Mail className="w-3 h-3 text-muted-foreground" />
+              <span>{value}</span>
+              {row.data.emailVerified && (
+                <CheckCircle2 className="w-3 h-3 text-green-500" />
+              )}
+            </div>
+          );
+        }
+
+        if (colKey === 'website' && value) {
+          return (
+            <a
+              href={value}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-blue-500 hover:text-blue-600"
+            >
+              <ExternalLink className="w-3 h-3" />
+              <span className="truncate max-w-[150px]">
+                {value.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+              </span>
+            </a>
+          );
+        }
+
+        if (colKey === 'url' && value) {
+          return (
+            <a
+              href={value}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-red-500 hover:text-red-600"
+            >
+              <MapPin className="w-3 h-3" />
+              <span>Maps</span>
+            </a>
+          );
+        }
+
+        if (colKey === 'rating' && value) {
+          return (
+            <div className="flex items-center gap-1">
+              <span className="text-yellow-500">⭐</span>
+              <span className="font-medium">{value}</span>
+            </div>
+          );
+        }
+
+        // Amazon specific rendering if in this general table
+        if (isAmazonScraper()) {
+          if (colKey === 'images' && Array.isArray(value) && value.length > 0) {
+            return (
+              <div className="relative group/img cursor-pointer" onClick={(e) => openImageModal(row.data, e)}>
+                <img
+                  src={value[0]}
+                  alt=""
+                  className="w-12 h-12 object-cover rounded border border-border group-hover/img:border-primary transition-all"
+                  onError={(e) => {
+                    e.target.src = 'https://via.placeholder.com/64?text=No+Image';
+                  }}
+                />
+                {value.length > 1 && (
+                  <div className="absolute bottom-0 right-0 bg-black/70 text-white text-[10px] px-1 rounded-tl">
+                    +{value.length - 1}
+                  </div>
+                )}
+              </div>
+            );
+          }
+          if (colKey === 'asin') {
+            return <code className="bg-muted px-2 py-1 rounded text-xs font-mono">{value || '-'}</code>;
+          }
+          if (colKey === 'price') {
+            return value ? <span className="font-semibold">${value.toFixed(2)}</span> : '-';
+          }
+        }
+
+        return (
+          <div className="max-w-xs">
+            {renderCellValue(value, colKey, row)}
+          </div>
+        );
+      }
+    })),
+    {
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }) => (
+        <Button
+          size="sm"
+          onClick={() => openChat(row)}
+          className="bg-blue-600 hover:bg-blue-700 text-white text-xs whitespace-nowrap"
+        >
+          <MessageSquare className="w-3 h-3 mr-1" />
+          AI Chat
+        </Button>
+      )
+    }
+  ]
+
   return (
-    <div className="flex-1 bg-white min-h-screen">
-      {/* Header with Tabs */}
-      <div className="border-b border-gray-200">
-        {/* Top Header */}
-        <div className="px-6 py-4 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="sm" onClick={() => navigate('/runs')} className="hover:bg-gray-50">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Actor
+    <>
+      <div className={cn("flex-1 min-h-screen flex flex-col font-sans transition-colors duration-300", isDark ? "bg-background text-foreground" : "bg-white")}>
+        {/* Header Section from Image */}
+        <div className="border-b border-border bg-card">
+          {/* Main Title Bar */}
+          <div className="px-5 py-3 flex items-center justify-between border-b border-border/50">
+            <div className="flex items-center gap-3">
+              <button onClick={() => navigate('/runs')} className="text-muted-foreground hover:text-foreground transition-colors">
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-muted-foreground font-medium">Run</span>
+                <span className="text-muted-foreground/30">•</span>
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-blue-500" />
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold text-base">{runDetails?.actor_name || 'Google Maps Scraper'}</span>
+                  <span className="bg-muted text-muted-foreground text-[10px] font-bold px-1.5 py-0.5 rounded leading-none uppercase tracking-wider">Actor</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 mr-2">
+                <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-all">
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-all">
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+              <Button variant="outline" size="sm" className="h-9 px-4 font-medium border-border hover:bg-muted transition-colors">
+                Actions <ChevronDown className="w-4 h-4 ml-2 opacity-50" />
               </Button>
-              <div className="border-l h-6"></div>
-              <h1 className="text-2xl font-semibold text-blue-600">
-                {isAmazonScraper() ? 'Amazon Product Scraper - Run' :
-                  isSeoScraper() ? 'SEO Metadata Scraper - Run' :
-                    'Google Maps Scraper - Run'}
-              </h1>
-              <Button variant="ghost" size="icon" className="hover:bg-gray-50">
-                <Star className="w-4 h-4" />
+              <Button variant="outline" size="sm" className="h-9 px-4 font-medium border-border hover:bg-muted transition-colors">API</Button>
+              <Button variant="outline" size="sm" className="h-9 px-4 font-medium border-border hover:bg-muted transition-colors flex items-center gap-2">
+                <ExternalLink className="w-4 h-4" />
+                Share
               </Button>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm" className="hover:bg-gray-50">Actions</Button>
-              <Button variant="outline" size="sm" className="hover:bg-gray-50">API</Button>
-              <Button variant="outline" size="sm" className="hover:bg-gray-50">Share</Button>
-              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">Export</Button>
+              <Button size="sm" className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm">Export</Button>
             </div>
           </div>
-        </div>
 
-        {/* Success Banner */}
-        <div className="px-6 py-4 bg-green-50 border-b border-green-200">
-          <div className="flex items-start">
-            <div className="flex-shrink-0">
-              <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
+          {/* Status Banner - PIXEL PERFECT REPLICA */}
+          <div className="px-3 py-1.5 bg-card border-b border-border flex items-center justify-between text-[12.5px] min-h-[44px]">
+            <div className="flex items-center gap-2">
+              <div className={cn("flex items-center gap-1.5 font-bold px-3 py-1 rounded-full border shadow-sm transition-all",
+                runDetails?.status?.toLowerCase() === 'succeeded' || runDetails?.status?.toLowerCase() === 'finished'
+                  ? (isDark ? "bg-green-500/10 text-green-400 border-green-500/30" : "bg-green-50 text-green-700 border-green-200")
+                  : (isDark ? "bg-amber-500/10 text-amber-400 border-amber-500/30" : "bg-amber-50 text-amber-700 border-amber-200")
+              )}>
+                {runDetails?.status?.toLowerCase() === 'succeeded' || runDetails?.status?.toLowerCase() === 'finished'
+                  ? <CheckCircle2 className="w-3.5 h-3.5 text-green-600 dark:text-green-500" />
+                  : <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-500" />
+                }
+                <span className="capitalize">{runDetails?.status || 'Succeeded'}</span>
+              </div>
+              <span className="text-muted-foreground font-medium px-1">Actor {runDetails?.status?.toLowerCase() || 'succeeded'} with {totalCount || 50} results in the dataset</span>
             </div>
-            <div className="ml-3 flex-1">
-              <p className="text-sm text-green-800">
-                <strong>Scraping finished.</strong> {isAmazonScraper()
-                  ? 'You can view all scraped products with detailed information.'
-                  : isSeoScraper()
-                    ? 'You can view comprehensive SEO metadata and content analysis.'
-                    : 'You can view all scraped places laid out on a map.'}
-              </p>
+
+            <div className="flex items-center divide-x divide-border overflow-hidden pr-2">
+              <div className="px-4 text-[12.5px] font-bold text-foreground">
+                ${(runDetails?.cost ?? runDetails?.compute_units ?? 0.177).toFixed(3)}
+              </div>
+              <div className="px-4 text-[12.5px] font-medium text-muted-foreground/80">
+                {runDetails?.created_at
+                  ? new Date(runDetails.created_at).toISOString().split('T')[0] + ' ' + new Date(runDetails.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
+                  : '2026-03-09 07:36'
+                }
+              </div>
+              <div className="px-4 text-[12.5px] font-medium text-muted-foreground/80">
+                {(() => {
+                  const drm = runDetails?.duration_seconds ?? runDetails?.duration ?? (runDetails?.finished_at && runDetails?.started_at ? (new Date(runDetails.finished_at) - new Date(runDetails.started_at)) / 1000 : 56);
+                  return drm ? `${Math.round(drm)} s` : '56 s';
+                })()}
+              </div>
+              <button className="px-4 text-[13px] text-foreground hover:text-blue-500 transition-colors flex items-center gap-1 font-bold">
+                More details <ChevronRight className="w-4 h-4 opacity-50" />
+              </button>
             </div>
           </div>
-        </div>
 
-        {/* Stats Bar */}
-        <div className="px-6 py-3 bg-white border-b border-gray-200">
-          <div className="flex items-center space-x-8 text-sm">
-            <div>
-              <span className="text-gray-600">RESULTS</span>
-              <span className="ml-2 text-blue-600 font-semibold">{totalCount}</span>
-            </div>
-            <div>
-              <span className="text-gray-600">REQUESTS</span>
-              <span className="ml-2 text-gray-900 font-semibold">2 of 20 handled</span>
-            </div>
-            <div>
-              <span className="text-gray-600">PRICE</span>
-              <span className="ml-2 text-gray-900 font-semibold">$0.207</span>
-            </div>
-            <div>
-              <span className="text-gray-600">STARTED</span>
-              <span className="ml-2 text-gray-900">{new Date().toLocaleString()}</span>
-            </div>
-            <div>
-              <span className="text-gray-600">DURATION</span>
-              <span className="ml-2 text-gray-900">12 s</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Tabs Navigation */}
-        <div className="px-6 flex items-center justify-between border-b border-gray-200">
-          <div className="flex items-center space-x-1">
-            {tabs.map((tab) => (
+          {/* Entity Tabs System */}
+          <div className="px-3 border-b border-border flex items-center gap-1">
+            {[
+              { id: 'output', label: 'Output', icon: TableIcon, count: totalCount },
+              { id: 'log', label: 'Log', icon: FileText },
+              { id: 'input', label: 'Input', icon: Settings },
+              { id: 'storage', label: 'Storage', icon: MapPin },
+              { id: 'live', label: 'Live view', icon: PlayIcon, disabled: true },
+              { id: 'integrations', label: 'Triggered integrations', icon: CheckCircle2, count: 0 },
+            ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center space-x-2 ${activeTab === tab.id
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
-                  }`}
+                onClick={() => !tab.disabled && setActiveTopTab(tab.id)}
+                disabled={tab.disabled}
+                className={`flex items-center gap-1.5 px-3 py-3 text-[14px] font-bold border-b-2 transition-all relative group ${activeTopTab === tab.id
+                  ? 'border-blue-600 text-foreground'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+                  } ${tab.disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
               >
-                {tab.icon && <tab.icon className="w-4 h-4" />}
+                {tab.icon && <tab.icon className={cn("w-[18px] h-[18px] opacity-70", activeTopTab === tab.id ? "text-blue-600 dark:text-blue-400 opacity-100" : "text-muted-foreground")} />}
                 <span>{tab.label}</span>
                 {tab.count !== undefined && (
-                  <span className="ml-1 px-1.5 py-0.5 text-xs bg-gray-100 rounded">{tab.count}</span>
+                  <span className={cn("ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-black leading-none",
+                    activeTopTab === tab.id ? "bg-blue-600 text-white shadow-[0_1px_3px_rgba(0,0,0,0.2)]" : "bg-muted text-muted-foreground border border-border/50"
+                  )}>
+                    {tab.count}
+                  </span>
                 )}
               </button>
             ))}
           </div>
-          <div className="py-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowColumnSettings(!showColumnSettings)}
-              className="flex items-center space-x-2"
-            >
-              <Settings className="w-4 h-4" />
-              <span>Table settings</span>
-            </Button>
-          </div>
         </div>
-      </div>
 
-      {/* Table */}
-      <div className="px-6 py-6">
-        <div className="bg-white">
-          {items.length === 0 ? (
-            <div className="text-center py-16 text-gray-500">
-              <Search className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-              <p className="text-lg">No results found</p>
-            </div>
-          ) : isAmazonScraper() ? (
-            // Amazon Product Table
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">#</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Picture</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Title</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">ASIN</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Brand</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Price</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Rating</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Reviews</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Availability</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Category</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">URL</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-100">
-                  {items.map((item, index) => {
-                    const product = item.data;
-                    return (
-                      <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                        {/* # */}
-                        <td className="px-4 py-4 text-sm text-gray-900 font-medium">
-                          {(page - 1) * limit + index + 1}
-                        </td>
+        {/* Content Area - Only active when "Output" tab is selected */}
+        {activeTopTab === 'output' && (
+          <div className="flex-1 flex flex-col bg-muted/10">
+            {/* Output Subheader (Overview, All fields, Table/JSON switch) */}
+            <div className="px-3 py-2 flex items-center justify-between border-b border-border/60 bg-white dark:bg-zinc-950">
+              <div className="flex items-center bg-zinc-100 dark:bg-zinc-900 border border-border p-0.5 rounded-md">
+                <button
+                  onClick={() => setActiveSubTab('overview')}
+                  className={cn("px-4 py-1 text-[13px] font-bold rounded transition-all",
+                    activeSubTab === 'overview' ? "bg-white dark:bg-zinc-800 text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  Overview
+                </button>
+                <button
+                  onClick={() => setActiveSubTab('all')}
+                  className={cn("px-4 py-1 text-[13px] font-bold rounded transition-all",
+                    activeSubTab === 'all' ? "bg-white dark:bg-zinc-800 text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  All fields
+                </button>
+              </div>
 
-                        {/* Picture */}
-                        <td className="px-4 py-4">
-                          {product.images && product.images.length > 0 ? (
-                            <div className="relative group cursor-pointer" onClick={() => openImageModal(product)}>
-                              <img
-                                src={product.images[0]}
-                                alt={product.title}
-                                className="w-16 h-16 object-cover rounded border border-gray-200 group-hover:border-blue-500 transition-all"
-                                onError={(e) => {
-                                  e.target.src = 'https://via.placeholder.com/64?text=No+Image';
-                                }}
-                              />
-                              {product.images.length > 1 && (
-                                <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-xs px-1 rounded-tl">
-                                  +{product.images.length - 1}
-                                </div>
-                              )}
-                              {product.videos && product.videos.length > 0 && (
-                                <div className="absolute top-0 right-0 bg-red-600 text-white p-1 rounded-bl">
-                                  <Play className="w-3 h-3" />
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="w-16 h-16 bg-gray-100 rounded border border-gray-200 flex items-center justify-center text-gray-400 text-xs">
-                              No image
-                            </div>
-                          )}
-                        </td>
+              <div className="flex items-center gap-4">
+                <button className="text-[13px] text-muted-foreground hover:text-foreground font-bold transition-colors flex items-center gap-1.5 px-2">
+                  Preview in new tab <ExternalLink className="w-3.5 h-3.5 opacity-60" />
+                </button>
 
-                        {/* Title */}
-                        <td className="px-4 py-4 text-sm max-w-xs">
-                          <div className="font-medium text-gray-900 line-clamp-2" title={product.title}>
-                            {product.title || '-'}
-                          </div>
-                        </td>
-
-                        {/* ASIN */}
-                        <td className="px-4 py-4 text-sm text-gray-700">
-                          <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
-                            {product.asin || '-'}
-                          </code>
-                        </td>
-
-                        {/* Brand */}
-                        <td className="px-4 py-4 text-sm text-gray-700">
-                          {product.brand || product.seller || product.soldBy || '-'}
-                        </td>
-
-                        {/* Price */}
-                        <td className="px-4 py-4 text-sm">
-                          {product.price ? (
-                            <div className="flex flex-col">
-                              <span className="font-semibold text-gray-900">
-                                ${product.price.toFixed(2)}
-                              </span>
-                              {product.originalPrice && product.originalPrice > product.price && (
-                                <>
-                                  <span className="text-xs text-gray-500 line-through">
-                                    ${product.originalPrice.toFixed(2)}
-                                  </span>
-                                  {product.discount && product.discount > 0 && (
-                                    <span className="text-xs text-green-600">
-                                      -{product.discount.toFixed(0)}%
-                                    </span>
-                                  )}
-                                </>
-                              )}
-                            </div>
-                          ) : '-'}
-                        </td>
-
-                        {/* Rating */}
-                        <td className="px-4 py-4 text-sm">
-                          {product.rating ? (
-                            <div className="flex items-center gap-1">
-                              <span className="text-yellow-500">⭐</span>
-                              <span className="font-medium text-gray-900">{product.rating}</span>
-                            </div>
-                          ) : '-'}
-                        </td>
-
-                        {/* Reviews Count */}
-                        <td className="px-4 py-4 text-sm text-gray-700">
-                          {product.reviewCount ? product.reviewCount.toLocaleString() : '-'}
-                        </td>
-
-                        {/* Availability */}
-                        <td className="px-4 py-4 text-sm">
-                          {product.availability ? (
-                            <div className="flex items-center gap-1">
-                              {product.availability.toLowerCase().includes('in stock') ? (
-                                <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">
-                                  In Stock
-                                </span>
-                              ) : (
-                                <span className="text-gray-600 text-xs">
-                                  {product.availability.substring(0, 30)}
-                                </span>
-                              )}
-                            </div>
-                          ) : '-'}
-                        </td>
-
-                        {/* Category */}
-                        <td className="px-4 py-4 text-sm text-gray-700 max-w-xs">
-                          <div className="line-clamp-2" title={product.category}>
-                            {product.category || '-'}
-                          </div>
-                        </td>
-
-                        {/* URL */}
-                        <td className="px-4 py-4 text-sm">
-                          {product.url ? (
-                            <a
-                              href={product.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline flex items-center gap-1"
-                            >
-                              <ExternalLink className="w-3 h-3" />
-                              View
-                            </a>
-                          ) : '-'}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            // Dynamic Table - Auto-detects all columns from data with proper ordering
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b border-gray-200 bg-white">
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide sticky left-0 bg-white z-10">#</th>
-                    {getOrderedColumns().map(colKey => (
-                      <th key={colKey} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap">
-                        {formatColumnName(colKey)}
-                      </th>
-                    ))}
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white">
-                  {items.map((item, index) => {
-                    const orderedCols = getOrderedColumns();
-                    return (
-                      <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4 text-sm text-gray-900 font-medium sticky left-0 bg-white">
-                          {(page - 1) * limit + index + 1}
-                        </td>
-                        {orderedCols.map(colKey => {
-                          const value = item.data[colKey];
-
-                          // Special rendering for social media
-                          if (colKey === 'socialMedia' && value && typeof value === 'object') {
-                            return (
-                              <td key={colKey} className="px-6 py-4 text-sm text-gray-700">
-                                {renderSocialMediaIcons(value, item)}
-                              </td>
-                            );
-                          }
-
-                          // Special rendering for title (primary column - bold)
-                          if (colKey === 'title') {
-                            return (
-                              <td key={colKey} className="px-6 py-4 text-sm">
-                                <div className="font-semibold text-gray-900 max-w-xs">
-                                  {value || '-'}
-                                </div>
-                              </td>
-                            );
-                          }
-
-                          // Special rendering for phone with icon
-                          if (colKey === 'phone' && value) {
-                            return (
-                              <td key={colKey} className="px-6 py-4 text-sm text-gray-700">
-                                <div className="flex items-center gap-2">
-                                  <Phone className="w-3 h-3 text-gray-400" />
-                                  <span>{value}</span>
-                                  {item.data.phoneVerified && (
-                                    <CheckCircle2 className="w-3 h-3 text-green-500" />
-                                  )}
-                                </div>
-                              </td>
-                            );
-                          }
-
-                          // Special rendering for email with icon
-                          if (colKey === 'email' && value) {
-                            return (
-                              <td key={colKey} className="px-6 py-4 text-sm text-gray-700">
-                                <div className="flex items-center gap-2">
-                                  <Mail className="w-3 h-3 text-gray-400" />
-                                  <span>{value}</span>
-                                  {item.data.emailVerified && (
-                                    <CheckCircle2 className="w-3 h-3 text-green-500" />
-                                  )}
-                                </div>
-                              </td>
-                            );
-                          }
-
-                          // Special rendering for website with icon
-                          if (colKey === 'website' && value) {
-                            return (
-                              <td key={colKey} className="px-6 py-4 text-sm">
-                                <a
-                                  href={value}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
-                                >
-                                  <ExternalLink className="w-3 h-3" />
-                                  <span className="truncate max-w-[150px]">
-                                    {value.replace(/^https?:\/\//, '').replace(/\/$/, '')}
-                                  </span>
-                                </a>
-                              </td>
-                            );
-                          }
-
-                          // Special rendering for Google Maps URL with map icon
-                          if (colKey === 'url' && value) {
-                            return (
-                              <td key={colKey} className="px-6 py-4 text-sm">
-                                <a
-                                  href={value}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center gap-1 text-red-600 hover:text-red-700"
-                                >
-                                  <MapPin className="w-3 h-3" />
-                                  <span>Maps</span>
-                                </a>
-                              </td>
-                            );
-                          }
-
-                          // Special rendering for rating with stars
-                          if (colKey === 'rating' && value) {
-                            return (
-                              <td key={colKey} className="px-6 py-4 text-sm">
-                                <div className="flex items-center gap-1">
-                                  <span className="text-yellow-500">⭐</span>
-                                  <span className="font-medium text-gray-900">{value}</span>
-                                </div>
-                              </td>
-                            );
-                          }
-
-                          // Default rendering for other columns
-                          return (
-                            <td key={colKey} className="px-6 py-4 text-sm text-gray-700">
-                              <div className="max-w-xs">
-                                {renderCellValue(value, colKey, item)}
-                              </div>
-                            </td>
-                          );
-                        })}
-                        <td className="px-6 py-4">
-                          <Button
-                            size="sm"
-                            onClick={() => openChat(item)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs whitespace-nowrap"
-                          >
-                            <MessageSquare className="w-3 h-3 mr-1" />
-                            AI Chat
-                          </Button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Pagination Controls */}
-          {totalPages > 0 && items.length > 0 && (
-            <div className="border-t border-gray-200 bg-white px-6 py-4 mt-4">
-              <div className="flex items-center justify-between">
-                {/* Items per page */}
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600">Items per page:</span>
-                  <select
-                    value={limit}
-                    onChange={(e) => {
-                      setLimit(parseInt(e.target.value));
-                      setPage(1);
-                    }}
-                    className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-gray-400"
+                {/* Mode Switcher PIXEL PERFECT */}
+                <div className="flex items-center bg-zinc-100 dark:bg-zinc-900 p-0.5 rounded-md border border-border">
+                  <button
+                    onClick={() => setViewMode('table')}
+                    className={cn("px-4 py-1 text-[13px] font-bold rounded transition-all",
+                      viewMode === 'table' ? "bg-white dark:bg-zinc-800 text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                    )}
                   >
-                    <option value="10">10</option>
-                    <option value="20">20</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
-                  </select>
+                    Table
+                  </button>
+                  <button
+                    onClick={() => setViewMode('json')}
+                    className={cn("px-4 py-1 text-[13px] font-bold rounded transition-all",
+                      viewMode === 'json' ? "bg-white dark:bg-zinc-800 text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    JSON
+                  </button>
                 </div>
 
-                {/* Page navigation */}
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Go to page:</span>
-                    <Input
-                      type="number"
-                      min="1"
-                      max={totalPages}
-                      value={goToPageInput}
-                      onChange={(e) => setGoToPageInput(e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          const pageNum = parseInt(goToPageInput);
-                          if (pageNum >= 1 && pageNum <= totalPages) {
-                            setPage(pageNum);
-                            setGoToPageInput('');
-                          }
-                        }
-                      }}
-                      className="w-16 h-8 text-sm border-gray-300 text-center focus:border-gray-400 focus:ring-0"
-                      placeholder={page.toString()}
-                    />
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        const pageNum = parseInt(goToPageInput);
-                        if (pageNum >= 1 && pageNum <= totalPages) {
-                          setPage(pageNum);
-                          setGoToPageInput('');
-                        }
-                      }}
-                      className="h-8 px-3 bg-white border border-gray-300 text-gray-700 text-sm hover:bg-gray-50"
-                    >
-                      Go
-                    </Button>
-                  </div>
+                <button className="p-1.5 text-muted-foreground hover:text-foreground border border-border rounded-md hover:border-gray-400 transition-all bg-card shadow-sm">
+                  <Columns className="w-4 h-4" />
+                </button>
 
-                  <div className="flex items-center gap-1">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setPage(Math.max(1, page - 1))}
-                      disabled={page === 1}
-                      className="h-8 w-8 p-0 text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </Button>
-                    <div className="px-3 py-1 text-sm font-medium text-gray-700">
-                      {page}
+                <button className="p-1.5 text-muted-foreground hover:text-foreground border border-border rounded-md hover:border-gray-400 transition-all bg-card shadow-sm">
+                  <Settings className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Content View Area */}
+            {viewMode === 'table' ? (
+              <div className="px-3 py-5 flex-1 flex flex-col min-h-0 bg-white dark:bg-zinc-950">
+                <DataTable
+                  columns={tableConfig.map(col => {
+                    if (col.id === 'number' || col.id === 'actions') return col;
+
+                    // Calculate dynamic coverage based on non-null values in current items
+                    const nonNullCount = items.filter(item => item.data && item.data[col.id] !== null && item.data[col.id] !== undefined && item.data[col.id] !== '').length;
+                    const coverage = items.length > 0 ? Math.round((nonNullCount / items.length) * 100) : 100;
+
+                    // Enhance headers with Apify-style Name + Props + Coverage
+                    return {
+                      ...col,
+                      header: (
+                        <div className="flex flex-col gap-0.5 py-0.5 group/header cursor-help min-w-[100px]">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="font-bold text-[14.5px] text-foreground leading-none tracking-tight group-hover/header:text-blue-600 transition-colors truncate">
+                              {formatColumnName(col.id)}
+                            </span>
+                            <CustomTooltip content={<div className="font-bold p-1 text-[11px]">Data coverage for <span className="text-blue-500">{col.id}</span>: {coverage}%</div>}>
+                              <span className={cn("text-[10px] font-black px-1.5 py-0.5 rounded leading-none tabular-nums border border-border/40 shadow-sm flex-shrink-0",
+                                coverage === 100 ? "bg-zinc-100 dark:bg-zinc-800 text-foreground/80 dark:text-zinc-200" : "bg-zinc-100/50 dark:bg-zinc-800/40 text-muted-foreground/60 dark:text-zinc-500"
+                              )}>
+                                {coverage}%
+                              </span>
+                            </CustomTooltip>
+                          </div>
+                          <div className="text-[11.5px] text-muted-foreground/50 font-bold leading-none mt-0.5 opacity-90 group-hover/header:text-muted-foreground/80 transition-colors overflow-hidden text-ellipsis">
+                            {col.id}
+                          </div>
+                        </div>
+                      )
+                    };
+                  })}
+                  data={items}
+                  loading={loading}
+                  currentPage={page}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                  itemsPerPage={limit}
+                  onItemsPerPageChange={(newLimit) => {
+                    setLimit(newLimit);
+                    setPage(1);
+                  }}
+                  totalItems={totalCount}
+                />
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col min-h-0 bg-white dark:bg-zinc-950 overflow-hidden">
+                <div className="flex-1 overflow-auto bg-white dark:bg-[#1e1e1e] font-mono py-4 dt-custom-scrollbar border-t border-border/50">
+                  <div className="flex min-w-full">
+                    {/* Line Numbers */}
+                    <div className="flex flex-col text-zinc-400 dark:text-zinc-500 text-right select-none px-4 border-r border-zinc-200 dark:border-zinc-800 min-w-[56px] text-[13px] leading-6 bg-zinc-50/50 dark:bg-zinc-900/30 h-fit">
+                      {Array.from({ length: Math.min(items.length * 15, 1000) }).map((_, i) => (
+                        <div key={i}>{i + 1}</div>
+                      ))}
                     </div>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setPage(Math.min(totalPages, page + 1))}
-                      disabled={page === totalPages}
-                      className="h-8 w-8 p-0 text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
+                    {/* Content */}
+                    <div className="flex-1 min-w-0 pl-1">
+                      <pre className="text-[13.5px] leading-6 font-mono overflow-visible select-text" style={{ fontFamily: "Menlo, Monaco, 'Courier New', monospace" }}>
+                        <div className="pl-4">
+                          <JsonTreeNode data={items.map(item => item.data)} isLast={true} depth={0} />
+                        </div>
+                      </pre>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
-      </div>
+            )}
+          </div>
+        )}
 
-      {/* Notion-style Contextual Links Popup */}
-      {showLinksModal && selectedLinksItem && (
-        <>
-          {/* Transparent overlay to close on click outside */}
-          <div
-            className="fixed inset-0 z-40"
-            onClick={closeLinksModal}
-          />
-
-          {/* Contextual popup at click position */}
-          <div
-            className="fixed z-50 bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden"
-            style={{
-              left: `${linksModalPosition.x}px`,
-              top: `${linksModalPosition.y}px`,
-              minWidth: '320px',
-              maxWidth: '400px',
-              maxHeight: '400px'
-            }}
-          >
-            {/* Header with business name */}
-            <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-              <div className="font-semibold text-gray-900 text-sm truncate">
-                {selectedLinksItem.data.title}
+        {/* Other tabs placeholders */}
+        {activeTopTab !== 'output' && (
+          <div className="flex-1 flex flex-col items-center justify-center bg-muted/20 text-muted-foreground p-20">
+            <div className="bg-card p-10 rounded-2xl border border-border flex flex-col items-center max-w-md shadow-lg transition-all duration-300">
+              <div className="w-16 h-16 bg-blue-500/10 text-blue-500 rounded-full flex items-center justify-center mb-6 ring-8 ring-blue-500/5">
+                {activeTopTab === 'log' && <FileText className="w-8 h-8" />}
+                {activeTopTab === 'input' && <Settings className="w-8 h-8" />}
+                {activeTopTab === 'storage' && <MapPin className="w-8 h-8" />}
+                {activeTopTab === 'integrations' && <CheckCircle2 className="w-8 h-8" />}
               </div>
-              <div className="text-xs text-gray-500 truncate mt-0.5">
-                All social links
-              </div>
+              <h3 className="text-xl font-bold text-foreground mb-3">
+                {topEntityTabs.find(t => t.id === activeTopTab)?.label} View
+              </h3>
+              <p className="text-center text-muted-foreground leading-relaxed">
+                This section is currently under development. In the full application, this would provide detailed {activeTopTab} information for the run.
+              </p>
+              <Button onClick={() => setActiveTopTab('output')} className="mt-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 h-11 rounded-xl shadow-md transition-all active:scale-95">
+                Back to Dataset Output
+              </Button>
             </div>
+          </div>
+        )}
 
-            {/* Links list - scrollable */}
-            <div className="overflow-y-auto max-h-[320px]">
-              <div className="py-1">
-                {/* Social Media Links */}
-                {selectedLinksItem.data.socialMedia && Object.entries(selectedLinksItem.data.socialMedia).map(([platform, url]) => {
-                  const platformLower = platform.toLowerCase();
-                  let bgClass = 'bg-gray-50 group-hover:bg-gray-100';
-                  let iconColorClass = 'text-gray-600';
+        {/* Notion-style Contextual Links Popup */}
+        {showLinksModal && selectedLinksItem && (
+          <>
+            {/* Transparent overlay to close on click outside */}
+            <div
+              className="fixed inset-0 z-40"
+              onClick={closeLinksModal}
+            />
 
-                  if (platformLower.includes('facebook')) {
-                    bgClass = 'bg-blue-50 group-hover:bg-blue-100';
-                    iconColorClass = 'text-blue-600';
-                  } else if (platformLower.includes('instagram')) {
-                    bgClass = 'bg-pink-50 group-hover:bg-pink-100';
-                    iconColorClass = 'text-pink-600';
-                  } else if (platformLower.includes('twitter') || platformLower.includes('x.com')) {
-                    bgClass = 'bg-sky-50 group-hover:bg-sky-100';
-                    iconColorClass = 'text-sky-600';
-                  } else if (platformLower.includes('linkedin')) {
-                    bgClass = 'bg-blue-50 group-hover:bg-blue-100';
-                    iconColorClass = 'text-blue-700';
-                  } else if (platformLower.includes('youtube')) {
-                    bgClass = 'bg-red-50 group-hover:bg-red-100';
-                    iconColorClass = 'text-red-600';
-                  } else if (platformLower.includes('tiktok')) {
-                    bgClass = 'bg-gray-100 group-hover:bg-gray-200';
-                    iconColorClass = 'text-gray-900';
-                  }
+            {/* Contextual popup at click position - Theme Adaptable */}
+            <div
+              className={cn(
+                "fixed z-50 rounded-lg shadow-2xl border overflow-hidden animate-in fade-in zoom-in-95 duration-200",
+                isDark ? "bg-zinc-900 border-zinc-800 shadow-black/50" : "bg-white border-zinc-200 shadow-zinc-200/50"
+              )}
+              style={{
+                left: `${linksModalPosition.x}px`,
+                top: `${linksModalPosition.y}px`,
+                minWidth: '280px',
+                maxWidth: '320px',
+                maxHeight: '350px'
+              }}
+            >
+              {/* Header with business name */}
+              <div className={cn(
+                "px-4 py-3 border-b",
+                isDark ? "bg-zinc-800/50 border-zinc-800" : "bg-zinc-50 border-zinc-200"
+              )}>
+                <div className={cn("font-bold text-sm truncate", isDark ? "text-zinc-100" : "text-zinc-900")}>
+                  {selectedLinksItem.data.title}
+                </div>
+                <div className={cn("text-xs mt-0.5", isDark ? "text-zinc-400" : "text-zinc-500")}>
+                  All social links
+                </div>
+              </div>
 
-                  return (
+              {/* Links list - scrollable */}
+              <div className="overflow-y-auto max-h-[320px] dt-custom-scrollbar">
+                <div className="py-1">
+                  {/* Social Media Links */}
+                  {selectedLinksItem.data.socialMedia && Object.entries(selectedLinksItem.data.socialMedia).map(([platform, url]) => {
+                    const platformLower = platform.toLowerCase();
+                    let bgClass = isDark ? 'bg-zinc-800 group-hover:bg-zinc-700' : 'bg-zinc-50 group-hover:bg-zinc-100';
+                    let iconColorClass = isDark ? 'text-zinc-300' : 'text-zinc-600';
+
+                    if (platformLower.includes('facebook')) {
+                      bgClass = isDark ? 'bg-blue-900/40 group-hover:bg-blue-900/60' : 'bg-blue-50 group-hover:bg-blue-100';
+                      iconColorClass = isDark ? 'text-blue-400' : 'text-blue-600';
+                    } else if (platformLower.includes('instagram')) {
+                      bgClass = isDark ? 'bg-pink-900/40 group-hover:bg-pink-900/60' : 'bg-pink-50 group-hover:bg-pink-100';
+                      iconColorClass = isDark ? 'text-pink-400' : 'text-pink-600';
+                    } else if (platformLower.includes('twitter') || platformLower.includes('x.com')) {
+                      bgClass = isDark ? 'bg-zinc-800 group-hover:bg-zinc-700' : 'bg-sky-50 group-hover:bg-sky-100';
+                      iconColorClass = isDark ? 'text-zinc-100' : 'text-sky-600';
+                    } else if (platformLower.includes('linkedin')) {
+                      bgClass = isDark ? 'bg-blue-900/40 group-hover:bg-blue-900/60' : 'bg-blue-50 group-hover:bg-blue-100';
+                      iconColorClass = isDark ? 'text-blue-400' : 'text-blue-700';
+                    } else if (platformLower.includes('youtube')) {
+                      bgClass = isDark ? 'bg-red-900/40 group-hover:bg-red-900/60' : 'bg-red-50 group-hover:bg-red-100';
+                      iconColorClass = isDark ? 'text-red-400' : 'text-red-600';
+                    } else if (platformLower.includes('tiktok')) {
+                      bgClass = isDark ? 'bg-zinc-800 group-hover:bg-zinc-700' : 'bg-zinc-100 group-hover:bg-zinc-200';
+                      iconColorClass = isDark ? 'text-zinc-100' : 'text-zinc-900';
+                    }
+
+                    return (
+                      <a
+                        key={platform}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn(
+                          "flex items-center px-3 py-2 transition-colors group",
+                          isDark ? "hover:bg-zinc-800/50" : "hover:bg-zinc-50"
+                        )}
+                      >
+                        <div className={`w-8 h-8 rounded flex items-center justify-center mr-3 flex-shrink-0 ${bgClass}`}>
+                          <div className={iconColorClass}>
+                            {getSocialIcon(platform)}
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className={cn("text-sm font-bold capitalize", isDark ? "text-zinc-200" : "text-zinc-900")}>
+                            {platform}
+                          </div>
+                          <div className={cn("text-[11px] truncate", isDark ? "text-zinc-500" : "text-zinc-400")}>
+                            {url.length > 40 ? url.substring(0, 40) + '...' : url}
+                          </div>
+                        </div>
+                        <ExternalLink className={cn("w-3.5 h-3.5 ml-2 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity", isDark ? "text-zinc-500" : "text-zinc-400")} />
+                      </a>
+                    );
+                  })}
+
+                  {/* Website Link */}
+                  {selectedLinksItem.data.website && (
                     <a
-                      key={platform}
-                      href={url}
+                      href={selectedLinksItem.data.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center px-3 py-2 hover:bg-gray-100 transition-colors group"
+                      className={cn(
+                        "flex items-center px-3 py-2 transition-colors group",
+                        isDark ? "hover:bg-zinc-800/50" : "hover:bg-zinc-50"
+                      )}
                     >
-                      <div className={`w-8 h-8 rounded flex items-center justify-center mr-3 flex-shrink-0 ${bgClass}`}>
-                        <div className={iconColorClass}>
-                          {getSocialIcon(platform)}
-                        </div>
+                      <div className={cn("w-8 h-8 rounded flex items-center justify-center mr-3 flex-shrink-0", isDark ? "bg-zinc-800 group-hover:bg-zinc-700" : "bg-zinc-50 group-hover:bg-zinc-100")}>
+                        <ExternalLink className={cn("w-3.5 h-3.5", isDark ? "text-zinc-400" : "text-zinc-600")} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-gray-900 capitalize">
-                          {platform}
-                        </div>
-                        <div className="text-xs text-gray-500 truncate">
-                          {url.length > 40 ? url.substring(0, 40) + '...' : url}
+                        <div className={cn("text-sm font-bold", isDark ? "text-zinc-200" : "text-zinc-900")}>Website</div>
+                        <div className={cn("text-[11px] truncate", isDark ? "text-zinc-500" : "text-zinc-400")}>
+                          {selectedLinksItem.data.website.length > 40
+                            ? selectedLinksItem.data.website.substring(0, 40) + '...'
+                            : selectedLinksItem.data.website}
                         </div>
                       </div>
-                      <ExternalLink className="w-4 h-4 text-gray-400 ml-2 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <ExternalLink className={cn("w-3.5 h-3.5 ml-2 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity", isDark ? "text-zinc-500" : "text-zinc-400")} />
                     </a>
-                  );
-                })}
+                  )}
 
-                {/* Website Link */}
-                {selectedLinksItem.data.website && (
-                  <a
-                    href={selectedLinksItem.data.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center px-3 py-2 hover:bg-gray-100 transition-colors group"
-                  >
-                    <div className="w-8 h-8 rounded bg-gray-50 group-hover:bg-gray-100 flex items-center justify-center mr-3 flex-shrink-0">
-                      <ExternalLink className="w-4 h-4 text-gray-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-gray-900">Website</div>
-                      <div className="text-xs text-gray-500 truncate">
-                        {selectedLinksItem.data.website.length > 40
-                          ? selectedLinksItem.data.website.substring(0, 40) + '...'
-                          : selectedLinksItem.data.website}
+                  {/* Google Maps Link */}
+                  {selectedLinksItem.data.url && (
+                    <a
+                      href={selectedLinksItem.data.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn(
+                        "flex items-center px-3 py-2 transition-colors group",
+                        isDark ? "hover:bg-zinc-800/50" : "hover:bg-zinc-50"
+                      )}
+                    >
+                      <div className={cn("w-8 h-8 rounded flex items-center justify-center mr-3 flex-shrink-0", isDark ? "bg-red-900/40 group-hover:bg-red-900/60" : "bg-red-50 group-hover:bg-red-100")}>
+                        <MapPin className={cn("w-3.5 h-3.5", isDark ? "text-red-400" : "text-red-600")} />
                       </div>
-                    </div>
-                    <ExternalLink className="w-4 h-4 text-gray-400 ml-2 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </a>
-                )}
-
-                {/* Google Maps Link */}
-                {selectedLinksItem.data.url && (
-                  <a
-                    href={selectedLinksItem.data.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center px-3 py-2 hover:bg-gray-100 transition-colors group"
-                  >
-                    <div className="w-8 h-8 rounded bg-red-50 group-hover:bg-red-100 flex items-center justify-center mr-3 flex-shrink-0">
-                      <MapPin className="w-4 h-4 text-red-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-gray-900">Google Maps</div>
-                      <div className="text-xs text-gray-500">View on map</div>
-                    </div>
-                    <ExternalLink className="w-4 h-4 text-gray-400 ml-2 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </a>
-                )}
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Amazon Product Image Modal - Compact Style like Social Links */}
-      {showImageModal && selectedProduct && (
-        <>
-          {/* Transparent overlay to close on click outside */}
-          <div
-            className="fixed inset-0 z-40"
-            onClick={closeImageModal}
-          />
-
-          {/* Compact image popup */}
-          <div
-            className="fixed z-50 bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden"
-            style={{
-              left: '50%',
-              top: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: '380px',
-              maxWidth: '90vw',
-              maxHeight: '85vh'
-            }}
-          >
-            {/* Header with product name */}
-            <div className="px-3 py-2 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-gray-900 text-xs truncate">
-                  {selectedProduct.title}
-                </div>
-                <div className="text-xs text-gray-500 mt-0.5">
-                  {currentImageIndex + 1} / {getAllMedia(selectedProduct).length}
-                  {getAllMedia(selectedProduct)[currentImageIndex]?.type === 'video' && (
-                    <span className="ml-1 text-red-600 font-semibold">• VIDEO</span>
+                      <div className="flex-1 min-w-0">
+                        <div className={cn("text-sm font-bold", isDark ? "text-zinc-200" : "text-zinc-900")}>Google Maps</div>
+                        <div className={cn("text-[11px]", isDark ? "text-zinc-500" : "text-zinc-400")}>View on map</div>
+                      </div>
+                      <ExternalLink className={cn("w-3.5 h-3.5 ml-2 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity", isDark ? "text-zinc-500" : "text-zinc-400")} />
+                    </a>
                   )}
                 </div>
               </div>
-              <button
-                onClick={closeImageModal}
-                className="ml-2 text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
             </div>
+          </>
+        )}
 
-            {/* Main Media Display with Navigation */}
-            <div className="relative bg-gray-50">
-              <div className="flex items-center justify-center p-3" style={{ height: '280px' }}>
-                {(() => {
-                  const allMedia = getAllMedia(selectedProduct);
-                  const currentMedia = allMedia[currentImageIndex];
+        {/* Amazon Product Image Modal - Compact Style like Social Links */}
+        {showImageModal && selectedProduct && (
+          <>
+            {/* Transparent overlay to close on click outside */}
+            <div
+              className="fixed inset-0 z-40"
+              onClick={closeImageModal}
+            />
 
-                  if (!currentMedia) {
-                    return (
-                      <div className="text-gray-400 text-center">
-                        <div className="text-3xl mb-2">📦</div>
-                        <p className="text-xs">No media</p>
-                      </div>
-                    );
-                  }
-
-                  if (currentMedia.type === 'video') {
-                    const videoUrl = currentMedia.url;
-                    const isHLS = videoUrl.includes('.m3u8');
-                    return (
-                      <CustomVideoPlayer
-                        videoUrl={videoUrl}
-                        isHLS={isHLS}
-                      />
-                    );
-                  }
-
-                  return (
-                    <img
-                      src={currentMedia.url}
-                      alt={`Product ${currentImageIndex + 1}`}
-                      className="max-w-full max-h-full object-contain"
-                      onError={(e) => {
-                        e.target.src = 'https://via.placeholder.com/250?text=No+Image';
-                      }}
-                    />
-                  );
-                })()}
+            {/* Compact image popup - Position Aware & Theme Adaptable */}
+            <div
+              className={cn(
+                "fixed z-50 rounded-xl shadow-2xl border overflow-hidden animate-in fade-in zoom-in-95 duration-200",
+                isDark ? "bg-zinc-900 border-zinc-800 shadow-black/50" : "bg-white border-zinc-200 shadow-zinc-200/50"
+              )}
+              style={{
+                left: `${imageModalPosition.x}px`,
+                top: `${imageModalPosition.y}px`,
+                width: '310px',
+                maxWidth: '90vw',
+                maxHeight: '85vh'
+              }}
+            >
+              {/* Header with product name */}
+              <div className={cn(
+                "px-3 py-2 border-b flex items-center justify-between",
+                isDark ? "bg-zinc-800/50 border-zinc-800" : "bg-zinc-50 border-zinc-200"
+              )}>
+                <div className="flex-1 min-w-0">
+                  <div className={cn("font-bold text-[13px] truncate", isDark ? "text-zinc-100" : "text-zinc-900")}>
+                    {selectedProduct.title}
+                  </div>
+                  <div className={cn("text-[11px] mt-0.5 font-medium", isDark ? "text-zinc-400" : "text-zinc-500")}>
+                    {currentImageIndex + 1} / {getAllMedia(selectedProduct).length}
+                    {getAllMedia(selectedProduct)[currentImageIndex]?.type === 'video' && (
+                      <span className="ml-1.5 text-red-500 font-bold tracking-tight">VIDEO</span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={closeImageModal}
+                  className={cn("ml-2 p-1 rounded-md transition-colors", isDark ? "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800" : "text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200")}
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
 
-              {/* Previous Button */}
+              {/* Main Media Display with Navigation */}
+              <div className={cn("relative", isDark ? "bg-zinc-950" : "bg-zinc-50")}>
+                <div className="flex items-center justify-center p-2" style={{ height: '210px' }}>
+                  {(() => {
+                    const allMedia = getAllMedia(selectedProduct);
+                    const currentMedia = allMedia[currentImageIndex];
+
+                    if (!currentMedia) {
+                      return (
+                        <div className="text-zinc-400 text-center">
+                          <div className="text-3xl mb-2">📦</div>
+                          <p className="text-xs">No media available</p>
+                        </div>
+                      );
+                    }
+
+                    if (currentMedia.type === 'video') {
+                      const videoUrl = currentMedia.url;
+                      const isHLS = videoUrl.includes('.m3u8');
+                      return (
+                        <CustomVideoPlayer
+                          videoUrl={videoUrl}
+                          isHLS={isHLS}
+                        />
+                      );
+                    }
+
+                    return (
+                      <img
+                        src={currentMedia.url}
+                        alt={`Product ${currentImageIndex + 1}`}
+                        className="max-w-full max-h-full object-contain"
+                        onError={(e) => {
+                          e.target.src = 'https://via.placeholder.com/250?text=No+Image';
+                        }}
+                      />
+                    );
+                  })()}
+                </div>
+
+                {/* Previous Button */}
+                {getAllMedia(selectedProduct).length > 1 && (
+                  <button
+                    onClick={previousImage}
+                    className={cn(
+                      "absolute left-2 top-1/2 transform -translate-y-1/2 rounded-full p-2 shadow-lg transition-all z-10",
+                      isDark ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700" : "bg-white hover:bg-zinc-100 text-zinc-800 border border-zinc-200"
+                    )}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                )}
+
+                {/* Next Button */}
+                {getAllMedia(selectedProduct).length > 1 && (
+                  <button
+                    onClick={nextImage}
+                    className={cn(
+                      "absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full p-2 shadow-lg transition-all z-10",
+                      isDark ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700" : "bg-white hover:bg-zinc-100 text-zinc-800 border border-zinc-200"
+                    )}
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              {/* Thumbnail Gallery - Combined Images and Videos */}
               {getAllMedia(selectedProduct).length > 1 && (
-                <button
-                  onClick={previousImage}
-                  className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white hover:bg-gray-100 text-gray-800 rounded-full p-1.5 shadow-md transition-all z-10"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-              )}
-
-              {/* Next Button */}
-              {getAllMedia(selectedProduct).length > 1 && (
-                <button
-                  onClick={nextImage}
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white hover:bg-gray-100 text-gray-800 rounded-full p-1.5 shadow-md transition-all z-10"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              )}
-
-              {/* Media Type Indicator - Removed */}
-            </div>
-
-            {/* Thumbnail Gallery - Combined Images and Videos */}
-            {getAllMedia(selectedProduct).length > 1 && (
-              <div className="px-3 py-2 border-t border-gray-200 bg-white overflow-y-auto" style={{ maxHeight: '120px' }}>
-                <div className="flex gap-1.5 flex-wrap">
-                  {getAllMedia(selectedProduct).map((media, index) => (
-                    <button
-                      key={index}
-                      onClick={() => selectThumbnail(index)}
-                      className={`relative flex-shrink-0 w-12 h-12 rounded overflow-hidden border-2 transition-all ${index === currentImageIndex
-                        ? 'border-blue-500 ring-1 ring-blue-200'
-                        : 'border-gray-200 hover:border-gray-400'
-                        }`}
-                    >
-                      {media.type === 'video' ? (
-                        <div className="w-full h-full relative bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900">
-                          {/* Video thumbnail - try to show first frame */}
-                          {!media.url.includes('.m3u8') ? (
-                            <video
-                              className="w-full h-full object-cover"
-                              preload="metadata"
-                              muted
-                              playsInline
-                              src={`${media.url}#t=0.1`}
-                              onLoadedData={(e) => {
-                                e.target.currentTime = 0.5;
-                              }}
-                              style={{ backgroundColor: '#000' }}
-                            />
-                          ) : (
-                            // HLS videos - show gradient background
-                            <div className="w-full h-full bg-gradient-to-br from-red-900 via-red-800 to-red-900" />
-                          )}
-                          {/* Play icon overlay - always visible for videos */}
-                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <div className="bg-black bg-opacity-50 rounded-full p-1.5">
+                <div className={cn("px-2 py-1.5 border-t overflow-y-auto", isDark ? "border-zinc-800 bg-zinc-900" : "border-zinc-200 bg-white")} style={{ maxHeight: '90px' }}>
+                  <div className="flex gap-1 flex-wrap">
+                    {getAllMedia(selectedProduct).map((media, index) => (
+                      <button
+                        key={index}
+                        onClick={() => selectThumbnail(index)}
+                        className={cn(
+                          "relative flex-shrink-0 w-9 h-9 rounded-lg overflow-hidden border-2 transition-all",
+                          index === currentImageIndex
+                            ? (isDark ? "border-blue-500 ring-2 ring-blue-500/20" : "border-blue-500 ring-2 ring-blue-500/20")
+                            : (isDark ? "border-zinc-800 hover:border-zinc-600" : "border-zinc-100 hover:border-zinc-300")
+                        )}
+                      >
+                        {media.type === 'video' ? (
+                          <div className={cn("w-full h-full relative", isDark ? "bg-zinc-850" : "bg-zinc-800")}>
+                            {!media.url.includes('.m3u8') ? (
+                              <video
+                                className="w-full h-full object-cover opacity-60"
+                                preload="metadata"
+                                muted
+                                playsInline
+                                src={`${media.url}#t=0.1`}
+                                onLoadedData={(e) => {
+                                  e.target.currentTime = 1;
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-red-950 via-red-900 to-red-950 opacity-60" />
+                            )}
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                               <Play className="w-4 h-4 text-white drop-shadow-lg" fill="currentColor" />
                             </div>
                           </div>
-                        </div>
-                      ) : (
-                        // Regular image - no play icon
-                        <img
-                          src={media.url}
-                          alt={`${index + 1}`}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.target.src = 'https://via.placeholder.com/48?text=?';
-                          }}
-                        />
-                      )}
-                    </button>
-                  ))}
+                        ) : (
+                          <img
+                            src={media.url}
+                            alt={`${index + 1}`}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.src = 'https://via.placeholder.com/48?text=?';
+                            }}
+                          />
+                        )}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Product Info Footer */}
-            <div className="px-3 py-2 border-t border-gray-200 bg-gray-50">
-              <div className="flex items-center justify-between text-xs mb-2">
-                {selectedProduct.brand && (
-                  <span className="text-gray-600 truncate flex-1 mr-2">
-                    {selectedProduct.brand}
-                  </span>
-                )}
-                {selectedProduct.price && (
-                  <span className="text-green-600 font-semibold whitespace-nowrap">
-                    ${selectedProduct.price.toFixed(2)}
-                  </span>
-                )}
-              </div>
-              {selectedProduct.rating && (
-                <div className="flex items-center gap-1 text-xs mb-2">
-                  <span className="text-yellow-500">⭐</span>
-                  <span className="font-medium">{selectedProduct.rating}</span>
-                  {selectedProduct.reviewCount && (
-                    <span className="text-gray-500">
-                      ({selectedProduct.reviewCount.toLocaleString()})
+              {/* Product Info Footer */}
+              <div className={cn("px-2.5 py-1.5 border-t", isDark ? "border-zinc-800 bg-zinc-800/20" : "border-zinc-200 bg-zinc-50")}>
+                <div className="flex items-center justify-between text-[11px] mb-1.5">
+                  {selectedProduct.brand && (
+                    <span className={cn("truncate flex-1 mr-2 font-medium", isDark ? "text-zinc-400" : "text-zinc-600")}>
+                      {selectedProduct.brand}
+                    </span>
+                  )}
+                  {selectedProduct.price && (
+                    <span className={cn("font-bold whitespace-nowrap", isDark ? "text-green-400" : "text-green-600 text-[13px]")}>
+                      ${selectedProduct.price.toFixed(2)}
                     </span>
                   )}
                 </div>
-              )}
-              {selectedProduct.url && (
-                <a
-                  href={selectedProduct.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white py-1.5 px-3 rounded text-xs font-medium transition-colors"
-                >
-                  View on Amazon
-                </a>
-              )}
+                {selectedProduct.rating && (
+                  <div className="flex items-center gap-1 text-[11px] mb-2 font-semibold">
+                    <span className="text-yellow-500">⭐</span>
+                    <span className={isDark ? "text-zinc-200" : "text-zinc-700"}>{selectedProduct.rating}</span>
+                    {selectedProduct.reviewCount && (
+                      <span className={isDark ? "text-zinc-500" : "text-zinc-400"}>
+                        ({selectedProduct.reviewCount.toLocaleString()})
+                      </span>
+                    )}
+                  </div>
+                )}
+                {selectedProduct.url && (
+                  <a
+                    href={selectedProduct.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white py-1.5 px-3 rounded-lg text-[13px] font-bold transition-all active:scale-[0.98] shadow-sm"
+                  >
+                    View on Amazon
+                  </a>
+                )}
+              </div>
             </div>
-          </div>
-        </>
-      )}
+          </>
+        )}
 
-      {/* Column Settings Modal */}
-      {showColumnSettings && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">Table Settings</h3>
-              <button onClick={() => setShowColumnSettings(false)} className="text-gray-400 hover:text-gray-600">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="px-6 py-4 max-h-96 overflow-y-auto">
-              <p className="text-sm text-gray-600 mb-4">Select columns to display in the table:</p>
-              <div className="space-y-2">
-                {/* Fixed columns */}
-                <label className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                  <Checkbox
-                    checked={visibleColumns.number}
-                    onChange={(e) => setVisibleColumns(prev => ({ ...prev, number: e.target.checked }))}
-                  />
-                  <span className="text-sm text-gray-900 font-medium">#</span>
-                </label>
-
-                {/* Dynamic columns from data */}
-                {allColumns.map(colKey => (
-                  <label key={colKey} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
+        {/* Column Settings Modal */}
+        {showColumnSettings && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">Table Settings</h3>
+                <button onClick={() => setShowColumnSettings(false)} className="text-gray-400 hover:text-gray-600">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="px-6 py-4 max-h-96 overflow-y-auto">
+                <p className="text-sm text-gray-600 mb-4">Select columns to display in the table:</p>
+                <div className="space-y-2">
+                  {/* Fixed columns */}
+                  <label className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
                     <Checkbox
-                      checked={visibleColumns[colKey]}
-                      onChange={(e) => setVisibleColumns(prev => ({ ...prev, [colKey]: e.target.checked }))}
+                      checked={visibleColumns.number}
+                      onChange={(e) => setVisibleColumns(prev => ({ ...prev, number: e.target.checked }))}
                     />
-                    <span className="text-sm text-gray-900">{formatColumnName(colKey)}</span>
+                    <span className="text-sm text-gray-900 font-medium">#</span>
                   </label>
-                ))}
 
-                {/* Actions column */}
-                <label className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                  <Checkbox
-                    checked={visibleColumns.actions}
-                    onChange={(e) => setVisibleColumns(prev => ({ ...prev, actions: e.target.checked }))}
-                  />
-                  <span className="text-sm text-gray-900 font-medium">Actions</span>
-                </label>
-              </div>
-            </div>
-            <div className="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  // Reset all columns to visible
-                  const resetColumns = { number: true, actions: true };
-                  allColumns.forEach(col => {
-                    resetColumns[col] = true;
-                  });
-                  setVisibleColumns(resetColumns);
-                }}
-              >
-                Show All
-              </Button>
-              <Button onClick={() => setShowColumnSettings(false)} className="bg-blue-600 hover:bg-blue-700">
-                Apply
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+                  {/* Dynamic columns from data */}
+                  {allColumns.map(colKey => (
+                    <label key={colKey} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                      <Checkbox
+                        checked={visibleColumns[colKey]}
+                        onChange={(e) => setVisibleColumns(prev => ({ ...prev, [colKey]: e.target.checked }))}
+                      />
+                      <span className="text-sm text-gray-900">{formatColumnName(colKey)}</span>
+                    </label>
+                  ))}
 
-      {/* AI Chat Sidebar */}
-      {chatOpen && (
-        <div className="fixed inset-y-0 right-0 w-1/3 bg-white shadow-2xl border-l border-gray-200 flex flex-col z-50">
-          {/* Chat Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-lg">AI Engagement Assistant</h3>
-              <p className="text-sm opacity-90">{selectedLead?.data.title}</p>
-            </div>
-            <Button variant="ghost" size="sm" onClick={closeChat} className="text-white hover:bg-white/20">
-              <X className="w-5 h-5" />
-            </Button>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="px-6 py-3 bg-gray-50 border-b flex gap-2 flex-wrap">
-            <Button size="sm" variant="outline" onClick={() => generateTemplate('email')} className="text-xs">
-              <FileText className="w-3 h-3 mr-1" />
-              Email Template
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => generateTemplate('phone')} className="text-xs">
-              <Phone className="w-3 h-3 mr-1" />
-              Call Script
-            </Button>
-          </div>
-
-          {/* Chat Messages */}
-          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-            {chatMessages.length === 0 && (
-              <div className="text-center text-gray-500 mt-8">
-                <MessageSquare className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p className="text-sm">Ask me anything about engaging with this lead!</p>
-                <p className="text-xs text-gray-400 mt-2">Try: &quot;How should I approach this business?&quot;</p>
-              </div>
-            )}
-            {chatMessages.map((msg, idx) => (
-              <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] rounded-lg px-4 py-3 ${msg.role === 'user'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-900'
-                  }`}>
-                  {msg.role === 'user' ? (
-                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                  ) : (
-                    <div className="text-sm prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-900 prose-strong:text-gray-900 prose-li:text-gray-900 prose-ul:text-gray-900 prose-ol:text-gray-900">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                        {msg.content}
-                      </ReactMarkdown>
-                    </div>
-                  )}
+                  {/* Actions column */}
+                  <label className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                    <Checkbox
+                      checked={visibleColumns.actions}
+                      onChange={(e) => setVisibleColumns(prev => ({ ...prev, actions: e.target.checked }))}
+                    />
+                    <span className="text-sm text-gray-900 font-medium">Actions</span>
+                  </label>
                 </div>
               </div>
-            ))}
-            {chatLoading && (
-              <div className="flex justify-start">
-                <div className="bg-gray-100 rounded-lg px-4 py-3">
-                  <div className="flex space-x-2">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              <div className="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    // Reset all columns to visible
+                    const resetColumns = { number: true, actions: true };
+                    allColumns.forEach(col => {
+                      resetColumns[col] = true;
+                    });
+                    setVisibleColumns(resetColumns);
+                  }}
+                >
+                  Show All
+                </Button>
+                <Button onClick={() => setShowColumnSettings(false)} className="bg-blue-600 hover:bg-blue-700">
+                  Apply
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* AI Chat Sidebar */}
+        {chatOpen && (
+          <div className="fixed inset-y-0 right-0 w-1/3 bg-white shadow-2xl border-l border-gray-200 flex flex-col z-50">
+            {/* Chat Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-lg">AI Engagement Assistant</h3>
+                <p className="text-sm opacity-90">{selectedLead?.data.title}</p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={closeChat} className="text-white hover:bg-white/20">
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="px-6 py-3 bg-gray-50 border-b flex gap-2 flex-wrap">
+              <Button size="sm" variant="outline" onClick={() => generateTemplate('email')} className="text-xs">
+                <FileText className="w-3 h-3 mr-1" />
+                Email Template
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => generateTemplate('phone')} className="text-xs">
+                <Phone className="w-3 h-3 mr-1" />
+                Call Script
+              </Button>
+            </div>
+
+            {/* Chat Messages */}
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+              {chatMessages.length === 0 && (
+                <div className="text-center text-gray-500 mt-8">
+                  <MessageSquare className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                  <p className="text-sm">Ask me anything about engaging with this lead!</p>
+                  <p className="text-xs text-gray-400 mt-2">Try: &quot;How should I approach this business?&quot;</p>
+                </div>
+              )}
+              {chatMessages.map((msg, idx) => (
+                <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[80%] rounded-lg px-4 py-3 ${msg.role === 'user'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-900'
+                    }`}>
+                    {msg.role === 'user' ? (
+                      <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                    ) : (
+                      <div className="text-sm prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-900 prose-strong:text-gray-900 prose-li:text-gray-900 prose-ul:text-gray-900 prose-ol:text-gray-900">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {msg.content}
+                        </ReactMarkdown>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
+              ))}
+              {chatLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-gray-100 rounded-lg px-4 py-3">
+                    <div className="flex space-x-2">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
-          {/* Chat Input */}
-          <div className="px-6 py-4 border-t bg-gray-50">
-            <div className="flex space-x-2">
-              <Input
-                placeholder="Ask for engagement advice..."
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && !chatLoading && handleSendMessage()}
-                className="flex-1"
-                disabled={chatLoading}
-              />
-              <Button
-                onClick={handleSendMessage}
-                disabled={chatLoading || !chatInput.trim()}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
+            {/* Chat Input */}
+            <div className="px-6 py-4 border-t bg-gray-50">
+              <div className="flex space-x-2">
+                <Input
+                  placeholder="Ask for engagement advice..."
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && !chatLoading && handleSendMessage()}
+                  className="flex-1"
+                  disabled={chatLoading}
+                />
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={chatLoading || !chatInput.trim()}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </>
   );
 };
 

@@ -76,12 +76,12 @@ const ItemsPerPageDropdown = ({ value, onChange, options }) => {
                 position: 'fixed',
                 bottom: `${coords.bottom + 2}px`,
                 left: `${coords.left}px`,
-                minWidth: `80px`,
+                minWidth: `70px`,
                 zIndex: 99999,
             }}
             className={cn(
-                "p-1 rounded-xl shadow-xl animate-in fade-in slide-in-from-bottom-2 duration-200",
-                isDark ? "bg-zinc-900 border-zinc-800 text-zinc-300" : "bg-white border-zinc-100 text-zinc-700 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.1)]"
+                "p-1 rounded-lg border",
+                isDark ? "bg-zinc-900 border-zinc-700 text-zinc-300" : "bg-white border-zinc-300 text-zinc-700"
             )}
         >
             <div className="flex flex-col gap-0.5">
@@ -90,7 +90,7 @@ const ItemsPerPageDropdown = ({ value, onChange, options }) => {
                         key={option.value}
                         onClick={() => handleSelect(option.value)}
                         className={cn(
-                            "w-full text-left px-3 py-1.5 text-[13px] transition-all rounded-lg",
+                            "w-full text-left px-3 py-1.5 text-[13px] font-semibold transition-all rounded-lg",
                             value === option.value
                                 ? (isDark ? "bg-zinc-800 text-white font-semibold" : "bg-zinc-300 text-black font-bold")
                                 : (isDark ? "text-zinc-400 hover:bg-zinc-800 hover:text-white" : "text-zinc-500 hover:bg-zinc-200/50 hover:text-black")
@@ -109,18 +109,18 @@ const ItemsPerPageDropdown = ({ value, onChange, options }) => {
                 type="button"
                 onClick={toggleDropdown}
                 className={cn(
-                    "h-8 px-2.5 flex items-center justify-between gap-2 border rounded-lg text-[13px] font-medium transition-all w-[72px]",
+                    "h-8 px-2.5 flex items-center justify-between font-bold gap-2 border rounded-lg text-[13px] font-medium transition-all ",
                     isDark
-                        ? "bg-zinc-900 border-zinc-800 hover:bg-zinc-800 text-zinc-300 active:scale-95"
-                        : "bg-white border-zinc-200 hover:border-zinc-300 text-zinc-700 active:scale-95 shadow-sm"
+                        ? "bg-zinc-800 border-zinc-700 hover:bg-zinc-700 text-zinc-200"
+                        : "bg-white border-zinc-300 hover:border-zinc-400 text-zinc-700 shadow-sm active:scale-95"
                 )}
             >
-                <span>{value}</span>
+                <span className='font-bold'>{value}</span>
                 <div className={cn(
-                    "transition-transform duration-200",
-                    isOpen ? "rotate-180" : "rotate-0 text-zinc-400"
+                    "transition-transform duration-200 text-zinc-700 dark:text-zinc-400",
+                    isOpen ? "rotate-180" : "rotate-0"
                 )}>
-                    <ChevronDown className="w-3.5 h-3.5" />
+                    <ChevronDown className="w-4 h-4" strokeWidth={3} />
                 </div>
             </button>
             {isOpen && createPortal(modalContent, document.body)}
@@ -130,7 +130,8 @@ const ItemsPerPageDropdown = ({ value, onChange, options }) => {
 
 // --- SCROLLBAR STYLES (Scoped to DataTable) ---
 const ScrollbarStyles = ({ isDark }) => (
-    <style dangerouslySetInnerHTML={{ __html: `
+    <style dangerouslySetInnerHTML={{
+        __html: `
         .dt-custom-scrollbar::-webkit-scrollbar {
             height: 6px;
             width: 6px;
@@ -154,6 +155,27 @@ const ScrollbarStyles = ({ isDark }) => (
 );
 
 // --- MAIN DATATABLE COMPONENT ---
+// --- PAGINATION RANGE HELPER ---
+const getPaginationRange = (currentPage, totalPages, siblings = 1) => {
+    const totalPageNumbers = siblings * 2 + 5;
+    if (totalPages <= totalPageNumbers) {
+        return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    const leftSiblingIndex = Math.max(currentPage - siblings, 1);
+    const rightSiblingIndex = Math.min(currentPage + siblings, totalPages);
+    const shouldShowLeftDots = leftSiblingIndex > 2;
+    const shouldShowRightDots = rightSiblingIndex < totalPages - 2;
+    if (!shouldShowLeftDots && shouldShowRightDots) {
+        const leftItemCount = 3 + 2 * siblings;
+        return [...Array.from({ length: leftItemCount }, (_, i) => i + 1), '...', totalPages];
+    }
+    if (shouldShowLeftDots && !shouldShowRightDots) {
+        const rightItemCount = 3 + 2 * siblings;
+        return [1, '...', ...Array.from({ length: rightItemCount }, (_, i) => totalPages - rightItemCount + i + 1)];
+    }
+    return [1, '...', ...Array.from({ length: rightSiblingIndex - leftSiblingIndex + 1 }, (_, i) => i + leftSiblingIndex), '...', totalPages];
+};
+
 const DataTable = ({
     columns,
     data,
@@ -168,7 +190,7 @@ const DataTable = ({
     onItemsPerPageChange,
     totalItems,
     showShadow = false,
-    shadowWidth = "w-5",
+    shadowWidth = "w-[5px]",
     stickyHeader = true,
 }) => {
     const [goToPageInput, setGoToPageInput] = useState('');
@@ -225,6 +247,7 @@ const DataTable = ({
     };
 
     const itemsPerPageOptions = [
+        { label: '5', value: 5 },
         { label: '10', value: 10 },
         { label: '20', value: 20 },
         { label: '50', value: 50 },
@@ -254,7 +277,7 @@ const DataTable = ({
         };
 
         const result = [];
-        
+
         // 1. Process Left Sticky
         let leftOffset = 0;
         leftSticky.forEach(c => {
@@ -279,11 +302,14 @@ const DataTable = ({
         <div className={cn("relative border border-border rounded-lg bg-card flex flex-col shadow-sm overflow-hidden", className)}>
             <ScrollbarStyles isDark={isDark} />
 
-            {/* FLOATING OVERLAY SHADOWS */}
             {showShadow && (
                 <div className="absolute inset-0 pointer-events-none z-[60] overflow-hidden rounded-lg">
                     <div
-                        style={{ background: isDark ? 'linear-gradient(to right, rgba(0,0,0,0.85), transparent)' : 'linear-gradient(to right, rgba(0,0,0,0.12), transparent)' }}
+                        style={{
+                            background: isDark
+                                ? 'linear-gradient(to right, rgba(0,0,0,1), transparent)'
+                                : 'linear-gradient(to right, rgba(0,0,0,0.4), transparent)'
+                        }}
                         className={cn(
                             "absolute top-0 left-0 bottom-0 transition-opacity duration-200",
                             shadowWidth,
@@ -291,7 +317,11 @@ const DataTable = ({
                         )}
                     />
                     <div
-                        style={{ background: isDark ? 'linear-gradient(to left, rgba(0,0,0,0.85), transparent)' : 'linear-gradient(to left, rgba(0,0,0,0.12), transparent)' }}
+                        style={{
+                            background: isDark
+                                ? 'linear-gradient(to left, rgba(0,0,0,1), transparent)'
+                                : 'linear-gradient(to left, rgba(0,0,0,0.4), transparent)'
+                        }}
                         className={cn(
                             "absolute top-0 right-0 bottom-0 transition-opacity duration-200",
                             shadowWidth,
@@ -305,7 +335,7 @@ const DataTable = ({
             <div className="flex-1 w-full min-w-0 bg-card">
                 <Table ref={tableRef} className="min-w-max w-full border-separate border-spacing-0">
                     <TableHeader className={cn(stickyHeader && "sticky top-0 z-30")}>
-                        <TableRow className={cn("bg-card", isDark ? "hover:bg-transparent" : "bg-gray-50/50 hover:bg-gray-50/50")}>
+                        <TableRow className={cn(isDark ? "hover:bg-transparent" : "hover:bg-zinc-100")}>
                             {processedColumns.map((column, index) => (
                                 <TableHead
                                     key={column.id || index}
@@ -314,9 +344,9 @@ const DataTable = ({
                                         right: column.sticky === 'right' ? (column.stickyOffset || 0) : undefined,
                                     }}
                                     className={cn(
-                                        "px-4 py-3.5 text-[13px] font-medium text-muted-foreground border-b border-border whitespace-nowrap",
-                                        column.sticky === 'left' && "sticky z-40 bg-card shadow-[1px_0_0_0_#e5e7eb] dark:shadow-[1px_0_0_0_#27272a]",
-                                        column.sticky === 'right' && "sticky z-40 bg-card shadow-[-1px_0_0_0_#e5e7eb] dark:shadow-[-1px_0_0_0_#27272a]",
+                                        "px-4 py-2.5 text-[13px] font-semibold text-foreground border-b border-border bg-zinc-200 dark:bg-zinc-900",
+                                        column.sticky === 'left' && "sticky z-40 shadow-[1px_0_0_0_#e5e7eb] dark:shadow-[1px_0_0_0_#27272a]",
+                                        column.sticky === 'right' && "sticky z-40 shadow-[-1px_0_0_0_#e5e7eb] dark:shadow-[-1px_0_0_0_#27272a]",
                                         column.className
                                     )}
                                 >
@@ -342,7 +372,7 @@ const DataTable = ({
                             data.map((row, rowIndex) => (
                                 <TableRow
                                     key={row.id || rowIndex}
-                                    className={cn("group transition-colors hover:bg-muted/40", onRowClick && "cursor-pointer")}
+                                    className={cn("group transition-colors hover:bg-zinc-200/50 dark:hover:bg-zinc-800/30", onRowClick && "cursor-pointer")}
                                     onClick={() => onRowClick && onRowClick(row)}
                                 >
                                     {processedColumns.map((column, colIndex) => (
@@ -353,11 +383,11 @@ const DataTable = ({
                                                 right: column.sticky === 'right' ? (column.stickyOffset || 0) : undefined,
                                             }}
                                             className={cn(
-                                                "px-4 py-3 align-middle text-[13px] text-foreground whitespace-nowrap",
+                                                "px-4 py-3 align-middle text-[13px] text-foreground",
                                                 // Only add border-b if it is NOT the last row
                                                 rowIndex !== data.length - 1 && "border-b border-border",
-                                                column.sticky === 'left' && "sticky z-20 bg-card group-hover:bg-muted font-medium shadow-[1px_0_0_0_#e5e7eb] dark:shadow-[1px_0_0_0_#27272a]",
-                                                column.sticky === 'right' && "sticky z-20 bg-card group-hover:bg-muted font-medium shadow-[-1px_0_0_0_#e5e7eb] dark:shadow-[-1px_0_0_0_#27272a]",
+                                                column.sticky === 'left' && "sticky z-20 bg-card group-hover:bg-zinc-200/50 dark:group-hover:bg-zinc-800/30 font-medium shadow-[1px_0_0_0_#e5e7eb] dark:shadow-[1px_0_0_0_#27272a]",
+                                                column.sticky === 'right' && "sticky z-20 bg-card group-hover:bg-zinc-200/50 dark:group-hover:bg-zinc-800/30 font-medium shadow-[-1px_0_0_0_#e5e7eb] dark:shadow-[-1px_0_0_0_#27272a]",
                                                 column.cellClassName
                                             )}
                                         >
@@ -373,9 +403,9 @@ const DataTable = ({
 
             {/* PAGINATION FOOTER */}
             {showPagination && (
-                <div className="px-4 py-3 border-t border-border bg-card flex items-center justify-between relative z-10">
+                <div className="px-4 py-1.5 border-t border-border bg-zinc-200 dark:bg-zinc-900 flex items-center justify-between relative z-10">
                     <div className="flex items-center gap-3">
-                        <span className="text-[13px] text-muted-foreground">Items per page:</span>
+                        <span className="text-[13px] text-muted-foreground font-bold">Items per page:</span>
                         {onItemsPerPageChange ? (
                             <ItemsPerPageDropdown
                                 value={itemsPerPage}
@@ -389,16 +419,28 @@ const DataTable = ({
 
                     <div className="flex items-center gap-6">
                         <div className="flex items-center gap-2">
-                            <span className="text-[13px] text-muted-foreground">Go to page:</span>
-                             <input
+                            <span className="text-[13px] font-bold text-muted-foreground">Go to page:</span>
+                            <input
                                 type="text"
                                 value={goToPageInput}
-                                onChange={(e) => setGoToPageInput(e.target.value)}
+                                onChange={(e) => {
+                                    const val = e.target.value.replace(/[^0-9]/g, '');
+                                    if (val === '') {
+                                        setGoToPageInput('');
+                                        return;
+                                    }
+                                    const num = parseInt(val);
+                                    if (num > totalPages) {
+                                        setGoToPageInput(String(totalPages));
+                                    } else {
+                                        setGoToPageInput(val);
+                                    }
+                                }}
                                 onKeyPress={(e) => e.key === 'Enter' && handleGoToPage()}
                                 disabled={totalPages <= 1}
                                 className={cn(
-                                    "w-[44px] h-8 px-2 text-[13px] text-center border rounded transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500",
-                                    isDark ? "bg-zinc-900 border-zinc-800 text-zinc-300 placeholder:text-zinc-600" : "bg-white border-gray-200 text-gray-700 placeholder:text-gray-300",
+                                    "w-[44px] h-8 px-2 text-[13px] text-center border rounded-lg transition-colors font-bold focus:outline-none focus:ring-1 focus:ring-blue-500",
+                                    isDark ? "bg-zinc-800 border-zinc-700 text-zinc-200" : "bg-white border-zinc-300 text-zinc-800",
                                     totalPages <= 1 && "opacity-50 cursor-not-allowed bg-muted/20"
                                 )}
                             />
@@ -406,8 +448,8 @@ const DataTable = ({
                                 onClick={handleGoToPage}
                                 disabled={totalPages <= 1}
                                 className={cn(
-                                    "h-8 px-3 text-[13px] border rounded transition-colors font-medium",
-                                    isDark ? "bg-zinc-900 border-zinc-800 hover:bg-zinc-800 text-zinc-300" : "bg-white border-zinc-200 hover:bg-gray-50 text-gray-600",
+                                    "h-8 px-3 text-[13px] border rounded-lg transition-all font-bold",
+                                    isDark ? "bg-zinc-800 border-zinc-700 hover:bg-zinc-700 text-zinc-200" : "bg-white border-zinc-300 hover:border-zinc-400 text-zinc-700 active:scale-95 shadow-sm",
                                     totalPages <= 1 && "opacity-50 cursor-not-allowed"
                                 )}
                             >
@@ -415,24 +457,47 @@ const DataTable = ({
                             </button>
                         </div>
 
-                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                        <div className="flex items-center gap-1.5 px-1">
                             <button
                                 onClick={() => onPageChange(Math.max(1, currentPage - 1))}
                                 disabled={currentPage === 1}
-                                className="p-1 hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                className="p-1 px-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
                             >
                                 <ChevronLeft className="w-4 h-4" />
                             </button>
-                            <div className={cn(
-                                "min-w-[28px] h-7 px-2 flex items-center justify-center rounded text-[13px] font-bold transition-all shadow-sm",
-                                "bg-blue-500 text-white"
-                            )}>
-                                {currentPage}
+
+                            <div className="flex items-center gap-0.5">
+                                {getPaginationRange(currentPage, totalPages).map((page, idx) => {
+                                    if (page === '...') {
+                                        return (
+                                            <span key={`dots-${idx}`} className="w-7 h-7 flex items-center justify-center text-zinc-400 dark:text-zinc-500 text-[13px]">
+                                                ...
+                                            </span>
+                                        );
+                                    }
+
+                                    const isActive = page === currentPage;
+                                    return (
+                                        <button
+                                            key={page}
+                                            onClick={() => onPageChange(page)}
+                                            className={cn(
+                                                "w-7 h-7 flex items-center justify-center rounded text-[13px] font-bold transition-all",
+                                                isActive
+                                                    ? "bg-white text-zinc-900 border border-zinc-300 dark:bg-zinc-700 dark:border-zinc-600 dark:text-zinc-100 shadow-sm scale-110 relative z-20"
+                                                    : "text-zinc-500 hover:bg-zinc-300/50 dark:hover:bg-zinc-800 active:scale-95"
+                                            )}
+                                        >
+                                            {page}
+                                        </button>
+                                    );
+                                })}
                             </div>
+
                             <button
                                 onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
                                 disabled={currentPage >= totalPages}
-                                className="p-1 hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                className="p-1 px-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
                             >
                                 <ChevronRight className="w-4 h-4" />
                             </button>

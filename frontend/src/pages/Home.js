@@ -16,9 +16,9 @@ import { useWorkspace } from '../contexts/WorkspaceContext';
 import { useAuth } from '../contexts/AuthContext';
 import { getProfileColor, getUserInitials, getUserDisplayName } from '../utils/userUtils';
 import { useTheme } from '../contexts/ThemeContext';
-import { RecentActorSkeleton, SuggestedActorSkeleton, RunRowSkeleton } from '../components/SkeletonLoader';
 import ActorCard from '../components/ActorCard';
 import DataTable from '../components/ui/DataTable';
+import LoadingScreen from '../components/LoadingScreen';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
@@ -265,11 +265,7 @@ function Home() {
           <div className="space-y-3">
             <h2 className="text-[17px] font-bold text-foreground">Recently viewed</h2>
             {loadingRecent ? (
-              <div className="grid grid-cols-4 gap-4">
-                {Array.from({ length: 4 }).map((_, idx) => (
-                  <RecentActorSkeleton key={idx} />
-                ))}
-              </div>
+              <LoadingScreen className="h-[68px]" />
             ) : recentActors.length > 0 ? (
               <div className="grid grid-cols-4 gap-4">
                 {recentActors.slice(0, 4).map((actor, idx) => (
@@ -297,11 +293,7 @@ function Home() {
             </div>
 
             {loadingSuggested ? (
-              <div className="grid grid-cols-3 gap-6">
-                {Array.from({ length: 6 }).map((_, idx) => (
-                  <SuggestedActorSkeleton key={idx} />
-                ))}
-              </div>
+              <LoadingScreen className="min-h-[200px]" />
             ) : suggestedActors.length > 0 ? (
               <div className="grid grid-cols-3 gap-3 p-2 -m-2">
                 {suggestedActors.map((actor, idx) => (

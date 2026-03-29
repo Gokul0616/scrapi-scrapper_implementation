@@ -6,6 +6,7 @@ import CustomBarChart, { SERVICE_THEMES } from './CustomBarChart';
 import CustomDropdown from './CustomDropdown';
 import CustomTooltip from './CustomTooltip';
 import { useNavigate } from 'react-router-dom';
+import LoadingScreen from './LoadingScreen';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -235,7 +236,9 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
 
     // Stable pattern-id helper matching CustomBarChart
     const pid = (key) => `stripe-${key.replace(/[\s()/-]+/g, '-').toLowerCase()}`;
-
+    if (isLoading) {
+        return <LoadingScreen />
+    }
     return (
         <div className="space-y-2 w-full mx-auto">
             {/* Hidden SVG defs – shared across legend + tooltip pattern dots */}
@@ -343,7 +346,7 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
                         {/* Chart body – fills remaining height */}
                         {isLoading ? (
                             <div className="flex-1 flex items-center justify-center" style={{ minHeight: 400 }}>
-                                <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                                <LoadingScreen />
                             </div>
                         ) : error ? (
                             <div

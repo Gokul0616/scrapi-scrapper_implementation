@@ -103,6 +103,7 @@ const DashboardLayout = ({ children }) => {
 };
 
 function AppRoutes() {
+
   return (
     <>
       <RouteTracker />
