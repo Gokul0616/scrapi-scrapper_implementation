@@ -11,7 +11,7 @@ from auth import get_current_user
 from models import (
     Schedule, ScheduleCreate, ScheduleUpdate, Run
 )
-from services.scheduler_service import get_scheduler
+from services.scheduler_service import get_scheduler, get_next_run, update_schedule_status
 
 logger = logging.getLogger(__name__)
 
@@ -54,12 +54,6 @@ async def create_schedule(
         
         limits = billing_info.get("limits", {})
         max_schedules = limits.get("max_schedules", 0)
-        
-        if max_schedules == 0:
-            raise HTTPException(
-                status_code=403,
-                detail="Your current plan does not support Scheduled Runs. Please upgrade to create schedules."
-            )
             
         # Count existing schedules
         query = {"user_id": current_user['id']}
@@ -96,7 +90,7 @@ async def create_schedule(
     
     # Calculate next run
     if scheduler:
-        next_run = scheduler._get_next_run(schedule.cron_expression, schedule.timezone)
+        next_run = get_next_run(schedule.cron_expression, schedule.timezone)
         schedule.next_run = next_run
     
     # Save to database
@@ -247,7 +241,7 @@ async def update_schedule(
             if scheduler:
                 cron_expr = update_data.get('cron_expression', schedule['cron_expression'])
                 tz = update_data.get('timezone', schedule['timezone'])
-                next_run = scheduler._get_next_run(cron_expr, tz)
+                next_run = get_next_run(cron_expr, tz)
                 update_data['next_run'] = next_run
         
         # Update database
@@ -450,8 +444,7 @@ async def run_schedule_now(
         )
     
     # Update schedule statistics for manual runs
-    if scheduler:
-        await scheduler._update_schedule_status(schedule_id, "success", run.id)
+    await update_schedule_status(db, schedule_id, "success", run.id)
     
     logger.info(f"✅ Manual run triggered for schedule {schedule_id}: {run.id}")
     

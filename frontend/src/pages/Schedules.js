@@ -852,6 +852,8 @@ const ScheduleModal = ({ isEdit, schedule, actors, onClose, onSuccess }) => {
   }, [formData.actor_id, actors]);
 
   const cronPresets = [
+    { label: 'Every 30 seconds', value: '* * * * * */30' },
+    { label: 'Every minute', value: '* * * * *' },
     { label: 'Every hour', value: '0 * * * *' },
     { label: 'Every 6 hours', value: '0 */6 * * *' },
     { label: 'Daily at midnight', value: '0 0 * * *' },
@@ -1222,6 +1224,10 @@ const ScheduleModal = ({ isEdit, schedule, actors, onClose, onSuccess }) => {
               <section>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Common Examples</h3>
                 <div className="space-y-3">
+                  <div className="border-l-4 border-emerald-500 pl-4 py-2">
+                    <code className="font-mono text-emerald-600 font-semibold">* * * * * */30</code>
+                    <p className="text-sm text-gray-700 mt-1">Every 30 seconds</p>
+                  </div>
                   <div className="border-l-4 border-blue-500 pl-4 py-2">
                     <code className="font-mono text-blue-600 font-semibold">* * * * *</code>
                     <p className="text-sm text-gray-700 mt-1">Every minute</p>

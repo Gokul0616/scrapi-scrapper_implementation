@@ -22,6 +22,7 @@ class Run(BaseModel):
     actor_name: str
     actor_icon: Optional[str] = None
     status: str = "queued"  # queued, running, succeeded, failed, aborted
+    celery_task_id: Optional[str] = None
     input_data: Dict[str, Any] = Field(default_factory=dict)
     started_at: Optional[datetime] = None
     finished_at: Optional[datetime] = None

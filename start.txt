@@ -1,4 +1,5 @@
- source venv/bin/activate && uvicorn server:app --host 0.0.0.0 --port 8001 --reload
+# Start Redis, Celery Worker, and FastAPI Backend in a single command
+source venv/bin/activate && (redis-server & celery -A celery_app worker --loglevel=info & uvicorn server:app --host 0.0.0.0 --port 8001 --reload)
 
-
- lsof -i :8001 -t | xargs kill -9 
+# Run this if you need to kill everything that was started above
+lsof -i :8001 -t | xargs kill -9 2>/dev/null ; pkill -9 -f celery ; pkill -9 redis-server

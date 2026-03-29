@@ -1,112 +1,73 @@
 """
 Task Manager for handling parallel scraping jobs.
-Allows multiple scraping runs to execute concurrently.
+Transitions to Celery distributed worker queue.
 """
 
-import asyncio
 import logging
-from typing import Dict, Set
+from typing import Dict, Set, Optional
 from datetime import datetime, timezone
+from celery_app import celery_app
 
 logger = logging.getLogger(__name__)
 
 class TaskManager:
-    """Manages concurrent scraping tasks."""
+    """Manages concurrent scraping tasks via Celery."""
     
     def __init__(self):
-        self.running_tasks: Dict[str, asyncio.Task] = {}
-        self.task_locks: Set[str] = set()
+        pass
     
-    def is_running(self, run_id: str) -> bool:
-        """Check if a task is currently running."""
-        return run_id in self.running_tasks and not self.running_tasks[run_id].done()
+    async def get_running_count(self) -> int:
+        """Get count of currently active runs from DB."""
+        from database import get_db
+        db = get_db()
+        if db is not None:
+             return await db.runs.count_documents({"status": {"$in": ["queued", "running"]}})
+        return 0
     
-    def get_running_count(self) -> int:
-        """Get count of currently running tasks."""
-        # Clean up completed tasks
-        self._cleanup_completed()
-        return len(self.running_tasks)
-    
-    def _cleanup_completed(self):
-        """Remove completed tasks from tracking."""
-        completed = [run_id for run_id, task in self.running_tasks.items() if task.done()]
-        for run_id in completed:
-            del self.running_tasks[run_id]
-            self.task_locks.discard(run_id)
-    
-    async def start_task(self, run_id: str, coroutine):
+    async def cancel_task(self, run_id: str, celery_task_id: Optional[str] = None) -> bool:
         """
-        Start a new task in the background.
-        
-        Args:
-            run_id: Unique identifier for the run
-            coroutine: Async function to execute
+        Cancel a running task via Celery.
         """
-        if run_id in self.task_locks:
-            logger.warning(f"Task {run_id} is already running")
-            return
-        
-        # Mark as running
-        self.task_locks.add(run_id)
-        
-        # Create and start task
-        task = asyncio.create_task(coroutine)
-        self.running_tasks[run_id] = task
-        
-        logger.info(f"Started task {run_id}. Total running: {self.get_running_count()}")
-        
-        # Add callback to cleanup when done
-        task.add_done_callback(lambda t: self._task_completed(run_id, t))
-    
-    def _task_completed(self, run_id: str, task: asyncio.Task):
-        """Callback when a task completes."""
-        self.task_locks.discard(run_id)
-        
-        if task.cancelled():
-            logger.info(f"Task {run_id} was cancelled")
-        elif task.exception():
-            logger.error(f"Task {run_id} failed with exception: {task.exception()}")
-        else:
-            logger.info(f"Task {run_id} completed successfully")
-        
-        # Clean up
-        if run_id in self.running_tasks:
-            del self.running_tasks[run_id]
-    
-    async def cancel_task(self, run_id: str) -> bool:
-        """
-        Cancel a running task.
-        
-        Args:
-            run_id: Task identifier
+        if not celery_task_id:
+            # Try fetching from db if not provided
+            from database import get_db
+            db = get_db()
+            if db is not None:
+                run = await db.runs.find_one({"id": run_id})
+                if run:
+                    celery_task_id = run.get("celery_task_id")
+                    
+        # Explicitly kill worker's child Chromium frames regardless of Celery revoke state
+        from database import get_db
+        db = get_db()
+        if db is not None:
+            run = await db.runs.find_one({"id": run_id})
+            if run and run.get("worker_pid"):
+                worker_pid = run.get("worker_pid")
+                try:
+                    import psutil
+                    worker_proc = psutil.Process(worker_pid)
+                    for child in worker_proc.children(recursive=True):
+                        if "chrome" in child.name().lower() or "chromium" in child.name().lower():
+                            logger.info(f"Nuking orphaned Chromium id {child.pid} for run {run_id}")
+                            child.kill()
+                except Exception:
+                    pass
+                    
+        if celery_task_id:
+            logger.info(f"Revoking Celery task {celery_task_id} for run {run_id}")
+            celery_app.control.revoke(celery_task_id, terminate=True, signal='SIGTERM')
+            return True
             
-        Returns:
-            True if task was cancelled, False if not found or already completed
-        """
-        if run_id not in self.running_tasks:
-            return False
-        
-        task = self.running_tasks[run_id]
-        if task.done():
-            return False
-        
-        task.cancel()
-        try:
-            await task
-        except asyncio.CancelledError:
-            logger.info(f"Task {run_id} cancelled")
-        
-        return True
+        logger.warning(f"Could not cancel task {run_id}: no celery_task_id found")
+        return False
     
     def get_status(self) -> Dict:
         """Get current status of task manager."""
-        self._cleanup_completed()
         return {
-            "running_tasks": len(self.running_tasks),
-            "task_ids": list(self.running_tasks.keys())
+            "status": "managed_by_celery"
         }
 
-# Global task manager instance
 task_manager = TaskManager()
 
 def get_task_manager() -> TaskManager:

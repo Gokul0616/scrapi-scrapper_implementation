@@ -31,9 +31,19 @@ class SchedulerService:
             return
             
         try:
-            # Create scheduler with memory job store
+            # Create scheduler with Redis job store
+            import os
+            import urllib.parse
+            from apscheduler.jobstores.redis import RedisJobStore
+            
+            redis_url = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+            parsed_url = urllib.parse.urlparse(redis_url)
+            host = parsed_url.hostname or 'localhost'
+            port = parsed_url.port or 6379
+            # Use db=2 for scheduler to avoid clashing with celery main database running on 0
+            
             jobstores = {
-                'default': MemoryJobStore()
+                'default': RedisJobStore(host=host, port=port, db=2)
             }
             
             self.scheduler = AsyncIOScheduler(
@@ -47,7 +57,7 @@ class SchedulerService:
             
             # Start Data Retention Cron
             self.scheduler.add_job(
-                func=self._run_data_retention_cleanup,
+                func=run_data_retention_cleanup_job,
                 trigger=CronTrigger(hour=0, minute=0, timezone=pytz.UTC), # Run daily at midnight
                 id="system_data_retention_cleanup",
                 replace_existing=True
@@ -107,11 +117,19 @@ class SchedulerService:
             tz = pytz.timezone(timezone_str)
             
             # Create cron trigger
-            trigger = CronTrigger.from_crontab(cron_expression, timezone=tz)
+            parts = cron_expression.split()
+            if len(parts) == 6:
+                minute, hour, day, month, dow, second = parts
+                trigger = CronTrigger(second=second, minute=minute, hour=hour, day=day, month=month, day_of_week=dow, timezone=tz)
+            elif len(parts) == 5:
+                minute, hour, day, month, dow = parts
+                trigger = CronTrigger(minute=minute, hour=hour, day=day, month=month, day_of_week=dow, timezone=tz)
+            else:
+                trigger = CronTrigger.from_crontab(cron_expression, timezone=tz)
             
             # Add job to scheduler
             self.scheduler.add_job(
-                func=self._execute_scheduled_run,
+                func=execute_scheduled_run_job,
                 trigger=trigger,
                 id=schedule_id,
                 kwargs={
@@ -125,7 +143,7 @@ class SchedulerService:
             )
             
             # Calculate next run time
-            next_run = self._get_next_run(cron_expression, timezone_str)
+            next_run = get_next_run(cron_expression, timezone_str)
             
             # Update schedule in database with next_run time
             await self.db.schedules.update_one(
@@ -148,191 +166,225 @@ class SchedulerService:
         except Exception as e:
             logger.warning(f"Failed to remove schedule {schedule_id}: {str(e)}")
     
-    async def _execute_scheduled_run(
-        self,
-        schedule_id: str,
-        user_id: str,
-        actor_id: str,
-        input_data: Dict[str, Any]
-    ):
-        """Execute a scheduled run."""
+    def get_human_readable_cron(self, cron_expression: str) -> str:
+        """Convert cron expression to human-readable format."""
         try:
-            logger.info(f"⏰ Executing scheduled run for schedule {schedule_id}")
+            parts = cron_expression.split()
+            if len(parts) not in [5, 6]:
+                return cron_expression
             
-            # Get actor details
-            actor = await self.db.actors.find_one({"id": actor_id})
-            if not actor:
-                logger.error(f"Actor {actor_id} not found for schedule {schedule_id}")
-                await self._update_schedule_status(schedule_id, "failed", None)
-                return
+            # Common patterns
+            if cron_expression in ["* * * * * */30", "*/30 * * * * *"]:
+                return "Every 30 seconds"
+            elif cron_expression == "* * * * *":
+                return "Every minute"
             
-            # Import Run model here to avoid circular imports
-            from models import Run
+            minute, hour, day, month, weekday = parts[:5]
             
-            # Create run
-            run = Run(
-                user_id=user_id,
-                actor_id=actor_id,
-                actor_name=actor['name'],
-                actor_icon=actor.get('icon'),
-                input_data=input_data,
-                status="queued",
-                origin="Scheduler"
+            if cron_expression == "0 * * * *":
+                return "Every hour"
+            elif cron_expression == "0 0 * * *":
+                return "Daily at midnight"
+            elif cron_expression == "0 12 * * *":
+                return "Daily at noon"
+            elif cron_expression == "0 0 * * 0":
+                return "Weekly on Sunday at midnight"
+            elif cron_expression == "0 0 1 * *":
+                return "Monthly on the 1st at midnight"
+            elif cron_expression.startswith("*/"):
+                interval = cron_expression.split()[0][2:]
+                return f"Every {interval} minutes"
+            else:
+                return f"At {hour}:{minute} daily" if day == "*" else cron_expression
+                
+        except Exception:
+            return cron_expression
+
+# ================= TOP LEVEL EXECUTORS ================= #
+
+def get_next_run(cron_expression: str, timezone_str: str) -> datetime:
+    """Calculate the next run time for a cron expression."""
+    try:
+        tz = pytz.timezone(timezone_str)
+        now = datetime.now(tz)
+        cron = croniter(cron_expression, now)
+        next_run = cron.get_next(datetime)
+        return next_run.astimezone(pytz.UTC)
+    except Exception as e:
+        logger.error(f"Failed to calculate next run: {str(e)}")
+        return datetime.now(timezone.utc)
+
+async def update_schedule_status(db: AsyncIOMotorDatabase, schedule_id: str, status: str, run_id: Optional[str]):
+    """Update schedule with last run information."""
+    try:
+        set_data = {
+            "last_run": datetime.now(timezone.utc),
+            "last_status": status
+        }
+        
+        if run_id:
+            set_data["last_run_id"] = run_id
+        
+        # Calculate next run time
+        schedule = await db.schedules.find_one({"id": schedule_id})
+        if schedule:
+            next_run = get_next_run(
+                schedule['cron_expression'],
+                schedule['timezone']
             )
+            set_data["next_run"] = next_run
+        
+        await db.schedules.update_one(
+            {"id": schedule_id},
+            {
+                "$set": set_data,
+                "$inc": {"run_count": 1}
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to update schedule status: {str(e)}")
+
+async def execute_scheduled_run_job(schedule_id: str, user_id: str, actor_id: str, input_data: Dict[str, Any]):
+    """Top-level standalone execution target."""
+    try:
+        from database import get_db
+        db = get_db()
+        if db is None:
+            logger.error("No database connection available for scheduled run")
+            return
             
-            # Save run to database
-            doc = run.model_dump()
-            doc['created_at'] = doc['created_at'].isoformat()
-            await self.db.runs.insert_one(doc)
+        logger.info(f"⏰ Executing scheduled run for schedule {schedule_id}")
+        
+        # Get actor details
+        actor = await db.actors.find_one({"id": actor_id})
+        if not actor:
+            logger.error(f"Actor {actor_id} not found for schedule {schedule_id}")
+            await update_schedule_status(db, schedule_id, "failed", None)
+            return
+        
+        from models import Run
+        run = Run(
+            user_id=user_id,
+            actor_id=actor_id,
+            actor_name=actor['name'],
+            actor_icon=actor.get('icon'),
+            input_data=input_data,
+            status="queued",
+            origin="Scheduler"
+        )
+        
+        doc = run.model_dump()
+        doc['created_at'] = doc['created_at'].isoformat()
+        await db.runs.insert_one(doc)
+        
+        logger.info(f"✅ Created scheduled run {run.id} for schedule {schedule_id}")
+        
+        from workers.scraping_worker import run_scraping_task
+        celery_result = run_scraping_task.apply_async(
+            kwargs={
+                "run_id": run.id,
+                "actor_id": actor_id,
+                "user_id": user_id,
+                "input_data": input_data,
+                "organization_id": None
+            },
+            queue="default"
+        )
+        
+        await db.runs.update_one(
+            {"id": run.id},
+            {"$set": {"celery_task_id": celery_result.id}}
+        )
+        
+        await update_schedule_status(db, schedule_id, "success", run.id)
+        logger.info(f"✅ Scheduled run {run.id} started successfully via Celery. Task ID: {celery_result.id}")
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to execute scheduled run for {schedule_id}: {str(e)}")
+        from database import get_db
+        db = get_db()
+        if db is not None:
+            await update_schedule_status(db, schedule_id, "failed", None)
+
+async def run_data_retention_cleanup_job():
+    """Top-level standalone execution target."""
+    try:
+        from database import get_db
+        db = get_db()
+        if db is None:
+            logger.error("No database connection available for retention cleanup")
+            return
             
-            logger.info(f"✅ Created scheduled run {run.id} for schedule {schedule_id}")
+        logger.info("🧹 Starting daily data retention cleanup")
+        from datetime import timedelta
+        
+        workspaces = []
+        async for user in db.users.find({}, {"id": 1, "limits": 1, "plan": 1}):
+            retention_days = user.get("limits", {}).get("data_retention_days", 7)
+            workspaces.append(("personal", user["id"], retention_days))
             
-            # Import task manager and execute function
-            from services.task_manager import task_manager
-            from routes.routes import execute_scraping_job
+        async for org in db.organizations.find({}, {"id": 1, "limits": 1, "plan": 1}):
+            retention_days = org.get("limits", {}).get("data_retention_days", 7)
+            workspaces.append(("organization", org["id"], retention_days))
             
-            # Start the scraping task
-            await task_manager.start_task(
-                run.id,
-                execute_scraping_job(
-                    run.id,
-                    actor_id,
-                    user_id,
-                    input_data
-                )
-            )
+        now = datetime.now(timezone.utc)
+        total_deleted_runs = 0
+        total_deleted_datasets = 0
+        
+        for ws_type, ws_id, retention_days in workspaces:
+            cutoff_date = now - timedelta(days=retention_days)
+            cutoff_iso = cutoff_date.isoformat()
             
-            # Update schedule with last run info
-            await self._update_schedule_status(schedule_id, "success", run.id)
-            
-            logger.info(f"✅ Scheduled run {run.id} started successfully")
-            
-        except Exception as e:
-            logger.error(f"❌ Failed to execute scheduled run for {schedule_id}: {str(e)}")
-            await self._update_schedule_status(schedule_id, "failed", None)
-    
-    async def _update_schedule_status(
-        self,
-        schedule_id: str,
-        status: str,
-        run_id: Optional[str]
-    ):
-        """Update schedule with last run information."""
-        try:
-            set_data = {
-                "last_run": datetime.now(timezone.utc),
-                "last_status": status
+            query = {
+                "user_id" if ws_type == "personal" else "organization_id": ws_id,
+                "created_at": {"$lt": cutoff_iso}
             }
             
-            if run_id:
-                set_data["last_run_id"] = run_id
+            dataset_query = dict(query)
+            dataset_query["name"] = None
             
-            # Calculate next run time
-            schedule = await self.db.schedules.find_one({"id": schedule_id})
-            if schedule:
-                next_run = self._get_next_run(
-                    schedule['cron_expression'],
-                    schedule['timezone']
-                )
-                set_data["next_run"] = next_run
-            
-            await self.db.schedules.update_one(
-                {"id": schedule_id},
-                {
-                    "$set": set_data,
-                    "$inc": {"run_count": 1}
-                }
-            )
-            
-        except Exception as e:
-            logger.error(f"Failed to update schedule status: {str(e)}")
-    
-    def _get_next_run(self, cron_expression: str, timezone_str: str) -> datetime:
-        """Calculate the next run time for a cron expression."""
-        try:
-            tz = pytz.timezone(timezone_str)
-            now = datetime.now(tz)
-            cron = croniter(cron_expression, now)
-            next_run = cron.get_next(datetime)
-            return next_run.astimezone(pytz.UTC)
-        except Exception as e:
-            logger.error(f"Failed to calculate next run: {str(e)}")
-            return datetime.now(timezone.utc)
-            
-    async def _run_data_retention_cleanup(self):
-        """Background job to clean up old datasets and runs based on plan retention limits."""
-        try:
-            logger.info("🧹 Starting daily data retention cleanup")
-            from datetime import timedelta
-            
-            # 1. Get all workspaces and their retention limits
-            workspaces = []
-            
-            async for user in self.db.users.find({}, {"id": 1, "limits": 1, "plan": 1}):
-                retention_days = user.get("limits", {}).get("data_retention_days", 7)
-                workspaces.append(("personal", user["id"], retention_days))
+            datasets_to_delete = await db.datasets.find(dataset_query, {"id": 1, "run_id": 1}).to_list(None)
+            if datasets_to_delete:
+                dataset_ids = [d["id"] for d in datasets_to_delete]
+                run_ids_for_items = [d["run_id"] for d in datasets_to_delete if "run_id" in d]
                 
-            async for org in self.db.organizations.find({}, {"id": 1, "limits": 1, "plan": 1}):
-                retention_days = org.get("limits", {}).get("data_retention_days", 7)
-                workspaces.append(("organization", org["id"], retention_days))
-                
-            now = datetime.now(timezone.utc)
-            total_deleted_runs = 0
-            total_deleted_datasets = 0
-            
-            for ws_type, ws_id, retention_days in workspaces:
-                cutoff_date = now - timedelta(days=retention_days)
-                cutoff_iso = cutoff_date.isoformat()
-                
-                query = {
-                    "user_id" if ws_type == "personal" else "organization_id": ws_id,
-                    "created_at": {"$lt": cutoff_iso}
-                }
-                
-                # Delete old UNNAMED datasets and their associated items
-                dataset_query = dict(query)
-                dataset_query["name"] = None
-                
-                datasets_to_delete = await self.db.datasets.find(dataset_query, {"id": 1, "run_id": 1}).to_list(None)
-                if datasets_to_delete:
-                    dataset_ids = [d["id"] for d in datasets_to_delete]
-                    run_ids_for_items = [d["run_id"] for d in datasets_to_delete if "run_id" in d]
+                if run_ids_for_items:
+                    await db.dataset_items.delete_many({"run_id": {"$in": run_ids_for_items}})
                     
-                    if run_ids_for_items:
-                        await self.db.dataset_items.delete_many({"run_id": {"$in": run_ids_for_items}})
-                        
-                    del_ds = await self.db.datasets.delete_many({"id": {"$in": dataset_ids}})
-                    total_deleted_datasets += del_ds.deleted_count
+                del_ds = await db.datasets.delete_many({"id": {"$in": dataset_ids}})
+                total_deleted_datasets += del_ds.deleted_count
+            
+            datasets_preserved = await db.datasets.find({"name": {"$ne": None}}).to_list(None)
+            preserved_run_ids = [d["run_id"] for d in datasets_preserved if "run_id" in d]
+            
+            run_query = dict(query)
+            if preserved_run_ids:
+                run_query["id"] = {"$nin": preserved_run_ids}
                 
-                # We skip deleting runs that are attached to preserved (named) datasets.
-                # Find runs we can safely delete
-                datasets_preserved = await self.db.datasets.find({"name": {"$ne": None}}).to_list(None)
-                preserved_run_ids = [d["run_id"] for d in datasets_preserved if "run_id" in d]
-                
-                run_query = dict(query)
-                if preserved_run_ids:
-                    run_query["id"] = {"$nin": preserved_run_ids}
-                    
-                del_runs = await self.db.runs.delete_many(run_query)
-                total_deleted_runs += del_runs.deleted_count
-                
-            logger.info(f"✅ Data retention cleanup finished. Deleted {total_deleted_runs} runs and {total_deleted_datasets} datasets.")
-        except Exception as e:
-            logger.error(f"❌ Error during data retention cleanup: {str(e)}")
+            del_runs = await db.runs.delete_many(run_query)
+            total_deleted_runs += del_runs.deleted_count
+            
+        logger.info(f"✅ Data retention cleanup finished. Deleted {total_deleted_runs} runs and {total_deleted_datasets} datasets.")
+    except Exception as e:
+        logger.error(f"❌ Error during data retention cleanup: {str(e)}")
     
     def get_human_readable_cron(self, cron_expression: str) -> str:
         """Convert cron expression to human-readable format."""
         try:
             parts = cron_expression.split()
-            if len(parts) != 5:
+            if len(parts) not in [5, 6]:
                 return cron_expression
             
-            minute, hour, day, month, weekday = parts
-            
             # Common patterns
-            if cron_expression == "* * * * *":
+            if cron_expression in ["* * * * * */30", "*/30 * * * * *"]:
+                return "Every 30 seconds"
+            elif cron_expression == "* * * * *":
                 return "Every minute"
-            elif cron_expression == "0 * * * *":
+            
+            minute, hour, day, month, weekday = parts[:5]
+            
+            if cron_expression == "0 * * * *":
                 return "Every hour"
             elif cron_expression == "0 0 * * *":
                 return "Daily at midnight"

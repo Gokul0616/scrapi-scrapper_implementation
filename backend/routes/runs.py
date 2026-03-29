@@ -315,19 +315,34 @@ async def create_run(
     
     logger.info(f"✅ Run created: {run.id}")
     
-    # Start scraping in parallel using task manager
+    # Start scraping in parallel using task manager via Celery
     if task_manager:
-        await task_manager.start_task(
-            run.id,
-            execute_scraping_job(
-                run.id,
-                real_actor_id,
-                current_user['id'],
-                run_data.input_data,
-                organization_id  # Pass organization_id
-            )
+        queue_name = "default"
+        try:
+            plan = billing_info.get("plan", "free")
+            if plan in ["pro", "business", "enterprise"]:
+                queue_name = "high_priority"
+        except Exception:
+            pass
+
+        from workers.scraping_worker import run_scraping_task
+        celery_result = run_scraping_task.apply_async(
+            kwargs={
+                "run_id": run.id,
+                "actor_id": real_actor_id,
+                "user_id": current_user['id'],
+                "input_data": run_data.input_data,
+                "organization_id": organization_id
+            },
+            queue=queue_name
         )
-        logger.info(f"Run {run.id} queued. Currently running: {task_manager.get_running_count()} tasks")
+        
+        await db.runs.update_one(
+            {"id": run.id},
+            {"$set": {"celery_task_id": celery_result.id}}
+        )
+        count = await task_manager.get_running_count()
+        logger.info(f"Run {run.id} queued in Celery '{queue_name}' queue. Currently running/queued: {count}")
     else:
         logger.warning(f"Task manager not initialized, run {run.id} created but not started")
     

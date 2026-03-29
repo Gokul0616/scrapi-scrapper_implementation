@@ -106,7 +106,14 @@ export const setupAxiosInterceptor = (navigate, showMessage) => {
         let errorText = 'An unexpected error occurred';
         if (error.response) {
           if (error.response.data && error.response.data.detail) {
-            errorText = error.response.data.detail;
+            if (Array.isArray(error.response.data.detail)) {
+              // Handle FastAPI validation error arrays to prevent React crash
+              const firstErr = error.response.data.detail[0];
+              const fieldName = firstErr.loc && firstErr.loc.length > 1 ? `'${firstErr.loc[firstErr.loc.length - 1]}'` : 'Field';
+              errorText = `Validation Error: ${fieldName} ${firstErr.msg}`;
+            } else {
+              errorText = error.response.data.detail;
+            }
           } else if (error.response.data && error.response.data.message) {
             errorText = error.response.data.message;
           } else if (error.response.status === 404) {
