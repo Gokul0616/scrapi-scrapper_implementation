@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Star, Users, ArrowLeft, X } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
-import { SkeletonGrid } from '../components/SkeletonLoader';
+import LoadingScreen from '../components/LoadingScreen';
 import CustomDropdown from '../components/CustomDropdown';
 import ActorCard from '../components/ActorCard';
 
@@ -207,7 +207,7 @@ function Store() {
             </div>
 
             {loading ? (
-              <SkeletonGrid count={6} columns={3} />
+              <LoadingScreen text="Loading featured actors..." className="py-20" />
             ) : featuredActors.length > 0 ? (
               <div className="flex flex-wrap gap-4 p-2 -m-2" data-testid="featured-actors-grid">
                 {featuredActors.map((actor) => (<>
@@ -349,7 +349,7 @@ function Store() {
 
         {/* Actors Grid */}
         {loading ? (
-          <SkeletonGrid count={12} columns={3} />
+          <LoadingScreen text="Loading actors..." className="py-20" />
         ) : actors.length > 0 ? (
           <div className="flex flex-wrap gap-4 p-2 -m-2" data-testid="all-actors-grid">
             {actors.map((actor) => (

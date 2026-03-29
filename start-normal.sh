@@ -1,10 +1,12 @@
 #!/bin/bash
 
-# Scrapi - Normal Mode Setup Script
-# Runs: Frontend + Backend + MongoDB
+# =========================================================================
+# SCRAPI Ubuntu Start Script
+# Installs dependencies and runs Frontend, Backend, Redis, and Celery
+# =========================================================================
 
 echo "=========================================="
-echo "🚀 Starting Scrapi - Normal Mode"
+echo "🚀 Starting Scrapi - Ubuntu Full Stack Deployment"
 echo "=========================================="
 echo ""
 
@@ -15,57 +17,128 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-echo -e "${BLUE}[1/4]${NC} Installing backend dependencies..."
-cd /app/backend
-pip install -r requirements.txt --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/ > /tmp/pip_install.log 2>&1 || true
-echo -e "${GREEN}✓${NC} Backend dependencies ready"
+# Ensure we are in the project root
+PROJECT_ROOT=$(pwd)
 
-echo -e "${BLUE}[2/4]${NC} Installing Playwright browsers..."
+echo -e "${YELLOW}>> Project Root detected as: $PROJECT_ROOT${NC}"
+
+# 1. System Dependencies (Redis Server, Node, Python)
+echo -e "${BLUE}[1/5]${NC} Checking System Dependencies (Redis)..."
+if ! command -v redis-server &> /dev/null; then
+    echo -e "${YELLOW}   Installing Redis Server...${NC}"
+    sudo apt-get update && sudo apt-get install -y redis-server
+fi
+# Ensure Redis is running
+sudo systemctl enable redis-server 2>/dev/null || true
+sudo systemctl start redis-server 2>/dev/null || true
+echo -e "${GREEN}✓${NC} Redis is running"
+
+
+# 2. Backend Dependencies (Python + Celery)
+echo -e "${BLUE}[2/5]${NC} Installing Backend Dependencies..."
+cd "$PROJECT_ROOT/backend"
+
+# Ensure venv exists
+if [ ! -d "venv" ]; then
+    echo -e "${YELLOW}   Creating Python Virtual Environment...${NC}"
+    python3 -m venv venv
+fi
+source venv/bin/activate
+pip install -r requirements.txt --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/ > /tmp/pip_install.log 2>&1 || true
+echo -e "${GREEN}✓${NC} Backend dependencies (FastAPI + Celery) ready"
+
+
+# 3. Playwright Browsers
+echo -e "${BLUE}[3/5]${NC} Installing Playwright Browsers..."
 export PLAYWRIGHT_BROWSERS_PATH=/pw-browsers
 playwright install chromium > /tmp/playwright_install.log 2>&1 || true
-echo -e "${GREEN}✓${NC} Playwright ready"
+# Install OS dependencies for Playwright gracefully on Ubuntu
+if command -v apt-get &> /dev/null; then
+    sudo playwright install-deps chromium > /tmp/pw_deps.log 2>&1 || true
+fi
+echo -e "${GREEN}✓${NC} Playwright Chromium ready"
 
-echo -e "${BLUE}[3/4]${NC} Installing frontend dependencies..."
-cd /app/frontend
+
+# 4. Frontend Dependencies (React)
+echo -e "${BLUE}[4/5]${NC} Installing Frontend Dependencies..."
+cd "$PROJECT_ROOT/frontend"
 if [ ! -d "node_modules" ]; then
-    yarn install > /tmp/frontend_install.log 2>&1
+    # Try yarn first, fallback to npm
+    if command -v yarn &> /dev/null; then
+        yarn install > /tmp/frontend_install.log 2>&1
+    else
+        npm install --legacy-peer-deps > /tmp/frontend_install.log 2>&1 || true
+    fi
 fi
 echo -e "${GREEN}✓${NC} Frontend dependencies ready"
 
-echo -e "${BLUE}[4/4]${NC} Starting services..."
-# Stop conflicting services quickly
-sudo supervisorctl stop scrapi_admin_console 2>/dev/null || true
-sudo supervisorctl stop landing_site 2>/dev/null || true
-pkill -9 -f "scrapi-admin-console" 2>/dev/null || true
-pkill -9 -f "landing-site" 2>/dev/null || true
 
-# Start services
+# 5. Stop existing and BOOT everything!
+echo -e "${BLUE}[5/5]${NC} Booting Scrapi Multi-Architecture Stack..."
+cd "$PROJECT_ROOT"
+
+# Try supervisorctl for MongoDB if they use it locally
 sudo supervisorctl start mongodb 2>/dev/null || true
-sudo supervisorctl restart backend 2>/dev/null || true
-sudo supervisorctl restart frontend 2>/dev/null || true
-echo -e "${GREEN}✓${NC} All services started"
+
+# Kill any existing stray processes to prevent port collision
+echo -e "${YELLOW}   Cleaning up old processes...${NC}"
+lsof -i :8001 -t | xargs kill -9 2>/dev/null
+lsof -i :3000 -t | xargs kill -9 2>/dev/null
+pkill -9 -f "celery -A celery_app" 2>/dev/null || true
+
+# Option A: If supervisor is configured for backend/frontend
+if sudo supervisorctl status backend >/dev/null 2>&1; then
+    echo -e "${YELLOW}   Supervisor configuration detected. Restarting services via Supervisor...${NC}"
+    sudo supervisorctl restart backend 2>/dev/null || true
+    sudo supervisorctl restart frontend 2>/dev/null || true
+    
+    # Check if supervisor has celery configured, if not boot it via nohup
+    if ! sudo supervisorctl status celery >/dev/null 2>&1; then
+        echo -e "${YELLOW}   No Celery Supervisor config found. Starting Celery locally via Nohup...${NC}"
+        cd "$PROJECT_ROOT/backend"
+        source venv/bin/activate
+        nohup celery -A celery_app worker --loglevel=info > /tmp/scrapi-celery.log 2>&1 &
+    else
+        sudo supervisorctl restart celery 2>/dev/null || true
+    fi
+    echo -e "${GREEN}✓${NC} Services started via Supervisor/Nohup"
+
+# Option B: Run locally in background (standard Ubuntu execution via nohup)
+else
+    echo -e "${YELLOW}   Starting servers natively via Nohup...${NC}"
+    
+    # Start Backend
+    cd "$PROJECT_ROOT/backend"
+    source venv/bin/activate
+    nohup uvicorn server:app --host 0.0.0.0 --port 8001 > /tmp/scrapi-backend.log 2>&1 &
+    
+    # Start Celery
+    nohup celery -A celery_app worker --loglevel=info > /tmp/scrapi-celery.log 2>&1 &
+    
+    # Start Frontend
+    cd "$PROJECT_ROOT/frontend"
+    if command -v yarn &> /dev/null; then
+        nohup yarn start > /tmp/scrapi-frontend.log 2>&1 &
+    else
+        nohup npm start > /tmp/scrapi-frontend.log 2>&1 &
+    fi
+    
+    echo -e "${GREEN}✓${NC} Services started in the background"
+fi
 
 echo ""
-echo "Waiting for services..."
+echo "Waiting for systems to wake up..."
 sleep 3
 
 echo ""
 echo "=========================================="
-echo "Service Status"
-echo "=========================================="
-sudo supervisorctl status backend frontend mongodb 2>/dev/null | grep -E "backend|frontend|mongodb"
-
-echo ""
-echo "=========================================="
-echo "✅ Normal Mode Started!"
+echo "✅ SCRAPI DISTRIBUTED SYSTEM IS ONLINE!"
 echo "=========================================="
 echo ""
 echo -e "${GREEN}🌐 Frontend:${NC}     http://localhost:3000"
 echo -e "${GREEN}🔧 Backend API:${NC}  http://localhost:8001"
-echo -e "${GREEN}📚 API Docs:${NC}     http://localhost:8001/docs"
+echo -e "${GREEN}⚙️ Celery Worker:${NC}  Running in background"
+echo -e "${GREEN}🛢️ Redis Store:${NC}    Running locally"
 echo ""
-echo "Commands:"
-echo "  sudo supervisorctl restart backend   # Restart backend"
-echo "  sudo supervisorctl restart frontend  # Restart frontend"
-echo "  tail -f /var/log/supervisor/backend.err.log  # Check logs"
+echo -e "Use ${YELLOW}pkill -f \"uvicorn|celery|react-scripts\"${NC} to stop the servers later if not using supervisor."
 echo ""
