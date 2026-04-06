@@ -15,21 +15,39 @@ from emergentintegrations.llm.chat import LlmChat, UserMessage
 load_dotenv()
 logger = logging.getLogger(__name__)
 
+from .billing_service import BillingService
+from .task_manager import get_task_manager
+
 class EnhancedGlobalChatService:
     """Enhanced service for handling global chat with function calling."""
     
     def __init__(self, db, user_id: str):
         self.db = db
         self.user_id = user_id
-        # Get Emergent LLM key
-        self.api_key = os.getenv('EMERGENT_LLM_KEY')
         
-        if not self.api_key:
-            raise ValueError("EMERGENT_LLM_KEY not found in environment")
+        # Determine LLM configuration
+        self.openrouter_key = os.getenv('OPENROUTER_API_KEY')
+        self.emergent_key = os.getenv('EMERGENT_LLM_KEY')
         
-        logger.info(f"EnhancedGlobalChatService initialized with Emergent LLM key")
+        # Default configuration
+        self.provider = "openai"
+        self.model = "gpt-5.2"
+        self.api_key = self.emergent_key
         
-        self.system_prompt = """You are Scrapi AI Agent - an intelligent AI with COMPLETE CONTROL over the Scrapi web scraping platform.
+        # Prioritize OpenRouter if available
+        if self.openrouter_key:
+            self.api_key = self.openrouter_key
+            self.provider = "openrouter"
+            self.model = "qwen/qwen3.6-plus:free"
+            logger.info(f"EnhancedGlobalChatService initialized with OpenRouter: {self.model}")
+        elif self.emergent_key:
+            self.api_key = self.emergent_key
+            self.provider = "openai"
+            logger.info(f"EnhancedGlobalChatService initialized with Emergent LLM")
+        else:
+            raise ValueError("No LLM API key found (OPENROUTER_API_KEY or EMERGENT_LLM_KEY)")
+        
+        self.system_prompt = """You are Mira, the Scrapi AI Agent - an intelligent AI with COMPLETE CONTROL over the Scrapi web scraping platform.
 
 **🤖 YOU ARE A FULL AI AGENT - NOT JUST A CHATBOT**
 
@@ -260,6 +278,15 @@ Then FUNCTION_CALL: {"name": "view_run_details", "arguments": {"run_id": "<first
                         }
                     },
                     "required": ["run_ids"]
+                }
+            },
+            {
+                "name": "abort_last_run",
+                "description": "Abort the single most recent running or queued scraper run. Use when user says 'abort last run', 'stop previous', etc.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {},
+                    "required": []
                 }
             },
             {
@@ -603,7 +630,6 @@ Then FUNCTION_CALL: {"name": "view_run_details", "arguments": {"run_id": "<first
         """Stop a running scraping job."""
         try:
             # First, try to cancel the task in task_manager
-            from task_manager import get_task_manager
             task_manager = get_task_manager()
             task_cancelled = await task_manager.cancel_task(run_id)
             
@@ -620,6 +646,46 @@ Then FUNCTION_CALL: {"name": "view_run_details", "arguments": {"run_id": "<first
                 return {"error": "Run not found or not running/queued"}
         except Exception as e:
             logger.error(f"Error stopping run: {str(e)}")
+            return {"error": str(e)}
+    
+    async def abort_last_run(self) -> Dict[str, Any]:
+        """Find the latest running or queued run and abort it."""
+        try:
+            # Find the most recent run that is either running or queued
+            last_run = await self.db.runs.find_one(
+                {"user_id": self.user_id, "status": {"$in": ["running", "queued"]}},
+                sort=[("created_at", -1)]
+            )
+            
+            if not last_run:
+                # If no running/queued found, check last run of ANY status to explain why we can't abort
+                any_last_run = await self.db.runs.find_one(
+                    {"user_id": self.user_id},
+                    sort=[("created_at", -1)]
+                )
+                if any_last_run:
+                    return {"success": False, "message": f"I found your last run ({any_last_run.get('id')[:8]}), but its status is already '{any_last_run.get('status')}'. No active runs found to abort."}
+                return {"success": False, "message": "I couldn't find any recent runs to abort."}
+            
+            run_id = last_run["id"]
+            
+            # Execute abort logic
+            task_manager = get_task_manager()
+            task_cancelled = await task_manager.cancel_task(run_id)
+            
+            await self.db.runs.update_one(
+                {"id": run_id},
+                {"$set": {"status": "aborted", "finished_at": datetime.now(timezone.utc).isoformat()}}
+            )
+            
+            return {
+                "success": True, 
+                "message": f"🚀 Aborted your last run ({run_id[:8]}) successfully!",
+                "run_id": run_id,
+                "task_cancelled": task_cancelled
+            }
+        except Exception as e:
+            logger.error(f"Error aborting last run: {str(e)}")
             return {"error": str(e)}
     
     async def delete_run(self, run_id: str) -> Dict[str, Any]:
@@ -857,6 +923,29 @@ Then FUNCTION_CALL: {"name": "view_run_details", "arguments": {"run_id": "<first
             if not actor:
                 return {"error": f"Actor '{actor_name}' not found"}
             
+            # CHECK LIMITS before starting (Strict Blocking)
+            billing_service = BillingService()
+            billing_info = await billing_service.get_billing_summary(self.user_id, 'personal')
+            credits = billing_info.get("planConsumption", {}).get("freeRemaining", 0)
+            concurrent_limit = billing_info.get("limits", {}).get("max_concurrent_runs", 1)
+            current_concurrent = billing_info.get("currentUsage", {}).get("running_concurrently", 0)
+            
+            if credits <= 0:
+                return {
+                    "success": False,
+                    "error": "Insufficient credits. Your current balance is $0.00. Please upgrade your plan or add credits to continue.",
+                    "action": "navigate_to_page",
+                    "page": "settings",
+                    "message": "⚠️ Plan Limit Reached: Your balance is $0.00. You need to upgrade to start more runs."
+                }
+                
+            if current_concurrent >= concurrent_limit:
+                return {
+                    "success": False,
+                    "error": f"Concurrent run limit reached ({current_concurrent}/{concurrent_limit}).",
+                    "message": f"⚠️ Limit Reached: You are already running {current_concurrent} scraper(s). Please wait for them to finish or upgrade your plan."
+                }
+            
             # Determine scraper type and build appropriate input_data
             is_amazon = "amazon" in actor["name"].lower()
             
@@ -991,6 +1080,8 @@ Then FUNCTION_CALL: {"name": "view_run_details", "arguments": {"run_id": "<first
                 result = await self.create_scraping_run(**arguments)
             elif function_name == "stop_run":
                 result = await self.stop_run(**arguments)
+            elif function_name == "abort_last_run":
+                result = await self.abort_last_run()
             elif function_name == "delete_run":
                 result = await self.delete_run(**arguments)
             elif function_name == "abort_multiple_runs":
@@ -1073,6 +1164,25 @@ Then FUNCTION_CALL: {"name": "view_run_details", "arguments": {"run_id": "<first
             # Save user message
             await self.save_message("user", message)
             
+            # 2. Get billing info to inject into prompt for plan awareness
+            billing_service = BillingService()
+            billing_info = await billing_service.get_billing_summary(self.user_id, 'personal')
+            plan_name = billing_info.get("plan", "Free").title()
+            credits = billing_info.get("planConsumption", {}).get("freeRemaining", 0)
+            concurrent_limit = billing_info.get("limits", {}).get("max_concurrent_runs", 1)
+            current_concurrent = billing_info.get("currentUsage", {}).get("running_concurrently", 0)
+            
+            billing_context = f"""
+**USER PLAN & LIMITS:**
+- Current Plan: {plan_name}
+- Available Platform Credits: ${credits:.2f}
+- Concurrent Run Limit: {current_concurrent}/{concurrent_limit}
+- Status: {"STRICT BLOCK" if credits <= 0 else "Active"}
+
+CRITICAL: If user's Available Credits are $0.00, you MUST NOT start any new runs. Tell them to upgrade.
+CRITICAL: If user's Concurrent Run Limit is reached, you MUST NOT start any new runs.
+"""
+            
             # Get conversation history (last 30 messages for context)
             history = await self.get_conversation_history(limit=30)
             
@@ -1133,6 +1243,12 @@ You: FUNCTION_CALL: {{"name": "fill_and_start_scraper", "arguments": {{"actor_na
 User: "run 3 for karur saloons" (AGAIN - same request)
 You: FUNCTION_CALL: {{"name": "fill_and_start_scraper", "arguments": {{"actor_name": "Google Maps", "search_terms": ["saloons"], "location": "Karur, India", "max_results": 3}}}}
 (Always execute, even if similar request was just made!)
+
+User: "abort last run"
+You: FUNCTION_CALL: {{"name": "abort_last_run", "arguments": {{}}}}
+
+User: "stop my previous scraper"
+You: FUNCTION_CALL: {{"name": "abort_last_run", "arguments": {{}}}}
 
 User: "Run google maps scraper for Hotels in NYC with 50 results"
 You: FUNCTION_CALL: {{"name": "fill_and_start_scraper", "arguments": {{"actor_name": "Google Maps", "search_terms": ["Hotels"], "location": "New York, NY", "max_results": 50}}}}
@@ -1227,6 +1343,8 @@ When user mentions multiple locations with "and", create SEPARATE runs for EACH 
 - "X in A, B, and C" = 3 runs (one for each location)
 - ALWAYS parse locations separately when connected by "and" or commas
 
+{billing_context}
+
 {conversation_context}"""
             
             # Construct full prompt with system message and context
@@ -1236,12 +1354,14 @@ When user mentions multiple locations with "and", create SEPARATE runs for EACH 
             chat = LlmChat(
                 api_key=self.api_key,
                 session_id=f"global_chat_{self.user_id}_{datetime.now().timestamp()}",
-                system_message=enhanced_prompt
-            ).with_model("gemini", "gemini-2.5-flash")
+                system_message=enhanced_prompt,
+                provider=self.provider,
+                model=self.model
+            )
             
             # Get response using Emergent LLM through emergentintegrations
             user_msg = UserMessage(text=message)
-            response = await chat.send_message(user_msg)
+            response = await chat.send_message_async(user_msg)
             
             # LOG: Check what the AI responded
             logger.info(f"AI Response: {response[:500]}...")
@@ -1306,21 +1426,42 @@ When user mentions multiple locations with "and", create SEPARATE runs for EACH 
                         logger.error(f"Error processing function call: {str(e)}")
                         all_function_results.append({"error": str(e)})
                 
-                # Get final response with all function results
-                results_summary = json.dumps(all_function_results, indent=2)
-                follow_up_system = f"{enhanced_prompt}\n\nFunction results: {results_summary}\n\nPlease respond naturally to the user's original question with this data. Remember the conversation context. DO NOT include FUNCTION_CALL in your response. If multiple runs were created, mention all of them."
-                follow_up_text = f"Original message: {message}\n\nPlease provide a natural response about what was executed."
-                
-                # Create new chat instance for follow-up
-                follow_up_chat = LlmChat(
-                    api_key=self.api_key,
-                    session_id=f"global_chat_followup_{self.user_id}_{datetime.now().timestamp()}",
-                    system_message=follow_up_system
-                ).with_model("gemini", "gemini-2.5-flash")
-                
-                # Generate follow-up response
-                follow_up_msg = UserMessage(text=follow_up_text)
-                final_response = await follow_up_chat.send_message(follow_up_msg)
+                # FAST PATH: If we have automation actions and no complex data questions, skip second LLM call
+                fast_response = None
+                if len(function_calls) == 1:
+                    fc = function_calls[0]
+                    res = all_function_results[0]
+                    if res.get("success"):
+                        if fc["name"] == "fill_and_start_scraper":
+                            fast_response = res.get("message", "🤖 Mira is starting your scraper now!")
+                        elif fc["name"] == "navigate_to_page":
+                            fast_response = f"📍 I'm opening the {fc['arguments'].get('page', 'requested')} page for you."
+                        elif fc["name"] == "stop_run" or fc["name"] == "abort_last_run":
+                            fast_response = f"🛑 {res.get('message', 'I have aborted the run as requested.')}"
+                        elif fc["name"] == "abort_all_runs":
+                            fast_response = f"🧹 I'm stopping all {fc['arguments'].get('status_filter', '')} runs immediately."
+
+                if fast_response:
+                    final_response = fast_response
+                    logger.info(f"⚡ FAST PATH triggered: {final_response}")
+                else:
+                    # Get final response with all function results (Slow Path)
+                    results_summary = json.dumps(all_function_results, indent=2)
+                    follow_up_system = f"{enhanced_prompt}\n\nFunction results: {results_summary}\n\nPlease respond naturally to the user's original question with this data. Remember the conversation context. DO NOT include FUNCTION_CALL in your response. If multiple runs were created, mention all of them."
+                    follow_up_text = f"Original message: {message}\n\nPlease provide a natural response about what was executed."
+                    
+                    # Create new chat instance for follow-up (Original logic)
+                    follow_up_chat = LlmChat(
+                        api_key=self.api_key,
+                        session_id=f"global_chat_followup_{self.user_id}_{datetime.now().timestamp()}",
+                        system_message=follow_up_system,
+                        provider=self.provider,
+                        model=self.model
+                    )
+                    
+                    # Generate follow-up response
+                    follow_up_msg = UserMessage(text=follow_up_text)
+                    final_response = await follow_up_chat.send_message_async(follow_up_msg)
                 
                 # Save assistant response with all function calls
                 await self.save_message("assistant", final_response, {"multiple_calls": function_calls})

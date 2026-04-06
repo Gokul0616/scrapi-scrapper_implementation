@@ -1,8 +1,9 @@
 import logging
 import os
+import json
 from typing import Dict, Any, List
 from datetime import datetime
-import google.generativeai as genai
+from emergentintegrations.llm.chat import LlmChat, UserMessage
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -10,18 +11,42 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 class LeadChatService:
-    """Service for AI-powered lead engagement advice using Gemini LLM."""
+    """Service for AI-powered lead engagement advice using unified LlmChat."""
 
     def __init__(self):
-        # Get Gemini API key
-        gemini_key = os.getenv('GEMINI_API_KEY')
+        # Determine LLM configuration
+        self.openrouter_key = os.getenv('OPENROUTER_API_KEY')
+        self.gemini_key = os.getenv('GEMINI_API_KEY')
+        self.emergent_key = os.getenv('EMERGENT_LLM_KEY')
         
-        if not gemini_key:
-            raise ValueError("GEMINI_API_KEY not found in environment variables")
+        # Default configuration
+        self.provider = "openai"
+        self.model_name = "gpt-5.2"
+        self.api_key = self.emergent_key
         
-        genai.configure(api_key=gemini_key)
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
-        logger.info(f"LeadChatService initialized with Gemini LLM")
+        # Prioritize OpenRouter if available
+        if self.openrouter_key:
+            self.api_key = self.openrouter_key
+            self.provider = "openrouter"
+            self.model_name = "qwen/qwen3.6-plus:free"
+            logger.info(f"LeadChatService initialized with OpenRouter: {self.model_name}")
+        elif self.gemini_key:
+            self.api_key = self.gemini_key
+            self.provider = "gemini"
+            self.model_name = "gemini-1.5-flash"
+            logger.info(f"LeadChatService initialized with Gemini LLM")
+        elif self.emergent_key:
+            self.api_key = self.emergent_key
+            self.provider = "openai"
+            logger.info(f"LeadChatService initialized with Emergent LLM")
+        else:
+            raise ValueError("No LLM API key found (OPENROUTER_API_KEY, GEMINI_API_KEY or EMERGENT_LLM_KEY)")
+        
+        self.llm = LlmChat(
+            api_key=self.api_key,
+            provider=self.provider,
+            model=self.model_name
+        )
     
     async def get_engagement_advice(
         self,
@@ -31,38 +56,26 @@ class LeadChatService:
     ) -> str:
         """
         Get AI-powered advice on how to engage with a business lead.
-        
-        Args:
-            lead_data: Business information (name, category, rating, etc.)
-            user_message: User's question about the lead
-            chat_history: Previous conversation history
-        
-        Returns:
-            AI assistant's response
         """
         try:
             # Build system message with lead context
             system_message = self._build_system_message(lead_data)
+            self.llm.system_message = system_message
             
-            # Construct the full prompt including history
-            full_prompt = system_message + "\n\n"
-            
-            # Add conversation history to prompt for context
-            if chat_history and len(chat_history) > 0:
-                full_prompt += "**PREVIOUS CONVERSATION (Remember this context):**\n"
+            # Format history for LlmChat
+            self.llm.clear_history()
+            if chat_history:
                 for msg in chat_history:
-                    role = "USER" if msg.get('role') == 'user' else "ASSISTANT"
+                    # Ensure roles are compatible with OpenAI/LlmChat format
+                    role = msg.get('role', 'user')
                     content = msg.get('content', '')
-                    full_prompt += f"\n{role}: {content}\n"
-                full_prompt += "\n**CURRENT USER MESSAGE:**\n"
-
-            full_prompt += f"USER: {user_message}"
+                    self.llm.conversation_history.append({"role": role, "content": content})
 
             # Generate response
-            response = await self.model.generate_content_async(full_prompt)
+            response = await self.llm.send_message_async(user_message)
             
             logger.info(f"Generated engagement advice for lead: {lead_data.get('title', 'Unknown')}")
-            return response.text
+            return response
         
         except Exception as e:
             logger.error(f"Error generating engagement advice: {str(e)}")
@@ -118,24 +131,19 @@ Help the user craft a winning approach to engage with {business_name}."""
     async def generate_outreach_template(self, lead_data: Dict[str, Any], channel: str = "email") -> str:
         """
         Generate a personalized outreach template.
-
-        Args:
-            lead_data: Business information
-            channel: Communication channel (email, phone, linkedin)
-
-        Returns:
-            Personalized outreach template
         """
         try:
             system_message = self._build_system_message(lead_data)
+            self.llm.system_message = system_message
+            self.llm.clear_history()
 
-            prompt = f"{system_message}\n\nCreate a personalized {channel} outreach template for this business. Make it professional, concise, and focused on value. Include placeholders for customization."
+            prompt = f"Create a personalized {channel} outreach template for this business. Make it professional, concise, and focused on value. Include placeholders for customization."
 
             # Generate response
-            response = await self.model.generate_content_async(prompt)
+            response = await self.llm.send_message_async(prompt)
             
             logger.info(f"Generated {channel} template for lead: {lead_data.get('title', 'Unknown')}")
-            return response.text
+            return response
         
         except Exception as e:
             logger.error(f"Error generating outreach template: {str(e)}")

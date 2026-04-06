@@ -62,6 +62,77 @@ class TaskManager:
         logger.warning(f"Could not cancel task {run_id}: no celery_task_id found")
         return False
     
+    async def start_task(self, run_id: str, actor_id: str, user_id: str = None, input_data: dict = None, organization_id: str = None, *args, **kwargs) -> bool:
+        """
+        Start a scraping task via Celery.
+        Centralizes the logic for queue selection and run tracking.
+        """
+        # Handle old signature: task_manager.start_task(run_id, coroutine)
+        # If second arg is a coroutine object, we shouldn't attempt to use it
+        if args and hasattr(args[0], '__await__'):
+            logger.warning(f"TaskManager.start_task called with deprecated coroutine for run {run_id}. Celery requires explicit arguments.")
+            # We attempt to proceed if user_id and input_data were also passed as kwargs
+        
+        from database import get_db
+        db = get_db()
+        if db is None:
+            logger.error("No database connection available to start task")
+            return False
+
+        # Ensure we have the minimum required data
+        if not all([actor_id, user_id, input_data]):
+            # Try to fetch from DB if missing
+            run = await db.runs.find_one({"id": run_id})
+            if run:
+                actor_id = actor_id or run.get("actor_id")
+                user_id = user_id or run.get("user_id")
+                input_data = input_data or run.get("input_data")
+                organization_id = organization_id or run.get("organization_id")
+            else:
+                logger.error(f"Missing required data to start run {run_id}")
+                return False
+
+        # 1. Determine queue priority
+        queue_name = "default"
+        try:
+            from services.billing_service import billing_service
+            billing_info = await billing_service.get_billing_summary(organization_id or user_id, 'organization' if organization_id else 'personal')
+            plan = billing_info.get("plan", "free")
+            if plan in ["pro", "business", "enterprise"]:
+                queue_name = "high_priority"
+        except Exception as e:
+            logger.warning(f"Error determining queue for run {run_id}: {e}")
+
+        # 2. Trigger Celery task
+        from workers.scraping_worker import run_scraping_task
+        try:
+            celery_result = run_scraping_task.apply_async(
+                kwargs={
+                    "run_id": run_id,
+                    "actor_id": actor_id,
+                    "user_id": user_id,
+                    "input_data": input_data,
+                    "organization_id": organization_id
+                },
+                queue=queue_name
+            )
+            
+            # 3. Save task ID to database
+            await db.runs.update_one(
+                {"id": run_id},
+                {"$set": {"celery_task_id": celery_result.id, "status": "queued"}}
+            )
+            
+            logger.info(f"🚀 Run {run_id} successfully queued in Celery '{queue_name}' queue. Task ID: {celery_result.id}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to trigger Celery task for run {run_id}: {e}")
+            await db.runs.update_one(
+                {"id": run_id},
+                {"$set": {"status": "failed", "error_message": f"Failed to queue task: {str(e)}"}}
+            )
+            return False
+
     def get_status(self) -> Dict:
         """Get current status of task manager."""
         return {

@@ -473,7 +473,7 @@ const GlobalChat = () => {
               }
           }
           className="w-14 h-14 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg hover:shadow-xl flex items-center justify-center z-[70] group active:scale-95 transition-all duration-200"
-          title="AI Assistant (Drag to move)"
+          title="Mira AI (Drag to move)"
         >
           <ChatIcon className="w-6 h-6" />
           <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-background animate-pulse"></span>
@@ -497,8 +497,8 @@ const GlobalChat = () => {
                 <ChatIcon className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h3 className="font-semibold text-sm text-foreground">AI Assistant</h3>
-                <p className="text-xs text-muted-foreground">Always here to help</p>
+                <h3 className="font-semibold text-sm text-foreground">Mira</h3>
+                <p className="text-xs text-muted-foreground">Your Scrapi Assistant</p>
               </div>
             </div>
             <div className="flex items-center space-x-1">
@@ -553,7 +553,7 @@ const GlobalChat = () => {
                     <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
                       <ChatIcon className="w-8 h-8 text-muted-foreground" />
                     </div>
-                    <p className="text-base font-medium mb-1">Hi! I'm your AI assistant.</p>
+                    <p className="text-base font-medium mb-1">Hi! I'm Mira.</p>
                     <p className="text-sm text-muted-foreground mb-4">
                       I can help you navigate and control the app!
                     </p>
@@ -651,7 +651,7 @@ const GlobalChat = () => {
               <div className="px-4 py-3 border-t bg-card border-border rounded-b-xl">
                 <div className="flex space-x-2">
                   <Input
-                    placeholder="Type your message..."
+                    placeholder="Ask Mira anything..."
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyPress={handleKeyPress}

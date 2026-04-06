@@ -433,14 +433,11 @@ async def run_schedule_now(
     # Start scraping
     if task_manager:
         await task_manager.start_task(
-            run.id,
-            execute_scraping_job(
-                run.id,
-                schedule['actor_id'],
-                current_user['id'],
-                schedule['input_data'],
-                schedule.get('organization_id') # Pass organization_id from schedule
-            )
+            run_id=run.id,
+            actor_id=schedule['actor_id'],
+            user_id=current_user['id'],
+            input_data=schedule['input_data'],
+            organization_id=schedule.get('organization_id')
         )
     
     # Update schedule statistics for manual runs

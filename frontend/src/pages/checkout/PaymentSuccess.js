@@ -13,6 +13,7 @@ import {
     FileText
 } from 'lucide-react';
 import './PaymentSuccess.css';
+import LoadingScreen from '@/components/LoadingScreen';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 const API = `${BACKEND_URL}/api`;
@@ -122,8 +123,7 @@ const PaymentSuccess = () => {
     if (status === 'loading') {
         return (
             <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
-                <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-4" />
-                <p className="text-sm text-muted-foreground font-medium">Finalising your upgrade...</p>
+                <LoadingScreen text='Finalisisng your upgrade...' />
             </div>
         );
     }
@@ -156,20 +156,32 @@ const PaymentSuccess = () => {
         <div className="min-h-screen bg-[#fafafa] dark:bg-[#000000] flex flex-col items-center relative overflow-x-hidden">
             {showConfetti && (
                 <div className="confetti-container">
-                    {[...Array(30)].map((_, i) => (
-                        <div
-                            key={i}
-                            className="confetti"
-                            style={{
-                                left: `${Math.random() * 100}%`,
-                                animationDelay: `${Math.random() * 5}s`,
-                                width: '4px',
-                                height: '10px',
-                                opacity: 0.3,
-                                backgroundColor: i % 2 === 0 ? '#9ca3af' : '#d1d5db'
-                            }}
-                        />
-                    ))}
+                    {[...Array(150)].map((_, i) => {
+                        const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4'];
+                        const size = Math.random() * 8 + 4;
+                        const delay = Math.random() * 5;
+                        const duration = Math.random() * 3 + 2;
+                        const left = Math.random() * 100;
+                        const shape = i % 3 === 0 ? '50%' : '2px'; // mix of circles and rectangles
+
+                        return (
+                            <div
+                                key={i}
+                                className="confetti"
+                                style={{
+                                    left: `${left}%`,
+                                    animationDelay: `${delay}s`,
+                                    animationDuration: `${duration}s`,
+                                    width: `${size}px`,
+                                    height: `${i % 2 === 0 ? size : size * 1.5}px`,
+                                    opacity: 0.8,
+                                    backgroundColor: colors[i % colors.length],
+                                    borderRadius: shape,
+                                    transform: `rotate(${Math.random() * 360}deg)`
+                                }}
+                            />
+                        );
+                    })}
                 </div>
             )}
 

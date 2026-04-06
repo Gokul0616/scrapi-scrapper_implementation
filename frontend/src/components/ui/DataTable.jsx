@@ -357,14 +357,14 @@ const DataTable = ({
                     </TableHeader>
                     <TableBody>
                         {loading ? (
-                            <TableRow>
+                            <TableRow className="hover:bg-transparent">
                                 <TableCell colSpan={columns.length} className="p-0 border-none">
-                                    <LoadingScreen className="min-h-[200px]" />
+                                    <LoadingScreen className="p-5" />
                                 </TableCell>
                             </TableRow>
                         ) : data.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={columns.length} className="px-4 py-16 text-center text-muted-foreground text-sm border-none">
+                            <TableRow className="hover:bg-transparent">
+                                <TableCell colSpan={columns.length} className="px-4 py-8 text-center text-muted-foreground text-sm border-none">
                                     {emptyState || "No results found."}
                                 </TableCell>
                             </TableRow>

@@ -10,6 +10,7 @@ import OTPInput from '../components/OTPInput';
 import CustomValidationTooltip from '../components/CustomValidationTooltip';
 import SecureShield from '../components/auth/SecureShield';
 import axios from 'axios';
+import LoadingScreen from '@/components/LoadingScreen';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || '';
 
@@ -59,6 +60,7 @@ const Register = () => {
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [showValidationTooltip, setShowValidationTooltip] = useState(false);
+  const processingRef = React.useRef(false);
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
@@ -97,8 +99,14 @@ const Register = () => {
   };
 
   const handleCaptchaVerify = useCallback(async (shieldDataOrId, solutionOrAnswer) => {
+    if (processingRef.current) return;
+    processingRef.current = true;
+    
     setIsLoading(true);
     setOtpError('');
+    setOtpSuccessMessage('');
+    setIsShieldSolved(true);
+    setStep(3); // Move to OTP step immediately to show "Sending..." state
 
     // Check if it's the new Shield data or old Captcha
     let shieldData = {};
@@ -132,13 +140,17 @@ const Register = () => {
       }));
 
       setOtpSuccessMessage('OTP sent successfully to your email');
-      if (step === 2) {
-        setStep(3); // Move to OTP step
-      }
     } catch (error) {
+      console.error("Failed to send OTP:", error);
+      const errorMessage = error.response?.data?.detail || error.response?.data?.message || 'Failed to send verification code. Please try again.';
+      setOtpError(errorMessage);
+      setStep(1); // Return to first step to allow retry
+      setIsShieldSolved(false); // Reset shield if it failed
+      processingRef.current = false; // Allow retry
+    } finally {
+      setIsLoading(false);
     }
-    setIsShieldSolved(true);
-  }, [formData.email, step, showMessage]);
+  }, [formData.email]); // Removed step and showMessage to avoid re-triggering SecureShield on step change
 
   const handleOTPSubmit = async (e) => {
     e.preventDefault();
@@ -520,63 +532,77 @@ const Register = () => {
                 </div>
               ) : (
                 <>
-                  <p className="text-[13px] text-gray-600 mb-6 text-center">
-                    We sent a verification code to<br />
-                    <span className="font-medium text-gray-900">{formData.email}</span>
-                  </p>
-
-                  {otpSuccessMessage && (
-                    <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
-                      <p className="text-[12px] text-green-600 flex items-center justify-center">
-                        <Check className="w-3.5 h-3.5 mr-1" />
-                        {otpSuccessMessage}
+                  {isLoading && !otpSuccessMessage && !formData.otp ? (
+                    <div className="flex flex-col items-center justify-center py-10">
+                      <LoadingScreen />
+                      <p className="text-[14px] text-gray-600 font-medium tracking-tight">Sending verification code...</p>
+                      <p className="text-[12px] text-gray-400 mt-1">Check your inbox for a message from Scrapi</p>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-[13px] text-gray-600 mb-6 text-center">
+                        We sent a verification code to<br />
+                        <span className="font-medium text-gray-900">{formData.email}</span>
                       </p>
-                    </div>
-                  )}
 
-                  <form onSubmit={handleOTPSubmit} className="space-y-6">
-                    <div>
-                      <label className="block text-[13px] font-medium text-gray-700 mb-3 text-center">
-                        Enter 6-digit code
-                      </label>
-                      <OTPInput
-                        length={6}
-                        value={formData.otp}
-                        onChange={(otp) => {
-                          setFormData({ ...formData, otp });
-                          setOtpError('');
-                          setOtpSuccessMessage('');
-                        }}
-                        disabled={isLoading}
-                      />
-                      {otpError && (
-                        <p className="mt-2 text-[12px] text-red-600 flex items-center justify-center">
-                          <AlertCircle className="w-3.5 h-3.5 mr-1" />
-                          {otpError}
-                        </p>
+                      {otpSuccessMessage && (
+                        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+                          <p className="text-[12px] text-green-600 flex items-center justify-center font-medium">
+                            <Check className="w-3.5 h-3.5 mr-1" />
+                            {otpSuccessMessage}
+                          </p>
+                        </div>
                       )}
-                    </div>
 
-                    <Button
-                      type="submit"
-                      className="w-full bg-gray-900 hover:bg-gray-800 text-white h-[38px] text-[14px] font-medium rounded-md"
-                      disabled={isLoading || formData.otp.length !== 6}
-                    >
-                      {isLoading ? 'Verifying...' : 'Verify'}
-                    </Button>
+                      <form onSubmit={handleOTPSubmit} className="space-y-6">
+                        <div>
+                          <label className="block text-[13px] font-medium text-gray-700 mb-3 text-center">
+                            Enter 6-digit code
+                          </label>
+                          <OTPInput
+                            length={6}
+                            value={formData.otp}
+                            onChange={(otp) => {
+                              setFormData({ ...formData, otp });
+                              setOtpError('');
+                              setOtpSuccessMessage('');
+                            }}
+                            disabled={isLoading}
+                          />
+                          {otpError && (
+                            <p className="mt-2 text-[12px] text-red-600 flex items-center justify-center">
+                              <AlertCircle className="w-3.5 h-3.5 mr-1" />
+                              {otpError}
+                            </p>
+                          )}
+                        </div>
 
-                    <p className="text-center text-[13px] text-gray-600">
-                      Didn't receive the code?{' '}
-                      <button
-                        type="button"
-                        onClick={handleResendOTP}
-                        className="text-blue-600 hover:underline font-medium"
-                        disabled={isLoading}
-                      >
-                        Resend
-                      </button>
-                    </p>
-                  </form>
+                        <Button
+                          type="submit"
+                          className="w-full bg-gray-900 hover:bg-gray-800 text-white h-[38px] text-[14px] font-medium rounded-md shadow-sm transition-all active:scale-[0.98]"
+                          disabled={isLoading || formData.otp.length !== 6}
+                        >
+                          {isLoading ? (
+                            <div className="flex items-center justify-center">
+                              <LoadingScreen text='Verifying...' />
+                            </div>
+                          ) : 'Verify'}
+                        </Button>
+
+                        <p className="text-center text-[13px] text-gray-600">
+                          Didn't receive the code?{' '}
+                          <button
+                            type="button"
+                            onClick={handleResendOTP}
+                            className="text-blue-600 hover:underline font-medium transition-colors"
+                            disabled={isLoading}
+                          >
+                            Resend
+                          </button>
+                        </p>
+                      </form>
+                    </>
+                  )}
                 </>
               )}
             </>

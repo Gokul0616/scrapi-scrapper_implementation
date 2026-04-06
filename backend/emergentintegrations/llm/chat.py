@@ -127,6 +127,13 @@ class LlmChat:
                 else:
                     genai.configure(api_key=self.api_key)
                 self.client = genai.GenerativeModel(self.model)
+            elif self.provider == "openrouter":
+                if OpenAI is None:
+                    raise ImportError("OpenAI library not installed. Install with: pip install openai")
+                self.client = OpenAI(
+                    api_key=self.api_key,
+                    base_url="https://openrouter.ai/api/v1"
+                )
             else:
                 raise ValueError(f"Unsupported provider: {self.provider}")
                 
@@ -167,12 +174,12 @@ class LlmChat:
         self.conversation_history.append(message.to_dict())
         
         try:
-            if self.provider == "openai":
+            if self.provider == "openai" or self.provider == "openrouter":
                 response = self._send_openai_message()
             elif self.provider == "anthropic":
                 response = self._send_anthropic_message()
             elif self.provider == "gemini":
-                response = self._send_gemini_message()
+                response = self._send_gemini_message()  
             else:
                 raise ValueError(f"Unsupported provider: {self.provider}")
             
@@ -254,7 +261,7 @@ class LlmChat:
                 formatted_messages.append(msg)
         
         try:
-            if self.provider == "openai":
+            if self.provider == "openai" or self.provider == "openrouter":
                 async for token in self._stream_openai(formatted_messages):
                     yield token
             elif self.provider == "anthropic":
@@ -274,7 +281,12 @@ class LlmChat:
         messages_with_system.extend(messages)
         
         # Create async client if not already done
-        if self.api_key.startswith("sk-emergent-"):
+        if self.provider == "openrouter":
+            async_client = AsyncOpenAI(
+                api_key=self.api_key,
+                base_url="https://openrouter.ai/api/v1"
+            )
+        elif self.api_key.startswith("sk-emergent-"):
             async_client = AsyncOpenAI(
                 api_key=self.api_key,
                 base_url="https://api.emergent.sh/openai/v1"
@@ -285,7 +297,12 @@ class LlmChat:
         stream = await async_client.chat.completions.create(
             model=self.model,
             messages=messages_with_system,
-            stream=True
+            stream=True,
+            # OpenRouter specific headers for identification if needed
+            extra_headers={
+                "HTTP-Referer": "https://scrapi.ai",
+                "X-Title": "Scrapi AI"
+            } if self.provider == "openrouter" else {}
         )
         
         async for chunk in stream:

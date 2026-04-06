@@ -1238,10 +1238,12 @@ async def check_email(email: str):
     """Check if an email already exists in the database."""
     from services.email_validator import validate_email_comprehensive
     
-    # Validate email format and check if disposable
+    # Validate email format and check if disposable (comprehensive)
+    logger.info(f"🔍 Validating email in check-email: {email}")
     is_valid, error_message = await validate_email_comprehensive(email, check_mx=False, check_smtp=False)
     
     if not is_valid:
+        logger.warning(f"🚫 Email validation failed in check-email for {email}: {error_message}")
         raise HTTPException(status_code=400, detail=error_message)
     
     # Check if email is associated with a deleted account
@@ -1416,16 +1418,19 @@ async def verify_otp(request: VerifyOTPRequest):
         })
         
         if not otp_doc:
+            logger.warning(f"OTP verification failed: Code not found for {request.email} with purpose {request.purpose}")
             raise HTTPException(status_code=400, detail="Invalid or expired verification code")
         
         # Check if OTP has expired
         expires_at = parse_datetime_safe(otp_doc['expires_at'])
         if datetime.now(timezone.utc) > expires_at:
+            logger.warning(f"OTP verification failed: Code expired for {request.email}")
             await db.otps.delete_one({"id": otp_doc['id']})
             raise HTTPException(status_code=400, detail="Verification code has expired")
         
         # Check attempts
         if otp_doc['attempts'] >= 5:
+            logger.warning(f"OTP verification failed: Too many attempts for {request.email}")
             await db.otps.delete_one({"id": otp_doc['id']})
             raise HTTPException(status_code=400, detail="Too many failed attempts. Please request a new code.")
         
@@ -1437,6 +1442,7 @@ async def verify_otp(request: VerifyOTPRequest):
                 {"$inc": {"attempts": 1}}
             )
             remaining = 5 - otp_doc['attempts'] - 1
+            logger.warning(f"OTP verification failed: Invalid code entered for {request.email}. {remaining} attempts left.")
             raise HTTPException(
                 status_code=400, 
                 detail=f"Invalid verification code. {remaining} attempts remaining."
@@ -2264,14 +2270,11 @@ async def create_run(
     
     # Start scraping in parallel using task manager
     await task_manager.start_task(
-        run.id,
-        execute_scraping_job(
-            run.id,
-            real_actor_id,
-            current_user['id'],
-            run_data.input_data,
-            organization_id  # Pass organization_id
-        )
+        run_id=run.id,
+        actor_id=real_actor_id,
+        user_id=current_user['id'],
+        input_data=run_data.input_data,
+        organization_id=organization_id
     )
     
     logger.info(f"Run {run.id} queued. Currently running: {task_manager.get_running_count()} tasks")
@@ -2914,14 +2917,11 @@ async def global_chat(
                     
                     # Use task manager for parallel execution
                     await task_manager.start_task(
-                        run_id,
-                        execute_scraping_job(
-                            run_id,
-                            actor_id,
-                            current_user['id'],
-                            input_data,
-                            None # Global chat runs default to personal for now, or could infer from context if passed
-                        )
+                        run_id=run_id,
+                        actor_id=actor_id,
+                        user_id=current_user['id'],
+                        input_data=input_data,
+                        organization_id=None
                     )
                     logger.info(f"✓ Run {run_id} started by AI Agent. Active tasks: {task_manager.get_running_count()}")
                 else:
@@ -2936,13 +2936,10 @@ async def global_chat(
             
             # Use task manager for parallel execution
             await task_manager.start_task(
-                run_id,
-                execute_scraping_job(
-                    run_id,
-                    actor_id,
-                    current_user['id'],
-                    input_data
-                )
+                run_id=run_id,
+                actor_id=actor_id,
+                user_id=current_user['id'],
+                input_data=input_data
             )
             logger.info(f"✓ Run {run_id} started by AI Agent. Active tasks: {task_manager.get_running_count()}")
         
@@ -3388,14 +3385,11 @@ async def run_schedule_now(
     # Start scraping
     from services.task_manager import task_manager
     await task_manager.start_task(
-        run.id,
-        execute_scraping_job(
-            run.id,
-            schedule['actor_id'],
-            current_user['id'],
-            schedule['input_data'],
-            schedule.get('organization_id') # Pass organization_id from schedule
-        )
+        run_id=run.id,
+        actor_id=schedule['actor_id'],
+        user_id=current_user['id'],
+        input_data=schedule['input_data'],
+        organization_id=schedule.get('organization_id')
     )
     
     # Update schedule statistics for manual runs

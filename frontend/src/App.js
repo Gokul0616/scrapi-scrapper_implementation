@@ -97,7 +97,7 @@ const DashboardLayout = ({ children }) => {
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
       <main className={`flex-1 overflow-y-auto transition-colors ${theme === 'dark' ? 'bg-[#0F1014]' : 'bg-gray-50'}`}>{children}</main>
-      {/* <GlobalChat /> */}
+      <GlobalChat />
     </div>
   );
 };

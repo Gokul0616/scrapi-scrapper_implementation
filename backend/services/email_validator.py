@@ -640,6 +640,10 @@ class EmailValidator:
                     result.add_warning(f"Note: {verify_reason}")
                 else:
                     logger.info(f"✅ Server verified: {email} on {provider_name}")
+                    # Whitelist: Skip subsequent dynamic reputation/website checks for trusted providers
+                    # This prevents false positives (like blocking gmail.com due to a network glitch)
+                    enable_dynamic_checks = False
+                    logger.info(f"✨ Trusted provider whitelisted: skipping dynamic checks for {email}")
             except Exception as e:
                 logger.error(f"Server verification error: {str(e)}")
                 result.add_warning("Unable to verify email server")

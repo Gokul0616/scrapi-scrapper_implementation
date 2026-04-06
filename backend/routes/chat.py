@@ -200,16 +200,13 @@ async def global_chat(
                     # Use task manager for parallel execution
                     if task_manager:
                         await task_manager.start_task(
-                            run.id,
-                            execute_scraping_job(
-                                run_id,
-                                actor_id,
-                                current_user['id'],
-                                input_data,
-                                None # Global chat runs default to personal for now
-                            )
+                            run_id=run_id,
+                            actor_id=actor_id,
+                            user_id=current_user['id'],
+                            input_data=input_data,
+                            organization_id=None # Global chat runs default to personal for now
                         )
-                        logger.info(f"✓ Run {run_id} started by AI Agent. Active tasks: {task_manager.get_running_count()}")
+                        logger.info(f"✓ Run {run_id} started by AI Agent. Active tasks: {await task_manager.get_running_count()}")
                     else:
                         logger.warning(f"Task manager not initialized, AI Agent could not start run {run_id}")
                 else:
@@ -225,15 +222,12 @@ async def global_chat(
             # Use task manager for parallel execution
             if task_manager:
                 await task_manager.start_task(
-                    run_id,
-                    execute_scraping_job(
-                        run_id,
-                        actor_id,
-                        current_user['id'],
-                        input_data
-                    )
+                    run_id=run_id,
+                    actor_id=actor_id,
+                    user_id=current_user['id'],
+                    input_data=input_data
                 )
-                logger.info(f"✓ Run {run_id} started by AI Agent. Active tasks: {task_manager.get_running_count()}")
+                logger.info(f"✓ Run {run_id} started by AI Agent. Active tasks: {await task_manager.get_running_count()}")
             else:
                  logger.warning(f"Task manager not initialized, AI Agent could not start run {run_id}")
         

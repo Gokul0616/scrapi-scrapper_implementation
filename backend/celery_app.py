@@ -9,15 +9,22 @@ celery_app = Celery(
     'scrapi_tasks',
     broker=CELERY_BROKER_URL,
     backend=CELERY_RESULT_BACKEND,
-    include=['workers.scraping_worker']
+    include=[
+        'workers.scraping_worker',
+        'workers.webhook_worker',
+    ]
 )
 
+# Base serialisation + timezone settings
 celery_app.conf.update(
     task_serializer='json',
-    accept_content=['json'],  
+    accept_content=['json'],
     result_serializer='json',
     timezone='UTC',
     enable_utc=True,
-    task_default_queue='default',
-    # We can route tasks to priority queues dynamically in code using apply_async(queue='...')
 )
+
+# Apply priority queue routing config (Phase 1.3)
+from workers.queue_config import QUEUE_CONFIG  # noqa: E402
+celery_app.conf.update(QUEUE_CONFIG)
+

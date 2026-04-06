@@ -7,6 +7,8 @@ const API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 const SecureShield = ({ onVerify, email }) => {
     const [status, setStatus] = useState('initializing'); // initializing, challenge, solving, completed, error
     const [error, setError] = useState('');
+    const hasCalledVerify = React.useRef(false);
+    const workerRef = React.useRef(null);
 
     const getFingerprint = useCallback(() => {
         const canvas = document.createElement('canvas');
@@ -34,6 +36,9 @@ const SecureShield = ({ onVerify, email }) => {
     }, []);
 
     const startShield = useCallback(async () => {
+        // Prevent double execution
+        if (hasCalledVerify.current) return;
+        
         try {
             setStatus('challenge');
             const startTime = Date.now();
@@ -45,6 +50,7 @@ const SecureShield = ({ onVerify, email }) => {
 
             // 2. Solve Proof-of-Work in Worker
             const worker = new Worker('/pow_worker.js');
+            workerRef.current = worker;
             worker.postMessage({ nonce: data.nonce, difficulty: data.difficulty });
 
             worker.onmessage = (e) => {
@@ -63,23 +69,33 @@ const SecureShield = ({ onVerify, email }) => {
                     total_time: Date.now() - startTime
                 };
 
-                setStatus('completed');
+                // Final check before calling parent
+                if (!hasCalledVerify.current) {
+                    setStatus('completed');
+                    hasCalledVerify.current = true;
+                    
+                    // 4. Pass back to parent
+                    onVerify({
+                        nonce: data.nonce,
+                        solution: solution,
+                        fingerprint: fingerprint
+                    });
+                }
 
-                // 4. Pass back to parent
-                onVerify({
-                    nonce: data.nonce,
-                    solution: solution,
-                    fingerprint: fingerprint
-                });
-
-                worker.terminate();
+                if (workerRef.current) {
+                    workerRef.current.terminate();
+                    workerRef.current = null;
+                }
             };
 
             worker.onerror = (err) => {
                 console.error("Shield Worker Error:", err);
                 setError('Security shield calculation error');
                 setStatus('error');
-                worker.terminate();
+                if (workerRef.current) {
+                    workerRef.current.terminate();
+                    workerRef.current = null;
+                }
             };
 
         } catch (err) {
@@ -91,6 +107,13 @@ const SecureShield = ({ onVerify, email }) => {
 
     useEffect(() => {
         startShield();
+        return () => {
+            // Cleanup on unmount
+            if (workerRef.current) {
+                workerRef.current.terminate();
+                workerRef.current = null;
+            }
+        };
     }, [startShield]);
 
     return (

@@ -175,9 +175,8 @@ const ActorsTable = ({
 
     const emptyState = (
         <div className="flex flex-col items-center justify-center space-y-2">
-            <MapPin className="w-10 h-10 text-muted-foreground/30" />
             <div className="text-sm font-medium">No actors found</div>
-            <div className="text-xs text-muted-foreground">Go to Marketplace or Store to add actors.</div>
+            {/* <div className="text-xs text-muted-foreground">Go to Marketplace or Store to add actors.</div> */}
         </div>
     );
 

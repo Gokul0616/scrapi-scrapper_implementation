@@ -15,6 +15,7 @@ import { getUserInitials, getProfileColor, getUserDisplayName } from '../utils/u
 import { useToast } from '../hooks/use-toast';
 import ApiIntegrations from '../components/ApiIntegrations';
 import axios from 'axios';
+import LoadingScreen from '../components/LoadingScreen';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -25,6 +26,7 @@ const Settings = () => {
   const { workspaces, refreshWorkspaces } = useWorkspace();
   const [searchParams] = useSearchParams();
   const fileInputRef = useRef(null);
+  const usernameInputRef = useRef(null);
   const tabRefs = useRef({});
   const tabsListRef = useRef(null);
   const initialReadme = `Markdown as an easy way to elevate the **look** and *feel* of your text.
@@ -139,6 +141,30 @@ Here are some ideas to get you started:
       setActiveTab(tabParam);
     }
   }, [searchParams]);
+
+  // Focus username input when on account tab
+  useEffect(() => {
+    if (activeTab === 'account' && !loading) {
+      // Use a small delay and multiple attempts to ensure focus succeeds
+      // as the tab transition might take a few frames
+      const focusElement = () => {
+        if (usernameInputRef.current) {
+          usernameInputRef.current.focus();
+          // Move cursor to end of text
+          const length = usernameInputRef.current.value.length;
+          usernameInputRef.current.setSelectionRange(length, length);
+        }
+      };
+
+      const timer = setTimeout(focusElement, 50);
+      const secondTimer = setTimeout(focusElement, 150);
+      
+      return () => {
+        clearTimeout(timer);
+        clearTimeout(secondTimer);
+      };
+    }
+  }, [activeTab, loading]);
 
 
   useEffect(() => {
@@ -552,14 +578,7 @@ Here are some ideas to get you started:
   };
 
   if (loading) {
-    return (
-      <div className="flex-1 p-8 bg-background">
-        <div className="animate-pulse">
-          <div className="h-8 w-32 bg-muted rounded mb-6"></div>
-          <div className="h-10 w-full max-w-xl bg-muted rounded"></div>
-        </div>
-      </div>
-    );
+    return <LoadingScreen text="Loading settings..." />;
   }
 
   return (
@@ -653,6 +672,7 @@ Here are some ideas to get you started:
                     <div className="flex items-start gap-3">
                       <div className="flex-1 max-w-sm">
                         <Input
+                          ref={usernameInputRef}
                           value={username}
                           onChange={handleUsernameChange}
                           data-testid="username-input"
