@@ -16,6 +16,11 @@ from .audit import AuditLog
 from .api_key import ApiKey, ApiKeyCreate, ApiKeyDisplay
 from .category import Category, CategoryCreate, CategoryUpdate
 from .policy import Policy, PolicyCreate, PolicyUpdate
+from .kv_store import KVStore, KVStoreCreate, KVStoreUpdate, KVStoreItem, KVStoreKeyInfo
+from .request_queue import (
+    RequestQueue, RequestQueueCreate, RQItem, RQItemAdd, RQBatchAdd,
+    RQMarkHandled, RQReclaim,
+)
 from .organization import (
     Organization, OrganizationCreate, OrganizationUpdate, OrganizationResponse,
     OrganizationMembership, MembershipInvite, MembershipUpdate, MemberResponse,
@@ -59,6 +64,11 @@ __all__ = [
     'Organization', 'OrganizationCreate', 'OrganizationUpdate', 'OrganizationResponse',
     'OrganizationMembership', 'MembershipInvite', 'MembershipUpdate', 'MemberResponse',
     'WorkspaceContext', 'WorkspaceResponse',
+    # KV Store models
+    'KVStore', 'KVStoreCreate', 'KVStoreUpdate', 'KVStoreItem', 'KVStoreKeyInfo',
+    # Request Queue models
+    'RequestQueue', 'RequestQueueCreate', 'RQItem', 'RQItemAdd', 'RQBatchAdd',
+    'RQMarkHandled', 'RQReclaim',
     # Notification models
     'Notification', 'NotificationResponse', 'MarkAsReadRequest'
 ]

@@ -819,7 +819,7 @@ const Billing = () => {
   );
 
   const renderPricing = () => {
-    // Determine dynamic CU price string based on plan (Apify style limits mapped from backend)
+    // Determine dynamic CU price string based on plan (Scrapi style limits mapped from backend)
     // Default to 'Custom' or standard static fallback if not explicitly provided
     let cuPriceString = '$0.30 / CU';
     if (billingData?.plan?.toLowerCase() === 'growth') cuPriceString = '$0.25 / CU';

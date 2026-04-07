@@ -684,7 +684,7 @@ class BillingService:
 
     def calculate_compute_units(self, duration_seconds: int, ram_mb: int) -> float:
         """
-        Calculates compute units based on Apify formula:
+        Calculates compute units based on Scrapi formula:
         (duration_in_hours) * (ram_in_gb)
         """
         if not duration_seconds:
@@ -1276,7 +1276,7 @@ class BillingService:
                             "commission_earned": round(amount * comm_rate, 2),
                             "paypal_order_id": order_id,
                             "created_at": datetime.now(timezone.utc).isoformat(),
-                            "active_until": (datetime.now(timezone.utc) + timedelta(days=365)).isoformat() # Apify Lifetime tracking simplified to 1yr active
+                            "active_until": (datetime.now(timezone.utc) + timedelta(days=365)).isoformat() # Scrapi Lifetime tracking simplified to 1yr active
                         }
                         await db.referral_tracking.insert_one(referral_doc)
                 

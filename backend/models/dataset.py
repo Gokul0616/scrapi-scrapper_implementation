@@ -1,23 +1,25 @@
-from pydantic import BaseModel, Field, ConfigDict
-from typing import Dict, Any,Optional
-from datetime import datetime, timezone
-import uuid
+from datetime import datetime
+from typing import Optional, List, Any
+from pydantic import BaseModel, Field
 
-class DatasetItem(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    run_id: str
-    data: Dict[str, Any]
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+class DatasetBase(BaseModel):
+    name: Optional[str] = None
+    run_id: Optional[str] = None
 
-class Dataset(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    run_id: str
+class DatasetCreate(DatasetBase):
+    pass
+
+class Dataset(DatasetBase):
+    id: str
     user_id: str
     organization_id: Optional[str] = None
-    name: Optional[str] = None
     item_count: int = 0
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime
+    modified_at: datetime
+    accessed_at: datetime
+
+class DatasetItem(BaseModel):
+    id: str
+    dataset_id: str
+    data: Any
+    created_at: datetime

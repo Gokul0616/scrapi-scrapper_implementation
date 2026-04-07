@@ -209,7 +209,7 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
             });
         });
 
-        // Define a preferred order to match Apify's UI structure
+        // Define a preferred order to match Scrapi's UI structure
         const preferredOrder = [
             'Actor compute units',
             'Actors - paid for events',

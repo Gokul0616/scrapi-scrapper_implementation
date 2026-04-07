@@ -31,6 +31,8 @@ class Run(BaseModel):
     compute_units_used: float = 0.0
     results_count: int = 0
     dataset_id: Optional[str] = None
+    default_kv_store_id: Optional[str] = None       # auto-created per run
+    default_request_queue_id: Optional[str] = None  # auto-created per run
     error_message: Optional[str] = None
     logs: List[str] = Field(default_factory=list)
     cost: float = 0.0

@@ -167,7 +167,7 @@ async def seed_initial_docs(db) -> None:
         {
             "id": "crawlee",
             "title": "Crawlee",
-            "content": "A popular web scraping and browser automation library. Open source, built by Apify.",
+            "content": "A popular web scraping and browser automation library. Open source, built by Scrapi.",
             "category": "Open Source",
             "url_path": "https://crawlee.dev",
             "tags": ["crawler", "open-source", "library"]

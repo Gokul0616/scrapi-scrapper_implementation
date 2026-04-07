@@ -48,6 +48,40 @@ async def run_async_scraping_job(run_id: str, actor_id: str, user_id: str, input
         logger.warning(f"Could not initialize email validator in worker: {e}")
         
     try:
+        # ── Auto-create default KV Store + Request Queue per run (Scrapi-style) ──
+        from services.kv_store_service import KVStoreService
+        from services.request_queue_service import RequestQueueService
+
+        kv_service = KVStoreService(db)
+        rq_service = RequestQueueService(db)
+
+        try:
+            default_kv = await kv_service.create_store(
+                user_id=user_id, name=None, run_id=run_id, org_id=organization_id
+            )
+            # Store actor INPUT in the default KV store
+            await kv_service.set_record(
+                default_kv.id, "INPUT", input_data, "application/json"
+            )
+            default_rq = await rq_service.create_queue(
+                user_id=user_id, name=None, run_id=run_id, org_id=organization_id
+            )
+            await db.runs.update_one(
+                {"id": run_id},
+                {
+                    "$set": {
+                        "default_kv_store_id": default_kv.id,
+                        "default_request_queue_id": default_rq.id,
+                    }
+                }
+            )
+            logger.info(
+                f"Default storage created for run {run_id}: "
+                f"kv={default_kv.id}, rq={default_rq.id}"
+            )
+        except Exception as storage_err:
+            logger.warning(f"Could not create default storage for run {run_id}: {storage_err}")
+
         # Run the actual background scraping job (we ignore its task_manager dependencies)
         logger.info(f"Worker beginning async scraping job for run: {run_id}")
         await execute_scraping_job(run_id, actor_id, user_id, input_data, organization_id)

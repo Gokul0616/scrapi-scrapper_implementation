@@ -10,7 +10,7 @@ import {
 } from 'recharts';
 
 // ─────────────────────────────────────────────────
-// Service colour + stripe definitions  (Apify palette)
+// Service colour + stripe definitions  (Scrapi palette)
 // ─────────────────────────────────────────────────
 export const SERVICE_THEMES = {
     'Actor compute units': { color: '#10b981', pattern: false },

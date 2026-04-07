@@ -1,0 +1,38 @@
+{
+  "name": "scrapi-sdk",
+  "version": "1.0.0",
+  "description": "JavaScript/TypeScript SDK for the Scrapi web scraping platform — Scrapi-compatible interface",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest"
+  },
+  "keywords": [
+    "scraping",
+    "web-scraping",
+    "scrapi",
+    "sdk",
+    "scrapi-compatible"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.19.39",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/scrapi-io/scrapi-sdk-js"
+  },
+  "homepage": "https://docs.scrapi.io/sdk/js"
+}

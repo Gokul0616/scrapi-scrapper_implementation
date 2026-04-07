@@ -1619,7 +1619,7 @@ const DatasetV2 = () => {
                     const nonNullCount = items.filter(item => item.data && item.data[col.id] !== null && item.data[col.id] !== undefined && item.data[col.id] !== '').length;
                     const coverage = items.length > 0 ? Math.round((nonNullCount / items.length) * 100) : 100;
 
-                    // Enhance headers with Apify-style Name + Props + Coverage
+                    // Enhance headers with Scrapi-style Name + Props + Coverage
                     return {
                       ...col,
                       header: (

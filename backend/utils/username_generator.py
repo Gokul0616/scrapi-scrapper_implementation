@@ -1,5 +1,5 @@
 """
-Username generator that creates Apify-style usernames.
+Username generator that creates Scrapi-style usernames.
 Format: {adjective}_{noun}
 Example: righteous_planet, cosmic_dragon, brave_thunder
 """

@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 class GoogleMapsScraperV3(BaseScraper):
     """
-    Enhanced Google Maps scraper with Apify-like performance:
+    Enhanced Google Maps scraper with Scrapi-like performance:
     - Parallel detail extraction
     - Better scrolling and pagination
     - Email and phone extraction with verification

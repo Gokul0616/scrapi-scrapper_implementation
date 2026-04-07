@@ -1263,7 +1263,7 @@ async def check_email(email: str):
 
 @router.get("/users/generate-username")
 async def generate_username_suggestion(count: int = 5):
-    """Generate username suggestions in Apify-style format (adjective_noun)."""
+    """Generate username suggestions in Scrapi-style format (adjective_noun)."""
     from utils.username_generator import generate_username_suggestions
     
     # Generate suggestions

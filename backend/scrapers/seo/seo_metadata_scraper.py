@@ -1,6 +1,6 @@
 """
 SEO Metadata Scraper - Extract comprehensive SEO data from websites
-Similar to Apify's SEO Metadata Scraper
+Similar to Scrapi's SEO Metadata Scraper
 """
 import json
 import logging

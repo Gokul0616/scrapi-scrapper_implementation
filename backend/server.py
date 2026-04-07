@@ -59,6 +59,18 @@ async def startup_event():
     await access_control_service.ensure_indexes()
     await security_service.ensure_indexes()
 
+    # Ensure indexes for Phase 2 storage layer
+    try:
+        from services.kv_store_service import KVStoreService
+        from services.request_queue_service import RequestQueueService
+        from services.dataset_service import DatasetService
+        await KVStoreService(db).ensure_indexes()
+        await RequestQueueService(db).ensure_indexes()
+        await DatasetService(db).ensure_indexes()
+        logging.info("✅ Storage layer indexes ensured (KV Store + Request Queue + Dataset)")
+    except Exception as e:
+        logging.warning(f"⚠️ Could not ensure storage indexes: {e}")
+
     # Verify Redis connectivity (managed externally via Docker or local install)
     try:
         import redis as redis_sync

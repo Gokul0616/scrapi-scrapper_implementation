@@ -109,7 +109,7 @@ const BillingDetailsStep = ({
                 const hasSaved = saved && Object.keys(saved).length > 0;
 
                 if (hasSaved) {
-                    // ── Silent pre-fill (Stripe/Apify style — no banner) ──
+                    // ── Silent pre-fill (Stripe/Scrapi style — no banner) ──
                     const mapped = fromBackend(saved);
                     setSavedDetails(mapped);
                     setBillingDetails(prev => ({
