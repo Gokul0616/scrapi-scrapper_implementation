@@ -15,10 +15,21 @@ class DatasetService:
 
     async def ensure_indexes(self):
         """Create indexes for performance and expiration."""
-        await self.datasets.create_index([("user_id", 1), ("name", 1)], unique=True, sparse=True)
+        try:
+            # Drop legacy index if it exists (it was too restrictive for null names)
+            await self.datasets.drop_index("user_id_1_name_1")
+        except Exception:
+            pass # Index might not exist yet
+            
+        # Create a partial unique index: enforce uniqueness ONLY if name is provided (is a string)
+        await self.datasets.create_index(
+            [("user_id", 1), ("name", 1)],
+            unique=True,
+            partialFilterExpression={"name": {"$type": "string"}}
+        )
         await self.datasets.create_index([("run_id", 1)])
         await self.dataset_items.create_index([("dataset_id", 1)])
-        logger.info("✅ Dataset indexes ensured")
+        logger.info("✅ Dataset indexes ensured (with partial uniqueness for names)")
 
     async def create_dataset(
         self, user_id: str, name: Optional[str] = None, run_id: Optional[str] = None, org_id: Optional[str] = None

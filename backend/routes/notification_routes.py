@@ -246,3 +246,17 @@ async def broadcast_usage_update(user_id: str):
                 print(f"DEBUG WebSocket: Failed to send to a connection for {user_id}: {e}")
     else:
         print(f"DEBUG WebSocket: User {user_id} NOT found in active_connections. Current active users: {list(active_connections.keys())}")
+
+async def broadcast_chat_update(user_id: str, conversation_id: str, chat_message: dict):
+    """Notify the frontend that a new chat message has arrived."""
+    if user_id in active_connections:
+        payload = {
+            "type": "chat_update",
+            "conversation_id": conversation_id,
+            "message": chat_message
+        }
+        for websocket in active_connections[user_id]:
+            try:
+                await websocket.send_json(payload)
+            except Exception as e:
+                logger.info(f"Failed to send chat update to user {user_id}: {e}")

@@ -20,6 +20,7 @@ class Dataset(DatasetBase):
 
 class DatasetItem(BaseModel):
     id: str
+    run_id: Optional[str] = None
     dataset_id: str
     data: Any
     created_at: datetime

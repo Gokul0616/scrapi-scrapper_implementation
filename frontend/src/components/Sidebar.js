@@ -46,7 +46,8 @@ import {
   Palette,
   Plus,
   ExternalLink,
-  Mail
+  Mail,
+  Sparkles
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -143,6 +144,21 @@ const Sidebar = () => {
 
     saveSidebarState();
   }, [isCollapsed, user]);
+
+  // Handle automatic sidebar collapsing when entering the chat screen
+  const lastPathname = useRef(location.pathname);
+
+  useEffect(() => {
+    // Detect transition from any non-chat route to a chat route
+    const wasInChat = lastPathname.current.startsWith('/chat');
+    const isInChat = location.pathname.startsWith('/chat');
+    
+    if (isInChat && !wasInChat) {
+      setIsCollapsed(true);
+    }
+    
+    lastPathname.current = location.pathname;
+  }, [location.pathname]);
 
 
 
@@ -288,6 +304,7 @@ const Sidebar = () => {
   // Menu structure
   const scrapiStoreItems = [
     { icon: Home, label: 'Home', path: '/home', shortcut: 'S H' },
+    { icon: Sparkles, label: 'Mira AI', path: '/chat', shortcut: '' },
     { icon: Code2, label: 'Actors', path: '/actors', shortcut: 'S A' },
     { icon: PlayCircle, label: 'Runs', path: '/runs', shortcut: 'S R' },
     { icon: BookmarkCheck, label: 'Saved tasks', path: '/tasks', shortcut: 'S T' },

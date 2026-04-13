@@ -1,54 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import AlertModal from './AlertModal';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { X, Send, Minimize2, Trash2, Navigation } from 'lucide-react';
-import { useTheme } from '../contexts/ThemeContext';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
-
-// Custom Sparkle Icon SVG Component - Unique and modern
-const ChatIcon = ({ className = "w-5 h-5" }) => (
-  <svg
-    className={className}
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M12 2L13.5 8.5L20 10L13.5 11.5L12 18L10.5 11.5L4 10L10.5 8.5L12 2Z"
-      fill="currentColor"
-      fillOpacity="0.9"
-    />
-    <path
-      d="M19 3L19.8 5.8L22.5 6.5L19.8 7.2L19 10L18.2 7.2L15.5 6.5L18.2 5.8L19 3Z"
-      fill="currentColor"
-      fillOpacity="0.7"
-    />
-    <path
-      d="M6 14L6.6 16.2L9 17L6.6 17.8L6 20L5.4 17.8L3 17L5.4 16.2L6 14Z"
-      fill="currentColor"
-      fillOpacity="0.7"
-    />
+// Custom Sparkle Icon SVG Component
+const ChatIcon = ({ className = 'w-5 h-5' }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2L13.5 8.5L20 10L13.5 11.5L12 18L10.5 11.5L4 10L10.5 8.5L12 2Z" fill="currentColor" fillOpacity="0.9" />
+    <path d="M19 3L19.8 5.8L22.5 6.5L19.8 7.2L19 10L18.2 7.2L15.5 6.5L18.2 5.8L19 3Z" fill="currentColor" fillOpacity="0.7" />
+    <path d="M6 14L6.6 16.2L9 17L6.6 17.8L6 20L5.4 17.8L3 17L5.4 16.2L6 14Z" fill="currentColor" fillOpacity="0.7" />
   </svg>
 );
 
 const GlobalChat = () => {
   const navigate = useNavigate();
-  // const { theme } = useTheme(); // Theme now handled by direct classes match
-  const [isOpen, setIsOpen] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
-  const [messages, setMessages] = useState([]);
-  const [inputMessage, setInputMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [historyLoaded, setHistoryLoaded] = useState(false);
-  const [actionFeedback, setActionFeedback] = useState(null);
-  const messagesEndRef = useRef(null);
+  const location = useLocation();
 
   // Draggable state
   const [position, setPosition] = useState(() => {
@@ -60,641 +24,107 @@ const GlobalChat = () => {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [currentPos, setCurrentPos] = useState({ x: 0, y: 0 });
   const buttonRef = useRef(null);
-  const DRAG_THRESHOLD = 5; // pixels - minimum movement to consider it a drag
+  const DRAG_THRESHOLD = 5;
 
-  // Alert modal states
-  const [alertModal, setAlertModal] = useState({ show: false, type: 'info', title: '', message: '' });
-  const [confirmModal, setConfirmModal] = useState({ show: false, type: 'warning', title: '', message: '', onConfirm: null });
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
+  // Attach drag listeners — must be declared before any early return
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (!isDragging) return;
 
-  // Load conversation history when chat opens
-  useEffect(() => {
-    if (isOpen && !historyLoaded) {
-      loadChatHistory();
-    }
-  }, [isOpen]);
+    const handleMove = (e) => {
+      e.preventDefault();
+      const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+      const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+      if (
+        Math.abs(clientX - dragStart.startX) > DRAG_THRESHOLD ||
+        Math.abs(clientY - dragStart.startY) > DRAG_THRESHOLD
+      ) {
+        setDragMoved(true);
+      }
+      setCurrentPos({ x: clientX - dragStart.x, y: clientY - dragStart.y });
+    };
 
-  // Get position styles based on corner
+    const handleEnd = () => {
+      setIsDragging(false);
+      if (dragMoved) {
+        const buttonSize = 56;
+        const centerX = currentPos.x + buttonSize / 2;
+        const centerY = currentPos.y + buttonSize / 2;
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        const isLeft = centerX < windowWidth - centerX;
+        const isTop = centerY < windowHeight - centerY;
+        let corner = 'bottom-right';
+        if (isTop && isLeft) corner = 'top-left';
+        else if (isTop && !isLeft) corner = 'top-right';
+        else if (!isTop && isLeft) corner = 'bottom-left';
+        const newPosition = { corner };
+        setPosition(newPosition);
+        localStorage.setItem('chatPosition', JSON.stringify(newPosition));
+      }
+      setTimeout(() => setDragMoved(false), 50);
+    };
+
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('mouseup', handleEnd);
+    document.addEventListener('touchmove', handleMove, { passive: false });
+    document.addEventListener('touchend', handleEnd);
+    return () => {
+      document.removeEventListener('mousemove', handleMove);
+      document.removeEventListener('mouseup', handleEnd);
+      document.removeEventListener('touchmove', handleMove);
+      document.removeEventListener('touchend', handleEnd);
+    };
+  }, [isDragging, currentPos, dragStart, dragMoved]);
+
+  // Don't show FAB when already on /chat page — after all hooks
+  const isChatPage = location.pathname === '/chat';
+  if (isChatPage) return null;
+
   const getPositionStyles = () => {
-    const spacing = 24; // 1.5rem = 24px
+    const spacing = 24;
     const positions = {
-      'top-left': { top: `${spacing}px`, left: `${spacing}px`, bottom: 'auto', right: 'auto' },
-      'top-right': { top: `${spacing}px`, right: `${spacing}px`, bottom: 'auto', left: 'auto' },
-      'bottom-left': { bottom: `${spacing}px`, left: `${spacing}px`, top: 'auto', right: 'auto' },
-      'bottom-right': { bottom: `${spacing}px`, right: `${spacing}px`, top: 'auto', left: 'auto' }
+      'top-left':     { top: `${spacing}px`,    left: `${spacing}px`,  bottom: 'auto', right: 'auto' },
+      'top-right':    { top: `${spacing}px`,    right: `${spacing}px`, bottom: 'auto', left: 'auto'  },
+      'bottom-left':  { bottom: `${spacing}px`, left: `${spacing}px`,  top: 'auto',    right: 'auto' },
+      'bottom-right': { bottom: `${spacing}px`, right: `${spacing}px`, top: 'auto',    left: 'auto'  },
     };
     return positions[position.corner] || positions['bottom-right'];
   };
 
-  // Detect nearest corner based on current position
-  const getNearestCorner = (x, y) => {
-    const windowWidth = window.innerWidth;
-    const windowHeight = window.innerHeight;
-
-    const distanceToLeft = x;
-    const distanceToRight = windowWidth - x;
-    const distanceToTop = y;
-    const distanceToBottom = windowHeight - y;
-
-    const isLeft = distanceToLeft < distanceToRight;
-    const isTop = distanceToTop < distanceToBottom;
-
-    if (isTop && isLeft) return 'top-left';
-    if (isTop && !isLeft) return 'top-right';
-    if (!isTop && isLeft) return 'bottom-left';
-    return 'bottom-right';
-  };
-
-  // Handle drag start
   const handleDragStart = (e) => {
-    if (isOpen) return; // Don't drag when chat is open
-
     setIsDragging(true);
-    setDragMoved(false); // Reset drag moved flag
+    setDragMoved(false);
     const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
     const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
-
     const rect = buttonRef.current.getBoundingClientRect();
-    setDragStart({
-      x: clientX - rect.left,
-      y: clientY - rect.top,
-      startX: clientX,
-      startY: clientY
-    });
+    setDragStart({ x: clientX - rect.left, y: clientY - rect.top, startX: clientX, startY: clientY });
     setCurrentPos({ x: rect.left, y: rect.top });
   };
 
-  // Handle drag move
-  const handleDragMove = (e) => {
-    if (!isDragging) return;
-
-    e.preventDefault();
-    const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
-    const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
-
-    // Check if movement exceeds threshold
-    const deltaX = Math.abs(clientX - dragStart.startX);
-    const deltaY = Math.abs(clientY - dragStart.startY);
-
-    if (deltaX > DRAG_THRESHOLD || deltaY > DRAG_THRESHOLD) {
-      setDragMoved(true); // User is actually dragging, not just clicking
-    }
-
-    setCurrentPos({
-      x: clientX - dragStart.x,
-      y: clientY - dragStart.y
-    });
-  };
-
-  // Handle drag end
-  const handleDragEnd = () => {
-    if (!isDragging) return;
-
-    setIsDragging(false);
-
-    // Only update position if user actually dragged (moved beyond threshold)
-    if (dragMoved) {
-      // Calculate center of button
-      const buttonSize = 56; // 14 * 4 = 56px (w-14 h-14)
-      const centerX = currentPos.x + buttonSize / 2;
-      const centerY = currentPos.y + buttonSize / 2;
-
-      // Find nearest corner
-      const nearestCorner = getNearestCorner(centerX, centerY);
-
-      // Update position
-      const newPosition = { corner: nearestCorner };
-      setPosition(newPosition);
-      localStorage.setItem('chatPosition', JSON.stringify(newPosition));
-    }
-
-    // Reset drag moved flag after a short delay to allow onClick to check it
-    setTimeout(() => {
-      setDragMoved(false);
-    }, 50);
-  };
-
-  // Add/remove event listeners for dragging
-  useEffect(() => {
-    if (isDragging) {
-      const handleMove = (e) => handleDragMove(e);
-      const handleEnd = () => handleDragEnd();
-
-      document.addEventListener('mousemove', handleMove);
-      document.addEventListener('mouseup', handleEnd);
-      document.addEventListener('touchmove', handleMove);
-      document.addEventListener('touchend', handleEnd);
-
-      return () => {
-        document.removeEventListener('mousemove', handleMove);
-        document.removeEventListener('mouseup', handleEnd);
-        document.removeEventListener('touchmove', handleMove);
-        document.removeEventListener('touchend', handleEnd);
-      };
-    }
-  }, [isDragging, currentPos, dragStart]);
-
-  const loadChatHistory = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(
-        `${API}/chat/global/history?limit=30`,
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
-
-      const history = response.data.history || [];
-      const formattedMessages = history.map(msg => ({
-        role: msg.role,
-        content: msg.content,
-        timestamp: msg.created_at || new Date().toISOString()
-      }));
-
-      setMessages(formattedMessages);
-      setHistoryLoaded(true);
-    } catch (error) {
-      console.error('Error loading chat history:', error);
-      setHistoryLoaded(true);
-    }
-  };
-
-  const clearChatHistory = async () => {
-    // Show confirmation modal
-    setConfirmModal({
-      show: true,
-      type: 'warning',
-      title: 'Clear Chat History',
-      message: 'Are you sure you want to clear your chat history?',
-      onConfirm: async () => {
-        try {
-          const token = localStorage.getItem('token');
-          await axios.delete(
-            `${API}/chat/global/history`,
-            {
-              headers: { Authorization: `Bearer ${token}` }
-            }
-          );
-
-          setMessages([]);
-          setAlertModal({
-            show: true,
-            type: 'success',
-            title: 'Success',
-            message: 'Chat history cleared successfully!'
-          });
-        } catch (error) {
-          console.error('Error clearing chat history:', error);
-          setAlertModal({
-            show: true,
-            type: 'error',
-            title: 'Error',
-            message: 'Failed to clear chat history. Please try again.'
-          });
-        }
-      }
-    });
-  };
-
-  // Execute commands from AI (navigation, export, form filling, etc.)
-  const executeCommand = async (response) => {
-    try {
-      // Parse the response to look for action commands
-      const responseData = typeof response === 'string' ? { response } : response;
-
-      // Check if there's an action command in the response metadata
-      if (responseData.action) {
-        const { action, page, run_id, format, message: actionMessage, actor_id, form_data } = responseData;
-
-        // Show visual feedback
-        if (actionMessage) {
-          setActionFeedback(actionMessage);
-          setTimeout(() => setActionFeedback(null), 3000);
-        }
-
-        // Execute navigation
-        if (action === 'navigate' && page) {
-          setTimeout(() => {
-            const pageMap = {
-              'home': '/home',
-              'actors': '/actors',
-              'runs': '/runs',
-              'datasets': '/datasets',
-              'leads': '/datasets',
-              'proxies': '/proxies',
-              'marketplace': '/marketplace',
-              'store': '/store',
-              'my-scrapers': '/my-scrapers',
-              'create-scraper': '/create-scraper'
-            };
-
-            if (pageMap[page]) {
-              navigate(pageMap[page]);
-            } else if (page.startsWith('/')) {
-              // Direct path navigation
-              navigate(page);
-            }
-          }, 800); // Small delay for user to see the feedback
-        }
-
-        // Execute actor detail page opening
-        if (action === 'open_actor' && actor_id) {
-          setTimeout(() => {
-            navigate(`/actors/${actor_id}`);
-          }, 800);
-        }
-
-        // Execute run details viewing - navigate to dataset page with run_id
-        if (action === 'view_run' && run_id) {
-          setTimeout(() => {
-            navigate(`/dataset/${run_id}`);
-          }, 800);
-        }
-
-        // Execute full form fill and run automation
-        if (action === 'fill_and_run' && run_id) {
-          // Just navigate to runs page to see the new run
-          setTimeout(() => {
-            setActionFeedback(`✓ Scraper started! Run ID: ${run_id.substring(0, 8)}...`);
-            setTimeout(() => {
-              navigate('/runs');
-              setActionFeedback(null);
-            }, 1500);
-          }, 1000);
-        }
-
-        // Execute export
-        if (action === 'export' && run_id) {
-          setTimeout(async () => {
-            try {
-              const token = localStorage.getItem('token');
-              const exportFormat = format || 'json';
-              const response = await axios.get(
-                `${API}/datasets/export/${run_id}?format=${exportFormat}`,
-                {
-                  headers: { Authorization: `Bearer ${token}` },
-                  responseType: 'blob'
-                }
-              );
-
-              // Download the file
-              const url = window.URL.createObjectURL(new Blob([response.data]));
-              const link = document.createElement('a');
-              link.href = url;
-              link.setAttribute('download', `export_${run_id}.${exportFormat}`);
-              document.body.appendChild(link);
-              link.click();
-              link.parentNode.removeChild(link);
-
-              setActionFeedback(`✓ Export downloaded successfully!`);
-              setTimeout(() => setActionFeedback(null), 3000);
-            } catch (error) {
-              console.error('Export error:', error);
-              setActionFeedback(`✗ Export failed. Please try again.`);
-              setTimeout(() => setActionFeedback(null), 3000);
-            }
-          }, 500);
-        }
-      }
-    } catch (error) {
-      console.error('Command execution error:', error);
-    }
-  };
-
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim() || isLoading) return;
-
-    const userMessage = inputMessage.trim();
-    setInputMessage('');
-
-    // Add user message
-    const newUserMessage = {
-      role: 'user',
-      content: userMessage,
-      timestamp: new Date().toISOString()
-    };
-
-    setMessages(prev => [...prev, newUserMessage]);
-    setIsLoading(true);
-
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${API}/chat/global`,
-        {
-          message: userMessage
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
-
-      const assistantMessage = {
-        role: 'assistant',
-        content: response.data.response,
-        timestamp: response.data.timestamp
-      };
-
-      setMessages(prev => [...prev, assistantMessage]);
-
-      // Execute any commands from the response
-      await executeCommand(response.data);
-    } catch (error) {
-      console.error('Global chat error:', error);
-
-      const errorMessage = {
-        role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.',
-        timestamp: new Date().toISOString()
-      };
-
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
-  const toggleChat = () => {
-    if (isOpen) {
-      setIsOpen(false);
-      setIsMinimized(false);
-    } else {
-      setIsOpen(true);
-      setIsMinimized(false);
-    }
-  };
-
-  const toggleMinimize = () => {
-    setIsMinimized(!isMinimized);
-  };
-
   return (
-    <>
-      {/* Floating Button */}
-      {!isOpen && (
-        <button
-          ref={buttonRef}
-          onMouseDown={handleDragStart}
-          onTouchStart={handleDragStart}
-          onClick={(e) => {
-            // Only open chat if user didn't drag (just clicked)
-            if (!dragMoved) {
-              toggleChat();
-            }
-          }}
-          style={
-            isDragging
-              ? {
-                position: 'fixed',
-                left: `${currentPos.x}px`,
-                top: `${currentPos.y}px`,
-                cursor: 'grabbing',
-                transition: 'none'
-              }
-              : {
-                position: 'fixed',
-                ...getPositionStyles(),
-                cursor: 'grab',
-                transition: 'all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)'
-              }
-          }
-          className="w-14 h-14 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg hover:shadow-xl flex items-center justify-center z-[70] group active:scale-95 transition-all duration-200"
-          title="Mira AI (Drag to move)"
-        >
-          <ChatIcon className="w-6 h-6" />
-          <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-background animate-pulse"></span>
-        </button>
-      )}
-
-      {/* Chat Window */}
-      {isOpen && (
-        <div
-          style={{
-            position: 'fixed',
-            ...getPositionStyles()
-          }}
-          className={`w-96 bg-popover border-border rounded-xl shadow-2xl border flex flex-col z-[70] transition-all duration-300 ${isMinimized ? 'h-14' : 'h-[500px]'
-            }`}
-        >
-          {/* Header */}
-          <div className="bg-muted/50 border-border px-4 py-3 rounded-t-xl flex items-center justify-between border-b">
-            <div className="flex items-center space-x-3">
-              <div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center">
-                <ChatIcon className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-sm text-foreground">Mira</h3>
-                <p className="text-xs text-muted-foreground">Your Scrapi Assistant</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearChatHistory}
-                className="hover:bg-muted text-muted-foreground h-8 w-8 p-0"
-                title="Clear History"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleMinimize}
-                className="hover:bg-muted text-muted-foreground h-8 w-8 p-0"
-              >
-                <Minimize2 className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleChat}
-                className="hover:bg-muted text-muted-foreground h-8 w-8 p-0"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-
-          {/* Chat Content - Only show when not minimized */}
-          {!isMinimized && (
-            <>
-              {/* Action Feedback Banner */}
-              {actionFeedback && (
-                <div className="px-4 py-2 bg-blue-600 text-white text-sm flex items-center space-x-2">
-                  <Navigation className="w-4 h-4" />
-                  <span className="font-medium">{actionFeedback}</span>
-                </div>
-              )}
-
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2 bg-background scrollbar-hide"
-                style={{
-                  scrollbarWidth: 'none',
-                  msOverflowStyle: 'none'
-                }}
-              >
-                {messages.length === 0 && (
-                  <div className="text-center text-muted-foreground mt-8">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
-                      <ChatIcon className="w-8 h-8 text-muted-foreground" />
-                    </div>
-                    <p className="text-base font-medium mb-1">Hi! I'm Mira.</p>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      I can help you navigate and control the app!
-                    </p>
-                    <div className="mt-4 space-y-2 text-sm text-left bg-muted/50 p-4 rounded-lg">
-                      <p className="font-semibold mb-2 text-foreground">
-                        Try asking:
-                      </p>
-                      <ul className="space-y-1.5 text-muted-foreground">
-                        <li className="flex items-start">
-                          <span className="text-green-500 mr-2">•</span>
-                          <span>"Go to Actors page"</span>
-                        </li>
-                        <li className="flex items-start">
-                          <span className="text-green-500 mr-2">•</span>
-                          <span>"Show me my runs"</span>
-                        </li>
-                        <li className="flex items-start">
-                          <span className="text-green-500 mr-2">•</span>
-                          <span>"Export my latest data as CSV"</span>
-                        </li>
-                        <li className="flex items-start">
-                          <span className="text-green-500 mr-2">•</span>
-                          <span>"How many scrapers do I have?"</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                )}
-
-                {messages.map((msg, idx) => (
-                  <div
-                    key={idx}
-                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-[85%] rounded-xl px-3 py-2 ${msg.role === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted border border-border text-foreground'
-                        }`}
-                    >
-                      {msg.role === 'user' ? (
-                        <p className="text-xs whitespace-pre-wrap leading-relaxed transition-colors">{msg.content}</p>
-                      ) : (
-                        <div className="text-xs prose prose-sm max-w-none leading-relaxed">
-                          <ReactMarkdown
-                            remarkPlugins={[remarkGfm]}
-                            components={{
-                              p: ({ children }) => <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>,
-                              strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
-                              em: ({ children }) => <em className="italic">{children}</em>,
-                              h1: ({ children }) => <h1 className="text-base font-semibold mb-2 text-foreground">{children}</h1>,
-                              h2: ({ children }) => <h2 className="text-sm font-semibold mb-1.5 text-foreground">{children}</h2>,
-                              h3: ({ children }) => <h3 className="text-sm font-semibold mb-1 text-foreground">{children}</h3>,
-                              ul: ({ children }) => <ul className="list-disc pl-4 mb-2 space-y-1">{children}</ul>,
-                              ol: ({ children }) => <ol className="list-decimal pl-4 mb-2 space-y-1">{children}</ol>,
-                              li: ({ children }) => <li className="text-muted-foreground">{children}</li>,
-                              code: ({ inline, children }) =>
-                                inline ?
-                                  <code className="bg-muted-foreground/20 text-foreground px-1.5 py-0.5 rounded text-xs font-mono">{children}</code> :
-                                  <code className="block bg-muted-foreground/10 p-2 rounded text-xs font-mono overflow-x-auto my-2">{children}</code>,
-                              blockquote: ({ children }) => <blockquote className="border-l-4 border-primary pl-3 italic text-muted-foreground my-2">{children}</blockquote>
-                            }}
-                          >
-                            {msg.content}
-                          </ReactMarkdown>
-                        </div>
-                      )}
-                      <p className={`text-xs mt-1.5 ${msg.role === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
-                        }`}>
-                        {new Date(msg.timestamp).toLocaleTimeString([], {
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-
-                {isLoading && (
-                  <div className="flex justify-start">
-                    <div className="bg-muted border border-border rounded-xl px-4 py-3">
-                      <div className="flex space-x-2">
-                        <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div ref={messagesEndRef} />
-              </div>
-
-              {/* Input */}
-              <div className="px-4 py-3 border-t bg-card border-border rounded-b-xl">
-                <div className="flex space-x-2">
-                  <Input
-                    placeholder="Ask Mira anything..."
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    disabled={isLoading}
-                    className="flex-1 text-sm h-10 bg-background border-input text-foreground placeholder:text-muted-foreground rounded-lg"
-                  />
-                  <Button
-                    onClick={handleSendMessage}
-                    disabled={isLoading || !inputMessage.trim()}
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground h-10 w-10 p-0 rounded-lg shadow-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Send className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      )}
-
-      {/* Alert Modal (for info/error messages) */}
-      <AlertModal
-        show={alertModal.show}
-        onClose={() => setAlertModal({ ...alertModal, show: false })}
-        type={alertModal.type}
-        title={alertModal.title}
-        message={alertModal.message}
-        confirmText="OK"
-      />
-
-      {/* Confirmation Modal (for confirmations) */}
-      <AlertModal
-        show={confirmModal.show}
-        onClose={() => setConfirmModal({ ...confirmModal, show: false })}
-        onConfirm={confirmModal.onConfirm}
-        type={confirmModal.type}
-        title={confirmModal.title}
-        message={confirmModal.message}
-        showCancel={true}
-        confirmText="Confirm"
-        cancelText="Cancel"
-      />
-    </>
+    <button
+      ref={buttonRef}
+      onMouseDown={handleDragStart}
+      onTouchStart={handleDragStart}
+      onClick={() => {
+        if (!dragMoved) navigate('/chat');
+      }}
+      title="Chat with Mira AI (Drag to move)"
+      style={
+        isDragging
+          ? { position: 'fixed', left: `${currentPos.x}px`, top: `${currentPos.y}px`, cursor: 'grabbing', transition: 'none' }
+          : { position: 'fixed', ...getPositionStyles(), cursor: 'grab', transition: 'all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)' }
+      }
+      className="w-14 h-14 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg hover:shadow-xl flex items-center justify-center z-[70] active:scale-95 transition-all duration-200 group"
+    >
+      <ChatIcon className="w-6 h-6" />
+      {/* Online pulse indicator */}
+      <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-background animate-pulse" />
+      {/* Hover tooltip */}
+      <span className="absolute bottom-full mb-2 right-0 whitespace-nowrap px-2 py-1 rounded-md bg-popover border border-border text-xs font-medium text-foreground shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+        Chat with Mira
+      </span>
+    </button>
   );
 };
 

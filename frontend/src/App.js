@@ -31,6 +31,7 @@ import Store from './pages/Store';
 import Schedules from './pages/Schedules';
 import ApiAccess from './pages/ApiAccess';
 import GlobalChat from './components/GlobalChat';
+import MiraChat from './pages/Chat';
 import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
 import Billing from './pages/Billing';
@@ -97,7 +98,7 @@ const DashboardLayout = ({ children }) => {
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
       <main className={`flex-1 overflow-y-auto transition-colors ${theme === 'dark' ? 'bg-[#0F1014]' : 'bg-gray-50'}`}>{children}</main>
-      <GlobalChat />
+      {/* <GlobalChat /> */}
     </div>
   );
 };
@@ -190,6 +191,8 @@ function AppRoutes() {
         />
         {/* Placeholder routes */}
         <Route path="/home" element={<ProtectedRoute><DashboardLayout><Home /></DashboardLayout></ProtectedRoute>} />
+        <Route path="/chat" element={<ProtectedRoute><DashboardLayout><MiraChat /></DashboardLayout></ProtectedRoute>} />
+        <Route path="/chat/:conversationId" element={<ProtectedRoute><DashboardLayout><MiraChat /></DashboardLayout></ProtectedRoute>} />
         <Route path="/store" element={<ProtectedRoute><DashboardLayout><Store /></DashboardLayout></ProtectedRoute>} />
         <Route path="/development" element={<ProtectedRoute><DashboardLayout><div className="p-8">Development</div></DashboardLayout></ProtectedRoute>} />
         <Route path="/tasks" element={<ProtectedRoute><DashboardLayout><div className="p-8">Saved Tasks</div></DashboardLayout></ProtectedRoute>} />

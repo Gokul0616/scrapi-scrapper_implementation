@@ -9,7 +9,6 @@ export default defineConfig({
         host: '0.0.0.0',
         allowedHosts: [
             'localhost',
-            '.emergentagent.com',
         ],
         hmr: true,
         proxy: {

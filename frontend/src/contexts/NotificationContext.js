@@ -175,6 +175,10 @@ export const NotificationProvider = ({ children }) => {
           // Trigger a global event to notify components like Sidebar that usage has changed
           console.log('Usage update received from WebSocket');
           window.dispatchEvent(new CustomEvent('usageUpdated'));
+        } else if (data.type === 'chat_update') {
+          // Trigger a global event to notify Chat.js that a message was received
+          console.log('Chat update received from WebSocket');
+          window.dispatchEvent(new CustomEvent('mira_chat_update', { detail: data }));
         }
       } catch (error) {
         console.error('Failed to parse WebSocket message:', error);

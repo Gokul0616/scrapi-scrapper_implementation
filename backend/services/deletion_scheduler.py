@@ -43,6 +43,7 @@ class DeletionScheduler:
             try:
                 await self._process_pending_deletions()
                 await self._send_deletion_reminders()
+                await self._cleanup_expired_chats()
                 # Run every hour
                 await asyncio.sleep(3600)
             except asyncio.CancelledError:
@@ -91,6 +92,39 @@ class DeletionScheduler:
         except Exception as e:
             logger.error(f"Error processing pending deletions: {str(e)}", exc_info=True)
     
+    async def _cleanup_expired_chats(self):
+        """Clean up chat history older than 30 days"""
+        try:
+            from datetime import timedelta
+            now = datetime.now(timezone.utc)
+            cutoff_date = now - timedelta(days=30)
+            cutoff_iso = cutoff_date.isoformat()
+
+            # 1. Find conversations older than 30 days based on updated_at
+            expired_convs = await self.db.chat_conversations.find({
+                "updated_at": {"$lt": cutoff_iso}
+            }).to_list(None)
+
+            if not expired_convs:
+                return
+
+            conv_ids = [c["id"] for c in expired_convs]
+            
+            # 2. Delete messages associated with these conversations
+            msg_res = await self.db.global_chat_history.delete_many({
+                "conversation_id": {"$in": conv_ids}
+            })
+
+            # 3. Delete the conversations themselves
+            conv_res = await self.db.chat_conversations.delete_many({
+                "id": {"$in": conv_ids}
+            })
+
+            logger.info(f"🧹 Chat Retention: Cleaned up {len(conv_ids)} conversations and {msg_res.deleted_count} messages.")
+
+        except Exception as e:
+            logger.error(f"Error cleaning up expired chats: {str(e)}", exc_info=True)
+
     async def _send_deletion_reminders(self):
         """Send reminder emails for accounts pending deletion"""
         try:

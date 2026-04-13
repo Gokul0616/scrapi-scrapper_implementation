@@ -18,6 +18,7 @@ from task_manager import get_task_manager
 import logging
 import asyncio
 from fastapi import Request
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -529,14 +530,31 @@ async def execute_scraping_job(run_id: str, actor_id: str, user_id: str, input_d
             
             # Create dataset and store results
             from models import Dataset
-            dataset = Dataset(run_id=run_id, user_id=user_id, item_count=len(results))
+            now = datetime.now(timezone.utc)
+            dataset = Dataset(
+                id=str(uuid.uuid4()),
+                run_id=run_id,
+                user_id=user_id,
+                item_count=len(results),
+                created_at=now,
+                modified_at=now,
+                accessed_at=now
+            )
             dataset_doc = dataset.model_dump()
             dataset_doc['created_at'] = dataset_doc['created_at'].isoformat()
+            dataset_doc['modified_at'] = dataset_doc['modified_at'].isoformat()
+            dataset_doc['accessed_at'] = dataset_doc['accessed_at'].isoformat()
             await db.datasets.insert_one(dataset_doc)
             
             # Store dataset items
             for result in results:
-                item = DatasetItem(run_id=run_id, data=result)
+                item = DatasetItem(
+                    id=str(uuid.uuid4()),
+                    run_id=run_id,
+                    dataset_id=dataset.id,
+                    data=result,
+                    created_at=datetime.now(timezone.utc)
+                )
                 item_doc = item.model_dump()
                 item_doc['created_at'] = item_doc['created_at'].isoformat()
                 await db.dataset_items.insert_one(item_doc)

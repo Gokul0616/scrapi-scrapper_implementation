@@ -28,7 +28,7 @@ class LeadChatService:
         if self.openrouter_key:
             self.api_key = self.openrouter_key
             self.provider = "openrouter"
-            self.model_name = "qwen/qwen3.6-plus:free"
+            self.model_name = "google/gemma-4-26b-a4b-it:free"
             logger.info(f"LeadChatService initialized with OpenRouter: {self.model_name}")
         elif self.gemini_key:
             self.api_key = self.gemini_key
@@ -63,16 +63,49 @@ class LeadChatService:
             self.llm.system_message = system_message
             
             # Format history for LlmChat
-            self.llm.clear_history()
+            history_list = []
             if chat_history:
                 for msg in chat_history:
                     # Ensure roles are compatible with OpenAI/LlmChat format
                     role = msg.get('role', 'user')
                     content = msg.get('content', '')
-                    self.llm.conversation_history.append({"role": role, "content": content})
+                    history_list.append({"role": role, "content": content})
 
-            # Generate response
-            response = await self.llm.send_message_async(user_message)
+            # Define fallback sequence with robust provider switching
+            fallbacks = []
+            if self.provider == "openrouter":
+                fallbacks.extend([
+                    {"provider": "openrouter", "model": self.model_name, "api_key": self.api_key},
+                    {"provider": "openrouter", "model": "meta-llama/llama-3.3-70b-instruct:free", "api_key": self.api_key},
+                    {"provider": "openrouter", "model": "openrouter/free", "api_key": self.api_key}
+                ])
+            else:
+                fallbacks.append({"provider": self.provider, "model": self.model_name, "api_key": self.api_key})
+                
+            # Add Native Gemini as the ultimate safety net if key exists
+            gemini_key = os.getenv('GEMINI_API_KEY')
+            if gemini_key:
+                fallbacks.append({"provider": "gemini", "model": "gemini-flash-latest", "api_key": gemini_key})
+
+            response = None
+            last_error = None
+            
+            for fback in fallbacks:
+                try:
+                    llm = LlmChat(api_key=fback["api_key"], provider=fback["provider"], model=fback["model"])
+                    llm.system_message = system_message
+                    llm.conversation_history = history_list.copy()
+                    
+                    response = await llm.send_message_async(user_message)
+                    break
+                except Exception as e:
+                    last_error = e
+                    logger.warning(f"Model {model} failed in lead chat: {str(e)}")
+                    continue
+            
+            if response is None:
+                response = "I'm currently experiencing high traffic rate limits across all my free brains. Please wait a minute and try again!"
+                logger.error(f"All fallback models failed. Last error: {str(last_error)}")
             
             logger.info(f"Generated engagement advice for lead: {lead_data.get('title', 'Unknown')}")
             return response
@@ -135,12 +168,39 @@ Help the user craft a winning approach to engage with {business_name}."""
         try:
             system_message = self._build_system_message(lead_data)
             self.llm.system_message = system_message
-            self.llm.clear_history()
-
             prompt = f"Create a personalized {channel} outreach template for this business. Make it professional, concise, and focused on value. Include placeholders for customization."
 
-            # Generate response
-            response = await self.llm.send_message_async(prompt)
+            # Define fallback sequence with robust provider switching
+            fallbacks = []
+            if self.provider == "openrouter":
+                fallbacks.extend([
+                    {"provider": "openrouter", "model": self.model_name, "api_key": self.api_key},
+                    {"provider": "openrouter", "model": "meta-llama/llama-3.3-70b-instruct:free", "api_key": self.api_key},
+                    {"provider": "openrouter", "model": "openrouter/free", "api_key": self.api_key}
+                ])
+            else:
+                fallbacks.append({"provider": self.provider, "model": self.model_name, "api_key": self.api_key})
+                
+            # Add Native Gemini as the ultimate safety net if key exists
+            gemini_key = os.getenv('GEMINI_API_KEY')
+            if gemini_key:
+                fallbacks.append({"provider": "gemini", "model": "gemini-flash-latest", "api_key": gemini_key})
+
+            response = None
+            last_error = None
+            
+            for fback in fallbacks:
+                try:
+                    llm = LlmChat(api_key=fback["api_key"], provider=fback["provider"], model=fback["model"])
+                    llm.system_message = system_message
+                    response = await llm.send_message_async(prompt)
+                    break
+                except Exception as e:
+                    last_error = e
+                    continue
+            
+            if response is None:
+                response = f"I'm currently hitting rate limits and can't generate the {channel} template right now. Please try again in a few minutes!"
             
             logger.info(f"Generated {channel} template for lead: {lead_data.get('title', 'Unknown')}")
             return response

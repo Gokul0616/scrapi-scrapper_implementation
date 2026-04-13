@@ -159,12 +159,13 @@ async def global_chat(
     task_manager = get_task_manager()
     try:
         message = request.get('message')
+        conversation_id = request.get('conversation_id')
         
         if not message:
             raise HTTPException(status_code=400, detail="Message is required")
         
         # Use enhanced global chat service with user context
-        chat_service = EnhancedGlobalChatService(db, current_user['id'])
+        chat_service = EnhancedGlobalChatService(db, current_user['id'], conversation_id)
         result = await chat_service.chat(message)
         
         # Handle MULTIPLE runs if created (supports multiple commands in one request)
@@ -234,6 +235,7 @@ async def global_chat(
         # Return response with action metadata for UI automation
         response_data = {
             "response": result["response"],
+            "conversation_id": result.get("conversation_id"),
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
@@ -250,26 +252,52 @@ async def global_chat(
 @router.get("/chat/global/history")
 async def get_chat_history(
     current_user: dict = Depends(get_current_user),
+    conversation_id: Optional[str] = None,
     limit: int = 50
 ):
     """Get user's global chat conversation history."""
     db = get_db()
     try:
-        chat_service = EnhancedGlobalChatService(db, current_user['id'])
+        chat_service = EnhancedGlobalChatService(db, current_user['id'], conversation_id)
         history = await chat_service.get_conversation_history(limit=limit)
         return {"history": history}
     except Exception as e:
         logger.error(f"Error getting chat history: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.delete("/chat/global/history")
-async def clear_chat_history(
-    current_user: dict = Depends(get_current_user)
+@router.get("/chat/conversations")
+async def get_conversations(
+    current_user: dict = Depends(get_current_user),
+    limit: int = 50
 ):
-    """Clear user's global chat conversation history."""
+    """Get list of user's chat conversations for the sidebar."""
     db = get_db()
     try:
-        chat_service = EnhancedGlobalChatService(db, current_user['id'])
+        from datetime import datetime, timedelta, timezone
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+        
+        conversations = await db.chat_conversations.find(
+            {
+                "user_id": current_user['id'],
+                "updated_at": {"$gte": cutoff}
+            },
+            {"_id": 0}
+        ).sort("updated_at", -1).limit(limit).to_list(limit)
+        return {"conversations": conversations}
+    except Exception as e:
+        logger.error(f"Error getting conversations: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/chat/global/history")
+async def clear_chat_history(
+    request: dict = {},
+    current_user: dict = Depends(get_current_user)
+):
+    """Clear user's global chat conversation history or a specific thread."""
+    db = get_db()
+    try:
+        conversation_id = request.get('conversation_id')
+        chat_service = EnhancedGlobalChatService(db, current_user['id'], conversation_id)
         result = await chat_service.clear_history()
         return result
     except Exception as e:
