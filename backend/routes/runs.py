@@ -146,6 +146,15 @@ async def execute_scraping_job(run_id: str, actor_id: str, user_id: str, input_d
             from services.billing_service import billing_service
             await billing_service.record_run_usage(run_id)
             
+            # 🔔 Dispatch webhook event — run.succeeded
+            try:
+                from services.webhook_service import WebhookService
+                await WebhookService(db).dispatch_event(
+                    "run.succeeded", run_id, actor_id, user_id
+                )
+            except Exception as _wh_err:
+                logger.warning(f"Webhook dispatch failed for run.succeeded {run_id}: {_wh_err}")
+            
             logger.info(f"Run {run_id} completed successfully with {len(results)} results")
             # Real-time update: Run finished (cleaning up logic RAM)
             await broadcast_usage_update(user_id)
@@ -166,6 +175,14 @@ async def execute_scraping_job(run_id: str, actor_id: str, user_id: str, input_d
                 }
             }
         )
+        # 🔔 Dispatch webhook event — run.aborted
+        try:
+            from services.webhook_service import WebhookService
+            await WebhookService(db).dispatch_event(
+                "run.aborted", run_id, actor_id, user_id
+            )
+        except Exception as _wh_err:
+            logger.warning(f"Webhook dispatch failed for run.aborted {run_id}: {_wh_err}")
         raise  # Re-raise to let the task manager's callback know
         
     except Exception as e:
@@ -188,9 +205,18 @@ async def execute_scraping_job(run_id: str, actor_id: str, user_id: str, input_d
         
         await db.runs.update_one({"id": run_id}, {"$set": update_data})
         
-        # Record billing usage for failed run (CU only logic is in billing_summary/historical)
+        # Record billing usage for failed run
         from services.billing_service import billing_service
         await billing_service.record_run_usage(run_id)
+        
+        # 🔔 Dispatch webhook event — run.failed
+        try:
+            from services.webhook_service import WebhookService
+            await WebhookService(db).dispatch_event(
+                "run.failed", run_id, actor_id, user_id
+            )
+        except Exception as _wh_err:
+            logger.warning(f"Webhook dispatch failed for run.failed {run_id}: {_wh_err}")
         
         # Real-time update: Run failed (cleaning up logic RAM)
         await broadcast_usage_update(user_id)

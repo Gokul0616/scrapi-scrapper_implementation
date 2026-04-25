@@ -9,7 +9,7 @@ const COL_GAP = 12;
 const RIGHT_PAD = 24;
 const BADGE_H = 30;
 const PLAN_TOP = 220;
-const MAIN_ROW = 54;
+const MAIN_ROW = 44;
 
 const MAIN_FEATURES = [
     { label: 'Monthly prepaid usage', tooltip: 'Platform credits included each month', values: ['$5 free credits', '$29', '$99', '$299', 'Custom'] },
@@ -71,9 +71,9 @@ const CellVal = ({ value }) => {
     const s = String(value);
     if (s.includes('\n')) {
         const [a, ...b] = s.split('\n');
-        return <span className="text-sm leading-snug"><span className="font-semibold text-foreground block">{a}</span><span className="text-xs text-muted-foreground">{b.join(' ')}</span></span>;
+        return <span className="text-[13px] leading-tight"><span className="font-bold text-foreground block">{a}</span><span className="text-[11px] text-muted-foreground">{b.join(' ')}</span></span>;
     }
-    return <span className="text-sm font-semibold text-foreground">{s}</span>;
+    return <span className="text-[13px] font-bold text-foreground">{s}</span>;
 };
 
 // ─── PlanStep ─────────────────────────────────────────────────────────────────
@@ -110,17 +110,17 @@ const PlanStep = ({ selectedPlan, setSelectedPlan, isAnnual, setIsAnnual, onNext
     };
 
     const Row = ({ label, sublabel, tooltip, values }) => (
-        <div className="flex" style={{ minHeight: 52 }}>
+        <div className="flex" style={{ minHeight: 44 }}>
             <div className="flex-shrink-0 flex flex-col justify-center py-2 bg-background border-r border-border" style={{ width: LEFT_W, position: 'sticky', left: 0, zIndex: 2, paddingLeft: 24, paddingRight: 12 }}>
                 <div className="flex items-start gap-1.5">
-                    <span className="text-sm text-foreground leading-snug">{label}</span>
+                    <span className="text-[13px] font-medium text-foreground leading-snug">{label}</span>
                     {tooltip && <Tip tooltip={tooltip} />}
                 </div>
-                {sublabel && <span className="text-xs text-muted-foreground mt-0.5">{sublabel}</span>}
+                {sublabel && <span className="text-[11px] text-muted-foreground mt-0.5">{sublabel}</span>}
             </div>
             <div className="flex flex-shrink-0" style={{ paddingLeft: COL_GAP, paddingRight: RIGHT_PAD, gap: COL_GAP }}>
                 {values.map((val, i) => (
-                    <div key={i} className={`flex items-center py-2 ${PLANS[i] && selectedPlan === PLANS[i].id && !PLANS[i].isCurrent ? 'bg-blue-50 dark:bg-blue-950/20' : ''}`} style={{ width: COL_W, flexShrink: 0 }}>
+                    <div key={i} className={`flex items-center py-1.5 ${PLANS[i] && selectedPlan === PLANS[i].id && !PLANS[i].isCurrent ? 'bg-blue-50 dark:bg-blue-950/20' : ''}`} style={{ width: COL_W, flexShrink: 0 }}>
                         <CellVal value={val} />
                     </div>
                 ))}
@@ -129,29 +129,29 @@ const PlanStep = ({ selectedPlan, setSelectedPlan, isAnnual, setIsAnnual, onNext
     );
 
     const SectionHdr = ({ title }) => (
-        <div className="flex" style={{ minHeight: 50 }}>
-            <div className="flex-shrink-0 flex items-center bg-[#f0f0f0] dark:bg-[#202020] border-r border-border" style={{ width: LEFT_W, position: 'sticky', left: 0, zIndex: 2, paddingLeft: 24, paddingRight: 12 }}>
-                <span className="text-sm font-semibold text-foreground">{title}</span>
+        <div className="flex" style={{ minHeight: 34 }}>
+            <div className="flex-shrink-0 flex items-center bg-accent border-r border-border" style={{ width: LEFT_W, position: 'sticky', left: 0, zIndex: 2, paddingLeft: 24, paddingRight: 12 }}>
+                <span className="text-sm font-bold text-foreground">{title}</span>
             </div>
-            <div className="flex-1 bg-[#f0f0f0] dark:bg-[#202020]" />
+            <div className="flex-1 bg-accent" />
         </div>
     );
 
     const SubGroup = ({ title }) => (
-        <div className="flex" style={{ minHeight: 36 }}>
-            <div className="flex-shrink-0 flex items-center bg-muted/30 border-r border-border" style={{ width: LEFT_W, position: 'sticky', left: 0, zIndex: 2, paddingLeft: 24, paddingRight: 12 }}>
-                <span className="text-xs font-bold uppercase tracking-wide text-foreground">{title}</span>
+        <div className="flex" style={{ minHeight: 28 }}>
+            <div className="flex-shrink-0 flex items-center bg-muted/25 border-r border-border" style={{ width: LEFT_W, position: 'sticky', left: 0, zIndex: 2, paddingLeft: 24, paddingRight: 12 }}>
+                <span className="text-xs font-bold text-foreground">{title}</span>
             </div>
-            <div className="flex-1 bg-muted/30" />
+            <div className="flex-1 bg-muted/25" />
         </div>
     );
 
     const SubName = ({ name }) => (
-        <div className="flex" style={{ minHeight: 34 }}>
-            <div className="flex-shrink-0 flex items-center bg-card border-r border-border" style={{ width: LEFT_W, position: 'sticky', left: 0, zIndex: 2, paddingLeft: 24, paddingRight: 12 }}>
-                <span className="text-sm font-bold text-foreground">{name}</span>
+        <div className="flex" style={{ minHeight: 28 }}>
+            <div className="flex-shrink-0 flex items-center bg-muted/5 border-r border-border" style={{ width: LEFT_W, position: 'sticky', left: 0, zIndex: 2, paddingLeft: 24, paddingRight: 12 }}>
+                <span className="text-[12px] font-bold text-foreground">{name}</span>
             </div>
-            <div className="flex-1 bg-card" />
+            <div className="flex-1 bg-muted/5" />
         </div>
     );
 
@@ -176,14 +176,14 @@ const PlanStep = ({ selectedPlan, setSelectedPlan, isAnnual, setIsAnnual, onNext
                 <div style={{ width: TOTAL_CONTENT_W }}>
 
                     {/* Plan cards row */}
-                    <div className="flex mb-5">
+                    <div className="flex mb-4">
                         {/* Left label column (scrolls with cards) */}
                         <div className="flex-shrink-0 bg-background" style={{ width: LEFT_W, paddingLeft: 24 }}>
                             <div style={{ height: BADGE_H + PLAN_TOP }} />
                             <div className="rounded-xl border border-border bg-card overflow-hidden" style={{ marginRight: 12 }}>
                                 {MAIN_FEATURES.map((f, i) => (
-                                    <div key={i} className="px-4 flex items-center gap-2" style={{ height: MAIN_ROW }}>
-                                        <span className="text-sm text-foreground leading-snug">{f.label}</span>
+                                    <div key={i} className={`px-4 flex items-center gap-2 ${i !== MAIN_FEATURES.length - 1 ? 'border-b border-border/50' : ''}`} style={{ height: MAIN_ROW }}>
+                                        <span className="text-[13px] font-medium text-foreground leading-snug">{f.label}</span>
                                         {f.tooltip && <Tip tooltip={f.tooltip} />}
                                     </div>
                                 ))}
@@ -207,7 +207,7 @@ const PlanStep = ({ selectedPlan, setSelectedPlan, isAnnual, setIsAnnual, onNext
                                             )}
                                         </div>
                                         {/* Card */}
-                                        <div className={`rounded-xl border bg-card flex flex-col transition-all ${isSel && !plan.isCurrent ? 'border-blue-400 ring-2 ring-blue-400 ring-offset-1' : 'border-border'}`}>
+                                        <div className={`rounded-xl border bg-card flex flex-col transition-all ${isSel && !plan.isCurrent ? 'border-blue-400 ring-2 ring-blue-400 ring-offset-1 shadow-md' : 'border-border shadow-sm'}`}>
                                             <div className="h-[3px] rounded-t-xl" style={{ background: plan.gradient }} />
                                             <div className="px-4 pt-3 flex flex-col" style={{ minHeight: PLAN_TOP }}>
                                                 <h3 className="text-xl font-bold text-foreground mb-0.5">{plan.name}</h3>
@@ -232,7 +232,7 @@ const PlanStep = ({ selectedPlan, setSelectedPlan, isAnnual, setIsAnnual, onNext
                                                     ) : plan.rank < currentPlanRank ? (
                                                         <button disabled className="w-full py-2 rounded-lg text-sm font-medium bg-muted/50 text-muted-foreground/60 border border-border/50 cursor-not-allowed">Unavailable</button>
                                                     ) : isEnt ? (
-                                                        <button className="w-full py-2 rounded-lg text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors">Contact us</button>
+                                                        <button className="w-full py-2 rounded-lg text-sm font-semibold bg-gray-900 dark:bg-white text-white dark:text-black hover:opacity-90 transition-opacity">Contact us</button>
                                                     ) : (
                                                         <button
                                                             onClick={() => {
@@ -257,7 +257,7 @@ const PlanStep = ({ selectedPlan, setSelectedPlan, isAnnual, setIsAnnual, onNext
                                             </div>
                                             <div className="border-t border-border">
                                                 {MAIN_FEATURES.map((f, fi) => (
-                                                    <div key={fi} className={`px-4 flex items-center ${isSel && !plan.isCurrent ? 'bg-blue-50 dark:bg-blue-950/20' : ''}`} style={{ height: MAIN_ROW }}>
+                                                    <div key={fi} className={`px-4 flex items-center ${fi !== MAIN_FEATURES.length - 1 ? 'border-b border-border/50' : ''} ${isSel && !plan.isCurrent ? 'bg-blue-50 dark:bg-blue-950/20' : ''}`} style={{ height: MAIN_ROW }}>
                                                         <CellVal value={f.values[pi]} />
                                                     </div>
                                                 ))}
@@ -271,7 +271,7 @@ const PlanStep = ({ selectedPlan, setSelectedPlan, isAnnual, setIsAnnual, onNext
 
                     {/* Feature comparison sections */}
                     {SECTIONS.map(section => (
-                        <div key={section.title} className="border border-border rounded-xl overflow-hidden mb-4">
+                        <div key={section.title} className="border border-border rounded-xl overflow-hidden mb-3">
                             <SectionHdr title={section.title} />
                             {section.rows.map((row, ri) => <Row key={ri} {...row} />)}
                         </div>
@@ -279,8 +279,12 @@ const PlanStep = ({ selectedPlan, setSelectedPlan, isAnnual, setIsAnnual, onNext
 
                     {/* Storage accordion */}
                     <div className="border border-border rounded-xl overflow-hidden mb-4">
-                        <button onClick={() => setStorageOpen(v => !v)} className="w-full flex items-center justify-between bg-muted/50 hover:bg-muted/70 transition-colors px-4" style={{ minHeight: 44 }}>
-                            <span className="text-sm font-semibold text-foreground">Storage and data transfer</span>
+                        <button 
+                            onClick={() => setStorageOpen(v => !v)} 
+                            className={`w-full flex items-center justify-between transition-colors px-4 ${storageOpen ? 'bg-accent' : 'bg-muted/50 hover:bg-muted/70'}`} 
+                            style={{ minHeight: 38 }}
+                        >
+                            <span className="text-sm font-bold text-foreground">Storage and data transfer</span>
                             {storageOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
                         </button>
                         <div className={`grid transition-all duration-300 ease-in-out ${storageOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
@@ -301,8 +305,6 @@ const PlanStep = ({ selectedPlan, setSelectedPlan, isAnnual, setIsAnnual, onNext
                     </div>
                 </div>
             </div>
-
-
         </div>
     );
 };

@@ -7,6 +7,7 @@ import CustomDropdown from './CustomDropdown';
 import CustomTooltip from './CustomTooltip';
 import { useNavigate } from 'react-router-dom';
 import LoadingScreen from './LoadingScreen';
+import SectionHeader from './ui/SectionHeader';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -383,9 +384,7 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
             {/* ── Actors Usage Table ─────────────────────────────────────────── */}
             {!isLoading && !error && data && data.actor_usage.length > 0 && (
                 <div className="border border-border rounded-lg bg-card overflow-hidden">
-                    <div className="px-4 py-2.5 border-b border-border flex items-center gap-2">
-                        <h3 className="font-semibold text-sm text-foreground">Usage by Actors</h3>
-                    </div>
+                    <SectionHeader title="Usage by Actors" />
                     <table className="w-full text-left">
                         <thead>
                             <tr className="border-b border-border bg-muted/30 text-xs text-muted-foreground">
@@ -396,23 +395,23 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
                         <tbody>
                             {data.actor_usage.map((actor, i) => (
                                 <tr key={i} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
-                                    <td className="px-4 py-2.5">
+                                    <td className="px-4 py-2">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-7 h-7 rounded shrink-0 flex items-center justify-center text-sm bg-white border border-border overflow-hidden">
+                                            <div className="w-7 h-7 rounded shrink-0 flex items-center justify-center text-sm bg-white dark:bg-card border border-border overflow-hidden">
                                                 {actor.actor_icon
                                                     ? <img src={actor.actor_icon} alt={actor.actor_name} className="w-full h-full object-cover" />
                                                     : <span className="opacity-60">🌐</span>
                                                 }
                                             </div>
                                             <div>
-                                                <div className="font-medium text-[13px] text-foreground">{actor.actor_name}</div>
+                                                <div className="font-semibold text-[13px] text-foreground">{actor.actor_name}</div>
                                                 <div className="text-[11px] text-muted-foreground hidden sm:block">
                                                     scrapi/{actor.actor_id?.toLowerCase().substring(0, 8)}…
                                                 </div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-4 py-2.5 text-right font-semibold text-foreground text-sm">
+                                    <td className="px-4 py-2 text-right font-semibold text-foreground text-sm">
                                         ${actor.total_usage.toFixed(5)}
                                     </td>
                                 </tr>
@@ -424,33 +423,28 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
 
             {/* ── Actor Compute Units Row ────────────────────────────────────────── */}
             {!isLoading && !error && data && data.compute_units_cost !== undefined && (
-                <div className="flex items-center justify-between p-4 bg-muted/20 border border-border rounded-lg mt-4">
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-foreground">Actor compute units</span>
-                        <CustomTooltip content="Total cost of platform compute resources (RAM/CPU) used by all runs.">
-                            <span className="text-muted-foreground w-3.5 h-3.5 flex items-center justify-center border border-muted-foreground rounded-full text-[10px] cursor-help">?</span>
-                        </CustomTooltip>
-                    </div>
+                <SectionHeader
+                    className="rounded-lg border mt-3"
+                    title="Actor compute units"
+                    tip="Total cost of platform compute resources (RAM/CPU) used by all runs."
+                >
                     <span className="text-sm font-bold text-foreground">
                         ${data.compute_units_cost.toFixed(5)}
                     </span>
-                </div>
+                </SectionHeader>
             )}
 
             {/* ── Storage Usage Table ─────────────────────────────────────────── */}
             {!isLoading && !error && data && data.storage_usage && (
-                <div className="border border-border rounded-lg bg-card overflow-hidden mt-4">
-                    <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-sm text-foreground">Usage by Storage</h3>
-                            <CustomTooltip content="Includes timed storage (GB-hours) and API operations (reads/writes).">
-                                <span className="text-muted-foreground w-3.5 h-3.5 flex items-center justify-center border border-muted-foreground rounded-full text-[10px] cursor-help">?</span>
-                            </CustomTooltip>
-                        </div>
+                <div className="border border-border rounded-lg bg-card overflow-hidden mt-3">
+                    <SectionHeader
+                        title="Usage by Storage"
+                        tip="Includes timed storage (GB-hours) and API operations (reads/writes)."
+                    >
                         <div className="text-sm font-bold text-foreground">
                             ${data.storage_usage.total.toFixed(5)}
                         </div>
-                    </div>
+                    </SectionHeader>
                     <table className="w-full text-left">
                         <thead>
                             <tr className="border-b border-border bg-muted/30 text-xs text-muted-foreground">
@@ -460,16 +454,16 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
                         </thead>
                         <tbody>
                             <tr className="border-b border-border hover:bg-muted/30 transition-colors">
-                                <td className="px-4 py-2.5 text-sm text-foreground">Timed storage</td>
-                                <td className="px-4 py-2.5 text-right font-medium text-foreground text-sm">${data.storage_usage.timed_storage.toFixed(5)}</td>
+                                <td className="px-4 py-2 text-sm text-foreground">Timed storage</td>
+                                <td className="px-4 py-2 text-right font-medium text-foreground text-sm">${data.storage_usage.timed_storage.toFixed(5)}</td>
                             </tr>
                             <tr className="border-b border-border hover:bg-muted/30 transition-colors">
-                                <td className="px-4 py-2.5 text-sm text-foreground">Reads</td>
-                                <td className="px-4 py-2.5 text-right font-medium text-foreground text-sm">${data.storage_usage.reads.toFixed(5)}</td>
+                                <td className="px-4 py-2 text-sm text-foreground">Reads</td>
+                                <td className="px-4 py-2 text-right font-medium text-foreground text-sm">${data.storage_usage.reads.toFixed(5)}</td>
                             </tr>
                             <tr className="last:border-0 hover:bg-muted/30 transition-colors">
-                                <td className="px-4 py-2.5 text-sm text-foreground">Writes</td>
-                                <td className="px-4 py-2.5 text-right font-medium text-foreground text-sm">${data.storage_usage.writes.toFixed(5)}</td>
+                                <td className="px-4 py-2 text-sm text-foreground">Writes</td>
+                                <td className="px-4 py-2 text-right font-medium text-foreground text-sm">${data.storage_usage.writes.toFixed(5)}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -478,15 +472,12 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
 
             {/* ── Proxy Usage Table ────────────────────────────────────────────── */}
             {!isLoading && !error && data && (
-                <div className="border border-border rounded-lg bg-card overflow-hidden mt-4">
-                    <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-sm text-foreground ">Usage by Proxy</h3>
-                        </div>
+                <div className="border border-border rounded-lg bg-card overflow-hidden mt-3">
+                    <SectionHeader title="Usage by Proxy">
                         <div className="text-sm font-bold text-foreground">
                             $0.00000
                         </div>
-                    </div>
+                    </SectionHeader>
                     <table className="w-full text-left font-sans">
                         <thead>
                             <tr className="border-b border-border bg-muted/30 text-xs text-muted-foreground">
@@ -516,15 +507,12 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
 
             {/* ── Data Transfer Usage Table ─────────────────────────────────────── */}
             {!isLoading && !error && data && (
-                <div className="border border-border rounded-lg bg-card overflow-hidden mt-4">
-                    <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-sm text-foreground">Usage by Data Transfer</h3>
-                        </div>
+                <div className="border border-border rounded-lg bg-card overflow-hidden mt-3">
+                    <SectionHeader title="Usage by Data Transfer">
                         <div className="text-sm font-bold text-foreground">
                             $0.00000
                         </div>
-                    </div>
+                    </SectionHeader>
                     <table className="w-full text-left font-sans">
                         <thead>
                             <tr className="border-b border-border bg-muted/30 text-xs text-muted-foreground">
@@ -554,8 +542,8 @@ const HistoricalUsageView = ({ currentWorkspace }) => {
 
             {/* ── Total Summary Footer ────────────────────────────────────────── */}
             {!isLoading && !error && data && (
-                <div className="flex justify-end p-4 bg-muted/20 border border-border rounded-lg mt-4 items-center gap-3">
-                    <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Total Month Usage</span>
+                <div className="flex justify-end px-4 py-2.5 bg-accent border border-border rounded-lg mt-3 items-center gap-3">
+                    <span className="text-xs font-bold text-muted-foreground">Total Month Usage</span>
                     <span className="text-xl font-bold text-foreground">
                         ${data.total_cost.toFixed(5)}
                     </span>

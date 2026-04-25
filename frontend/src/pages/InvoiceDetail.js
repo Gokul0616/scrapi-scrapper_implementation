@@ -26,9 +26,9 @@ const API = `${BACKEND_URL}/api`;
 // ── Section card — matches ReviewStep / checkout style ────────────────────────
 const Section = ({ icon: Icon, label, children }) => (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <div className="flex items-center gap-2.5 px-4 py-3 border-b border-border bg-muted/30">
-            <Icon className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-semibold text-foreground">{label}</span>
+        <div className="flex items-center gap-2.5 px-4 py-1.5 border-b border-border bg-accent">
+            <Icon className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-sm font-bold text-foreground">{label}</span>
         </div>
         <div className="p-4">{children}</div>
     </div>
@@ -44,7 +44,7 @@ const Row = ({ label, value, mono, accent, truncate }) => {
     );
 
     return (
-        <div className="flex items-center justify-between py-1.5 gap-4">
+        <div className="flex items-center justify-between py-1 gap-4">
             <span className="text-sm text-muted-foreground shrink-0">{label}</span>
             {truncate && value ? (
                 <CustomTooltip content={valueStr}>
@@ -213,7 +213,7 @@ const InvoiceDetail = () => {
         <div className="min-h-screen bg-background">
             {/* Top bar */}
             <div className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md no-print">
-                <div className=" mx-auto px-5 h-14 flex items-center justify-between gap-4">
+                <div className=" mx-auto px-5 h-12 flex items-center justify-between gap-4">
                     <button
                         onClick={() => navigate('/billing?tab=invoices')}
                         className={`text-[14px] font-semibold flex items-center gap-1 transition-colors ${theme === 'dark'
@@ -244,10 +244,10 @@ const InvoiceDetail = () => {
             </div>
 
             {/* Page content */}
-            <div ref={printRef} className=" mx-auto px-5 py-8 space-y-4">
+            <div ref={printRef} className=" mx-auto px-5 py-6 space-y-3">
 
                 {/* Invoice header row */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-2">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-1">
                     <div>
                         <h1 className="text-xl font-black text-foreground tracking-tight">Invoice #{invoice.invoice_no}</h1>
                         <p className="text-sm text-muted-foreground mt-0.5">Issued {formatDate(invoice.created_at)}</p>

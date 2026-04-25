@@ -13,6 +13,9 @@ from .chat import router as chat_router
 from .email_validation_routes import router as email_validation_router
 from .routes_legacy import router as legacy_router
 from .storage_routes import router as storage_router
+from .webhook_routes import router as webhook_router
+from .pipeline_routes import router as pipeline_router
+from .api_keys_routes import router as api_keys_router
 
 # Import legacy routers (if they still exist and are needed)
 from .search_routes import router as search_router, set_search_db
@@ -33,6 +36,9 @@ router.include_router(chat_router, tags=["Chat"])
 router.include_router(email_validation_router)
 router.include_router(legacy_router, tags=["Legacy"])
 router.include_router(storage_router, prefix="/storage", tags=["Storage"])
+router.include_router(webhook_router, prefix="/webhooks", tags=["Webhooks"])
+router.include_router(pipeline_router, prefix="/pipelines", tags=["Pipelines"])
+router.include_router(api_keys_router, prefix="/auth/api-keys", tags=["API Keys"])
 
 
 def set_db(db):
@@ -69,4 +75,7 @@ __all__ = [
     'notification_router',
     'set_notification_db',
     'storage_router',
+    'webhook_router',
+    'pipeline_router',
+    'api_keys_router',
 ]

@@ -6,6 +6,7 @@ Handles:
 - HMAC-SHA256 request signing (X-Scrapi-Signature header)
 - Exponential backoff retry (max 3 attempts)
 - Failure count tracking in MongoDB
+- Per-attempt delivery log written to `webhook_deliveries` collection
 """
 
 import hashlib
@@ -14,6 +15,7 @@ import json
 import logging
 import os
 import sys
+import uuid
 from datetime import datetime, timezone
 
 # Ensure backend root is in sys.path for Celery child processes
@@ -40,7 +42,7 @@ def _build_signature(secret: str, payload: str) -> str:
     name="workers.webhook_worker.dispatch_webhook",
     max_retries=3,
     default_retry_delay=30,  # seconds (doubled on each retry via countdown)
-    queue="default",
+    queue="webhooks",
 )
 def dispatch_webhook(self, webhook_id: str, event: str, payload: dict):
     """
@@ -75,6 +77,10 @@ async def _async_dispatch(task, webhook_id: str, event: str, payload: dict):
     client = AsyncIOMotorClient(mongo_url)
     db = client[db_name]
 
+    attempt_number = task.request.retries + 1
+    run_id = payload.get("run", {}).get("id", "")
+    now_iso = datetime.now(timezone.utc).isoformat()
+
     try:
         webhook = await db.webhooks.find_one({"id": webhook_id})
         if not webhook:
@@ -98,7 +104,7 @@ async def _async_dispatch(task, webhook_id: str, event: str, payload: dict):
             {
                 "event": event,
                 "webhook_id": webhook_id,
-                "delivered_at": datetime.now(timezone.utc).isoformat(),
+                "delivered_at": now_iso,
                 "data": payload,
             },
             default=str,
@@ -109,6 +115,7 @@ async def _async_dispatch(task, webhook_id: str, event: str, payload: dict):
             "User-Agent": "Scrapi-Webhook/1.0",
             "X-Scrapi-Event": event,
             "X-Scrapi-Webhook-Id": webhook_id,
+            "X-Scrapi-Delivery-Id": str(uuid.uuid4()),
         }
 
         if secret:
@@ -120,8 +127,22 @@ async def _async_dispatch(task, webhook_id: str, event: str, payload: dict):
         status_code = response.status_code
         success = 200 <= status_code < 300
 
-        # Persist delivery result
-        now_iso = datetime.now(timezone.utc).isoformat()
+        # ── Write delivery log ──────────────────────────────────────────────
+        delivery_doc = {
+            "id": str(uuid.uuid4()),
+            "webhook_id": webhook_id,
+            "event": event,
+            "run_id": run_id,
+            "attempt": attempt_number,
+            "status_code": status_code,
+            "success": success,
+            "response_body": response.text[:500] if response.text else None,
+            "error_message": None,
+            "delivered_at": now_iso,
+        }
+        await db.webhook_deliveries.insert_one(delivery_doc)
+
+        # ── Update webhook metadata ─────────────────────────────────────────
         if success:
             await db.webhooks.update_one(
                 {"id": webhook_id},
@@ -143,5 +164,25 @@ async def _async_dispatch(task, webhook_id: str, event: str, payload: dict):
 
         logger.info(f"✅ Webhook {webhook_id} delivered event '{event}' → {target_url} [{status_code}]")
 
+    except Exception as exc:
+        # Write failure delivery log before re-raising for retry
+        if "delivery_doc" not in dir():
+            delivery_doc = {
+                "id": str(uuid.uuid4()),
+                "webhook_id": webhook_id,
+                "event": event,
+                "run_id": run_id,
+                "attempt": attempt_number,
+                "status_code": None,
+                "success": False,
+                "response_body": None,
+                "error_message": str(exc)[:500],
+                "delivered_at": now_iso,
+            }
+            try:
+                await db.webhook_deliveries.insert_one(delivery_doc)
+            except Exception:
+                pass
+        raise
     finally:
         client.close()

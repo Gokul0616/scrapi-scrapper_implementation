@@ -82,12 +82,37 @@ async def run_async_scraping_job(run_id: str, actor_id: str, user_id: str, input
         except Exception as storage_err:
             logger.warning(f"Could not create default storage for run {run_id}: {storage_err}")
 
-        # Run the actual background scraping job (we ignore its task_manager dependencies)
+        # Run the actual background scraping job
         logger.info(f"Worker beginning async scraping job for run: {run_id}")
         await execute_scraping_job(run_id, actor_id, user_id, input_data, organization_id)
         logger.info(f"Worker successfully finished async scraping job for run: {run_id}")
+
+        # 🔔 Dispatch webhook event — run.succeeded
+        try:
+            from services.webhook_service import WebhookService
+            await WebhookService(db).dispatch_event(
+                "run.succeeded", run_id, actor_id, user_id
+            )
+        except Exception as wh_err:
+            logger.warning(f"Webhook dispatch failed (run.succeeded) for run {run_id}: {wh_err}")
+
+        # 🔗 Advance pipeline if this run is part of one
+        try:
+            from services.pipeline_service import PipelineService
+            await PipelineService(db).trigger_next_step(run_id)
+        except Exception as pl_err:
+            logger.warning(f"Pipeline advance failed for run {run_id}: {pl_err}")
+
     except Exception as e:
         logger.error(f"Worker encountered error during scraping job for run {run_id}: {e}")
+        # 🔔 Dispatch webhook event — run.failed
+        try:
+            from services.webhook_service import WebhookService
+            await WebhookService(db).dispatch_event(
+                "run.failed", run_id, actor_id, user_id
+            )
+        except Exception as wh_err:
+            logger.warning(f"Webhook dispatch failed (run.failed) for run {run_id}: {wh_err}")
         raise
     finally:
         client.close()

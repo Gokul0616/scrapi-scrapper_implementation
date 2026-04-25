@@ -71,6 +71,25 @@ async def startup_event():
     except Exception as e:
         logging.warning(f"⚠️ Could not ensure storage indexes: {e}")
 
+    # Ensure indexes for Phase 3 — Webhooks & Pipelines
+    try:
+        from services.webhook_service import WebhookService
+        from services.pipeline_service import PipelineService
+        await WebhookService(db).ensure_indexes()
+        await PipelineService(db).ensure_indexes()
+        logging.info("✅ Phase 3 indexes ensured (Webhooks + Pipelines)")
+    except Exception as e:
+        logging.warning(f"⚠️ Could not ensure Phase 3 indexes: {e}")
+
+    # Ensure indexes for Phase 4 — API Keys
+    try:
+        await db.api_keys.create_index([("key_hash", 1)], unique=True)
+        await db.api_keys.create_index([("user_id", 1), ("is_active", 1)])
+        await db.api_keys.create_index([("user_id", 1)])
+        logging.info("✅ Phase 4 indexes ensured (API Keys)")
+    except Exception as e:
+        logging.warning(f"⚠️ Could not ensure Phase 4 indexes: {e}")
+
     # Verify Redis connectivity (managed externally via Docker or local install)
     try:
         import redis as redis_sync
@@ -127,6 +146,47 @@ api_router.include_router(billing_router)
 
 # Include the router in the main app
 app.include_router(api_router)
+
+# Compatibility WebSocket route (old path: /api/ws/api-keys/<id>/timer)
+# Frontend still uses this path — delegate to the in-memory TEMP_KEY_STORE
+import asyncio as _asyncio
+from fastapi import WebSocket as _WS, WebSocketDisconnect as _WSDc
+
+@app.websocket("/api/ws/api-keys/{key_id}/timer")
+async def ws_api_key_timer_compat(websocket: _WS, key_id: str):
+    """Backward-compatible WS endpoint — proxies to the TEMP_KEY_STORE in api_keys_routes."""
+    await websocket.accept()
+    try:
+        from routes.api_keys_routes import TEMP_KEY_STORE
+        import time as _time
+        while True:
+            if key_id not in TEMP_KEY_STORE:
+                await websocket.send_json({"key": None, "remaining": 0})
+                break
+            data = TEMP_KEY_STORE[key_id]
+            remaining = int(data["expires_at"] - _time.time())
+            if remaining <= 0:
+                TEMP_KEY_STORE.pop(key_id, None)
+                await websocket.send_json({"key": None, "remaining": 0})
+                break
+            await websocket.send_json({"key": data["key"], "remaining": remaining})
+            await _asyncio.sleep(1)
+    except _WSDc:
+        pass
+    except Exception as _e:
+        # 1005 = no status received, 1006 = abnormal closure — both are normal
+        # browser-side disconnects (React cleanup, tab close, etc.)
+        _msg = str(_e).lower()
+        _is_normal_disconnect = any(x in _msg for x in [
+            '1005', '1006', 'no close frame', 'no status received',
+            'abnormal closure', 'connection closed', 'connection reset',
+        ])
+        if not _is_normal_disconnect:
+            logging.debug(f"WS compat unexpected: {_e}")
+        try:
+            await websocket.close()
+        except Exception:
+            pass
 
 # Protected documentation endpoints - require admin authentication
 from auth import get_current_user, decode_token
@@ -601,6 +661,15 @@ async def health():
 # Add workspace middleware
 from middleware import WorkspaceMiddleware
 app.add_middleware(WorkspaceMiddleware)
+
+# Add API key rate limiter (Phase 4.2) — only limits scrapi_api_* key requests
+try:
+    from middleware.rate_limiter import RateLimiterMiddleware
+    redis_url = os.environ.get("REDIS_URL", "redis://localhost:6379/1")
+    app.add_middleware(RateLimiterMiddleware, redis_url=redis_url)
+    logging.info("✅ Rate limiter middleware registered")
+except Exception as _rl_err:
+    logging.warning(f"⚠️ Rate limiter middleware could not be loaded: {_rl_err}")
 
 app.add_middleware(
     CORSMiddleware,

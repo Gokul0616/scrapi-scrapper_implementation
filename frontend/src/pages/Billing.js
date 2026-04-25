@@ -18,6 +18,7 @@ import AddPromoModal from '../components/modals/AddPromoModal';
 import AlertModal from '../components/AlertModal';
 import DataTable from '../components/ui/DataTable';
 import LoadingScreen from '@/components/LoadingScreen';
+import SectionHeader from '../components/ui/SectionHeader';
 
 const BILLING_TOOLTIPS = {
   // Service breakdown
@@ -165,6 +166,7 @@ const Billing = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(false);
   const [error, setError] = useState(null);
+  const [prorationDiscount, setProrationDiscount] = useState(0);
   const [expandedServices, setExpandedServices] = useState({});
 
   const toggleService = (serviceName) => {
@@ -195,6 +197,16 @@ const Billing = () => {
         setBillingData(summary);
         setBillingDetails(billing_details);
         setSubscriptionSetup(subscription);
+
+        // Fetch proration/unused credit separately as it's a checkout-time calculation
+        try {
+          const prorationRes = await axios.get(`${API}/billing/proration?workspace_id=${currentWorkspace.workspace_id}&workspace_type=${currentWorkspace.workspace_type}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setProrationDiscount(prorationRes.data?.discount || 0);
+        } catch (pErr) {
+          console.error('Error fetching proration discount:', pErr);
+        }
 
       } catch (err) {
         console.error('Error fetching billing data:', err);
@@ -290,7 +302,7 @@ const Billing = () => {
         <div className="flex items-center justify-between mb-1.5">
           <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
             Platform usage in current billing period: <span className="font-bold">${billingData.totalUsage.toFixed(5)}</span>
-            <CustomTooltip 
+            <CustomTooltip
               content={
                 <div className="flex flex-col gap-1 text-[11px] text-left max-w-[250px]">
                   <div className="font-bold text-foreground">Your total consumption so far.</div>
@@ -322,7 +334,7 @@ const Billing = () => {
       <div className="rounded-lg border border-border bg-card p-4">
         <h3 className="text-base font-semibold mb-3 text-foreground flex items-center gap-2">
           Plan consumption
-          <CustomTooltip 
+          <CustomTooltip
             content={
               <div className="flex flex-col gap-1 text-[11px] text-left max-w-[250px]">
                 <div className="font-bold text-foreground">Usage of your monthly pre-paid credits.</div>
@@ -345,7 +357,7 @@ const Billing = () => {
         </div>
 
         {/* Usage Labels */}
-        <div className="flex items-center gap-5 text-sm">
+        <div className="flex items-center gap-5 text-sm mb-4">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
             <span className="text-foreground font-medium">
@@ -359,13 +371,37 @@ const Billing = () => {
             </span>
           </div>
         </div>
+
+        {/* Credits and Balance offsets */}
+        {(prorationDiscount > 0 || (billingData?.account_balance || 0) > 0) && (
+          <div className="pt-3 border-t border-border/50 flex flex-wrap gap-x-6 gap-y-2">
+            {prorationDiscount > 0 && (
+              <div className="flex items-center gap-2 text-[13px]">
+                <span className="text-muted-foreground">Unused plan credit:</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">${Number(prorationDiscount).toFixed(2)}</span>
+                <CustomTooltip content="Credit from your previous plan which will be applied to your next renewal.">
+                  <HelpCircle className="w-3 h-3 text-muted-foreground/40 hover:text-muted-foreground cursor-help" />
+                </CustomTooltip>
+              </div>
+            )}
+            {(billingData?.account_balance || 0) > 0 && (
+              <div className="flex items-center gap-2 text-[13px]">
+                <span className="text-muted-foreground">Credit Balance:</span>
+                <span className="font-bold text-blue-600 dark:text-blue-400">${Number(billingData.account_balance).toFixed(2)}</span>
+                <CustomTooltip content="Pre-paid credits or refunds stored on your account.">
+                  <HelpCircle className="w-3 h-3 text-muted-foreground/40 hover:text-muted-foreground cursor-help" />
+                </CustomTooltip>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Platform Usage Breakdown */}
       <div className="rounded-lg border border-border bg-card p-4">
         <h3 className="text-base font-semibold mb-3 text-foreground flex items-center gap-2">
           Platform usage breakdown by services
-          <CustomTooltip 
+          <CustomTooltip
             content={
               <div className="flex flex-col gap-1 text-[11px] text-left max-w-[250px]">
                 <div className="font-bold text-foreground">Granular breakdown of costs across platform components.</div>
@@ -405,7 +441,7 @@ const Billing = () => {
               <div key={service.name} className={`${index !== billingData.services.length - 1 ? 'border-b border-border' : ''}`}>
                 <div
                   onClick={() => toggleService(service.name)}
-                  className={`flex items-center justify-between px-3 py-2.5 hover:bg-muted/50 transition-colors cursor-pointer ${isExpanded ? 'bg-muted/30' : ''}`}
+                  className={`flex items-center justify-between px-3 py-2 transition-colors cursor-pointer ${isExpanded ? 'bg-accent' : 'hover:bg-muted/50'}`}
                 >
                   <div className="flex items-center gap-2.5">
                     {isExpanded ? (
@@ -443,7 +479,7 @@ const Billing = () => {
                                       <td colSpan="4" className="py-3 font-bold text-foreground text-[13px] pt-4 flex items-center gap-1.5">
                                         {detail.label}
                                         {detail.label === "Pay per event" && (
-                                          <CustomTooltip 
+                                          <CustomTooltip
                                             content={
                                               <div className="flex flex-col gap-1 text-[11px] text-left max-w-[250px]">
                                                 <div className="font-bold text-foreground">Fixed costs for specific Actor events.</div>
@@ -459,62 +495,62 @@ const Billing = () => {
                                   );
                                 }
 
-                            if (detail.type === 'run') {
-                              return (
-                                <tr key={detail.id || dIdx} className="hover:bg-muted/30 transition-colors">
-                                  <td className="py-2.5">
-                                    <div className="flex flex-col">
-                                      <span
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          navigate(`/actor/${detail.actor_id}`);
-                                        }}
-                                        className="text-blue-500 font-bold hover:underline cursor-pointer"
-                                      >
-                                        {detail.actor_name} - {detail.unit_label}
-                                      </span>
-                                      <span className="text-[10px] text-muted-foreground">
-                                        {new Date(detail.date).toLocaleString()}
-                                      </span>
-                                    </div>
-                                  </td>
-                                  <td className="py-2.5 text-right font-medium">{detail.units}</td>
-                                  <td className="py-2.5 text-right text-muted-foreground">{detail.price_per_unit}</td>
-                                  <td className="py-2.5 text-right font-bold text-foreground">${detail.cost.toFixed(5)}</td>
-                                </tr>
-                              );
-                            }
+                                if (detail.type === 'run') {
+                                  return (
+                                    <tr key={detail.id || dIdx} className="hover:bg-muted/30 transition-colors">
+                                      <td className="py-2.5">
+                                        <div className="flex flex-col">
+                                          <span
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              navigate(`/actor/${detail.actor_id}`);
+                                            }}
+                                            className="text-blue-500 font-bold hover:underline cursor-pointer"
+                                          >
+                                            {detail.actor_name} - {detail.unit_label}
+                                          </span>
+                                          <span className="text-[10px] text-muted-foreground">
+                                            {new Date(detail.date).toLocaleString()}
+                                          </span>
+                                        </div>
+                                      </td>
+                                      <td className="py-2.5 text-right font-medium">{detail.units}</td>
+                                      <td className="py-2.5 text-right text-muted-foreground">{detail.price_per_unit}</td>
+                                      <td className="py-2.5 text-right font-bold text-foreground">${detail.cost.toFixed(5)}</td>
+                                    </tr>
+                                  );
+                                }
 
-                            return (
-                              <tr key={dIdx} className="hover:bg-muted/20 transition-colors">
-                                <td className="py-2.5 flex items-center gap-1.5 font-medium text-foreground">
-                                  {detail.label}
-                                  <CustomTooltip 
-                                    content={
-                                      <div className="flex flex-col gap-1 text-[11px] text-left max-w-[250px]">
-                                        <div className="font-bold text-foreground">
-                                          {BILLING_TOOLTIPS[detail.label]?.what || "Usage details for this service."}
-                                        </div>
-                                        <div className="text-muted-foreground text-[10px] leading-relaxed">
-                                          {BILLING_TOOLTIPS[detail.label]?.how || "Calculated based on actual consumption."}
-                                        </div>
-                                      </div>
-                                    }
-                                  >
-                                    <HelpCircle className="w-3 h-3 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
-                                  </CustomTooltip>
-                                </td>
-                                <td className="py-2.5 text-right font-medium text-foreground">{detail.value}</td>
-                                <td className="py-2.5 text-right text-muted-foreground">{detail.price || '-'}</td>
-                                <td className="py-2.5 text-right font-bold text-foreground">${detail.cost.toFixed(5)}</td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
+                                return (
+                                  <tr key={dIdx} className="hover:bg-muted/20 transition-colors">
+                                    <td className="py-2.5 flex items-center gap-1.5 font-medium text-foreground">
+                                      {detail.label}
+                                      <CustomTooltip
+                                        content={
+                                          <div className="flex flex-col gap-1 text-[11px] text-left max-w-[250px]">
+                                            <div className="font-bold text-foreground">
+                                              {BILLING_TOOLTIPS[detail.label]?.what || "Usage details for this service."}
+                                            </div>
+                                            <div className="text-muted-foreground text-[10px] leading-relaxed">
+                                              {BILLING_TOOLTIPS[detail.label]?.how || "Calculated based on actual consumption."}
+                                            </div>
+                                          </div>
+                                        }
+                                      >
+                                        <HelpCircle className="w-3 h-3 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
+                                      </CustomTooltip>
+                                    </td>
+                                    <td className="py-2.5 text-right font-medium text-foreground">{detail.value}</td>
+                                    <td className="py-2.5 text-right text-muted-foreground">{detail.price || '-'}</td>
+                                    <td className="py-2.5 text-right font-bold text-foreground">${detail.cost.toFixed(5)}</td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -570,48 +606,51 @@ const Billing = () => {
     const fullAddress = [displayAddress, displayCity, displayState, displayPostal, displayCountry].filter(Boolean).join(', ');
 
     return (
-      <div className="space-y-6">
+      <div className="space-y-3">
 
         {/* -- Current Subscription Box -- */}
         <div>
-          <div className="flex items-center gap-4 mb-4">
-            <h2 className="text-xl font-bold text-foreground">Current subscription</h2>
-            {/* <button
-              onClick={() => {
-                if (currentWorkspace) {
-                  selectWorkspace(currentWorkspace);
-                }
-                navigate('/upgrade-checkout');
-              }}
-              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-semibold transition-colors"
-            >
-              Upgrade
-            </button> */}
+          <div className="flex items-center gap-4 mb-2">
+            <h2 className="text-lg font-bold text-foreground">Current subscription</h2>
           </div>
 
           <div className="rounded-lg border border-border bg-card overflow-hidden">
-            <div className="px-5 py-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className={`w-5 h-5 rounded-full ${activePlanColor} opacity-80`} />
-                <span className="text-[15px] font-bold text-foreground capitalize">
-                  {billingData?.plan || 'Free'} plan
-                  {billingData?.plan_period && (
-                    <span className="text-muted-foreground font-normal lowercase ml-1">/ {billingData.plan_period}</span>
-                  )}
-                </span>
-              </div>
-
-              {(billingData?.account_balance || 0) > 0 && (
-                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-green-50/80 dark:bg-green-900/20 border border-green-200/50 dark:border-green-800/30">
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)] animate-pulse" />
-                  <span className="text-[13px] font-semibold text-green-700 dark:text-green-400">
-                    Credit Balance: ${Number(billingData.account_balance).toFixed(2)}
+            <SectionHeader
+              title={
+                <div className="flex items-center gap-3">
+                  <div className={`w-3.5 h-3.5 rounded-full ${activePlanColor} opacity-80`} />
+                  <span className="text-sm font-bold text-foreground capitalize">
+                    {billingData?.plan || 'Free'} plan
+                    {billingData?.plan_period && (
+                      <span className="text-muted-foreground font-normal lowercase ml-1">/ {billingData.plan_period}</span>
+                    )}
                   </span>
                 </div>
+              }
+            >
+              {((billingData?.account_balance || 0) > 0 || prorationDiscount > 0) && (
+                <div className="flex flex-wrap items-center gap-2">
+                  {prorationDiscount > 0 && (
+                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50/80 dark:bg-emerald-900/20 border border-emerald-200/50 dark:border-emerald-800/30">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+                      <span className="text-[12px] font-semibold text-emerald-700 dark:text-emerald-400">
+                        Unused Credit: ${Number(prorationDiscount).toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+                  {(billingData?.account_balance || 0) > 0 && (
+                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50/80 dark:bg-blue-900/20 border border-blue-200/50 dark:border-blue-800/30">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
+                      <span className="text-[12px] font-semibold text-blue-700 dark:text-blue-400">
+                        Credit Balance: ${Number(billingData.account_balance).toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+                </div>
               )}
-            </div>
+            </SectionHeader>
 
-            <div className="p-5 space-y-3.5">
+            <div className="p-4 space-y-1.5">
               <div className="flex items-center gap-2 text-[13px] text-foreground">
                 <span className="font-medium">Free platform usage:</span> ${billingData?.limits?.platform_credits?.toFixed(2) || '5.00'}
                 <CustomTooltip content="Total free platform usage provided each month.">
@@ -695,25 +734,24 @@ const Billing = () => {
                 </div>
               )}
 
-              <div className="pt-3">
-                <a href="#" className="text-[13px] font-medium text-blue-500 hover:text-blue-600 transition-colors flex items-center gap-1">See all plan features and compare plans <ExternalLink className="w-3.5 h-3.5" /></a>
+              <div className="pt-2">
+                <a href="#" className="text-[12px] font-medium text-blue-500 hover:text-blue-600 transition-colors flex items-center gap-1">See all plan features and compare plans <ExternalLink className="w-3 h-3" /></a>
               </div>
             </div>
           </div>
         </div>
 
         {/* -- Payment Methods Box -- */}
-        <div className="rounded-lg border border-border bg-card">
-          <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <h3 className="text-[15px] font-bold text-foreground">Payment methods</h3>
-              <CustomTooltip content="Manage the credit cards or PayPal accounts used for billing your subscription.">
-                <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
-              </CustomTooltip>
-            </div>
-            <button onClick={() => openModal('add-payment')} className="flex items-center gap-1 text-[13px] text-foreground font-semibold hover:bg-muted px-2 py-1 rounded transition-colors"><span className="text-lg leading-none mb-0.5">+</span> Add new</button>
-          </div>
-          <div className="p-5">
+        <div className="rounded-lg border border-border bg-card overflow-hidden">
+          <SectionHeader title="Payment methods" tip="Manage the credit cards or PayPal accounts used for billing your subscription.">
+            <button
+              onClick={() => openModal('add-payment')}
+              className="h-[28px] flex items-center gap-1.5 px-3 rounded-md border border-border bg-card text-[13px] font-bold text-foreground hover:bg-muted hover:border-muted-foreground/30 transition-all active:scale-95 shadow-sm"
+            >
+              <span className="text-lg leading-none mb-0.5">+</span> Add new
+            </button>
+          </SectionHeader>
+          <div className="p-4">
             {!subscriptionSetup?.payment_method ? (
               <div className="text-[13px] text-muted-foreground">No payment methods found.</div>
             ) : (
@@ -738,23 +776,17 @@ const Billing = () => {
         </div>
 
         {/* -- Billing Details Box -- */}
-        <div className="rounded-lg border border-border bg-card">
-          <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <h3 className="text-[15px] font-bold text-foreground">Billing details</h3>
-              <CustomTooltip content="Update your company name, tax IDs, and physical address for invoices.">
-                <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
-              </CustomTooltip>
-            </div>
+        <div className="rounded-lg border border-border bg-card overflow-hidden">
+          <SectionHeader title="Billing details" tip="Update your company name, tax IDs, and physical address for invoices.">
             <button
               onClick={() => openModal('edit-billing')}
-              className="flex items-center gap-1.5 text-[13px] text-foreground font-semibold hover:bg-muted px-2 py-1 rounded transition-colors"
+              className="h-[28px] flex items-center gap-1.5 px-3 rounded-md border border-border bg-card text-[13px] font-bold text-foreground hover:bg-muted hover:border-muted-foreground/30 transition-all active:scale-95 shadow-sm"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /><path d="m15 5 4 4" /></svg>
               Edit
             </button>
-          </div>
-          <div className="p-5">
+          </SectionHeader>
+          <div className="p-4">
             <div className="text-[13px] text-foreground font-semibold leading-relaxed">
               {displayName ? (
                 <>
@@ -770,19 +802,23 @@ const Billing = () => {
         </div>
 
         {/* -- Special Offers Box -- */}
-        <div className="rounded-lg border border-border bg-card">
-          <div className="px-5 py-4 flex items-center justify-between">
+        <div className="rounded-lg border border-border bg-card overflow-hidden">
+          <SectionHeader title="Special offers" tip="Apply referral codes or exclusive promotional discounts to your active workspace.">
             <div className="flex items-center gap-2">
-              <h3 className="text-[15px] font-bold text-foreground">Special offers</h3>
-              <CustomTooltip content="Apply referral codes or exclusive promotional discounts to your active workspace.">
-                <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
-              </CustomTooltip>
+              <button
+                onClick={() => openModal('add-referral')}
+                className="h-[28px] flex items-center gap-1.5 px-3 rounded-md border border-border bg-card text-[13px] font-bold text-foreground hover:bg-muted hover:border-muted-foreground/30 transition-all active:scale-95 shadow-sm"
+              >
+                <span className="text-lg leading-none mb-0.5">+</span> Add a referral code
+              </button>
+              <button
+                onClick={() => openModal('add-promo')}
+                className="h-[28px] flex items-center gap-1.5 px-3 rounded-md border border-border bg-card text-[13px] font-bold text-foreground hover:bg-muted hover:border-muted-foreground/30 transition-all active:scale-95 shadow-sm"
+              >
+                <span className="text-lg leading-none mb-0.5">+</span> Add a promo code
+              </button>
             </div>
-            <div className="flex items-center gap-4">
-              <button onClick={() => openModal('add-referral')} className="flex items-center gap-1 text-[13px] text-foreground font-semibold hover:bg-muted px-2 py-1 rounded transition-colors"><span className="text-lg leading-none mb-0.5">+</span> Add a referral code</button>
-              <button onClick={() => openModal('add-promo')} className="flex items-center gap-1 text-[13px] text-foreground font-semibold hover:bg-muted px-2 py-1 rounded transition-colors"><span className="text-lg leading-none mb-0.5">+</span> Add a promo code</button>
-            </div>
-          </div>
+          </SectionHeader>
         </div>
 
         {/* -- Confirmation Modal -- */}
@@ -803,7 +839,7 @@ const Billing = () => {
   };
 
   const renderPricingRow = (label, value, tooltip) => (
-    <div className="flex items-center py-4 border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+    <div className="flex items-center py-2 border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
       <div className="w-1/2 flex items-center gap-1.5 pl-4">
         <span className="text-sm font-medium text-muted-foreground">{label}</span>
         {tooltip && (
@@ -839,12 +875,10 @@ const Billing = () => {
     if (billingData?.plan?.toLowerCase() === 'enterprise') datacenterProxy = 'Custom';
 
     return (
-      <div className="space-y-4">
+      <div className="space-y-3">
         {/* Actors */}
         <div className="rounded-lg border border-border bg-card overflow-hidden">
-          <div className="p-4 border-b border-border bg-muted/20">
-            <h3 className="text-base font-bold text-foreground">Actors</h3>
-          </div>
+          <SectionHeader title="Actors" />
           <div>
             {renderPricingRow('Compute units (CU)', cuPriceString, 'Billed per second of Actor run based on memory allocated')}
           </div>
@@ -852,9 +886,7 @@ const Billing = () => {
 
         {/* Proxy */}
         <div className="rounded-lg border border-border bg-card overflow-hidden">
-          <div className="p-4 border-b border-border bg-muted/20">
-            <h3 className="text-base font-bold text-foreground">Proxy</h3>
-          </div>
+          <SectionHeader title="Proxy" />
           <div>
             {renderPricingRow('Residential proxies', residentialProxy, 'Charged per GB of traffic')}
             {renderPricingRow('Datacenter proxies', datacenterProxy, 'Shared IPs included in free tier')}
@@ -864,13 +896,11 @@ const Billing = () => {
 
         {/* Storage */}
         <div className="rounded-lg border border-border bg-card overflow-hidden">
-          <div className="p-4 border-b border-border bg-muted/20">
-            <h3 className="text-base font-bold text-foreground">Storage</h3>
-          </div>
+          <SectionHeader title="Storage" />
 
           {/* Dataset */}
           <div className="border-b border-border">
-            <div className="px-4 py-3 bg-muted/10 font-medium text-foreground text-sm">
+            <div className="px-4 py-2 bg-muted/25 font-bold text-foreground text-sm">
               Dataset
             </div>
             {renderPricingRow('Timed storage 1,000 GB-hours', '$1.00', 'Storage billed hourly')}
@@ -880,7 +910,7 @@ const Billing = () => {
 
           {/* Key-value store */}
           <div className="border-b border-border">
-            <div className="px-4 py-3 bg-muted/10 font-medium text-foreground text-sm">
+            <div className="px-4 py-2 bg-muted/25 font-bold text-foreground text-sm">
               Key-value store
             </div>
             {renderPricingRow('Timed storage 1,000 GB-hours', '$1.00', 'Storage billed hourly')}
@@ -891,7 +921,7 @@ const Billing = () => {
 
           {/* Request queue */}
           <div>
-            <div className="px-4 py-3 bg-muted/10 font-medium text-foreground text-sm">
+            <div className="px-4 py-2 bg-muted/25 font-bold text-foreground text-sm">
               Request queue
             </div>
             {renderPricingRow('Timed storage 1,000 GB-hours', '$4.00', 'Storage billed hourly')}
@@ -902,9 +932,7 @@ const Billing = () => {
 
         {/* Data transfer */}
         <div className="rounded-lg border border-border bg-card overflow-hidden">
-          <div className="p-4 border-b border-border bg-muted/20">
-            <h3 className="text-base font-bold text-foreground">Data transfer</h3>
-          </div>
+          <SectionHeader title="Data transfer" />
           <div>
             {renderPricingRow('External / GB', '$0.20', 'Transfer outside of Scrapi network')}
             {renderPricingRow('Internal / GB', '$0.05', 'Transfer within Scrapi network')}
