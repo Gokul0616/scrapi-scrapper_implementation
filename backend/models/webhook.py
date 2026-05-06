@@ -1,13 +1,18 @@
 """
 Webhook Models — Pydantic schemas for webhook CRUD and delivery logging.
 
-Events supported:
-  run.created    - Run was created and queued
-  run.started    - Run transitioned to running
-  run.succeeded  - Run completed with results
-  run.failed     - Run failed with error
-  run.aborted    - Run was manually aborted
-  run.timed_out  - Run exceeded time limit
+Run events:
+  run.created             - Run was created and queued
+  run.started             - Run transitioned to running
+  run.succeeded           - Run completed with results
+  run.failed              - Run failed with error
+  run.aborted             - Run was manually aborted
+  run.timed_out           - Run exceeded time limit
+
+Build events (Phase 5 — mirrors Apify ACTOR.BUILD.*):
+  actor.build.succeeded   - Build pipeline completed successfully
+  actor.build.failed      - Build pipeline failed (syntax/security/schema error)
+  actor.build.aborted     - Build was manually aborted
 """
 
 import uuid
@@ -21,12 +26,17 @@ from pydantic import BaseModel, Field
 # ── Supported events ──────────────────────────────────────────────────────────
 
 WEBHOOK_EVENTS = [
+    # Run lifecycle events
     "run.created",
     "run.started",
     "run.succeeded",
     "run.failed",
     "run.aborted",
     "run.timed_out",
+    # Build lifecycle events (Phase 5 — CI/CD)
+    "actor.build.succeeded",
+    "actor.build.failed",
+    "actor.build.aborted",
 ]
 
 

@@ -90,6 +90,20 @@ async def startup_event():
     except Exception as e:
         logging.warning(f"⚠️ Could not ensure Phase 4 indexes: {e}")
 
+    # Ensure indexes for Phase 5 — Actor Versioning & Build System
+    try:
+        await db.actor_versions.create_index([("actor_id", 1), ("version_number", 1)], unique=True)
+        await db.actor_builds.create_index([("actor_id", 1), ("build_number", 1)], unique=True)
+        await db.actor_builds.create_index([("version_id", 1), ("created_at", -1)])
+        await db.actor_builds.create_index([("actor_id", 1), ("status", 1)])
+        await db.actor_env_vars.create_index(
+            [("actor_id", 1), ("version_number", 1), ("name", 1)], unique=True
+        )
+        logging.info("✅ Phase 5 indexes ensured (Actor Versions + Builds + Env Vars)")
+    except Exception as e:
+        logging.warning(f"⚠️ Could not ensure Phase 5 indexes: {e}")
+
+
     # Verify Redis connectivity (managed externally via Docker or local install)
     try:
         import redis as redis_sync

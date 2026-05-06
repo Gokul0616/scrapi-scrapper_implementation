@@ -468,6 +468,9 @@ const DatasetV2 = () => {
   const [activeTopTab, setActiveTopTab] = useState('output');
   const [activeSubTab, setActiveSubTab] = useState('overview');
   const [viewMode, setViewMode] = useState('table'); // 'table' or 'json'
+  const [logLines, setLogLines] = useState([]);
+  const [isLogStreaming, setIsLogStreaming] = useState(false);
+  const logContainerRef = useRef(null);
 
   // Detect all available columns from data
   useEffect(() => {
@@ -524,6 +527,43 @@ const DatasetV2 = () => {
       }
     }
   };
+
+  // Phase 6: Server-Sent Events (SSE) Log Stream
+  useEffect(() => {
+    if (activeTopTab !== 'log' || !runId) return;
+
+    const token = localStorage.getItem('token');
+    const eventSource = new EventSource(`${API}/runs/${runId}/logs/stream?token=${token}`);
+    
+    setIsLogStreaming(true);
+
+    eventSource.onmessage = (event) => {
+      setLogLines(prev => [...prev, event.data]);
+    };
+
+    eventSource.addEventListener('end', (event) => {
+      setIsLogStreaming(false);
+      eventSource.close();
+    });
+
+    eventSource.onerror = (error) => {
+      console.error('SSE connection error:', error);
+      setIsLogStreaming(false);
+      eventSource.close();
+    };
+
+    return () => {
+      setIsLogStreaming(false);
+      eventSource.close();
+    };
+  }, [activeTopTab, runId]);
+
+  // Auto-scroll logs to bottom
+  useEffect(() => {
+    if (logContainerRef.current) {
+      logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
+    }
+  }, [logLines]);
 
   const fetchDataset = async () => {
     try {
@@ -1681,18 +1721,17 @@ const DatasetV2 = () => {
           </div>
         )}
 
-        {/* Other tabs placeholders */}
-        {activeTopTab !== 'output' && (
+        {/* Other tabs placeholders & Log Viewer */}
+        {activeTopTab !== 'output' && activeTopTab !== 'log' && (
           <div className="flex-1 flex flex-col items-center justify-center bg-muted/20 text-muted-foreground p-20">
             <div className="bg-card p-10 rounded-2xl border border-border flex flex-col items-center max-w-md shadow-lg transition-all duration-300">
               <div className="w-16 h-16 bg-blue-500/10 text-blue-500 rounded-full flex items-center justify-center mb-6 ring-8 ring-blue-500/5">
-                {activeTopTab === 'log' && <FileText className="w-8 h-8" />}
                 {activeTopTab === 'input' && <Settings className="w-8 h-8" />}
                 {activeTopTab === 'storage' && <MapPin className="w-8 h-8" />}
                 {activeTopTab === 'integrations' && <CheckCircle2 className="w-8 h-8" />}
               </div>
               <h3 className="text-xl font-bold text-foreground mb-3">
-                {topEntityTabs.find(t => t.id === activeTopTab)?.label} View
+                {topEntityTabs.find(t => t.id === activeTopTab)?.label || 'View'}
               </h3>
               <p className="text-center text-muted-foreground leading-relaxed">
                 This section is currently under development. In the full application, this would provide detailed {activeTopTab} information for the run.
@@ -1700,6 +1739,75 @@ const DatasetV2 = () => {
               <Button onClick={() => setActiveTopTab('output')} className="mt-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 h-11 rounded-xl shadow-md transition-all active:scale-95">
                 Back to Dataset Output
               </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Phase 6: Log Streaming View */}
+        {activeTopTab === 'log' && (
+          <div className="flex-1 flex flex-col min-h-0 bg-[#0c0c0c] font-mono relative">
+            <div className="flex items-center justify-between px-4 py-2 border-b border-[#222]">
+              <div className="flex items-center gap-2">
+                <div className={cn("w-2 h-2 rounded-full", isLogStreaming ? "bg-green-500 animate-pulse" : "bg-gray-500")} />
+                <span className="text-[#888] text-xs uppercase tracking-widest font-bold">
+                  {isLogStreaming ? 'LIVE STREAM' : 'CONNECTION CLOSED'}
+                </span>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setLogLines([])}
+                className="text-[#666] hover:text-white hover:bg-[#222] h-7 text-xs"
+              >
+                Clear logs
+              </Button>
+            </div>
+            <div 
+              ref={logContainerRef}
+              className="flex-1 overflow-y-auto p-4 dt-custom-scrollbar"
+            >
+              {logLines.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-[#444] space-y-4">
+                  <FileText className="w-12 h-12 opacity-50" />
+                  <p>Waiting for logs...</p>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {logLines.map((line, idx) => {
+                    // Try to parse timestamp from beginning if formatted like "2026-03-09T...: message"
+                    let timestamp = "";
+                    let content = line;
+                    const match = line.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z):\s(.*)/);
+                    if (match) {
+                      try {
+                        const d = new Date(match[1]);
+                        timestamp = d.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        content = match[2];
+                      } catch(e) {}
+                    }
+
+                    const isError = content.toLowerCase().includes('error') || content.toLowerCase().includes('failed');
+                    const isWarn = content.toLowerCase().includes('warn');
+                    const isSuccess = content.toLowerCase().includes('success') || content.toLowerCase().includes('✅');
+
+                    return (
+                      <div key={idx} className="flex gap-4 text-[13px] leading-relaxed hover:bg-[#1a1a1a] px-2 py-0.5 rounded -mx-2 transition-colors">
+                        {timestamp && (
+                          <span className="text-[#555] shrink-0 font-mono select-none w-[70px]">
+                            {timestamp}
+                          </span>
+                        )}
+                        <span className={cn(
+                          "whitespace-pre-wrap break-all flex-1",
+                          isError ? "text-red-400" : isWarn ? "text-yellow-400" : isSuccess ? "text-green-400" : "text-[#ccc]"
+                        )}>
+                          {content}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         )}

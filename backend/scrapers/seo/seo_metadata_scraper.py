@@ -8,6 +8,7 @@ from typing import Dict, Any, List, Optional, Callable
 from urllib.parse import urljoin, urlparse
 from playwright.async_api import Page
 from scrapers.base_scraper import BaseScraper
+from scrapi import Actor
 
 logger = logging.getLogger(__name__)
 
@@ -99,8 +100,7 @@ class SEOMetadataScraper(BaseScraper):
     
     async def scrape(
         self, 
-        config: Dict[str, Any], 
-        progress_callback: Optional[Callable] = None
+        config: Dict[str, Any]
     ) -> List[Dict[str, Any]]:
         """
         Main scraping method
@@ -122,13 +122,13 @@ class SEOMetadataScraper(BaseScraper):
         page = None
         
         try:
-            await self._log_progress(f"🔍 Starting SEO metadata extraction for: {url}", progress_callback)
+            await self._log_progress(f"🔍 Starting SEO metadata extraction for: {url}")
             
             # Get a browser page from the engine
             page = await self.engine.new_page()
             
             # Navigate to the URL with increased timeout and fallback strategy
-            await self._log_progress(f"📡 Loading page: {url}", progress_callback)
+            await self._log_progress(f"📡 Loading page: {url}")
             
             # Try with networkidle first, then fallback to domcontentloaded
             response = None
@@ -137,18 +137,18 @@ class SEOMetadataScraper(BaseScraper):
             try:
                 response = await page.goto(url, wait_until='networkidle', timeout=90000)
                 status_code = response.status if response else None
-                await self._log_progress(f"✅ Page loaded with networkidle (status: {status_code})", progress_callback)
+                await self._log_progress(f"✅ Page loaded with networkidle (status: {status_code})")
             except Exception as e:
-                await self._log_progress(f"⚠️ Networkidle failed, trying domcontentloaded: {str(e)}", progress_callback)
+                await self._log_progress(f"⚠️ Networkidle failed, trying domcontentloaded: {str(e)}")
                 try:
                     response = await page.goto(url, wait_until='domcontentloaded', timeout=90000)
                     status_code = response.status if response else None
-                    await self._log_progress(f"✅ Page loaded with domcontentloaded (status: {status_code})", progress_callback)
+                    await self._log_progress(f"✅ Page loaded with domcontentloaded (status: {status_code})")
                 except Exception as e2:
-                    await self._log_progress(f"⚠️ Domcontentloaded failed, trying load: {str(e2)}", progress_callback)
+                    await self._log_progress(f"⚠️ Domcontentloaded failed, trying load: {str(e2)}")
                     response = await page.goto(url, wait_until='load', timeout=90000)
                     status_code = response.status if response else None
-                    await self._log_progress(f"✅ Page loaded with load (status: {status_code})", progress_callback)
+                    await self._log_progress(f"✅ Page loaded with load (status: {status_code})")
             
             # Wait a bit more for dynamic content
             try:
@@ -157,31 +157,31 @@ class SEOMetadataScraper(BaseScraper):
                 pass
             
             # Extract all metadata
-            await self._log_progress("📊 Extracting SEO metadata...", progress_callback)
+            await self._log_progress("📊 Extracting SEO metadata...")
             metadata = await self._extract_metadata(page, url, status_code)
             
             # Extract headings if requested
             if extract_headings:
-                await self._log_progress("📝 Extracting headings (H1-H6)...", progress_callback)
+                await self._log_progress("📝 Extracting headings (H1-H6)...")
                 metadata['headings'] = await self._extract_headings(page)
             
             # Extract images if requested
             if extract_images:
-                await self._log_progress("🖼️ Analyzing images...", progress_callback)
+                await self._log_progress("🖼️ Analyzing images...")
                 metadata['images'] = await self._extract_image_metadata(page, url)
             
             # Extract links if requested
             if extract_links:
-                await self._log_progress("🔗 Analyzing links...", progress_callback)
+                await self._log_progress("🔗 Analyzing links...")
                 metadata['links'] = await self._extract_links(page, url)
             
             results.append(metadata)
             
-            await self._log_progress(f"✅ Successfully extracted SEO metadata from: {url}", progress_callback)
+            await self._log_progress(f"✅ Successfully extracted SEO metadata from: {url}")
             
         except Exception as e:
             logger.error(f"❌ Error scraping {url}: {str(e)}")
-            await self._log_progress(f"❌ Error: {str(e)}", progress_callback)
+            await self._log_progress(f"❌ Error: {str(e)}")
             results.append({
                 'url': url,
                 'error': str(e),

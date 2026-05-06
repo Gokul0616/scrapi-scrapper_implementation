@@ -217,6 +217,66 @@ class WebhookService:
         )
         return queued
 
+    async def dispatch_build_event(
+        self,
+        event: str,
+        build_id: str,
+        actor_id: str,
+        user_id: str,
+        build_doc: Dict[str, Any],
+        organization_id: Optional[str] = None,
+    ) -> int:
+        """
+        Fan out a build lifecycle event to all matching webhooks.
+        Mirrors Apify's ACTOR.BUILD.SUCCEEDED / ACTOR.BUILD.FAILED events.
+        Returns the number of Celery tasks queued.
+        """
+        if event not in WEBHOOK_EVENTS:
+            logger.warning(f"Unknown webhook event: {event}")
+            return 0
+
+        query = {
+            "user_id": user_id,
+            "is_enabled": True,
+            "events": event,
+            "$or": [
+                {"actor_id": None},
+                {"actor_id": actor_id},
+            ],
+        }
+        webhooks = await self.db.webhooks.find(query, {"_id": 0}).to_list(None)
+        if not webhooks:
+            return 0
+
+        payload: Dict[str, Any] = {
+            "event": event,
+            "build": {
+                "id": build_id,
+                "actor_id": actor_id,
+                "version_number": build_doc.get("version_number"),
+                "build_number": build_doc.get("build_number"),
+                "status": build_doc.get("status"),
+                "started_at": build_doc.get("started_at"),
+                "finished_at": build_doc.get("finished_at"),
+                "stats": build_doc.get("stats", {}),
+            },
+        }
+
+        from workers.webhook_worker import dispatch_webhook
+        queued = 0
+        for wh in webhooks:
+            try:
+                dispatch_webhook.apply_async(
+                    kwargs={"webhook_id": wh["id"], "event": event, "payload": payload},
+                    queue="webhooks",
+                )
+                queued += 1
+            except Exception as exc:
+                logger.error(f"Failed to queue build webhook {wh['id']}: {exc}")
+
+        logger.info(f"Dispatched build event '{event}' for build {build_id} → {queued} webhook(s)")
+        return queued
+
     # ── Delivery History ──────────────────────────────────────────────────────
 
     async def list_deliveries(

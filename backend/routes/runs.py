@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from typing import List, Optional
@@ -8,6 +7,7 @@ import io
 import json
 import csv
 import logging
+from scrapi import Actor
 
 from database import get_db, get_proxy_manager, get_task_manager
 from routes.utils import get_workspace_query, parse_datetime_safe
@@ -75,16 +75,29 @@ async def execute_scraping_job(run_id: str, actor_id: str, user_id: str, input_d
             logger.info(f"✅ Found scraper: {type(scraper).__name__}")
             logger.info(f"   Calling scraper.scrape() with input_data: {input_data}")
             
+            import redis.asyncio as aioredis
+            import os
+            redis_url = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+            redis_client = aioredis.from_url(redis_url, decode_responses=True)
+
             # Progress callback for logging
             async def progress_callback(message: str):
+                log_line = f"{datetime.now(timezone.utc).isoformat()}: {message}"
                 await db.runs.update_one(
                     {"id": run_id},
-                    {"$push": {"logs": f"{datetime.now(timezone.utc).isoformat()}: {message}"}}
+                    {"$push": {"logs": log_line}}
                 )
+                try:
+                    await redis_client.publish(f"run_logs:{run_id}", log_line)
+                except Exception as e:
+                    logger.warning(f"Failed to publish log to redis: {e}")
                 logger.info(f"Run {run_id}: {message}")
             
-            # Execute built-in scraper
-            results = await scraper.scrape(input_data, progress_callback)
+            # Phase 8: Set global SDK context for this run
+            Actor.set_log_callback(progress_callback)
+            
+            # Execute built-in scraper (callback no longer passed explicitly)
+            results = await scraper.scrape(input_data)
             
             # Create dataset and store results
             now = datetime.now(timezone.utc)
@@ -337,7 +350,57 @@ async def create_run(
         logger.error(f"Error checking billing limits: {e}")
         raise HTTPException(status_code=500, detail="Failed to verify plan limits.")
     # ==========================
-        
+    
+    # ── Phase 5: Resolve build version ──────────────────────────────────────
+    resolved_build_id = None
+    resolved_build_number = None
+
+    build_param = getattr(run_data, "build", None) or "latest"
+    try:
+        if "." in build_param and build_param.count(".") == 2:
+            # Explicit full build number: "1.1.3"
+            build_doc = await db.actor_builds.find_one({
+                "actor_id": real_actor_id,
+                "build_number": build_param,
+            })
+            if build_doc:
+                if build_doc.get("status") != "SUCCEEDED":
+                    raise HTTPException(
+                        400,
+                        f"Build {build_param} has status '{build_doc.get('status')}' and is not ready to run"
+                    )
+                resolved_build_id = build_doc["id"]
+                resolved_build_number = build_doc["build_number"]
+        else:
+            # Tag-based resolution: "latest", "beta", etc.
+            # First check if actor has a default build from versioning
+            if actor.get("default_build_id"):
+                build_doc = await db.actor_builds.find_one({"id": actor["default_build_id"]})
+                if build_doc and build_doc.get("status") == "SUCCEEDED":
+                    resolved_build_id = build_doc["id"]
+                    resolved_build_number = build_doc["build_number"]
+            
+            # If no actor-level default, check version with matching tag
+            if not resolved_build_id and build_param != "latest":
+                version_doc = await db.actor_versions.find_one({
+                    "actor_id": real_actor_id, "build_tag": build_param
+                })
+                if version_doc and version_doc.get("default_build_id"):
+                    build_doc = await db.actor_builds.find_one({"id": version_doc["default_build_id"]})
+                    if build_doc and build_doc.get("status") == "SUCCEEDED":
+                        resolved_build_id = build_doc["id"]
+                        resolved_build_number = build_doc["build_number"]
+
+        if resolved_build_id:
+            logger.info(f"Run {run_data.actor_id}: resolved build → {resolved_build_number}")
+        else:
+            logger.info(f"Run {run_data.actor_id}: no build found, using legacy scraper_registry")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.warning(f"Build resolution failed (non-fatal): {e}")
+    # ────────────────────────────────────────────────────────────────────────
+
     # Create run
     run = Run(
         user_id=current_user['id'],
@@ -346,7 +409,9 @@ async def create_run(
         actor_name=actor['name'],
         actor_icon=actor.get('icon'),
         input_data=run_data.input_data,
-        status="queued"
+        status="queued",
+        build_id=resolved_build_id,
+        build_number=resolved_build_number or actor.get("version", "legacy"),
     )
     
     doc = run.model_dump()
@@ -372,7 +437,9 @@ async def create_run(
                 "actor_id": real_actor_id,
                 "user_id": current_user['id'],
                 "input_data": run_data.input_data,
-                "organization_id": organization_id
+                "organization_id": organization_id,
+                "build_id": resolved_build_id,    # Phase 5
+                "version_number": resolved_build_number.rsplit(".", 1)[0] if resolved_build_number and resolved_build_number.count(".") == 2 else None,  # Phase 5
             },
             queue=queue_name
         )
@@ -387,6 +454,7 @@ async def create_run(
         logger.warning(f"Task manager not initialized, run {run.id} created but not started")
     
     return run
+
 
 @router.get("/runs")
 async def get_runs(

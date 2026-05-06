@@ -24,6 +24,7 @@ class QUEUES:
     DEFAULT = "default"
     SCHEDULED = "scheduled"
     WEBHOOKS = "webhooks"
+    BUILDS = "builds"  # Phase 5 — Actor build pipeline
 
 
 # ── Queue definitions ─────────────────────────────────────────────────────────
@@ -52,12 +53,19 @@ TASK_QUEUES = (
         routing_key=QUEUES.WEBHOOKS,
         queue_arguments={"x-max-priority": 7},
     ),
+    Queue(
+        QUEUES.BUILDS,
+        SCRAPI_EXCHANGE,
+        routing_key=QUEUES.BUILDS,
+        queue_arguments={"x-max-priority": 8},  # Higher than default, lower than high_priority
+    ),
 )
 
 # ── Explicit task → queue routing ─────────────────────────────────────────────
 TASK_ROUTES = {
     "workers.scraping_worker.run_scraping_task": {"queue": QUEUES.DEFAULT},
     "workers.webhook_worker.dispatch_webhook": {"queue": QUEUES.WEBHOOKS},
+    "workers.build_worker.run_build_task": {"queue": QUEUES.BUILDS},  # Phase 5
 }
 
 # ── Convenience dict to pass straight into celery_app.conf.update() ──────────

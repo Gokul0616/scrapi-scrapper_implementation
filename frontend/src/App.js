@@ -10,6 +10,7 @@ import { MessageProvider, useMessage } from './contexts/MessageContext';
 
 
 import GlobalModals from './components/GlobalModals';
+import GlobalContextMenu from './components/GlobalContextMenu';
 import LoadingScreen from './components/LoadingScreen';
 import { setupAxiosInterceptor } from './utils/axiosInterceptor';
 import { isValidSidebarPath } from './utils/routeUtils';
@@ -231,10 +232,10 @@ function App() {
             <WorkspaceProvider>
               <NotificationProvider>
                 <ModalProvider>
-                  <AppRoutes />
-                  <GlobalModals />
-
-
+                  <GlobalContextMenu>
+                    <AppRoutes />
+                    <GlobalModals />
+                  </GlobalContextMenu>
                 </ModalProvider>
               </NotificationProvider>
             </WorkspaceProvider>

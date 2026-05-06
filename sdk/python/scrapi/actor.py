@@ -39,8 +39,62 @@ from scrapi.models import Request
 from scrapi.storages.key_value_store import KeyValueStore
 from scrapi.storages.request_queue import RequestQueue
 from scrapi.storages.dataset import Dataset
+import contextvars
 
 logger = logging.getLogger("scrapi.actor")
+
+# ── Context Variables for Real-Time Streaming (Phase 8) ───────────────────────
+# These allow any function in the call stack to log to the correct run 
+# without passing a callback parameter through every function.
+_log_callback_var: contextvars.ContextVar[Optional[Callable]] = contextvars.ContextVar("_log_callback", default=None)
+
+class ScrapiLog:
+    """
+    SDK Logger that automatically routes logs to the platform's real-time stream
+    if a context is active, or falls back to standard logging.
+    """
+    
+    @staticmethod
+    async def info(message: str) -> None:
+        cb = _log_callback_var.get()
+        if cb:
+            # We wrap in check because it might be sync or async
+            if asyncio.iscoroutinefunction(cb):
+                await cb(message)
+            else:
+                cb(message)
+        logger.info(message)
+
+    @staticmethod
+    async def error(message: str) -> None:
+        cb = _log_callback_var.get()
+        if cb:
+            if asyncio.iscoroutinefunction(cb):
+                await cb(f"❌ ERROR: {message}")
+            else:
+                cb(f"❌ ERROR: {message}")
+        logger.error(message)
+
+    @staticmethod
+    async def warning(message: str) -> None:
+        cb = _log_callback_var.get()
+        if cb:
+            if asyncio.iscoroutinefunction(cb):
+                await cb(f"⚠️ WARNING: {message}")
+            else:
+                cb(f"⚠️ WARNING: {message}")
+        logger.warning(message)
+
+    @staticmethod
+    async def success(message: str) -> None:
+        cb = _log_callback_var.get()
+        if cb:
+            if asyncio.iscoroutinefunction(cb):
+                await cb(f"✅ SUCCESS: {message}")
+            else:
+                cb(f"✅ SUCCESS: {message}")
+        logger.info(f"SUCCESS: {message}")
+
 
 # ── Lazy client singleton ─────────────────────────────────────────────────────
 _http_client = None
@@ -72,7 +126,20 @@ class Actor(metaclass=ActorMeta):
     _initialized: bool = False
     _default_kv_store: Optional[KeyValueStore] = None
     _default_dataset: Optional[Dataset] = None
+    _default_dataset: Optional[Dataset] = None
     _default_rq: Optional[RequestQueue] = None
+    
+    # ── SDK Logger (Phase 8) ──────────────────────────────────────────────
+    log = ScrapiLog()
+
+
+    @classmethod
+    def set_log_callback(cls, callback: Optional[Callable]) -> None:
+        """
+        Internal use: set the callback for real-time log streaming.
+        Used by the platform execution engine to link Actor.log calls to the run stream.
+        """
+        _log_callback_var.set(callback)
 
     # ── Lifecycle ─────────────────────────────────────────────────────────
 

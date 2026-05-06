@@ -39,6 +39,9 @@ class Actor(BaseModel):
     fork_from: Optional[str] = None  # Parent actor ID if cloned
     template_type: Optional[str] = None  # google_maps, linkedin, ecommerce, generic, api
     visibility: str = "private"  # private, public, team
+    # Phase 5 — Versioning & Build System
+    default_build_id: Optional[str] = None       # ID of the currently deployed ActorBuild
+    latest_version_number: Optional[str] = None  # Head version number (e.g. "1.1")
 
 class ActorCreate(BaseModel):
     name: str
@@ -66,6 +69,8 @@ class ActorUpdate(BaseModel):
     status: Optional[str] = None
     visibility: Optional[str] = None
     version: Optional[str] = None
+    default_build_id: Optional[str] = None
+    latest_version_number: Optional[str] = None
 
 class ActorPublish(BaseModel):
     readme: Optional[str] = None

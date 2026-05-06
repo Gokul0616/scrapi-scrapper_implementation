@@ -3,6 +3,10 @@ from .user import User, UserCreate, UserLogin, UserResponse
 from .admin_user import AdminUser, AdminUserCreate, AdminUserLogin, AdminUserResponse
 from .actor import Actor, ActorCreate, ActorUpdate, ActorPublish
 from .actor_view import ActorView
+from .actor_version import (  # Phase 5
+    ActorVersion, ActorVersionCreate, ActorVersionUpdate, ActorVersionResponse,
+    ActorBuild, ActorBuildResponse,
+)
 from .notification import Notification, NotificationResponse, MarkAsReadRequest
 from .run import Run, RunCreate, RunInput
 from .dataset import Dataset, DatasetItem

@@ -12,6 +12,7 @@ celery_app = Celery(
     include=[
         'workers.scraping_worker',
         'workers.webhook_worker',
+        'workers.build_worker',    # Phase 5 — Actor build pipeline
     ]
 )
 

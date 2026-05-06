@@ -9,6 +9,7 @@ from playwright.async_api import Page, TimeoutError as PlaywrightTimeoutError
 from bs4 import BeautifulSoup
 import aiohttp
 from urllib.parse import urljoin, urlparse
+from scrapi import Actor
 
 # Try importing stealth, but don't fail if not present
 try:
@@ -93,7 +94,7 @@ class GoogleMapsScraperV3(BaseScraper):
             "socialMedia": "object - Social media links"
         }
     
-    async def scrape(self, config: Dict[str, Any], progress_callback: Optional[Callable] = None) -> List[Dict[str, Any]]:
+    async def scrape(self, config: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
         Main scraping method with enhanced performance.
         """
@@ -145,9 +146,8 @@ class GoogleMapsScraperV3(BaseScraper):
                 if display_location.lower().startswith("in "):
                     display_location = display_location[3:].strip()
                 
-                if progress_callback:
-                    info = f" (Resolved: {target_place_name})" if resolved else " (Local IP)"
-                    await progress_callback(f"🔍 Searching: {term} in {display_location}{info}")
+                info = f" (Resolved: {target_place_name})" if resolved else " (Local IP)"
+                await Actor.log.info(f"🔍 Searching: {term} in {display_location}{info}")
                 
                 # Build the actual search query
                 search_query = f"{term} in {display_location}" if display_location else term
@@ -159,8 +159,7 @@ class GoogleMapsScraperV3(BaseScraper):
                 
                 while attempt < max_attempts and len(places) < max_results:
                     if attempt > 0:
-                        if progress_callback:
-                            await progress_callback(f"🔄 Retry {attempt}/{max_attempts-1} - Found {len(places)}/{max_results}")
+                        await Actor.log.info(f"🔄 Retry {attempt}/{max_attempts-1} - Found {len(places)}/{max_results}")
                     
                     # Pass geolocation to _search_places to avoid single-result redirects
                     new_places = await self._search_places(
@@ -183,8 +182,7 @@ class GoogleMapsScraperV3(BaseScraper):
                     if attempt < max_attempts:
                         await asyncio.sleep(2)
                 
-                if progress_callback:
-                    await progress_callback(f"✅ Found {len(places)} places for '{term}'")
+                await Actor.log.success(f"Found {len(places)} places for '{term}'")
                 
                 # Extract details in parallel batches
                 batch_size = 5  # Process 5 places at once
@@ -193,9 +191,8 @@ class GoogleMapsScraperV3(BaseScraper):
                 for i in range(0, len(places_to_process), batch_size):
                     batch = places_to_process[i:i+batch_size]
                     
-                    if progress_callback:
-                        progress = min(i + batch_size, len(places_to_process))
-                        await progress_callback(f"📊 Extracting details: {progress}/{len(places_to_process)}")
+                    progress = min(i + batch_size, len(places_to_process))
+                    await Actor.log.info(f"📊 Extracting details: {progress}/{len(places_to_process)}")
                     
                     # Parallel extraction
                     tasks = [
@@ -222,8 +219,7 @@ class GoogleMapsScraperV3(BaseScraper):
         finally:
             await context.close()
         
-        if progress_callback:
-            await progress_callback(f"🎉 Complete! Extracted {len(all_results)} places")
+        await Actor.log.success(f"Complete! Extracted {len(all_results)} places")
         
         return all_results
     
@@ -349,6 +345,7 @@ class GoogleMapsScraperV3(BaseScraper):
             await stealth_async(page)
             
         try:
+            await Actor.log.info(f"🌐 Navigating to place details...")
             await page.goto(url, wait_until="domcontentloaded", timeout=45000)
             
             # Wait for main content to ensure page loaded
@@ -371,6 +368,7 @@ class GoogleMapsScraperV3(BaseScraper):
                 title_elem = await page.query_selector('h1')
                 if title_elem:
                     place_data['title'] = (await title_elem.text_content()).strip()
+                    await Actor.log.info(f"🏷️ Found business: {place_data['title']}")
             except Exception as e:
                 logger.debug(f"Title extraction failed: {e}")
 
@@ -443,6 +441,7 @@ class GoogleMapsScraperV3(BaseScraper):
                         phone = phone_text.replace('Phone: ', '').replace('Call phone number', '').strip()
                         place_data['phone'] = phone
                         place_data['phoneVerified'] = True
+                        await Actor.log.info(f"📞 Found phone: {phone}")
             except: pass
             
             # Opening Hours
@@ -455,6 +454,7 @@ class GoogleMapsScraperV3(BaseScraper):
             
             # 5. Enrichment: Email & Social extraction from website
             if place_data.get('website'):
+                await Actor.log.info(f"🕸️ Found website: {place_data['website']} - Beginning deep enrichment...")
                 await self._enrich_place_data(place_data)
 
             # Images
@@ -656,9 +656,11 @@ class GoogleMapsScraperV3(BaseScraper):
 
                     # 2. If no email, try to find Contact page
                     if not place_data.get('email'):
+                        await Actor.log.info(f"📧 No email on homepage. Searching for contact pages...")
                         contact_link = self._find_contact_link(soup, website_url)
                         if contact_link:
                             logger.info(f"Visiting contact page for {place_data.get('title')}: {contact_link}")
+                            await Actor.log.info(f"🔍 Crawling contact page: {contact_link}")
                             try:
                                 async with session.get(contact_link, timeout=aiohttp.ClientTimeout(total=10)) as contact_resp:
                                     if contact_resp.status == 200:
@@ -667,6 +669,13 @@ class GoogleMapsScraperV3(BaseScraper):
                                         self._extract_contacts_from_soup(contact_soup, place_data)
                             except Exception as e:
                                 logger.debug(f"Error visiting contact page: {e}")
+                    
+                    if place_data.get('email'):
+                        await Actor.log.success(f"Found verified email: {place_data['email']}")
+                    
+                    socials_found = list(place_data.get('socialMedia', {}).keys())
+                    if socials_found:
+                        await Actor.log.info(f"📱 Found social media: {', '.join(socials_found)}")
 
         except Exception as e:
             logger.debug(f"Enrichment error for {website_url}: {e}")

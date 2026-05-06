@@ -7,6 +7,7 @@ from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional, Callable
 from .scraper_engine import ScraperEngine
 import logging
+from scrapi import Actor
 
 logger = logging.getLogger(__name__)
 
@@ -32,15 +33,13 @@ class BaseScraper(ABC):
     @abstractmethod
     async def scrape(
         self, 
-        config: Dict[str, Any], 
-        progress_callback: Optional[Callable] = None
+        config: Dict[str, Any]
     ) -> List[Dict[str, Any]]:
         """
         Main scraping method that must be implemented by all scrapers.
         
         Args:
             config: Dictionary with scraper-specific configuration
-            progress_callback: Optional async function to report progress
             
         Returns:
             List of dictionaries containing scraped data
@@ -106,13 +105,11 @@ class BaseScraper(ABC):
     
     async def _log_progress(
         self, 
-        message: str, 
-        progress_callback: Optional[Callable] = None
+        message: str
     ):
-        """Helper to log progress both to logger and callback."""
+        """Helper to log progress both to logger and callback via SDK Actor.log."""
         logger.info(f"{self.name}: {message}")
-        if progress_callback:
-            try:
-                await progress_callback(message)
-            except Exception as e:
-                logger.error(f"Progress callback error: {e}")
+        try:
+            await Actor.log.info(message)
+        except Exception as e:
+            logger.error(f"Actor.log.info error: {e}")

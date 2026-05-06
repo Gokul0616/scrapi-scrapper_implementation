@@ -37,9 +37,11 @@ class Run(BaseModel):
     logs: List[str] = Field(default_factory=list)
     cost: float = 0.0
     build_number: Optional[str] = None
+    build_id: Optional[str] = None       # Phase 5 — ID of the ActorBuild used for this run
     origin: str = "Web"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class RunCreate(BaseModel):
     actor_id: str
     input_data: Dict[str, Any]
+    build: Optional[str] = "latest"  # Tag (e.g. "latest", "beta") or full build number (e.g. "1.1.3")

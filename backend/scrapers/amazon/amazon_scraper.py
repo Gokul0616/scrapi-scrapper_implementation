@@ -11,6 +11,8 @@ from ..base_scraper import BaseScraper
 from ..scraper_engine import ScraperEngine
 from playwright.async_api import Page, TimeoutError as PlaywrightTimeoutError
 from bs4 import BeautifulSoup
+import aiohttp
+from scrapi import Actor
 import json
 
 logger = logging.getLogger(__name__)
@@ -122,8 +124,7 @@ class AmazonProductScraper(BaseScraper):
     
     async def scrape(
         self, 
-        config: Dict[str, Any], 
-        progress_callback: Optional[Callable] = None
+        config: Dict[str, Any]
     ) -> List[Dict[str, Any]]:
         """Main scraping method for Amazon products."""
         
@@ -148,21 +149,18 @@ class AmazonProductScraper(BaseScraper):
         try:
             for keyword in search_keywords:
                 await self._log_progress(
-                    f"🔍 Searching Amazon for: {keyword}", 
-                    progress_callback
+                    f"🔍 Searching Amazon for: {keyword}"
                 )
                 
                 # Search and get product links
                 product_asins = await self._search_products(
                     context, 
                     keyword, 
-                    max_results,
-                    progress_callback
+                    max_results
                 )
                 
                 await self._log_progress(
-                    f"✅ Found {len(product_asins)} products for '{keyword}'",
-                    progress_callback
+                    f"✅ Found {len(product_asins)} products for '{keyword}'"
                 )
                 
                 # Extract details in batches
@@ -173,8 +171,7 @@ class AmazonProductScraper(BaseScraper):
                     
                     progress = min(i + batch_size, len(product_asins))
                     await self._log_progress(
-                        f"📊 Extracting details: {progress}/{len(product_asins)}",
-                        progress_callback
+                        f"📊 Extracting details: {progress}/{len(product_asins)}"
                     )
                     
                     # Parallel extraction within batch
@@ -201,13 +198,11 @@ class AmazonProductScraper(BaseScraper):
                             all_products.append(result)
                 
                 await self._log_progress(
-                    f"✅ Completed scraping for '{keyword}': {len([p for p in all_products if p.get('searchKeyword') == keyword])} products",
-                    progress_callback
+                    f"✅ Completed scraping for '{keyword}': {len([p for p in all_products if p.get('searchKeyword') == keyword])} products"
                 )
             
             await self._log_progress(
-                f"🎉 Scraping complete! Total products: {len(all_products)}",
-                progress_callback
+                f"🎉 Scraping complete! Total products: {len(all_products)}"
             )
             
         finally:
@@ -219,8 +214,7 @@ class AmazonProductScraper(BaseScraper):
         self,
         context,
         keyword: str,
-        max_results: int,
-        progress_callback: Optional[Callable] = None
+        max_results: int
     ) -> List[str]:
         """Search Amazon and extract product ASINs with pagination support."""
         
@@ -235,8 +229,7 @@ class AmazonProductScraper(BaseScraper):
                 search_url = f"{self.base_url}/s?k={keyword.replace(' ', '+')}&page={current_page}"
                 
                 await self._log_progress(
-                    f"🔍 Searching page {current_page} for '{keyword}' (found {len(asins)}/{max_results})",
-                    progress_callback
+                    f"🔍 Searching page {current_page} for '{keyword}' (found {len(asins)}/{max_results})"
                 )
                 
                 await page.goto(search_url, wait_until="domcontentloaded", timeout=30000)
@@ -323,8 +316,7 @@ class AmazonProductScraper(BaseScraper):
                 # If no products found on this page, break (reached end of results)
                 if page_asins_found == 0:
                     await self._log_progress(
-                        f"⚠️ No more products found at page {current_page}. Total found: {len(asins)}",
-                        progress_callback
+                        f"⚠️ No more products found at page {current_page}. Total found: {len(asins)}"
                     )
                     # Dump debug info
                     with open(f"amazon_debug_page_{current_page}.html", "w") as f:
@@ -338,8 +330,7 @@ class AmazonProductScraper(BaseScraper):
                     await asyncio.sleep(1)  # Small delay between pages
             
             await self._log_progress(
-                f"✅ Completed search for '{keyword}': {len(asins)} products found",
-                progress_callback
+                f"✅ Completed search for '{keyword}': {len(asins)} products found"
             )
             
         except Exception as e:

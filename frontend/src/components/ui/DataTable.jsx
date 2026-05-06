@@ -80,7 +80,7 @@ const ItemsPerPageDropdown = ({ value, onChange, options }) => {
                 zIndex: 99999,
             }}
             className={cn(
-                "p-1 rounded-lg border",
+                "p-1 rounded-lg border select-none",
                 isDark ? "bg-zinc-900 border-zinc-700 text-zinc-300" : "bg-white border-zinc-300 text-zinc-700"
             )}
         >
@@ -109,7 +109,7 @@ const ItemsPerPageDropdown = ({ value, onChange, options }) => {
                 type="button"
                 onClick={toggleDropdown}
                 className={cn(
-                    "h-8 px-2.5 flex items-center justify-between font-bold gap-2 border rounded-lg text-[13px] font-medium transition-all ",
+                    "h-8 px-2.5 flex items-center justify-between font-bold gap-2 border rounded-lg text-[13px] font-medium transition-all select-none",
                     isDark
                         ? "bg-zinc-800 border-zinc-700 hover:bg-zinc-700 text-zinc-200"
                         : "bg-white border-zinc-300 hover:border-zinc-400 text-zinc-700 shadow-sm active:scale-95"
@@ -334,7 +334,7 @@ const DataTable = ({
             {/* MAIN TABLE AREA */}
             <div className="flex-1 w-full min-w-0 bg-card">
                 <Table ref={tableRef} className="min-w-max w-full border-separate border-spacing-0">
-                    <TableHeader className={cn(stickyHeader && "sticky top-0 z-30")}>
+                    <TableHeader className={cn("select-none", stickyHeader && "sticky top-0 z-30")}>
                         <TableRow className={cn(isDark ? "hover:bg-transparent" : "hover:bg-zinc-100")}>
                             {processedColumns.map((column, index) => (
                                 <TableHead
@@ -403,7 +403,7 @@ const DataTable = ({
 
             {/* PAGINATION FOOTER */}
             {showPagination && (
-                <div className="px-4 py-1.5 border-t border-border bg-zinc-200 dark:bg-zinc-900 flex items-center justify-between relative z-10">
+                <div className="px-4 py-1.5 border-t border-border bg-zinc-200 dark:bg-zinc-900 flex items-center justify-between relative z-10 select-none">
                     <div className="flex items-center gap-3">
                         <span className="text-[13px] text-muted-foreground font-bold">Items per page:</span>
                         {onItemsPerPageChange ? (

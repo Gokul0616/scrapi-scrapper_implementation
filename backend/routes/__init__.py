@@ -16,6 +16,9 @@ from .storage_routes import router as storage_router
 from .webhook_routes import router as webhook_router
 from .pipeline_routes import router as pipeline_router
 from .api_keys_routes import router as api_keys_router
+from .actor_versions_routes import router as actor_versions_router  # Phase 5
+from .actor_env_routes import router as actor_env_router            # Phase 5
+from .log_streaming_routes import router as log_streaming_router    # Phase 6
 
 # Import legacy routers (if they still exist and are needed)
 from .search_routes import router as search_router, set_search_db
@@ -35,10 +38,14 @@ router.include_router(schedules_router, tags=["Schedules"])
 router.include_router(chat_router, tags=["Chat"])
 router.include_router(email_validation_router)
 router.include_router(legacy_router, tags=["Legacy"])
+router.include_router(actor_env_router, prefix="/actors")
+router.include_router(log_streaming_router)
 router.include_router(storage_router, prefix="/storage", tags=["Storage"])
 router.include_router(webhook_router, prefix="/webhooks", tags=["Webhooks"])
 router.include_router(pipeline_router, prefix="/pipelines", tags=["Pipelines"])
 router.include_router(api_keys_router, prefix="/auth/api-keys", tags=["API Keys"])
+router.include_router(actor_versions_router, tags=["Actor Versions"])  # Phase 5
+router.include_router(actor_env_router, tags=["Actor Env Vars"])        # Phase 5
 
 
 def set_db(db):

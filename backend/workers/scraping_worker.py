@@ -12,7 +12,7 @@ from celery_app import celery_app
 
 logger = logging.getLogger(__name__)
 
-async def run_async_scraping_job(run_id: str, actor_id: str, user_id: str, input_data: dict, organization_id: str = None):
+async def run_async_scraping_job(run_id: str, actor_id: str, user_id: str, input_data: dict, organization_id: str = None, build_id: str = None, version_number: str = None):
     import sys
     import os
     backend_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -82,6 +82,19 @@ async def run_async_scraping_job(run_id: str, actor_id: str, user_id: str, input
         except Exception as storage_err:
             logger.warning(f"Could not create default storage for run {run_id}: {storage_err}")
 
+        # ── Phase 5: Inject decrypted env vars for this version ──────────────
+        if version_number:
+            try:
+                from services.secrets_service import SecretsService
+                secrets_svc = SecretsService(db)
+                env_vars = await secrets_svc.get_for_run(actor_id, version_number)
+                if env_vars:
+                    os.environ.update(env_vars)
+                    logger.info(f"Injected {len(env_vars)} env var(s) for actor {actor_id} v{version_number}")
+            except Exception as env_err:
+                logger.warning(f"Could not inject env vars for run {run_id}: {env_err}")
+        # ────────────────────────────────────────────────────────────────────
+
         # Run the actual background scraping job
         logger.info(f"Worker beginning async scraping job for run: {run_id}")
         await execute_scraping_job(run_id, actor_id, user_id, input_data, organization_id)
@@ -131,13 +144,13 @@ def cleanup_child_processes(task_id: str):
         pass
 
 @celery_app.task(bind=True, name="workers.scraping_worker.run_scraping_task")
-def run_scraping_task(self, run_id: str, actor_id: str, user_id: str, input_data: dict, organization_id: str = None):
+def run_scraping_task(self, run_id: str, actor_id: str, user_id: str, input_data: dict, organization_id: str = None, build_id: str = None, version_number: str = None):
     """
     Sync wrapper to execute scraping inside a Celery task.
     """
     logger.info(f"Celery picked up task for run_id: {run_id}. Task ID: {self.request.id}")
     try:
-        asyncio.run(run_async_scraping_job(run_id, actor_id, user_id, input_data, organization_id))
+        asyncio.run(run_async_scraping_job(run_id, actor_id, user_id, input_data, organization_id, build_id, version_number))
     except BaseException as e:
         logger.error(f"Failed or Aborted scraping task {self.request.id}: {e}")
         cleanup_child_processes(self.request.id)

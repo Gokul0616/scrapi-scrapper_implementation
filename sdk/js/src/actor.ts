@@ -23,6 +23,37 @@ import { KeyValueStore } from './storages/key_value_store';
 import { RequestQueue } from './storages/request_queue';
 import { Dataset } from './storages/dataset';
 import { createRequest, type Request } from './models';
+import { AsyncLocalStorage } from 'async_hooks';
+
+// ── Shared Log Context (Phase 8) ───────────────────────────────────────────────
+const logContext = new AsyncLocalStorage<(message: string) => void | Promise<void>>();
+
+export class ScrapiLog {
+  async info(message: string): Promise<void> {
+    const cb = logContext.getStore();
+    if (cb) await cb(message);
+    console.log(`[INFO] ${message}`);
+  }
+
+  async error(message: string): Promise<void> {
+    const cb = logContext.getStore();
+    if (cb) await cb(`❌ ERROR: ${message}`);
+    console.error(`[ERROR] ${message}`);
+  }
+
+  async warning(message: string): Promise<void> {
+    const cb = logContext.getStore();
+    if (cb) await cb(`⚠️ WARNING: ${message}`);
+    console.warn(`[WARN] ${message}`);
+  }
+
+  async success(message: string): Promise<void> {
+    const cb = logContext.getStore();
+    if (cb) await cb(`✅ SUCCESS: ${message}`);
+    console.log(`[SUCCESS] ${message}`);
+  }
+}
+
 
 // ── Shared client singleton ────────────────────────────────────────────────────
 
@@ -43,6 +74,12 @@ export class Actor {
   private static _defaultDataset: Dataset | null = null;
   private static _defaultRq: RequestQueue | null = null;
 
+  /**
+   * SDK Logger (Phase 8)
+   */
+  public static log = new ScrapiLog();
+
+
   // ── Lifecycle ─────────────────────────────────────────────────────────────
 
   static async init(): Promise<void> {
@@ -60,6 +97,15 @@ export class Actor {
     Actor._defaultRq = null;
     console.log(`[Scrapi] Actor exited (exitCode=${options?.exitCode ?? 0})`);
   }
+
+  /**
+   * Internal use: set the callback for real-time log streaming.
+   * Links Actor.log calls to the platform's run stream.
+   */
+  static setLogCallback(callback: (message: string) => void | Promise<void>, fn: () => Promise<void>): Promise<void> {
+    return logContext.run(callback, fn);
+  }
+
 
   // ── Input / Output shortcuts ───────────────────────────────────────────────
 
