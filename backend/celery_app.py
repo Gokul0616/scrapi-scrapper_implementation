@@ -13,6 +13,7 @@ celery_app = Celery(
         'workers.scraping_worker',
         'workers.webhook_worker',
         'workers.build_worker',    # Phase 5 — Actor build pipeline
+        'workers.orchestrator_worker', # Phase 7 — Docker Orchestrator
     ]
 )
 

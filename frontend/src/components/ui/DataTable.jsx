@@ -190,7 +190,7 @@ const DataTable = ({
     onItemsPerPageChange,
     totalItems,
     showShadow = false,
-    shadowWidth = "w-[5px]",
+    shadowWidth = "w-[15px]",
     stickyHeader = true,
 }) => {
     const [goToPageInput, setGoToPageInput] = useState('');

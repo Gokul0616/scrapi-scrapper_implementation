@@ -96,6 +96,6 @@ async def stream_run_logs(
         finally:
             await pubsub.unsubscribe(f"run_logs:{run_id}")
             await pubsub.close()
-            await r.aclose()
+            await r.close()
 
     return EventSourceResponse(event_generator())

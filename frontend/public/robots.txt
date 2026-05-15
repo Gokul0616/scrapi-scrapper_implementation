@@ -1,0 +1,32 @@
+# https://www.robotstxt.org/robotstxt.html
+
+# ── Allow all well-behaved crawlers ──────────────────────────────────────────
+User-agent: *
+Allow: /
+
+# ── Block known AI scrapers / content harvesters ─────────────────────────────
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+# ── Block access to API / auth / internal routes ─────────────────────────────
+User-agent: *
+Disallow: /api/
+Disallow: /auth/
+Disallow: /settings
+Disallow: /billing
+Disallow: /chat
+
+# ── Sitemap ──────────────────────────────────────────────────────────────────
+Sitemap: https://console.scrapi.com/sitemap.xml

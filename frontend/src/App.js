@@ -232,7 +232,7 @@ function App() {
             <WorkspaceProvider>
               <NotificationProvider>
                 <ModalProvider>
-                  <GlobalContextMenu>
+                  <GlobalContextMenu enabled={false}>
                     <AppRoutes />
                     <GlobalModals />
                   </GlobalContextMenu>

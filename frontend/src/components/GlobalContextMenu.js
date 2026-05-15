@@ -420,7 +420,7 @@ const SubMenuItem = ({ icon: Icon, label, submenu, focused, onMouseEnter, onMous
 };
 
 // ─── Main component ───────────────────────────────────────────────────────────
-const GlobalContextMenu = ({ children }) => {
+const GlobalContextMenu = ({ children, enabled = true }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -512,6 +512,7 @@ const GlobalContextMenu = ({ children }) => {
 
   // ── Right-click intercept ─────────────────────────────────────────────────
   useEffect(() => {
+    if (!enabled) return;
     const onContextMenu = (e) => {
       e.preventDefault();
       // Capture any highlighted text at the moment of right-click
@@ -521,11 +522,11 @@ const GlobalContextMenu = ({ children }) => {
     };
     document.addEventListener('contextmenu', onContextMenu);
     return () => document.removeEventListener('contextmenu', onContextMenu);
-  }, [open]);
+  }, [open, enabled]);
 
   // ── Outside click ─────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!menuState.visible) return;
+    if (!enabled || !menuState.visible) return;
     const onPointerDown = (e) => {
       // Don't close if clicking inside a submenu portal
       if (e.target.closest?.('[data-ctx-submenu]')) return;
@@ -533,25 +534,25 @@ const GlobalContextMenu = ({ children }) => {
     };
     document.addEventListener('pointerdown', onPointerDown, true);
     return () => document.removeEventListener('pointerdown', onPointerDown, true);
-  }, [menuState.visible, close]);
+  }, [enabled, menuState.visible, close]);
 
   // ── Scroll ────────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!menuState.visible) return;
+    if (!enabled || !menuState.visible) return;
     window.addEventListener('scroll', close, true);
     return () => window.removeEventListener('scroll', close, true);
-  }, [menuState.visible, close]);
+  }, [enabled, menuState.visible, close]);
 
   // ── Window blur ───────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!menuState.visible) return;
+    if (!enabled || !menuState.visible) return;
     window.addEventListener('blur', close);
     return () => window.removeEventListener('blur', close);
-  }, [menuState.visible, close]);
+  }, [enabled, menuState.visible, close]);
 
   // ── Keyboard navigation ───────────────────────────────────────────────────
   useEffect(() => {
-    if (!menuState.visible) return;
+    if (!enabled || !menuState.visible) return;
     const actionable = interactableItems();
     const onKeyDown = (e) => {
       if (e.key === 'Escape') { e.preventDefault(); close(); return; }
@@ -581,15 +582,15 @@ const GlobalContextMenu = ({ children }) => {
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [menuState.visible, focusedIdx, close, interactableItems]);
+  }, [enabled, menuState.visible, focusedIdx, close, interactableItems]);
 
   // ── Focus container on open ───────────────────────────────────────────────
   useEffect(() => {
-    if (menuState.visible) {
+    if (enabled && menuState.visible) {
       const raf = requestAnimationFrame(() => menuRef.current?.focus());
       return () => cancelAnimationFrame(raf);
     }
-  }, [menuState.visible]);
+  }, [enabled, menuState.visible]);
 
   // ── Render ────────────────────────────────────────────────────────────────
   const renderItems = () => {
@@ -670,6 +671,11 @@ const GlobalContextMenu = ({ children }) => {
       document.body
     )
     : null;
+
+  // When disabled, just render children — browser default context menu applies
+  if (!enabled) {
+    return <>{children}</>;
+  }
 
   return (
     <>

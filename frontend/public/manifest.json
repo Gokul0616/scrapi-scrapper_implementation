@@ -1,0 +1,31 @@
+{
+    "short_name": "Scrapi",
+    "name": "Scrapi — Web Scraping Platform",
+    "description": "Enterprise web scraping and data extraction platform. Build, deploy, and scale scrapers effortlessly.",
+    "icons": [
+        {
+            "src": "favicon.png",
+            "sizes": "64x64",
+            "type": "image/png"
+        },
+        {
+            "src": "logo.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "logo.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "start_url": ".",
+    "display": "standalone",
+    "orientation": "portrait-primary",
+    "theme_color": "#0a0a0a",
+    "background_color": "#0a0a0a",
+    "categories": ["developer-tools", "productivity"],
+    "lang": "en-US",
+    "dir": "ltr"
+}

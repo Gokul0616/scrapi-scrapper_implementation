@@ -8,7 +8,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
 import LoadingScreen from '../components/LoadingScreen'; // Added this import
-import { Search, Download, ArrowLeft, MessageSquare, X, Send, Mail, Phone, CheckCircle2, FileText, MapPin, ExternalLink, Settings, Eye, Table as TableIcon, MoreHorizontal, Star, ChevronLeft, ChevronRight, Play, Clock, ChevronDown } from 'lucide-react';
+import { Search, Download, ArrowLeft, MessageSquare, X, Send, Mail, Phone, CheckCircle2, Check, FileText, MapPin, ExternalLink, Settings, Eye, Table as TableIcon, MoreHorizontal, Star, ChevronLeft, ChevronRight, Play, Clock, ChevronDown } from 'lucide-react';
 import ErrorDisplay, { showError } from '../components/ErrorDisplay';
 import Checkbox from '../components/ui/CustomCheckbox';
 import DataTable from '../components/ui/DataTable';
@@ -327,7 +327,7 @@ const JsonPreview = ({ data, label, color = "blue" }) => {
         </div>
       }
     >
-      <div className={cn("flex items-center gap-1.5 text-[11px] px-2 py-1 rounded-md border cursor-help transition-all shadow-sm max-w-full",
+      <div className={cn("flex items-center gap-1.5 text-[11px] px-2 py-1 rounded-md border  transition-all shadow-sm max-w-full",
         colorClasses[color] || colorClasses.blue)}>
         <span className="font-mono text-[9px] opacity-60 flex-shrink-0">{'{ }'}</span>
         <span className="truncate max-w-[150px] font-bold tracking-tight">{label || 'View Data'}</span>
@@ -384,12 +384,12 @@ const JsonTreeNode = ({ data, label, isLast = true, depth = 0 }) => {
 
   return (
     <div className="pl-4">
-      <div 
+      <div
         className="flex items-center cursor-pointer group/json-header select-none hover:bg-blue-50/50 dark:hover:bg-blue-900/10 rounded -ml-4 pl-1"
         onClick={toggleExpand}
       >
         <span className={cn(
-          "w-4 flex items-center justify-center text-zinc-400 dark:text-zinc-500 text-[10px] transition-transform duration-150", 
+          "w-4 flex items-center justify-center text-zinc-400 dark:text-zinc-500 text-[10px] transition-transform duration-150",
           isExpanded ? 'rotate-90' : 'rotate-0'
         )}>
           ▶
@@ -411,7 +411,7 @@ const JsonTreeNode = ({ data, label, isLast = true, depth = 0 }) => {
           </>
         )}
       </div>
-      
+
       {isExpanded && (
         <div className="border-l border-zinc-200 dark:border-zinc-800 ml-[7px] transition-all">
           {isArray ? (
@@ -424,9 +424,9 @@ const JsonTreeNode = ({ data, label, isLast = true, depth = 0 }) => {
             ))
           )}
           <div className="flex items-center -ml-[7px]">
-             <span className="w-4" />
-             <span className="text-[#008080] dark:text-[#4ec9b0] font-bold">{closeBrace}</span>
-             {!isLast && <span className="text-foreground">,</span>}
+            <span className="w-4" />
+            <span className="text-[#008080] dark:text-[#4ec9b0] font-bold">{closeBrace}</span>
+            {!isLast && <span className="text-foreground">,</span>}
           </div>
         </div>
       )}
@@ -469,6 +469,13 @@ const DatasetV2 = () => {
   const [activeSubTab, setActiveSubTab] = useState('overview');
   const [viewMode, setViewMode] = useState('table'); // 'table' or 'json'
   const [logLines, setLogLines] = useState([]);
+  const [copied, setCopied] = useState(false);
+  const copyLogs = () => {
+    const text = logLines.join('\n');
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
   const [isLogStreaming, setIsLogStreaming] = useState(false);
   const logContainerRef = useRef(null);
 
@@ -534,7 +541,7 @@ const DatasetV2 = () => {
 
     const token = localStorage.getItem('token');
     const eventSource = new EventSource(`${API}/runs/${runId}/logs/stream?token=${token}`);
-    
+
     setIsLogStreaming(true);
 
     eventSource.onmessage = (event) => {
@@ -727,26 +734,26 @@ const DatasetV2 = () => {
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
-      // Calculate position with smart placement
-      let x = buttonRect.left;
-      let y = buttonRect.bottom + 5;
+    // Calculate position with smart placement
+    let x = buttonRect.left;
+    let y = buttonRect.bottom + 5;
 
-      // Check if popup goes off bottom - if yes, open above button
-      if (y + popupHeight > viewportHeight - 20) {
-        y = buttonRect.top - popupHeight - 5;
-      }
+    // Check if popup goes off bottom - if yes, open above button
+    if (y + popupHeight > viewportHeight - 20) {
+      y = buttonRect.top - popupHeight - 5;
+    }
 
-      // Final boundary checks
-      if (y < 10) y = 10;
-      if (y + popupHeight > viewportHeight - 10) y = 10;
+    // Final boundary checks
+    if (y < 10) y = 10;
+    if (y + popupHeight > viewportHeight - 10) y = 10;
 
-      // Check if popup goes off right edge
-      if (x + popupWidth > viewportWidth - 10) {
-        x = viewportWidth - popupWidth - 10;
-      }
-      if (x < 10) x = 10;
+    // Check if popup goes off right edge
+    if (x + popupWidth > viewportWidth - 10) {
+      x = viewportWidth - popupWidth - 10;
+    }
+    if (x < 10) x = 10;
 
-      setLinksModalPosition({ x, y });
+    setLinksModalPosition({ x, y });
     setSelectedLinksItem(item);
     setShowLinksModal(true);
   };
@@ -1205,7 +1212,7 @@ const DatasetV2 = () => {
                 {value}
               </p>
             }>
-              <div className="cursor-help transition-colors hover:text-foreground">
+              <div className=" transition-colors hover:text-foreground">
                 <div className="line-clamp-2 text-xs text-muted-foreground leading-relaxed italic">{value}</div>
               </div>
             </CustomTooltip>
@@ -1663,7 +1670,7 @@ const DatasetV2 = () => {
                     return {
                       ...col,
                       header: (
-                        <div className="flex flex-col gap-0.5 py-0.5 group/header cursor-help min-w-[100px]">
+                        <div className="flex flex-col gap-0.5 py-0.5 group/header  min-w-[100px]">
                           <div className="flex items-center gap-1.5 min-w-0">
                             <span className="font-bold text-[14.5px] text-foreground leading-none tracking-tight group-hover/header:text-blue-600 transition-colors truncate">
                               {formatColumnName(col.id)}
@@ -1745,69 +1752,114 @@ const DatasetV2 = () => {
 
         {/* Phase 6: Log Streaming View */}
         {activeTopTab === 'log' && (
-          <div className="flex-1 flex flex-col min-h-0 bg-[#0c0c0c] font-mono relative">
-            <div className="flex items-center justify-between px-4 py-2 border-b border-[#222]">
-              <div className="flex items-center gap-2">
-                <div className={cn("w-2 h-2 rounded-full", isLogStreaming ? "bg-green-500 animate-pulse" : "bg-gray-500")} />
-                <span className="text-[#888] text-xs uppercase tracking-widest font-bold">
-                  {isLogStreaming ? 'LIVE STREAM' : 'CONNECTION CLOSED'}
-                </span>
+          <div className="flex-1 p-4 flex flex-col min-h-0 bg-background">
+            <div className="flex-1 flex flex-col min-h-0 bg-[#0c0c0c] font-mono relative rounded-[10px] overflow-hidden border border-[#222]">
+              {/* Header inside the terminal area */}
+              <div className="flex items-center justify-between px-6 py-3.5 border-b border-[#222]">
+                <div className="flex items-center gap-2">
+                  {/* Space for any left-side header content if needed */}
+                </div>
+                <div className="flex items-center gap-4 text-[#888] text-xs font-medium">
+                  {/* <span className="hover:text-white cursor-pointer transition-colors">View full log</span> */}
+                  <div className="flex items-center gap-3">
+                    <button onClick={copyLogs} className="hover:text-white transition-colors" title="Copy to clipboard">
+                      {copied ? (
+                        <Check className="w-[14px] h-[14px] text-green-500" />
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>
+                      )}
+                    </button>
+                    {/* <button className="hover:text-white transition-colors" title="Settings">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" /></svg>
+                    </button> */}
+                  </div>
+                </div>
               </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setLogLines([])}
-                className="text-[#666] hover:text-white hover:bg-[#222] h-7 text-xs"
+              <div
+                ref={logContainerRef}
+                className="flex-1 overflow-y-auto p-4 dt-custom-scrollbar"
               >
-                Clear logs
-              </Button>
-            </div>
-            <div 
-              ref={logContainerRef}
-              className="flex-1 overflow-y-auto p-4 dt-custom-scrollbar"
-            >
-              {logLines.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-[#444] space-y-4">
-                  <FileText className="w-12 h-12 opacity-50" />
-                  <p>Waiting for logs...</p>
-                </div>
-              ) : (
-                <div className="space-y-1">
-                  {logLines.map((line, idx) => {
-                    // Try to parse timestamp from beginning if formatted like "2026-03-09T...: message"
-                    let timestamp = "";
-                    let content = line;
-                    const match = line.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z):\s(.*)/);
-                    if (match) {
-                      try {
-                        const d = new Date(match[1]);
-                        timestamp = d.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                        content = match[2];
-                      } catch(e) {}
-                    }
+                {logLines.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-[#444] space-y-4">
+                    <FileText className="w-12 h-12 opacity-50" />
+                    <p>Waiting for logs...</p>
+                  </div>
+                ) : (
+                  <div className="space-y-0.5 font-mono">
+                    {logLines.map((line, idx) => {
+                      // Apify format: 2026-03-09T02:06:05.078Z LEVEL Message
+                      // Our current format from orchestrator: 2026-03-09T...: message
+                      let timestamp = "";
+                      let content = line;
+                      let level = "";
 
-                    const isError = content.toLowerCase().includes('error') || content.toLowerCase().includes('failed');
-                    const isWarn = content.toLowerCase().includes('warn');
-                    const isSuccess = content.toLowerCase().includes('success') || content.toLowerCase().includes('✅');
+                      const timestampMatch = line.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z)/);
+                      if (timestampMatch) {
+                        timestamp = timestampMatch[1];
+                        content = line.substring(timestamp.length).trim();
+                        if (content.startsWith(":")) {
+                          content = content.substring(1).trim();
+                        }
+                      }
 
-                    return (
-                      <div key={idx} className="flex gap-4 text-[13px] leading-relaxed hover:bg-[#1a1a1a] px-2 py-0.5 rounded -mx-2 transition-colors">
-                        {timestamp && (
-                          <span className="text-[#555] shrink-0 font-mono select-none w-[70px]">
-                            {timestamp}
-                          </span>
-                        )}
-                        <span className={cn(
-                          "whitespace-pre-wrap break-all flex-1",
-                          isError ? "text-red-400" : isWarn ? "text-yellow-400" : isSuccess ? "text-green-400" : "text-[#ccc]"
-                        )}>
-                          {content}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+                      // Extract level if present (e.g. "INFO", "WARN", "ERROR")
+                      const levelMatch = content.match(/^(INFO|WARN|ERROR|DEBUG|ACTOR:)/i);
+                      if (levelMatch) {
+                        level = levelMatch[1].toUpperCase();
+                        content = content.substring(level.length).trim();
+                      }
+
+                      return (
+                        <div key={idx} className="flex gap-4 text-[12px] leading-[1.6]  transition-colors py-0">
+                          {timestamp && (
+                            <span className="text-[#666] shrink-0 select-none">
+                              {timestamp}
+                            </span>
+                          )}
+                          <div className="flex-1 flex gap-2">
+                            {level && (
+                              <span className={cn(
+                                "shrink-0 font-bold",
+                                level === "INFO" ? "text-green-500" :
+                                  level === "ERROR" ? "text-red-500" :
+                                    level === "WARN" ? "text-yellow-500" :
+                                      level === "ACTOR:" ? "text-[#ccc]" : "text-blue-400"
+                              )}>
+                                {level}
+                              </span>
+                            )}
+                            <span className="whitespace-pre-wrap break-all text-[#ccc]">
+                              {content.split(/(https?:\/\/[^\s]+)/g).map((part, i) => {
+                                if (part.match(/^https?:\/\//)) {
+                                  return (
+                                    <a
+                                      key={i}
+                                      href={part}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-blue-400 underline underline-offset-2  transition-colors cursor-pointer"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      {part}
+                                    </a>
+                                  );
+                                }
+                                return (
+                                  <span key={i} className={cn(
+                                    content.includes('PlaywrightCrawler') ? "text-yellow-300" : ""
+                                  )}>
+                                    {part}
+                                  </span>
+                                );
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

@@ -430,19 +430,36 @@ async def create_run(
         except Exception:
             pass
 
-        from workers.scraping_worker import run_scraping_task
-        celery_result = run_scraping_task.apply_async(
-            kwargs={
-                "run_id": run.id,
-                "actor_id": real_actor_id,
-                "user_id": current_user['id'],
-                "input_data": run_data.input_data,
-                "organization_id": organization_id,
-                "build_id": resolved_build_id,    # Phase 5
-                "version_number": resolved_build_number.rsplit(".", 1)[0] if resolved_build_number and resolved_build_number.count(".") == 2 else None,  # Phase 5
-            },
-            queue=queue_name
-        )
+        import os
+        use_docker = os.environ.get("USE_DOCKER_EXECUTOR", "false").lower() == "true"
+        
+        if use_docker:
+            from workers.orchestrator_worker import run_orchestrated_task
+            celery_result = run_orchestrated_task.apply_async(
+                kwargs={
+                    "run_id": run.id,
+                    "actor_id": real_actor_id,
+                    "user_id": current_user['id'],
+                    "input_data": run_data.input_data,
+                    "organization_id": organization_id,
+                    "version_number": resolved_build_number.rsplit(".", 1)[0] if resolved_build_number and resolved_build_number.count(".") == 2 else None,
+                },
+                queue=queue_name
+            )
+        else:
+            from workers.scraping_worker import run_scraping_task
+            celery_result = run_scraping_task.apply_async(
+                kwargs={
+                    "run_id": run.id,
+                    "actor_id": real_actor_id,
+                    "user_id": current_user['id'],
+                    "input_data": run_data.input_data,
+                    "organization_id": organization_id,
+                    "build_id": resolved_build_id,
+                    "version_number": resolved_build_number.rsplit(".", 1)[0] if resolved_build_number and resolved_build_number.count(".") == 2 else None,
+                },
+                queue=queue_name
+            )
         
         await db.runs.update_one(
             {"id": run.id},
@@ -569,6 +586,20 @@ async def abort_run(
         task_cancelled = False
         if task_manager:
             task_cancelled = await task_manager.cancel_task(run_id)
+            
+        # If we are in Docker mode, we must forcefully kill the container to prevent zombies
+        import os
+        use_docker = os.environ.get("USE_DOCKER_EXECUTOR", "false").lower() == "true"
+        if use_docker:
+            try:
+                import docker
+                client = docker.from_env()
+                containers = client.containers.list(all=True, filters={"label": f"scrapi_run_id={run_id}"})
+                for c in containers:
+                    c.remove(force=True)
+                logger.info(f"Forcefully removed Docker container for aborted run {run_id}")
+            except Exception as e:
+                logger.error(f"Failed to remove Docker container for aborted run {run_id}: {e}")
         
         # Update database status to aborted
         finished_at = datetime.now(timezone.utc)

@@ -94,7 +94,7 @@ class SecurityService:
         duration_ms = fingerprint.get("duration_ms", 0)
         total_time = fingerprint.get("total_time", 0)
         
-        if duration_ms < 100:
+        if duration_ms < 100 and client_ip not in ("127.0.0.1", "::1", "localhost"):
             logger.warning(f"🛡️ Bot Detected: Impossible PoW speed ({duration_ms}ms) for IP {client_ip}")
             return False, "Abnormally fast security solution"
             

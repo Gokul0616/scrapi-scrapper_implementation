@@ -29,6 +29,7 @@ Usage:
     asyncio.run(main())
 """
 from __future__ import annotations
+from typing import Callable
 import asyncio
 import logging
 import os
