@@ -41,6 +41,7 @@ import UpgradeCheckout from './pages/UpgradeCheckout';
 import PaymentSuccess from './pages/checkout/PaymentSuccess';
 import InvoiceDetail from './pages/InvoiceDetail';
 import AuthCallback from './pages/AuthCallback';
+import ResetPassword from './pages/ResetPassword';
 
 // Component to handle root redirect based on last path
 const RootRedirect = () => {
@@ -113,6 +114,7 @@ function AppRoutes() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/auth/reset-password" element={<ResetPassword />} />
         <Route
           path="/"
           element={

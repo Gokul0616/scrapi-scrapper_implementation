@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { ChevronDown, Search, X } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
-const CustomDropdown = ({ value, onChange, options, placeholder = 'Select...', searchable = false, className = "", testId, disabled = false }) => {
+const CustomDropdown = ({ value, onChange, options, placeholder = 'Select...', searchable = false, className = "", testId, disabled = false, variant = 'default' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLabel, setSelectedLabel] = useState('');
@@ -126,25 +126,39 @@ const CustomDropdown = ({ value, onChange, options, placeholder = 'Select...', s
         </div>
       )}
 
-      <div className="max-h-[240px] overflow-y-auto py-1 scrollbar-thin p-1">
+      <div className="max-h-[300px] overflow-y-auto py-1 scrollbar-thin p-1">
         {filteredOptions.length > 0 ? (
-          filteredOptions.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => handleSelect(option.value)}
-              className={`w-full text-left px-3 py-1.5 text-[13px] mt-1  rounded-md transition-colors flex items-center justify-between group ${value === option.value
-                ? isDark
-                  ? 'bg-gray-600/40 text-blue-400 font-medium'
-                  : 'bg-gray-100 text-blue-600 font-medium'
-                : isDark
-                  ? 'text-foreground hover:bg-muted/50'
-                  : 'text-gray-700 hover:bg-gray-100'
-                }`}
-            >
-              <span className="truncate">{option.label}</span>
-            </button>
-          ))
+          filteredOptions.map((option) => {
+            const isSelected = value === option.value;
+            let btnClass = `w-full text-left px-3 py-1.5 text-[13px] mt-1 rounded-md transition-colors flex flex-col justify-center group `;
+            if (variant === 'apify') {
+              btnClass += isSelected 
+                ? 'bg-blue-600 text-white font-medium' 
+                : isDark 
+                  ? 'text-foreground hover:bg-muted/50' 
+                  : 'text-gray-700 hover:bg-gray-100';
+            } else {
+              btnClass += isSelected
+                ? isDark ? 'bg-gray-600/40 text-blue-400 font-medium' : 'bg-gray-100 text-blue-600 font-medium'
+                : isDark ? 'text-foreground hover:bg-muted/50' : 'text-gray-700 hover:bg-gray-100';
+            }
+
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => handleSelect(option.value)}
+                className={btnClass}
+              >
+                <span className="truncate block w-full">{option.label}</span>
+                {option.description && (
+                  <span className={`text-[12px] mt-0.5 leading-[1.4] whitespace-normal w-full text-left ${isSelected ? (variant === 'apify' ? 'text-blue-100' : 'text-blue-400/80') : 'text-muted-foreground'}`}>
+                    {option.description}
+                  </span>
+                )}
+              </button>
+            );
+          })
         ) : (
           <div className="px-3 py-4 text-[12px] text-muted-foreground text-center">
             No results found

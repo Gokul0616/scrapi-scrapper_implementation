@@ -741,6 +741,7 @@ class BillingService:
         # In a real scenario we'd query price_id from DB or env based on plan_type
         # Using a generic recurring test price for demonstration
         price_id = os.getenv("STRIPE_STARTER_PRICE_ID", "price_fake_test_123")
+        frontend_url = os.getenv("FRONTEND_URL")
         
         try:
             session = stripe.checkout.Session.create(
@@ -750,15 +751,15 @@ class BillingService:
                     'quantity': 1,
                 }],
                 mode='subscription',
-                success_url='http://localhost:3000/settings?tab=billing&success=true',
-                cancel_url='http://localhost:3000/settings?tab=billing&canceled=true',
+                success_url=f'{frontend_url}/settings?tab=billing&success=true',
+                cancel_url=f'{frontend_url}/settings?tab=billing&canceled=true',
                 client_reference_id=f"{workspace_type}_{workspace_id}"
             )
             return session.url
         except stripe.error.StripeError as e:
             # Fallback for when API keys are totally fake and crash
             print(f"Stripe error: {str(e)}")
-            return 'http://localhost:3000/settings?tab=billing&dummyCheckout=true'
+            return f'{frontend_url}/settings?tab=billing&dummyCheckout=true'
 
     # ── PayPal Integration ───────────────────────────────────────────────────
 
@@ -794,7 +795,7 @@ class BillingService:
         mode = os.getenv("PAYPAL_MODE", "sandbox")
         base_url = "https://api-m.sandbox.paypal.com" if mode == "sandbox" else "https://api-m.paypal.com"
         
-        frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+        frontend_url = os.getenv("FRONTEND_URL")
 
         payload = {
             "intent": "CAPTURE",

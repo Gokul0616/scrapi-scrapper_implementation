@@ -21,7 +21,7 @@ class AdminUser(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     username: str
     email: str
-    hashed_password: str
+    hashed_password: Optional[str] = None
     organization_name: Optional[str] = None
     plan: str = "Free"
     role: str = "admin"  # owner or admin - default is admin
@@ -29,6 +29,8 @@ class AdminUser(BaseModel):
     is_active: bool = True
     last_login_at: Optional[datetime] = None
     last_path: Optional[str] = None  # Store last visited path for redirect after login
+    google_id: Optional[str] = None # Google's unique subject ID
+    github_id: Optional[str] = None # GitHub's unique user ID
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     
 class AdminUserResponse(BaseModel):

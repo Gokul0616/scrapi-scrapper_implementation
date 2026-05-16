@@ -4,6 +4,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from typing import Optional
 from datetime import datetime, timezone
+from pydantic import BaseModel
 
 from database import get_db
 from routes.utils import parse_datetime_safe, generate_random_profile_color
@@ -16,6 +17,8 @@ from models.notification import Notification
 from auth import create_access_token, get_current_user, hash_password, verify_password
 from services.google_auth import get_google_auth_url, exchange_code_for_token, verify_google_id_token
 from services.github_auth import get_github_auth_url, exchange_github_code_for_token, get_github_user_info
+from services.session_service import SessionService
+from services.email_service import get_email_service
 import uuid
 import os
 import logging
@@ -202,8 +205,16 @@ async def register(user_data: UserCreate, request: Request):
     )
     await db.notifications.insert_one(welcome_notification.model_dump())
     
+    # Create session
+    session_service = SessionService(db.sessions)
+    jti = await session_service.create_session(
+        user_id=user.id,
+        user_agent_str=request.headers.get("user-agent", ""),
+        ip_address=request.client.host if request.client else "127.0.0.1"
+    )
+    
     # Create token
-    token = create_access_token({"sub": user.id, "username": user.username, "role": user.role})
+    token = create_access_token({"sub": user.id, "username": user.username, "role": user.role, "jti": jti})
     
     return {
         "access_token": token,
@@ -233,7 +244,7 @@ async def google_auth_url():
     return {"url": get_google_auth_url()}
 
 @router.get("/auth/google/callback")
-async def google_auth_callback(code: str):
+async def google_auth_callback(code: str, request: Request):
     """Google OAuth 2.0 callback - handles both signup and login."""
     from utils.username_generator import generate_unique_username
     from models import User
@@ -257,8 +268,14 @@ async def google_auth_callback(code: str):
     if not email:
         raise HTTPException(status_code=400, detail="Google token does not contain email")
 
-    # Check if user already exists
+    # Check if user already exists in standard users
     user_doc = await db.users.find_one({"email": email})
+    collection_name = "users"
+    
+    if not user_doc:
+        # Check if user exists in admin users
+        user_doc = await db.admin_users.find_one({"email": email})
+        collection_name = "admin_users"
     
     user_id = None
     username = None
@@ -267,7 +284,7 @@ async def google_auth_callback(code: str):
     if user_doc:
         user_id = user_doc['id']
         username = user_doc['username']
-        role = user_doc.get('role', 'user')
+        role = user_doc.get('role', 'user' if collection_name == "users" else "admin")
         
         # Check if account is deleted
         if user_doc.get("account_status") == "deleted":
@@ -282,11 +299,9 @@ async def google_auth_callback(code: str):
         
         if not user_doc.get("google_id"):
             update_fields["google_id"] = google_user.get("sub")
-            # If they had an email account, we can still mark google as a valid provider
-            # but we don't necessarily overwrite the primary 'email' provider if they want to keep both
         
-        # Update last login and google_id
-        await db.users.update_one(
+        # Update last login and google_id in the correct collection
+        await db[collection_name].update_one(
             {"id": user_id},
             {"$set": update_fields}
         )
@@ -302,8 +317,14 @@ async def google_auth_callback(code: str):
                 permanent_deletion_at = parse_datetime_safe(permanent_deletion_at)
                 days_remaining = max(0, (permanent_deletion_at - datetime.now(timezone.utc)).days)
             
-            token = create_access_token({"sub": user_id, "username": username, "role": role})
-            frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+            session_service = SessionService(db.sessions)
+            jti = await session_service.create_session(
+                user_id=user_id,
+                user_agent_str=request.headers.get("user-agent", ""),
+                ip_address=request.client.host if request.client else "127.0.0.1"
+            )
+            token = create_access_token({"sub": user_id, "username": username, "role": role, "jti": jti})
+            frontend_url = os.environ.get("FRONTEND_URL", "https://app.scrapi.com")
             
             # Construct redirect URL with deletion info
             redirect_url = f"{frontend_url}/auth/callback?token={token}&account_status=pending_deletion"
@@ -342,7 +363,6 @@ async def google_auth_callback(code: str):
             id=user_id,
             username=username,
             email=email,
-            hashed_password=hash_password(str(uuid.uuid4())),
             first_name=google_user.get("first_name"),
             last_name=google_user.get("last_name"),
             auth_provider="google",
@@ -374,12 +394,20 @@ async def google_auth_callback(code: str):
         )
         await db.notifications.insert_one(welcome_notification.model_dump())
     
+    # Create session
+    session_service = SessionService(db.sessions)
+    jti = await session_service.create_session(
+        user_id=user_id,
+        user_agent_str=request.headers.get("user-agent", ""),
+        ip_address=request.client.host if request.client else "127.0.0.1"
+    )
+    
     # Create token
-    token = create_access_token({"sub": user_id, "username": username, "role": role})
+    token = create_access_token({"sub": user_id, "username": username, "role": role, "jti": jti})
     
     # Redirect back to frontend with token
     # Assuming frontend has a route /auth/callback to handle this
-    frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+    frontend_url = os.environ.get("FRONTEND_URL", "https://app.scrapi.com")
     return RedirectResponse(url=f"{frontend_url}/auth/callback?token={token}")
 
 @router.get("/auth/github/url")
@@ -392,7 +420,7 @@ async def github_auth_url():
         raise HTTPException(status_code=500, detail="Failed to generate GitHub authentication URL")
 
 @router.get("/auth/github/callback")
-async def github_auth_callback(code: str):
+async def github_auth_callback(code: str, request: Request):
     """
     Handle GitHub OAuth callback.
     Exchanges code for token, gets user info, and creates/logs in the user.
@@ -425,6 +453,11 @@ async def github_auth_callback(code: str):
 
     # Check if user already exists
     user_doc = await db.users.find_one({"email": email})
+    collection_name = "users"
+    
+    if not user_doc:
+        user_doc = await db.admin_users.find_one({"email": email})
+        collection_name = "admin_users"
     
     user_id = None
     username = None
@@ -433,7 +466,7 @@ async def github_auth_callback(code: str):
     if user_doc:
         user_id = user_doc['id']
         username = user_doc['username']
-        role = user_doc.get('role', 'user')
+        role = user_doc.get('role', 'user' if collection_name == "users" else "admin")
         
         # Check if account is deleted
         if user_doc.get("account_status") == "deleted":
@@ -450,7 +483,7 @@ async def github_auth_callback(code: str):
             "github_access_token": access_token
         }
         
-        await db.users.update_one(
+        await db[collection_name].update_one(
             {"id": user_id},
             {"$set": update_fields}
         )
@@ -466,8 +499,14 @@ async def github_auth_callback(code: str):
                 permanent_deletion_at = parse_datetime_safe(permanent_deletion_at)
                 days_remaining = max(0, (permanent_deletion_at - datetime.now(timezone.utc)).days)
             
-            token = create_access_token({"sub": user_id, "username": username, "role": role})
-            frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+            session_service = SessionService(db.sessions)
+            jti = await session_service.create_session(
+                user_id=user_id,
+                user_agent_str=request.headers.get("user-agent", ""),
+                ip_address=request.client.host if request.client else "127.0.0.1"
+            )
+            token = create_access_token({"sub": user_id, "username": username, "role": role, "jti": jti})
+            frontend_url = os.environ.get("FRONTEND_URL", "https://app.scrapi.com")
             
             # Construct redirect URL with deletion info
             redirect_url = f"{frontend_url}/auth/callback?token={token}&account_status=pending_deletion"
@@ -497,7 +536,6 @@ async def github_auth_callback(code: str):
             id=user_id,
             username=username,
             email=email,
-            hashed_password=hash_password(str(uuid.uuid4())),
             first_name=github_user.get("first_name"),
             last_name=github_user.get("last_name"),
             auth_provider="github",
@@ -531,11 +569,19 @@ async def github_auth_callback(code: str):
         )
         await db.notifications.insert_one(welcome_notification.model_dump())
     
+    # Create session
+    session_service = SessionService(db.sessions)
+    jti = await session_service.create_session(
+        user_id=user_id,
+        user_agent_str=request.headers.get("user-agent", ""),
+        ip_address=request.client.host if request.client else "127.0.0.1"
+    )
+    
     # Create token
-    token = create_access_token({"sub": user_id, "username": username, "role": role})
+    token = create_access_token({"sub": user_id, "username": username, "role": role, "jti": jti})
     
     # Redirect back to frontend
-    frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+    frontend_url = os.environ.get("FRONTEND_URL", "https://app.scrapi.com")
     return RedirectResponse(url=f"{frontend_url}/auth/callback?token={token}")
 
 @router.post("/auth/login", response_model=dict)
@@ -625,11 +671,20 @@ async def login(credentials: UserLogin, request: Request):
         {"$set": {"last_login_at": datetime.now(timezone.utc)}}
     )
     
+    # Create session
+    session_service = SessionService(db.sessions)
+    jti = await session_service.create_session(
+        user_id=user_doc['id'],
+        user_agent_str=request.headers.get("user-agent", ""),
+        ip_address=request.client.host if request.client else "127.0.0.1"
+    )
+    
     # Create access token
     token = create_access_token({
         "sub": user_doc['id'], 
         "username": user_doc['username'],
-        "role": user_doc.get('role', 'user')
+        "role": user_doc.get('role', 'user'),
+        "jti": jti
     })
     
     # Check if account is pending deletion
@@ -682,6 +737,104 @@ async def login(credentials: UserLogin, request: Request):
             auth_provider=user_doc.get('auth_provider', 'email')
         )
     }
+
+@router.post("/auth/logout")
+async def logout(current_user: dict = Depends(get_current_user)):
+    """Logs out the user and revokes their current session."""
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+        
+    jti = current_user.get("jti")
+    if jti:
+        session_service = SessionService(db.sessions)
+        await session_service.collection.delete_one({"jti": jti, "user_id": current_user["id"]})
+        
+    return {"message": "Successfully logged out"}
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+@router.post("/auth/forgot-password")
+async def forgot_password(req: ForgotPasswordRequest, request: Request):
+    """Initiates the password reset flow."""
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+        
+    # Check both collections
+    user_doc = await db.users.find_one({"email": req.email})
+    collection_name = "users"
+    
+    if not user_doc:
+        user_doc = await db.admin_users.find_one({"email": req.email})
+        collection_name = "admin_users"
+        
+    if user_doc:
+        from datetime import timedelta
+        # Create a short-lived reset token (1 hour)
+        reset_token = create_access_token(
+            data={
+                "sub": user_doc["id"], 
+                "email": user_doc["email"], 
+                "type": "password_reset",
+                "collection": collection_name
+            },
+            expires_delta=timedelta(hours=1)
+        )
+        
+        frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+        reset_link = f"{frontend_url}/auth/reset-password?token={reset_token}"
+        
+        # Send email
+        email_service = get_email_service()
+        username = user_doc.get("username", user_doc.get("email"))
+        await email_service.send_password_reset_email(user_doc["email"], username, reset_link)
+        
+    # Always return success for security (don't reveal if email exists)
+    return {"message": "If the email exists, a password reset link has been sent."}
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+@router.post("/auth/reset-password")
+async def reset_password(req: ResetPasswordRequest):
+    """Resets the user's password using a token."""
+    from auth import decode_token
+    
+    try:
+        payload = decode_token(req.token)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+        
+    if payload.get("type") != "password_reset":
+        raise HTTPException(status_code=400, detail="Invalid token type")
+        
+    user_id = payload.get("sub")
+    collection = payload.get("collection", "users")
+    
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+        
+    # Update password
+    hashed_password = hash_password(req.new_password)
+    result = await db[collection].update_one(
+        {"id": user_id},
+        {"$set": {"hashed_password": hashed_password}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    # Revoke all sessions for this user for security
+    session_service = SessionService(db.sessions)
+    from bson import ObjectId
+    uid = ObjectId(user_id) if ObjectId.is_valid(user_id) else user_id
+    await session_service.collection.delete_many({"user_id": uid})
+    
+    return {"message": "Password has been reset successfully. You can now log in with your new password."}
 
 # ============= Admin Console Authentication Routes =============
 @router.post("/auth/admin/register", response_model=dict)

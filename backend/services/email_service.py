@@ -238,7 +238,7 @@ class EmailService:
                                 <p style="margin: 0; font-weight: bold;">Changed your mind?</p>
                                 <p style="margin: 10px 0;">You can reactivate your account anytime before {deletion_date} by simply logging in to SCRAPI.</p>
                                 <div style="text-align: center; margin-top: 15px;">
-                                    <a href="{os.getenv('FRONTEND_URL', 'http://localhost:3000')}/login" 
+                                    <a href="{os.getenv('FRONTEND_URL', 'https://app.scrapi.com')}/login" 
                                        style="background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
                                         Reactivate My Account
                                     </a>
@@ -333,7 +333,7 @@ class EmailService:
                                 <p style="margin: 0; font-weight: bold;">Want to keep your account?</p>
                                 <p style="margin: 10px 0;">Simply log in to SCRAPI to reactivate your account and cancel the deletion.</p>
                                 <div style="text-align: center; margin-top: 15px;">
-                                    <a href="{os.getenv('FRONTEND_URL', 'http://localhost:3000')}/login" 
+                                    <a href="{os.getenv('FRONTEND_URL', 'https://app.scrapi.com')}/login" 
                                        style="background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
                                         Reactivate My Account Now
                                     </a>
@@ -429,7 +429,7 @@ class EmailService:
                             </p>
                             
                             <div style="text-align: center; margin-top: 20px;">
-                                <a href="{os.getenv('FRONTEND_URL', 'http://localhost:3000')}/home" 
+                                <a href="{os.getenv('FRONTEND_URL', 'https://app.scrapi.com')}/home" 
                                    style="background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
                                     Go to Dashboard
                                 </a>
@@ -475,6 +475,89 @@ class EmailService:
             logger.error(f"Failed to send reactivation email: {str(e)}")
             return False
 
+    async def send_password_reset_email(self, to_email: str, username: str, reset_link: str):
+        """Send password reset email."""
+        # if os.getenv('APP_ENV') != 'production':
+        #     logger.info(f"[MOCK EMAIL] Password reset for {to_email}: {reset_link}")
+        #     return True
+        logger.warning(f"Password reset for {to_email}: {reset_link}")
+
+        try:
+            message = MIMEMultipart("alternative")
+            message["Subject"] = "Reset Your SCRAPI Password"
+            message["From"] = self.smtp_email
+            message["To"] = to_email
+            
+            html = f"""
+            <html>
+                <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                        <div style="text-align: center; margin-bottom: 30px;">
+                            <h1 style="color: #1f2937;">SCRAPI</h1>
+                        </div>
+                        
+                        <div style="background-color: #f8f9fa; padding: 30px; border-radius: 10px;">
+                            <h2 style="color: #1f2937; margin-top: 0;">Reset Your Password</h2>
+                            <p>Hello {username},</p>
+                            <p>We received a request to reset the password for your SCRAPI account. Click the button below to set a new password:</p>
+                            
+                            <div style="text-align: center; margin: 30px 0;">
+                                <a href="{reset_link}" 
+                                   style="background-color: #2563eb; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-size: 16px;">
+                                    Reset Password
+                                </a>
+                            </div>
+                            
+                            <p style="color: #6b7280; font-size: 14px;">
+                                This link will expire in 60 minutes. If you didn't request a password reset, you can safely ignore this email.
+                            </p>
+                            
+                            <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                                <p style="color: #9ca3af; font-size: 12px; margin-bottom: 5px;">If the button above doesn't work, copy and paste this URL into your browser:</p>
+                                <p style="color: #3b82f6; font-size: 12px; word-break: break-all;">{reset_link}</p>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 30px; text-align: center; color: #9ca3af; font-size: 12px;">
+                            <p>© 2024 SCRAPI. All rights reserved.</p>
+                        </div>
+                    </div>
+                </body>
+            </html>
+            """
+            
+            text = f"""
+            SCRAPI - Password Reset
+            
+            Hello {username},
+            
+            We received a request to reset your SCRAPI password.
+            
+            Copy and paste the link below into your browser to set a new password:
+            {reset_link}
+            
+            This link will expire in 60 minutes.
+            
+            If you didn't request this, please ignore this email.
+            """
+            
+            part1 = MIMEText(text, "plain")
+            part2 = MIMEText(html, "html")
+            message.attach(part1)
+            message.attach(part2)
+            
+            with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
+                server.starttls()
+                server.login(self.smtp_email, self.smtp_password)
+                server.send_message(message)
+            
+            logger.info(f"Password reset email sent to {to_email}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to send password reset email: {str(e)}")
+            return False
+
 
     async def send_payment_confirmation(
         self,
@@ -501,7 +584,7 @@ class EmailService:
             logger.info(f"[MOCK EMAIL] Payment confirmation for {invoice_no} to {to_emails}")
             return True
 
-        frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+        frontend_url = os.getenv('FRONTEND_URL', 'https://app.scrapi.com')
         invoice_url = f"{frontend_url}/billing/invoices/{invoice_id}"
         name_display = billing_name or "Customer"
         year = datetime.now().year

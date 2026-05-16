@@ -19,6 +19,8 @@ from .api_keys_routes import router as api_keys_router
 from .actor_versions_routes import router as actor_versions_router  # Phase 5
 from .actor_env_routes import router as actor_env_router            # Phase 5
 from .log_streaming_routes import router as log_streaming_router    # Phase 6
+from .security_routes import router as security_router
+from .session_routes import router as session_router
 
 # Import legacy routers (if they still exist and are needed)
 from .search_routes import router as search_router, set_search_db
@@ -46,7 +48,8 @@ router.include_router(pipeline_router, prefix="/pipelines", tags=["Pipelines"])
 router.include_router(api_keys_router, prefix="/auth/api-keys", tags=["API Keys"])
 router.include_router(actor_versions_router, tags=["Actor Versions"])  # Phase 5
 router.include_router(actor_env_router, tags=["Actor Env Vars"])        # Phase 5
-
+router.include_router(security_router)
+router.include_router(session_router)
 
 def set_db(db):
     """

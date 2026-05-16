@@ -24,6 +24,7 @@ class UsernameUpdate(BaseModel):
 class ProfileUpdate(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+    email: Optional[str] = None
     bio: Optional[str] = Field(None, max_length=200)
     readme: Optional[str] = Field(None, max_length=2000)
     homepage_url: Optional[str] = None
@@ -51,6 +52,13 @@ class ProfileResponse(BaseModel):
     profile_picture: Optional[str] = None
     theme_preference: str = "system"
     auth_provider: Optional[str] = None
+    email: Optional[str] = None
+    session_expiration_days: int = 90
+    resource_access_level: str = "anyone"
+    require_actor_approval: str = "require"
+    has_password: bool = False
+    has_google: bool = False
+    has_github: bool = False
 
 class UserPreferencesUpdate(BaseModel):
     theme_preference: Optional[str] = None
@@ -60,6 +68,11 @@ class UserPreferencesResponse(BaseModel):
     theme_preference: str = "light"
     sidebar_collapsed: bool = False
 
+class SecurityPreferencesUpdate(BaseModel):
+    session_expiration_days: Optional[int] = None
+    resource_access_level: Optional[str] = None
+    require_actor_approval: Optional[str] = None
+
 # Auth dependency
 from auth import get_current_user
 
@@ -68,14 +81,36 @@ async def get_profile(current_user: dict = Depends(get_current_user)):
     """Get user profile settings"""
     user_id = current_user.get("id")
     
-    # Get user from users collection
-    user = await db.users.find_one({"id": user_id}, {"_id": 0, "password": 0, "hashed_password": 0})
+    # Comprehensive user lookup strategy
+    user = None
+    
+    # 1. Try users collection
+    # Try by 'id' field (UUID string)
+    user = await db.users.find_one({"id": user_id})
+    
     if not user:
-        # Fallback to _id for ObjectId-based users
-        try:
-            user = await db.users.find_one({"_id": ObjectId(user_id)}, {"_id": 0, "password": 0, "hashed_password": 0})
-        except:
-            raise HTTPException(status_code=404, detail="User not found")
+        # Try by '_id' as string
+        user = await db.users.find_one({"_id": user_id})
+        
+    if not user and ObjectId.is_valid(user_id):
+        # Try by '_id' as ObjectId
+        user = await db.users.find_one({"_id": ObjectId(user_id)})
+        
+    # 2. Try admin_users collection if not found in users
+    if not user:
+        # Try by 'id' field
+        user = await db.admin_users.find_one({"id": user_id})
+        
+    if not user:
+        # Try by '_id' as string
+        user = await db.admin_users.find_one({"_id": user_id})
+        
+    if not user and ObjectId.is_valid(user_id):
+        # Try by '_id' as ObjectId
+        user = await db.admin_users.find_one({"_id": ObjectId(user_id)})
+                
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
     
     # Try to get settings from user_settings collection
     settings = await db.user_settings.find_one({"user_id": user_id}, {"_id": 0})
@@ -87,6 +122,13 @@ async def get_profile(current_user: dict = Depends(get_current_user)):
         "last_name": user.get("last_name"),
         "theme_preference": user.get("theme_preference", "light"),
         "auth_provider": user.get("auth_provider", "email"),
+        "email": user.get("email"),
+        "session_expiration_days": user.get("session_expiration_days", 90),
+        "resource_access_level": user.get("resource_access_level", "anyone"),
+        "require_actor_approval": user.get("require_actor_approval", "require"),
+        "has_password": bool(user.get("hashed_password")) and user.get("auth_provider") == "email",
+        "has_google": user.get("auth_provider") == "google" or bool(user.get("google_id")),
+        "has_github": user.get("auth_provider") == "github" or bool(user.get("github_id"))
     }
     
     if settings:
@@ -157,25 +199,36 @@ async def update_profile(data: ProfileUpdate, current_user: dict = Depends(get_c
         user_update["first_name"] = data.first_name
     if data.last_name is not None:
         user_update["last_name"] = data.last_name
+    if data.email is not None:
+        user_update["email"] = data.email
     if data.theme_preference is not None:
         user_update["theme_preference"] = data.theme_preference
     
     if user_update:
         user_update["updated_at"] = datetime.now(timezone.utc)
-        # Handle both UUID and ObjectId
+        # Update users collection
         result = await db.users.update_one(
             {"id": user_id},
             {"$set": user_update}
         )
         # Fallback to _id for ObjectId-based users
-        if result.modified_count == 0:
-            try:
-                await db.users.update_one(
-                    {"_id": ObjectId(user_id)},
-                    {"$set": user_update}
-                )
-            except:
-                pass
+        if result.modified_count == 0 and ObjectId.is_valid(user_id):
+            await db.users.update_one(
+                {"_id": ObjectId(user_id)},
+                {"$set": user_update}
+            )
+            
+        # Update admin_users collection
+        admin_result = await db.admin_users.update_one(
+            {"id": user_id},
+            {"$set": user_update}
+        )
+        # Fallback to _id for admin_users
+        if admin_result.modified_count == 0 and ObjectId.is_valid(user_id):
+            await db.admin_users.update_one(
+                {"_id": ObjectId(user_id)},
+                {"$set": user_update}
+            )
     
     return {"message": "Profile updated successfully"}
 
@@ -424,6 +477,84 @@ async def update_preferences(data: UserPreferencesUpdate, current_user: dict = D
     
     return {"message": "Preferences updated successfully"}
 
+@router.put("/security-preferences")
+async def update_security_preferences(data: SecurityPreferencesUpdate, current_user: dict = Depends(get_current_user)):
+    """Update security preferences (2FA, session expiration, access controls)"""
+    user_id = current_user.get("id")
+    
+    update_data = data.model_dump(exclude_none=True)
+    if not update_data:
+        return {"message": "No preferences to update"}
+        
+    update_data["updated_at"] = datetime.now(timezone.utc)
+    
+    # Update in users collection
+    result = await db.users.update_one(
+        {"id": user_id},
+        {"$set": update_data}
+    )
+    
+    # Fallback for ObjectId in users
+    if result.modified_count == 0 and ObjectId.is_valid(user_id):
+        await db.users.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": update_data}
+        )
+        
+    # Also check admin_users collection
+    admin_result = await db.admin_users.update_one(
+        {"id": user_id},
+        {"$set": update_data}
+    )
+    
+    # Fallback for ObjectId in admin_users
+    if admin_result.modified_count == 0 and ObjectId.is_valid(user_id):
+        await db.admin_users.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": update_data}
+        )
+        
+    # Also store in user_settings for consistency
+    await db.user_settings.update_one(
+        {"user_id": user_id},
+        {"$set": update_data},
+        upsert=True
+    )
+    
+    return {"message": "Security preferences updated successfully"}
+
+@router.delete("/connections/{provider}")
+async def disconnect_provider(provider: str, current_user: dict = Depends(get_current_user)):
+    """Disconnect an OAuth provider from the account."""
+    if provider not in ["google", "github"]:
+        raise HTTPException(status_code=400, detail="Invalid provider")
+        
+    user_id = current_user.get("id")
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    # Check if they have other login methods
+    has_password = "hashed_password" in user and bool(user["hashed_password"])
+    has_google = "google_id" in user and bool(user["google_id"])
+    has_github = "github_id" in user and bool(user["github_id"])
+    
+    active_methods = 0
+    if has_password: active_methods += 1
+    if has_google: active_methods += 1
+    if has_github: active_methods += 1
+    
+    if active_methods <= 1:
+        raise HTTPException(status_code=400, detail="Cannot disconnect the only login method for this account.")
+        
+    # Unset the provider
+    if provider == "google":
+        await db.users.update_one({"id": user_id}, {"$unset": {"google_id": ""}})
+    elif provider == "github":
+        await db.users.update_one({"id": user_id}, {"$unset": {"github_id": "", "github_username": "", "github_access_token": ""}})
+        
+    return {"message": f"Successfully disconnected {provider}"}
+
 
 @router.websocket("/ws/check-username")
 async def check_username_ws(websocket: WebSocket):
@@ -494,6 +625,88 @@ async def check_username_ws(websocket: WebSocket):
             await websocket.send_json({
                 "error": str(e),
                 "message": "An error occurred while checking username"
+            })
+        except:
+            pass
+        finally:
+            try:
+                await websocket.close()
+            except:
+                pass
+
+@router.websocket("/ws/check-email")
+async def check_email_ws(websocket: WebSocket):
+    """WebSocket endpoint for real-time email validation and availability"""
+    await websocket.accept()
+    
+    try:
+        from services.email_validator import validate_email_comprehensive
+        
+        while True:
+            # Receive email from client
+            data = await websocket.receive_text()
+            message = json.loads(data)
+            
+            email = message.get("email", "").strip().lower()
+            user_id = message.get("user_id")
+            
+            # Validation response
+            response = {
+                "email": email,
+                "valid": False,
+                "available": False,
+                "disposable": False,
+                "message": ""
+            }
+            
+            # Basic validation
+            if not email:
+                response["message"] = ""
+                await websocket.send_json(response)
+                continue
+                
+            # 1. Comprehensive Validation (Format + Disposable check)
+            is_valid, error_msg = await validate_email_comprehensive(email)
+            if not is_valid:
+                response["message"] = error_msg
+                response["valid"] = False
+                if "disposable" in error_msg.lower():
+                    response["disposable"] = True
+                await websocket.send_json(response)
+                continue
+            
+            response["valid"] = True
+            
+            # 2. Check availability (if taken by someone else)
+            # Check users collection
+            existing_user = await db.users.find_one({
+                "email": email,
+                "id": {"$ne": user_id}
+            })
+            
+            if not existing_user:
+                # Check admin_users collection
+                existing_user = await db.admin_users.find_one({
+                    "email": email,
+                    "id": {"$ne": user_id}
+                })
+            
+            if existing_user:
+                response["message"] = "Email already registered"
+                response["available"] = False
+            else:
+                response["message"] = "Email is available"
+                response["available"] = True
+            
+            await websocket.send_json(response)
+            
+    except WebSocketDisconnect:
+        pass
+    except Exception as e:
+        try:
+            await websocket.send_json({
+                "error": str(e),
+                "message": "An error occurred while checking email"
             })
         except:
             pass

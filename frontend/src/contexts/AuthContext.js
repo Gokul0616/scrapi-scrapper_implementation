@@ -181,14 +181,22 @@ export const AuthProvider = ({ children }) => {
       return { success: false, error: error.response?.data?.detail || 'Registration failed' };
     }
   };
-  const logout = () => {
-    setToken(null);
-    setUser(null);
-    setLastPath(null);
-    localStorage.removeItem('token');
-    delete axios.defaults.headers.common['Authorization'];
-    // Clear history state to prevent location.state persistence
-    window.history.replaceState({}, document.title);
+  const logout = async () => {
+    try {
+      if (token) {
+        await axios.post(`${API}/auth/logout`);
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setToken(null);
+      setUser(null);
+      setLastPath(null);
+      localStorage.removeItem('token');
+      delete axios.defaults.headers.common['Authorization'];
+      // Clear history state to prevent location.state persistence
+      window.history.replaceState({}, document.title);
+    }
   };
 
   const updateUser = async (updatedData) => {

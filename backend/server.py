@@ -107,7 +107,7 @@ async def startup_event():
     # Verify Redis connectivity (managed externally via Docker or local install)
     try:
         import redis as redis_sync
-        redis_url = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+        redis_url = os.environ.get('REDIS_URL', 'redis://redis:6379/0')
         r = redis_sync.from_url(redis_url, socket_connect_timeout=3)
         r.ping()
         r.close()
@@ -679,7 +679,7 @@ app.add_middleware(WorkspaceMiddleware)
 # Add API key rate limiter (Phase 4.2) — only limits scrapi_api_* key requests
 try:
     from middleware.rate_limiter import RateLimiterMiddleware
-    redis_url = os.environ.get("REDIS_URL", "redis://localhost:6379/1")
+    redis_url = os.environ.get("REDIS_URL", "redis://redis:6379/1")
     app.add_middleware(RateLimiterMiddleware, redis_url=redis_url)
     logging.info("✅ Rate limiter middleware registered")
 except Exception as _rl_err:

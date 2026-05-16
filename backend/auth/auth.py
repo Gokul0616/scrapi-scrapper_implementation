@@ -74,10 +74,27 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
             detail="Could not validate credentials"
         )
     
+    # Verify session is not revoked
+    jti = payload.get("jti")
+    if jti:
+        from database import get_db
+        from bson import ObjectId
+        db = get_db()
+        if db is not None:
+            # Check both string and ObjectId user_id formats
+            uid = ObjectId(user_id) if ObjectId.is_valid(user_id) else user_id
+            session_exists = await db.sessions.find_one({"jti": jti, "user_id": uid})
+            if not session_exists:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED, 
+                    detail="Session has been revoked or expired"
+                )
+    
     return {
         "id": user_id, 
         "username": payload.get("username"),
-        "role": payload.get("role", "admin")
+        "role": payload.get("role", "admin"),
+        "jti": jti
     }
 
 security_optional = HTTPBearer(auto_error=False)
@@ -94,11 +111,23 @@ async def get_optional_current_user(credentials: Optional[HTTPAuthorizationCrede
         user_id = payload.get("sub")
         if user_id is None:
             return None
+            
+        jti = payload.get("jti")
+        if jti:
+            from database import get_db
+            from bson import ObjectId
+            db = get_db()
+            if db is not None:
+                uid = ObjectId(user_id) if ObjectId.is_valid(user_id) else user_id
+                session_exists = await db.sessions.find_one({"jti": jti, "user_id": uid})
+                if not session_exists:
+                    return None
         
         return {
             "id": user_id, 
             "username": payload.get("username"),
-            "role": payload.get("role", "admin")
+            "role": payload.get("role", "admin"),
+            "jti": jti
         }
     except HTTPException:
         return None
