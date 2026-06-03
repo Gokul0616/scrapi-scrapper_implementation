@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, ChevronRight } from 'lucide-react';
+import ActionButton from './ActionButton';
 
 interface CookieSettings {
     strictlyNecessary: boolean;
@@ -103,22 +104,22 @@ const CookieSettingsModal: React.FC<CookieSettingsModalProps> = ({ isOpen, onClo
                 <button
                     data-testid="cookie-settings-close"
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors z-10"
+                    className="absolute top-3.5 right-4 text-gray-400 hover:text-gray-600 transition-colors z-10"
                     aria-label="Close cookie settings"
                 >
-                    <X size={20} />
+                    <X size={18} />
                 </button>
 
                 {/* Header */}
-                <div className="p-4 sm:p-6 pb-0">
+                <div className="p-3.5 sm:p-5 pb-0">
                     {/* Logo */}
-                    <div className="flex items-center gap-2 mb-5">
-                        <img src="/logo.png" alt="Scrapi" className="w-8 h-8 object-contain dark:brightness-0 dark:invert" />
-                        <span className="text-xl font-bold text-gray-900 dark:text-white">Scrapi</span>
+                    <div className="flex items-center gap-2 mb-3">
+                        <img src="/logo.png" alt="Scrapi" className="w-7 h-7 object-contain dark:brightness-0 dark:invert" />
+                        <span className="text-lg font-bold text-gray-900 dark:text-white">Scrapi</span>
                     </div>
 
                     {/* Description */}
-                    <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-4">
+                    <p className="text-[13px] text-gray-600 dark:text-gray-300 leading-relaxed mb-3">
                         Cookies enable us to store your preferences and give you a personalized website experience. We also use cookies for analytics and targeted marketing. We respect your right to privacy, so you can choose not to allow some types of cookies. Click on the category headings to learn more and change your settings.{' '}
                         <a
                             href="/cookie-policy"
@@ -131,8 +132,8 @@ const CookieSettingsModal: React.FC<CookieSettingsModalProps> = ({ isOpen, onClo
                 </div>
 
                 {/* Cookie Categories */}
-                <div className="px-4 sm:px-6">
-                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Manage Consent Preferences</h4>
+                <div className="px-3.5 sm:px-5">
+                    <h4 className="text-[13px] font-semibold text-gray-900 dark:text-white mb-2">Manage Consent Preferences</h4>
 
                     <div className="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
                         {cookieCategories.map((category, index) => (
@@ -142,16 +143,16 @@ const CookieSettingsModal: React.FC<CookieSettingsModalProps> = ({ isOpen, onClo
                             >
                                 {/* Category Header */}
                                 <div
-                                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                                    className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                                     onClick={() => toggleCategory(category.key)}
                                     data-testid={`cookie-category-${category.key}`}
                                 >
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-2.5">
                                         <ChevronRight
-                                            size={16}
+                                            size={14}
                                             className={`text-gray-400 transition-transform ${expandedCategory === category.key ? 'rotate-90' : ''}`}
                                         />
-                                        <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{category.title}</span>
+                                        <span className="text-[13px] font-medium text-gray-800 dark:text-gray-200">{category.title}</span>
                                     </div>
 
                                     {category.alwaysActive ? (
@@ -163,11 +164,11 @@ const CookieSettingsModal: React.FC<CookieSettingsModalProps> = ({ isOpen, onClo
                                                 handleToggle(category.key);
                                             }}
                                             data-testid={`cookie-toggle-${category.key}`}
-                                            className={`relative w-11 h-6 rounded-full transition-colors ${settings[category.key] ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                                            className={`relative w-9 h-5 rounded-full transition-colors ${settings[category.key] ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
                                                 }`}
                                         >
                                             <div
-                                                className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${settings[category.key] ? 'translate-x-6' : 'translate-x-1'
+                                                className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${settings[category.key] ? 'translate-x-4.5' : 'translate-x-0.5'
                                                     }`}
                                             />
                                         </button>
@@ -180,8 +181,8 @@ const CookieSettingsModal: React.FC<CookieSettingsModalProps> = ({ isOpen, onClo
                                         }`}
                                 >
                                     <div className="overflow-hidden">
-                                        <div className="px-4 pb-4 pl-11">
-                                            <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                                        <div className="px-3 pb-3 pl-9">
+                                            <p className="text-[12px] text-gray-600 dark:text-gray-400 leading-relaxed">
                                                 {category.description}
                                             </p>
                                         </div>
@@ -193,26 +194,19 @@ const CookieSettingsModal: React.FC<CookieSettingsModalProps> = ({ isOpen, onClo
                 </div>
 
                 {/* Footer Buttons */}
-                <div className="p-4 sm:p-6 flex justify-end gap-3">
-                    <button
+                <div className="p-3.5 sm:p-5 flex justify-end gap-2.5">
+                    <ActionButton
                         data-testid="cookie-reject-all"
                         onClick={handleRejectAll}
-                        className="px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-black border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-400 transition-all"
-                    >
-                        Reject all
-                    </button>
-                    <button
+                        label="Reject all"
+                        variant="default"
+                    />
+                    <ActionButton
                         data-testid="cookie-confirm-choices"
                         onClick={handleConfirm}
-                        className="px-5 py-2.5 text-sm font-medium text-white dark:text-gray-900 bg-gray-900 dark:bg-white rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-all"
-                    >
-                        Confirm my Choices
-                    </button>
-                </div>
-
-                {/* Powered by */}
-                <div className="px-4 sm:px-6 pb-4 text-center">
-                    <span className="text-xs text-gray-400">Powered by Scrapi</span>
+                        label="Confirm my Choices"
+                        variant="primary"
+                    />
                 </div>
             </div >
         </div >

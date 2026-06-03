@@ -9,11 +9,11 @@ export default defineConfig(({ mode }) => {
         server: {
             port: 3000,
             host: '0.0.0.0',
-            allowedHosts: 'all',
+            allowedHosts: true,
             hmr: true,
             proxy: {
                 '/api': {
-                    target: env.BACKEND_URL,
+                    target: env.BACKEND_URL || 'http://localhost:8001',
                     changeOrigin: true,
                     secure: false,
                 },

@@ -1708,14 +1708,14 @@ const DatasetV2 = () => {
                 <div className="flex-1 overflow-auto bg-white dark:bg-[#1e1e1e] font-mono py-4 dt-custom-scrollbar border-t border-border/50">
                   <div className="flex min-w-full">
                     {/* Line Numbers */}
-                    <div className="flex flex-col text-zinc-400 dark:text-zinc-500 text-right select-none px-4 border-r border-zinc-200 dark:border-zinc-800 min-w-[56px] text-[13px] leading-6 bg-zinc-50/50 dark:bg-zinc-900/30 h-fit">
+                    <div className="flex flex-col text-zinc-400 dark:text-zinc-500 text-right select-none px-4 border-r border-zinc-200 dark:border-zinc-800 min-w-[56px] text-[10px] leading-5 bg-zinc-50/50 dark:bg-zinc-900/30 h-fit">
                       {Array.from({ length: Math.min(items.length * 15, 1000) }).map((_, i) => (
                         <div key={i}>{i + 1}</div>
                       ))}
                     </div>
                     {/* Content */}
                     <div className="flex-1 min-w-0 pl-1">
-                      <pre className="text-[13.5px] leading-6 font-mono overflow-visible select-text" style={{ fontFamily: "Menlo, Monaco, 'Courier New', monospace" }}>
+                      <pre className="text-[11px] leading-5 font-mono font-semibold overflow-visible select-text" style={{ fontFamily: "Menlo, Monaco, 'Courier New', monospace" }}>
                         <div className="pl-4">
                           <JsonTreeNode data={items.map(item => item.data)} isLast={true} depth={0} />
                         </div>

@@ -1,25 +1,78 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useTheme } from '../contexts/ThemeContext';
 
 const CustomTooltip = ({ content, children, className = "inline-flex" }) => {
-    const [isVisible, setIsVisible] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);        // logical open/close
+    const [shouldRender, setShouldRender] = useState(false); // keep in DOM during close animation
+    const [isAnimating, setIsAnimating] = useState(false);   // controls opacity
     const [position, setPosition] = useState({ top: 0, left: 0 });
     const [arrowStyle, setArrowStyle] = useState({});
     const triggerRef = useRef(null);
     const tooltipRef = useRef(null);
+    const closeTimer = useRef(null);
     const { theme } = useTheme();
 
-    const handleMouseEnter = () => {
-        setIsVisible(true);
+    // Open: render first, then animate in after a frame
+    const openTooltip = () => {
+        clearTimeout(closeTimer.current);
+        setShouldRender(true);
+        // requestAnimationFrame ensures the element is in the DOM before we fade in
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => setIsAnimating(true));
+        });
     };
 
-    const handleMouseLeave = () => {
-        setIsVisible(false);
+    // Close: animate out fast, then unmount
+    const closeTooltip = () => {
+        setIsAnimating(false);
+        closeTimer.current = setTimeout(() => {
+            setShouldRender(false);
+        }, 100); // match the fast close duration
     };
+
+    const handleClick = (e) => {
+        e.stopPropagation();
+        setIsOpen((prev) => {
+            const next = !prev;
+            if (next) openTooltip();
+            else closeTooltip();
+            return next;
+        });
+    };
+
+    // Close tooltip when clicking outside
+    const handleClickOutside = useCallback((e) => {
+        if (
+            triggerRef.current && !triggerRef.current.contains(e.target) &&
+            tooltipRef.current && !tooltipRef.current.contains(e.target)
+        ) {
+            setIsOpen(false);
+            closeTooltip();
+        }
+    }, []);
+
+    // Close tooltip on Escape key
+    const handleKeyDown = useCallback((e) => {
+        if (e.key === 'Escape') {
+            setIsOpen(false);
+            closeTooltip();
+        }
+    }, []);
 
     useEffect(() => {
-        if (isVisible && triggerRef.current && tooltipRef.current) {
+        if (isOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+            document.addEventListener('keydown', handleKeyDown);
+        }
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [isOpen, handleClickOutside, handleKeyDown]);
+
+    const updatePosition = useCallback(() => {
+        if (triggerRef.current && tooltipRef.current) {
             const triggerRect = triggerRef.current.getBoundingClientRect();
             const tooltipRect = tooltipRef.current.getBoundingClientRect();
 
@@ -75,24 +128,52 @@ const CustomTooltip = ({ content, children, className = "inline-flex" }) => {
             setPosition({ top, left });
             setArrowStyle(arrowProps);
         }
-    }, [isVisible, theme]);
+    }, [theme]);
+
+    useEffect(() => {
+        if (shouldRender) {
+            // Initial positioning
+            updatePosition();
+            
+            // Reposition on scroll (capture: true listens to any scrollable parent) and resize
+            window.addEventListener('scroll', updatePosition, true);
+            window.addEventListener('resize', updatePosition);
+
+            return () => {
+                window.removeEventListener('scroll', updatePosition, true);
+                window.removeEventListener('resize', updatePosition);
+            };
+        }
+    }, [shouldRender, updatePosition]);
 
     return (
         <>
             <div
                 ref={triggerRef}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
-                className={className}
+                onClick={handleClick}
+                className={`${className} tooltip-trigger-pointer`}
             >
+                <style dangerouslySetInnerHTML={{ __html: `
+                    .tooltip-trigger-pointer, .tooltip-trigger-pointer * {
+                        cursor: pointer !important;
+                    }
+                `}} />
                 {children}
             </div>
 
-            {isVisible && typeof document !== 'undefined' && createPortal(
+            {shouldRender && typeof document !== 'undefined' && createPortal(
                 <div
                     ref={tooltipRef}
-                    style={{ top: position.top, left: position.left, position: 'fixed' }}
-                    className={`w-auto max-w-[400px] p-2 text-xs font-semibold rounded shadow-lg z-[99999] font-normal text-center pointer-events-none transition-opacity duration-200
+                    style={{
+                        top: position.top,
+                        left: position.left,
+                        position: 'fixed',
+                        opacity: isAnimating ? 1 : 0,
+                        transition: isAnimating
+                            ? 'opacity 150ms ease-in'   /* faster open */
+                            : 'opacity 100ms ease-out', /* fast close */
+                    }}
+                    className={`w-auto max-w-[400px] p-2 text-xs font-semibold rounded shadow-lg z-[99999] font-normal text-center
             ${theme === 'dark'
                             ? 'bg-gray-950 text-white border border-gray-700'
                             : 'bg-white text-gray-900 border border-gray-200 shadow-md'}`}
@@ -111,3 +192,4 @@ const CustomTooltip = ({ content, children, className = "inline-flex" }) => {
 };
 
 export default CustomTooltip;
+
