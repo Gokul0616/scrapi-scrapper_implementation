@@ -1,0 +1,233 @@
+[Skip to main content](https://docs.apify.com/platform/actors/development/builds-and-runs/builds#__docusaurus_skipToContent_fallback)
+[Academy](https://docs.apify.com/academy)
+[Platform](https://docs.apify.com/platform)
+[API](https://docs.apify.com/api)
+- [Reference](https://docs.apify.com/api/v2)
+- [Client for JavaScript](https://docs.apify.com/api/client/js/docs)
+- [Client for Python](https://docs.apify.com/api/client/python/docs)
+[Reference](https://docs.apify.com/api/v2)
+[Client for JavaScript](https://docs.apify.com/api/client/js/docs)
+[Client for Python](https://docs.apify.com/api/client/python/docs)
+[SDK](https://docs.apify.com/sdk)
+- [SDK for JavaScript](https://docs.apify.com/sdk/js/docs/overview)
+- [SDK for Python](https://docs.apify.com/sdk/python/docs/overview)
+[SDK for JavaScript](https://docs.apify.com/sdk/js/docs/overview)
+[SDK for Python](https://docs.apify.com/sdk/python/docs/overview)
+[CLI](https://docs.apify.com/cli/docs)
+[Open source](https://docs.apify.com/open-source)
+- [Crawlee](https://crawlee.dev)
+- [Fingerprint Suite](https://github.com/apify/fingerprint-suite)
+- [impit](https://github.com/apify/impit)
+- [MCP CLI](https://github.com/apify/mcp-cli)
+- [Actor whitepaper](https://whitepaper.actor)
+- [proxy-chain](https://github.com/apify/proxy-chain)
+- [Apify on GitHub](https://github.com/apify)
+[Crawlee](https://crawlee.dev)
+[Fingerprint Suite](https://github.com/apify/fingerprint-suite)
+[impit](https://github.com/apify/impit)
+[MCP CLI](https://github.com/apify/mcp-cli)
+[Actor whitepaper](https://whitepaper.actor)
+[proxy-chain](https://github.com/apify/proxy-chain)
+[Apify on GitHub](https://github.com/apify)
+[Discord](https://discord.com/invite/jyEM2PRvMU)
+[Go to Console](https://console.apify.com)
+- [Home](https://docs.apify.com/platform)
+- [Apify Console](https://docs.apify.com/platform/console)
+- [Actors](https://docs.apify.com/platform/actors)[Running Actors](https://docs.apify.com/platform/actors/running)[Development](https://docs.apify.com/platform/actors/development)[Quick start](https://docs.apify.com/platform/actors/development/quick-start)[Actor definition](https://docs.apify.com/platform/actors/development/actor-definition)[Programming interface](https://docs.apify.com/platform/actors/development/programming-interface)[Deployment](https://docs.apify.com/platform/actors/development/deployment)[[Builds](https://docs.apify.com/platform/actors/development/builds-and-runs/builds) and runs](https://docs.apify.com/platform/actors/development/builds-and-runs)Builds[Runs](https://docs.apify.com/platform/actors/development/builds-and-runs/runs)[State persistence](https://docs.apify.com/platform/actors/development/builds-and-runs/state-persistence)[Permissions](https://docs.apify.com/platform/actors/development/permissions)[Automated tests](https://docs.apify.com/platform/actors/development/automated-tests)[Performance](https://docs.apify.com/platform/actors/development/performance)[Publishing and monetization](https://docs.apify.com/platform/actors/publishing)
+- [Running Actors](https://docs.apify.com/platform/actors/running)
+- [Development](https://docs.apify.com/platform/actors/development)[Quick start](https://docs.apify.com/platform/actors/development/quick-start)[Actor definition](https://docs.apify.com/platform/actors/development/actor-definition)[Programming interface](https://docs.apify.com/platform/actors/development/programming-interface)[Deployment](https://docs.apify.com/platform/actors/development/deployment)[[Builds](https://docs.apify.com/platform/actors/development/builds-and-runs/builds) and runs](https://docs.apify.com/platform/actors/development/builds-and-runs)Builds[Runs](https://docs.apify.com/platform/actors/development/builds-and-runs/runs)[State persistence](https://docs.apify.com/platform/actors/development/builds-and-runs/state-persistence)[Permissions](https://docs.apify.com/platform/actors/development/permissions)[Automated tests](https://docs.apify.com/platform/actors/development/automated-tests)[Performance](https://docs.apify.com/platform/actors/development/performance)
+- [Quick start](https://docs.apify.com/platform/actors/development/quick-start)
+- [Actor definition](https://docs.apify.com/platform/actors/development/actor-definition)
+- [Programming interface](https://docs.apify.com/platform/actors/development/programming-interface)
+- [Deployment](https://docs.apify.com/platform/actors/development/deployment)
+
+- [[Builds](https://docs.apify.com/platform/actors/development/builds-and-runs/builds) and runs](https://docs.apify.com/platform/actors/development/builds-and-runs)Builds[Runs](https://docs.apify.com/platform/actors/development/builds-and-runs/runs)[State persistence](https://docs.apify.com/platform/actors/development/builds-and-runs/state-persistence)
+- [Builds](https://docs.apify.com/platform/actors/development/builds-and-runs/builds)
+- [Runs](https://docs.apify.com/platform/actors/development/builds-and-runs/runs)
+- [State persistence](https://docs.apify.com/platform/actors/development/builds-and-runs/state-persistence)
+- [Permissions](https://docs.apify.com/platform/actors/development/permissions)
+- [Automated tests](https://docs.apify.com/platform/actors/development/automated-tests)
+- [Performance](https://docs.apify.com/platform/actors/development/performance)
+- [Publishing and monetization](https://docs.apify.com/platform/actors/publishing)
+- [Schedules](https://docs.apify.com/platform/schedules)
+- [Storage](https://docs.apify.com/platform/storage)
+- [Proxy](https://docs.apify.com/platform/proxy)
+- [Integrations](https://docs.apify.com/platform/integrations)
+- [Collaboration](https://docs.apify.com/platform/collaboration)
+- [Monitoring](https://docs.apify.com/platform/monitoring)
+- [Security](https://docs.apify.com/platform/security)
+- [Limits](https://docs.apify.com/platform/limits)
+[Home](https://docs.apify.com/platform)
+[Apify Console](https://docs.apify.com/platform/console)
+[Actors](https://docs.apify.com/platform/actors)
+- [Running Actors](https://docs.apify.com/platform/actors/running)
+- [Development](https://docs.apify.com/platform/actors/development)[Quick start](https://docs.apify.com/platform/actors/development/quick-start)[Actor definition](https://docs.apify.com/platform/actors/development/actor-definition)[Programming interface](https://docs.apify.com/platform/actors/development/programming-interface)[Deployment](https://docs.apify.com/platform/actors/development/deployment)[[Builds](https://docs.apify.com/platform/actors/development/builds-and-runs/builds) and runs](https://docs.apify.com/platform/actors/development/builds-and-runs)Builds[Runs](https://docs.apify.com/platform/actors/development/builds-and-runs/runs)[State persistence](https://docs.apify.com/platform/actors/development/builds-and-runs/state-persistence)[Permissions](https://docs.apify.com/platform/actors/development/permissions)[Automated tests](https://docs.apify.com/platform/actors/development/automated-tests)[Performance](https://docs.apify.com/platform/actors/development/performance)
+- [Quick start](https://docs.apify.com/platform/actors/development/quick-start)
+- [Actor definition](https://docs.apify.com/platform/actors/development/actor-definition)
+- [Programming interface](https://docs.apify.com/platform/actors/development/programming-interface)
+- [Deployment](https://docs.apify.com/platform/actors/development/deployment)
+- [[Builds](https://docs.apify.com/platform/actors/development/builds-and-runs/builds) and runs](https://docs.apify.com/platform/actors/development/builds-and-runs)Builds[Runs](https://docs.apify.com/platform/actors/development/builds-and-runs/runs)[State persistence](https://docs.apify.com/platform/actors/development/builds-and-runs/state-persistence)
+- [Builds](https://docs.apify.com/platform/actors/development/builds-and-runs/builds)
+- [Runs](https://docs.apify.com/platform/actors/development/builds-and-runs/runs)
+- [State persistence](https://docs.apify.com/platform/actors/development/builds-and-runs/state-persistence)
+- [Permissions](https://docs.apify.com/platform/actors/development/permissions)
+- [Automated tests](https://docs.apify.com/platform/actors/development/automated-tests)
+- [Performance](https://docs.apify.com/platform/actors/development/performance)
+- [Publishing and monetization](https://docs.apify.com/platform/actors/publishing)
+[Running Actors](https://docs.apify.com/platform/actors/running)
+[Development](https://docs.apify.com/platform/actors/development)
+- [Quick start](https://docs.apify.com/platform/actors/development/quick-start)
+- [Actor definition](https://docs.apify.com/platform/actors/development/actor-definition)
+- [Programming interface](https://docs.apify.com/platform/actors/development/programming-interface)
+- [Deployment](https://docs.apify.com/platform/actors/development/deployment)
+
+- [[Builds](https://docs.apify.com/platform/actors/development/builds-and-runs/builds) and runs](https://docs.apify.com/platform/actors/development/builds-and-runs)Builds[Runs](https://docs.apify.com/platform/actors/development/builds-and-runs/runs)[State persistence](https://docs.apify.com/platform/actors/development/builds-and-runs/state-persistence)
+- [Builds](https://docs.apify.com/platform/actors/development/builds-and-runs/builds)
+- [Runs](https://docs.apify.com/platform/actors/development/builds-and-runs/runs)
+- [State persistence](https://docs.apify.com/platform/actors/development/builds-and-runs/state-persistence)
+- [Permissions](https://docs.apify.com/platform/actors/development/permissions)
+- [Automated tests](https://docs.apify.com/platform/actors/development/automated-tests)
+- [Performance](https://docs.apify.com/platform/actors/development/performance)
+[Quick start](https://docs.apify.com/platform/actors/development/quick-start)
+[Actor definition](https://docs.apify.com/platform/actors/development/actor-definition)
+[Programming interface](https://docs.apify.com/platform/actors/development/programming-interface)
+[Deployment](https://docs.apify.com/platform/actors/development/deployment)
+[Builds and runs](https://docs.apify.com/platform/actors/development/builds-and-runs)
+- [Builds](https://docs.apify.com/platform/actors/development/builds-and-runs/builds)
+- [Runs](https://docs.apify.com/platform/actors/development/builds-and-runs/runs)
+- [State persistence](https://docs.apify.com/platform/actors/development/builds-and-runs/state-persistence)
+[Builds](https://docs.apify.com/platform/actors/development/builds-and-runs/builds)
+[Runs](https://docs.apify.com/platform/actors/development/builds-and-runs/runs)
+[State persistence](https://docs.apify.com/platform/actors/development/builds-and-runs/state-persistence)
+[Permissions](https://docs.apify.com/platform/actors/development/permissions)
+[Automated tests](https://docs.apify.com/platform/actors/development/automated-tests)
+[Performance](https://docs.apify.com/platform/actors/development/performance)
+[Publishing and monetization](https://docs.apify.com/platform/actors/publishing)
+[Schedules](https://docs.apify.com/platform/schedules)
+[Storage](https://docs.apify.com/platform/storage)
+[Proxy](https://docs.apify.com/platform/proxy)
+[Integrations](https://docs.apify.com/platform/integrations)
+[Collaboration](https://docs.apify.com/platform/collaboration)
+[Monitoring](https://docs.apify.com/platform/monitoring)
+[Security](https://docs.apify.com/platform/security)
+[Limits](https://docs.apify.com/platform/limits)
+- https://docs.apify.com/platform
+- [Actors](https://docs.apify.com/platform/actors)
+- [Development](https://docs.apify.com/platform/actors/development)
+- [Builds and runs](https://docs.apify.com/platform/actors/development/builds-and-runs)
+[Actors](https://docs.apify.com/platform/actors)
+[Development](https://docs.apify.com/platform/actors/development)
+[Builds and runs](https://docs.apify.com/platform/actors/development/builds-and-runs)
+
+# Builds
+
+Copy for LLM
+
+## https://docs.apify.com/platform/actors/development/builds-and-runs/builds#understand-actor-buildsUnderstand Actor builds
+
+Before an Actor can be run, it needs to be built. The build process creates a snapshot of a specific version of the Actor's settings, including its [source code](https://docs.apify.com/platform/actors/development/actor-definition/source-code) and [environment variables](https://docs.apify.com/platform/actors/development/programming-interface/environment-variables). This snapshot is then used to create a Docker image containing everything the Actor needs for its run, such as npm packages, web browsers, etc.
+
+```
+npm
+```
+
+### https://docs.apify.com/platform/actors/development/builds-and-runs/builds#build-numbersBuild numbers
+Each build is assigned a unique build number in the format MAJOR.MINOR.BUILD (e.g. 1.2.345):
+- MAJOR.MINOR corresponds to the Actor version number
+- BUILD is an automatically incremented number starting at 1.
+
+### https://docs.apify.com/platform/actors/development/builds-and-runs/builds#build-resourcesBuild resources
+By default, builds have the following resource allocations:
+- Timeout: 1800 seconds
+- Memory: 4096 MB
+
+```
+4096 MB
+```
+
+Check out the [Resource limits](https://docs.apify.com/platform/actors/running) section for more details.
+
+## https://docs.apify.com/platform/actors/development/builds-and-runs/builds#versioningVersioning
+To support active development, Actors can have multiple versions of source code and associated settings, such as the base image and environment. Each version is denoted by a version number of the form MAJOR.MINOR, following [Semantic Versioning](https://semver.org/) principles.
+For example, an Actor might have:
+- Production version 1.1
+- Beta version 1.2 that contains new features but is still backward compatible
+- Development version 2.0 that contains breaking changes.
+
+## https://docs.apify.com/platform/actors/development/builds-and-runs/builds#tagsTags
+Tags simplify the process of specifying which build to use when running an Actor. Instead of using a version number, you can use a tag such as latest or beta. Tags are unique, meaning only one build can be associated with a specific tag.
+To set a tag for builds of a specific Actor version:
+1. Set the Build tag property.
+2. When a new build of that version is successfully finished, it's automatically assigned the tag.
+
+```
+Build tag
+```
+
+By default, the builds are set to the latest tag.
+
+## https://docs.apify.com/platform/actors/development/builds-and-runs/builds#cacheCache
+To speed up builds triggered via API, you can use the useCache=1 parameter. This instructs the build process to use cached Docker images and layers instead of pulling the latest copies and building each layer from scratch. Note that the cached images and layers might not always be available on the server building the image, the useCache parameter only functions on a best-effort basis.
+
+```
+useCache=1
+```
+
+
+```
+useCache
+```
+
+### https://docs.apify.com/platform/actors/development/builds-and-runs/builds#clean-buildsClean builds
+
+By default, Apify Console uses cached data when starting a build.
+To run a clean build without using the cache:
+1. Go to your Actor page.
+2. Select Source > Code.
+3. Expand Build options and choose Clean build.
+[Edit this page](https://github.com/apify/apify-docs/edit/master/sources/platform/actors/development/builds_and_runs/builds.md)
+[PreviousBuilds and runs](https://docs.apify.com/platform/actors/development/builds-and-runs)
+[NextRuns](https://docs.apify.com/platform/actors/development/builds-and-runs/runs)
+- [Understand Actor builds](https://docs.apify.com/platform/actors/development/builds-and-runs/builds#understand-actor-builds)[Build numbers](https://docs.apify.com/platform/actors/development/builds-and-runs/builds#build-numbers)[Build resources](https://docs.apify.com/platform/actors/development/builds-and-runs/builds#build-resources)
+- [Build numbers](https://docs.apify.com/platform/actors/development/builds-and-runs/builds#build-numbers)
+- [Build resources](https://docs.apify.com/platform/actors/development/builds-and-runs/builds#build-resources)
+- [Versioning](https://docs.apify.com/platform/actors/development/builds-and-runs/builds#versioning)
+- [Tags](https://docs.apify.com/platform/actors/development/builds-and-runs/builds#tags)
+- [Cache](https://docs.apify.com/platform/actors/development/builds-and-runs/builds#cache)[Clean builds](https://docs.apify.com/platform/actors/development/builds-and-runs/builds#clean-builds)
+- [Clean builds](https://docs.apify.com/platform/actors/development/builds-and-runs/builds#clean-builds)
+[Understand Actor builds](https://docs.apify.com/platform/actors/development/builds-and-runs/builds#understand-actor-builds)
+- [Build numbers](https://docs.apify.com/platform/actors/development/builds-and-runs/builds#build-numbers)
+- [Build resources](https://docs.apify.com/platform/actors/development/builds-and-runs/builds#build-resources)
+[Build numbers](https://docs.apify.com/platform/actors/development/builds-and-runs/builds#build-numbers)
+[Build resources](https://docs.apify.com/platform/actors/development/builds-and-runs/builds#build-resources)
+[Versioning](https://docs.apify.com/platform/actors/development/builds-and-runs/builds#versioning)
+[Tags](https://docs.apify.com/platform/actors/development/builds-and-runs/builds#tags)
+[Cache](https://docs.apify.com/platform/actors/development/builds-and-runs/builds#cache)
+- [Clean builds](https://docs.apify.com/platform/actors/development/builds-and-runs/builds#clean-builds)
+[Clean builds](https://docs.apify.com/platform/actors/development/builds-and-runs/builds#clean-builds)
+- [Academy](https://docs.apify.com/academy)
+- [Platform](https://docs.apify.com/platform)
+[Academy](https://docs.apify.com/academy)
+[Platform](https://docs.apify.com/platform)
+- [Reference](https://docs.apify.com/api/v2)
+- [Client for JavaScript](https://docs.apify.com/api/client/js/docs)
+- [Client for Python](https://docs.apify.com/api/client/python/docs)
+[Reference](https://docs.apify.com/api/v2)
+[Client for JavaScript](https://docs.apify.com/api/client/js/docs)
+[Client for Python](https://docs.apify.com/api/client/python/docs)
+- [SDK for JavaScript](https://docs.apify.com/sdk/js/docs/overview)
+- [SDK for Python](https://docs.apify.com/sdk/python/docs/overview)
+[SDK for JavaScript](https://docs.apify.com/sdk/js/docs/overview)
+[SDK for Python](https://docs.apify.com/sdk/python/docs/overview)
+- [CLI](https://docs.apify.com/cli/docs)
+- [Open source](https://docs.apify.com/open-source)
+[CLI](https://docs.apify.com/cli/docs)
+[Open source](https://docs.apify.com/open-source)
+- [Crawlee](https://crawlee.dev)
+- [GitHub](https://github.com/apify)
+- [Discord](https://discord.com/invite/jyEM2PRvMU)
+- [Trust Center](https://trust.apify.com)
+[Crawlee](https://crawlee.dev)
+[GitHub](https://github.com/apify)
+[Discord](https://discord.com/invite/jyEM2PRvMU)
+[Trust Center](https://trust.apify.com)

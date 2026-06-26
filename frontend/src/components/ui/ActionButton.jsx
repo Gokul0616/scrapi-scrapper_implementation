@@ -5,6 +5,7 @@ const ActionButton = ({ icon: Icon, label, onClick, title, disabled, variant = '
   const baseStyles = "h-[30px] rounded-md transition-all flex items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20";
   const variants = {
     default: "bg-accent text-muted-foreground hover:brightness-95 dark:hover:brightness-110 hover:text-foreground border border-border shadow-sm",
+    secondary: "bg-blue-600 text-white hover:brightness-95 dark:hover:brightness-110 border border-transparent shadow-sm",
     danger: "bg-accent text-red-600 hover:brightness-95 dark:hover:brightness-110 border border-border shadow-sm"
   };
 

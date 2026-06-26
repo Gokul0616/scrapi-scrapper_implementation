@@ -371,6 +371,14 @@ class DynamicEmailValidator:
     def check_username_randomness(username: str) -> Tuple[bool, float]:
         username = username.lower().strip()
         entropy = DynamicEmailValidator.calculate_entropy(username)
+        
+        # Check specific suspicious local patterns from NexBill
+        # 1. All numbers (e.g., 123456@...)
+        # 2. Short name (1-2 letters) + 5 or more numbers (e.g., ab123456@...)
+        if re.match(r'^\d+$', username) or re.match(r'^[a-z]{1,2}\d{5,}', username):
+            logger.info(f"🚫 Random/suspicious local pattern matched for username: {username}")
+            return True, entropy
+
         suspicious_score = 0
         
         # Increased threshold to reduce false positives (was 3.5, now 4.0)
@@ -613,6 +621,13 @@ class EmailValidator:
         # Layer 2.5: Blocked Usernames (test@, demo@, etc.)
         if username.lower() in self.BLOCKED_USERNAMES:
              result.add_error("Disposable emails are not allowed") # Using standardized message
+             return result
+
+        # NexBill Suspicious Local Patterns
+        # 1. All numbers (e.g., 123456@...)
+        # 2. Short name (1-2 letters) + 5 or more numbers (e.g., ab12345@...)
+        if re.match(r'^\d+$', username) or re.match(r'^[a-z]{1,2}\d{5,}', username):
+             result.add_error("Email username appears randomly generated")
              return result
         
         # Layer 3: Blocklist check

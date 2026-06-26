@@ -62,6 +62,41 @@ const Register = () => {
   const [showValidationTooltip, setShowValidationTooltip] = useState(false);
   const processingRef = React.useRef(false);
 
+  const validateEmailClientSide = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (!emailRegex.test(email)) {
+      return { valid: false, reason: 'Invalid email format' };
+    }
+
+    const parts = email.toLowerCase().trim().split('@');
+    if (parts.length !== 2) {
+      return { valid: false, reason: 'Invalid email format' };
+    }
+    const [local, domain] = parts;
+
+    // NexBill Local Patterns
+    // 1. All numbers (e.g., 123456@...)
+    // 2. Short name (1-2 letters) + 5 or more numbers (e.g., ab12345@...)
+    // const allDigitsRegex = /^\d+$/;
+    // const shortNameDigitsRegex = /^[a-z]{1,2}\d{5,}/;
+
+    // if (allDigitsRegex.test(local) || shortNameDigitsRegex.test(local)) {
+    //   return { valid: false, reason: 'Email username appears randomly generated' };
+    // }
+
+    // Suspicious domain keywords
+    // const suspiciousDomainKeywords = [
+    //   'temp', 'trash', 'fake', 'junk', 'spam', 'disposable', 'throwaway',
+    //   'mailinator', 'guerrilla', 'yopmail', '10minute', 'minutemail'
+    // ];
+
+    // if (suspiciousDomainKeywords.some(keyword => domain.includes(keyword))) {
+    //   return { valid: false, reason: 'Disposable email addresses are not allowed. Please use a permanent email address.' };
+    // }
+
+    return { valid: true };
+  };
+
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
     setEmailError('');
@@ -69,6 +104,13 @@ const Register = () => {
 
     if (!formData.email.trim()) {
       setShowValidationTooltip(true);
+      return;
+    }
+
+    // Client-side email validation checks (NexBill Heuristics)
+    const emailValidation = validateEmailClientSide(formData.email);
+    if (!emailValidation.valid) {
+      setEmailError(emailValidation.reason);
       return;
     }
 
@@ -101,7 +143,7 @@ const Register = () => {
   const handleCaptchaVerify = useCallback(async (shieldDataOrId, solutionOrAnswer) => {
     if (processingRef.current) return;
     processingRef.current = true;
-    
+
     setIsLoading(true);
     setOtpError('');
     setOtpSuccessMessage('');

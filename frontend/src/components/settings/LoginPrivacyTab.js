@@ -541,7 +541,9 @@ const LoginPrivacyTab = () => {
               <div className="flex items-center mb-1.5">
                 <label className="text-[14px] font-semibold text-foreground flex items-center gap-1.5">
                   Session expiration
-                  <HelpCircle className="w-[14px] h-[14px] text-muted-foreground" />
+                  <CustomTooltip content="Specify how long user sessions remain active before they automatically expire and require signing in again.">
+                    <HelpCircle className="w-[14px] h-[14px] text-muted-foreground cursor-help" />
+                  </CustomTooltip>
                 </label>
               </div>
               <div className="flex gap-3 items-center">

@@ -6,7 +6,7 @@ import { useModal } from '../contexts/ModalContext';
 import {
   ExternalLink, ChevronRight, Loader2, HelpCircle, FileText,
   Download, Eye, Tag, Search, Filter, ArrowUpDown,
-  ChevronLeft, ChevronDown
+  ChevronLeft, ChevronDown, Plus, Trash2, Edit2
 } from 'lucide-react';
 import axios from 'axios';
 import HistoricalUsageView from '../components/HistoricalUsageView';
@@ -19,6 +19,7 @@ import AlertModal from '../components/AlertModal';
 import DataTable from '../components/ui/DataTable';
 import LoadingScreen from '@/components/LoadingScreen';
 import SectionHeader from '../components/ui/SectionHeader';
+import ActionButton from '../components/ui/ActionButton';
 
 const BILLING_TOOLTIPS = {
   // Service breakdown
@@ -744,12 +745,11 @@ const Billing = () => {
         {/* -- Payment Methods Box -- */}
         <div className="rounded-lg border border-border bg-card overflow-hidden">
           <SectionHeader title="Payment methods" tip="Manage the credit cards or PayPal accounts used for billing your subscription.">
-            <button
+            <ActionButton
+              icon={Plus}
+              label="Add new"
               onClick={() => openModal('add-payment')}
-              className="h-[28px] flex items-center gap-1.5 px-3 rounded-md border border-border bg-card text-[13px] font-bold text-foreground hover:bg-muted hover:border-muted-foreground/30 transition-all active:scale-95 shadow-sm"
-            >
-              <span className="text-lg leading-none mb-0.5">+</span> Add new
-            </button>
+            />
           </SectionHeader>
           <div className="p-4">
             {!subscriptionSetup?.payment_method ? (
@@ -766,9 +766,11 @@ const Billing = () => {
                 </div>
                 <div className="flex items-center gap-6">
                   <span className="text-[13px] text-foreground">Primary</span>
-                  <button onClick={() => setShowDeleteConfirm(true)} className="text-red-500 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /><line x1="10" x2="10" y1="11" y2="17" /><line x1="14" x2="14" y1="11" y2="17" /></svg>
-                  </button>
+                  <ActionButton
+                    icon={Trash2}
+                    onClick={() => setShowDeleteConfirm(true)}
+                    variant="danger"
+                  />
                 </div>
               </div>
             )}
@@ -778,13 +780,11 @@ const Billing = () => {
         {/* -- Billing Details Box -- */}
         <div className="rounded-lg border border-border bg-card overflow-hidden">
           <SectionHeader title="Billing details" tip="Update your company name, tax IDs, and physical address for invoices.">
-            <button
+            <ActionButton
+              icon={Edit2}
+              label="Edit"
               onClick={() => openModal('edit-billing')}
-              className="h-[28px] flex items-center gap-1.5 px-3 rounded-md border border-border bg-card text-[13px] font-bold text-foreground hover:bg-muted hover:border-muted-foreground/30 transition-all active:scale-95 shadow-sm"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /><path d="m15 5 4 4" /></svg>
-              Edit
-            </button>
+            />
           </SectionHeader>
           <div className="p-4">
             <div className="text-[13px] text-foreground font-semibold leading-relaxed">
@@ -805,18 +805,16 @@ const Billing = () => {
         <div className="rounded-lg border border-border bg-card overflow-hidden">
           <SectionHeader title="Special offers" tip="Apply referral codes or exclusive promotional discounts to your active workspace.">
             <div className="flex items-center gap-2">
-              <button
+              <ActionButton
+                icon={Plus}
+                label="Add a referral code"
                 onClick={() => openModal('add-referral')}
-                className="h-[28px] flex items-center gap-1.5 px-3 rounded-md border border-border bg-card text-[13px] font-bold text-foreground hover:bg-muted hover:border-muted-foreground/30 transition-all active:scale-95 shadow-sm"
-              >
-                <span className="text-lg leading-none mb-0.5">+</span> Add a referral code
-              </button>
-              <button
+              />
+              <ActionButton
+                icon={Plus}
+                label="Add a promo code"
                 onClick={() => openModal('add-promo')}
-                className="h-[28px] flex items-center gap-1.5 px-3 rounded-md border border-border bg-card text-[13px] font-bold text-foreground hover:bg-muted hover:border-muted-foreground/30 transition-all active:scale-95 shadow-sm"
-              >
-                <span className="text-lg leading-none mb-0.5">+</span> Add a promo code
-              </button>
+              />
             </div>
           </SectionHeader>
         </div>
@@ -1192,7 +1190,7 @@ const Billing = () => {
                     </CustomTooltip>
                   </div>
                   <div className="text-[13px] font-semibold text-foreground">
-                    {limits.max_ram_gb >= 8 ? 'Unlimited' : '2 GB'}
+                    {limits.max_ram_gb > 8 ? 'Unlimited' : '2 GB'}
                   </div>
                 </div>
                 <div>
@@ -1230,9 +1228,10 @@ const Billing = () => {
                   <HelpCircle className="w-4 h-4 text-muted-foreground/60 cursor-help" />
                 </CustomTooltip>
               </div>
-              <button onClick={handleUpgrade} className="px-3 py-1.5 border border-border rounded bg-muted/30 text-[13px] font-semibold hover:bg-muted text-foreground transition-colors">
-                Upgrade retention
-              </button>
+              <ActionButton
+                label="Upgrade retention"
+                onClick={handleUpgrade}
+              />
 
               <div className="mt-5 pt-4 border-t border-border/50">
                 <h3 className="text-[13px] font-semibold text-foreground mb-2">Included Proxies</h3>
@@ -1264,9 +1263,10 @@ const Billing = () => {
                 <span className="text-[13px] font-medium text-foreground text-right w-[150px]">
                   ${freeUsed.toFixed(2)} of ${freeTotal.toFixed(2)}
                 </span>
-                <button onClick={handleUpgrade} className="px-3 py-1 border border-border rounded bg-muted/30 text-[12px] font-semibold hover:bg-muted transition-colors whitespace-nowrap">
-                  Upgrade
-                </button>
+                <ActionButton
+                  label="Upgrade"
+                  onClick={handleUpgrade}
+                />
               </div>
             </div>
             <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
@@ -1317,13 +1317,16 @@ const Billing = () => {
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold text-foreground">{pageTitle}</h1>
             <div className="flex items-center gap-3">
-              <button className="px-4 py-2 border border-border rounded-lg text-sm font-medium hover:bg-muted transition-colors text-foreground bg-card uppercase tracking-wider font-bold">
-                API
-              </button>
+              <ActionButton
+                label="API"
+                onClick={() => navigate('/settings?tab=api-integrations')}
+              />
               {isOwner && (
-                <button onClick={handleUpgrade} className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold transition-all shadow-lg shadow-blue-500/20 active:scale-95">
-                  Upgrade
-                </button>
+                <ActionButton
+                  label="Upgrade"
+                  onClick={handleUpgrade}
+                  variant="secondary"
+                />
               )}
             </div>
           </div>

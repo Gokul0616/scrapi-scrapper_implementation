@@ -3,6 +3,7 @@ import { Info } from 'lucide-react';
 import { useModal } from '../../contexts/ModalContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import ActionButton from '../ui/ActionButton';
 import GlobalModal from '../GlobalModal';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -60,16 +61,17 @@ const AddReferralModal = ({ modalId, onSuccess }) => {
                 <div className="mb-4"></div>
 
                 <div className="flex items-center justify-end gap-3">
-                    <button onClick={closeModal} className="px-4 py-2 text-[14px] font-semibold text-foreground hover:bg-muted/50 rounded-lg transition-colors">
-                        Cancel
-                    </button>
-                    <button
+                    <ActionButton
+                        label="Cancel"
+                        onClick={closeModal}
+                        variant="danger"
+                    />
+                    <ActionButton
+                        label={isSaving ? 'Saving...' : 'Save'}
                         onClick={handleSave}
                         disabled={isSaving || !code.trim()}
-                        className="px-5 py-2 text-[14px] font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-                    >
-                        {isSaving ? 'Saving...' : 'Save'}
-                    </button>
+                        variant="secondary"
+                    />
                 </div>
             </div>
         </GlobalModal>

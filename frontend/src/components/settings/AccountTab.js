@@ -4,9 +4,9 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useModal } from '../../contexts/ModalContext';
 import { Input } from '../ui/input';
-import { Button } from '../ui/button';
 import { Switch } from '../ui/switch';
 import { Textarea } from '../ui/textarea';
+import ActionButton from '../ui/ActionButton';
 import CustomTooltip from '../CustomTooltip';
 import { HelpCircle, Upload, Trash2, ExternalLink, Check, Sun, Moon, Monitor } from 'lucide-react';
 import { getUserInitials, getProfileColor } from '../../utils/userUtils';
@@ -194,7 +194,9 @@ const AccountTab = ({ isActive }) => {
       clearTimeout(usernameTimeoutRef.current);
     }
 
-    if (newUsername === originalUsername) {
+    const trimmedUsername = newUsername.trim();
+
+    if (trimmedUsername === originalUsername) {
       setUsernameValidation({
         checking: false,
         valid: true,
@@ -204,7 +206,7 @@ const AccountTab = ({ isActive }) => {
       return;
     }
 
-    if (!newUsername.trim()) {
+    if (!trimmedUsername) {
       setUsernameValidation({
         checking: false,
         valid: false,
@@ -224,7 +226,7 @@ const AccountTab = ({ isActive }) => {
     usernameTimeoutRef.current = setTimeout(() => {
       if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
         wsRef.current.send(JSON.stringify({
-          username: newUsername,
+          username: trimmedUsername,
           user_id: user?.id
         }));
       } else {
@@ -240,19 +242,21 @@ const AccountTab = ({ isActive }) => {
   };
 
   const handleSaveUsername = async () => {
-    if (username === originalUsername) return;
+    const trimmedUsername = username.trim();
+    if (trimmedUsername === originalUsername) return;
     if (!usernameValidation.available || usernameValidation.checking) return;
 
     setSavingUsername(true);
     try {
       const token = localStorage.getItem('token');
       await axios.put(`${API_URL}/api/settings/username`,
-        { username },
+        { username: trimmedUsername },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setOriginalUsername(username);
+      setOriginalUsername(trimmedUsername);
+      setUsername(trimmedUsername);
       if (updateUser) {
-        updateUser({ username });
+        updateUser({ username: trimmedUsername });
       }
 
       setUsernameValidation({
@@ -516,7 +520,7 @@ const AccountTab = ({ isActive }) => {
                   value={username}
                   onChange={handleUsernameChange}
                   data-testid="username-input"
-                  className={`w-full bg-background border-input ${usernameValidation.message && username !== originalUsername
+                  className={`w-full bg-background border-input ${usernameValidation.message && username.trim() !== originalUsername
                     ? usernameValidation.available
                       ? 'border-green-500 focus:border-green-500 focus:ring-green-500'
                       : 'border-red-500 focus:border-red-500 focus:ring-red-500'
@@ -524,7 +528,7 @@ const AccountTab = ({ isActive }) => {
                     }`}
                   placeholder=""
                 />
-                {username !== originalUsername && usernameValidation.message && (
+                {username.trim() !== originalUsername && usernameValidation.message && (
                   <div className={`mt-1.5 text-xs flex items-center gap-1.5 ${usernameValidation.checking
                     ? 'text-muted-foreground'
                     : usernameValidation.available
@@ -555,18 +559,11 @@ const AccountTab = ({ isActive }) => {
                   </div>
                 )}
               </div>
-              <Button
+              <ActionButton
+                label={savingUsername ? 'Saving...' : 'Save'}
                 onClick={handleSaveUsername}
-                disabled={username === originalUsername || savingUsername || !usernameValidation.available || usernameValidation.checking}
-                data-testid="save-username-btn"
-                variant={username === originalUsername ? "ghost" : "default"}
-                className={username === originalUsername
-                  ? 'text-muted-foreground/50'
-                  : 'bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed'
-                }
-              >
-                {savingUsername ? 'Saving...' : 'Save'}
-              </Button>
+                disabled={username.trim() === originalUsername || savingUsername || !usernameValidation.available || usernameValidation.checking}
+              />
             </div>
           </div>
         </div>
@@ -615,26 +612,17 @@ const AccountTab = ({ isActive }) => {
                   accept="image/*"
                   className="hidden"
                 />
-                <Button
-                  variant="outline"
-                  size="sm"
+                <ActionButton
+                  icon={Upload}
+                  label="Upload new image"
                   onClick={() => fileInputRef.current?.click()}
-                  data-testid="upload-image-btn"
-                  className="border-border text-muted-foreground hover:bg-muted"
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  Upload new image
-                </Button>
+                />
                 {profilePicture && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                  <ActionButton
+                    icon={Trash2}
                     onClick={handleDeleteImage}
-                    data-testid="delete-image-btn"
-                    className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                    variant="danger"
+                  />
                 )}
               </div>
             </div>
@@ -805,14 +793,11 @@ const AccountTab = ({ isActive }) => {
             </div>
 
             <div className="pt-3">
-              <Button
+              <ActionButton
+                label={savingProfile ? 'Saving...' : 'Save'}
                 onClick={handleSaveProfile}
                 disabled={savingProfile}
-                data-testid="save-profile-btn"
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                {savingProfile ? 'Saving...' : 'Save'}
-              </Button>
+              />
             </div>
           </div>
         </div>
@@ -856,27 +841,20 @@ const AccountTab = ({ isActive }) => {
           </div>
           <div className="flex-1">
             <div className="mb-3">
-              <Button
+              <ActionButton
+                label={isExporting ? 'Exporting...' : '📥 Export My Data'}
                 onClick={handleExportData}
                 disabled={isExporting}
-                variant="outline"
-                data-testid="export-data-btn"
-                className="border-border text-muted-foreground hover:bg-muted"
-              >
-                {isExporting ? 'Exporting...' : '📥 Export My Data'}
-              </Button>
+              />
               <p className="mt-1.5 text-xs text-muted-foreground">
                 Download all your data before deletion (actors, runs, datasets, etc.)
               </p>
             </div>
-            <Button
-              variant="outline"
-              data-testid="delete-account-btn"
+            <ActionButton
+              label="Delete account"
               onClick={() => openModal('delete-account')}
-              className="border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive bg-transparent"
-            >
-              Delete account
-            </Button>
+              variant="danger"
+            />
             <p className="mt-2 text-xs text-muted-foreground">
               Completely remove your account, Actors, tasks, schedules, data, everything. This is sad 😢
             </p>

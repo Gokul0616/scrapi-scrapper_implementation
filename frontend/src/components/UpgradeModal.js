@@ -3,6 +3,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useModal } from '../contexts/ModalContext';
 import { useWorkspace } from '../contexts/WorkspaceContext';
 import { useNavigate } from 'react-router-dom';
+import ActionButton from './ui/ActionButton';
 import GlobalModal from './GlobalModal';
 
 const UpgradeModal = () => {
@@ -124,24 +125,17 @@ const UpgradeModal = () => {
 
         {/* Footer */}
         <div className="flex justify-end gap-2.5 mt-4">
-          <button
-            type="button"
+          <ActionButton
+            label="Cancel"
             onClick={closeModal}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold border transition-colors ${theme === 'dark'
-              ? 'border-gray-700 text-gray-300 hover:bg-white/10 bg-transparent'
-              : 'border-gray-300 text-gray-700 hover:bg-gray-50 bg-white'
-              }`}
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
+            variant="danger"
+          />
+          <ActionButton
+            label="Confirm"
             onClick={handleConfirm}
             disabled={!selectedWorkspace}
-            className="px-5 py-2 rounded-lg text-sm font-semibold bg-[#0d66d0] text-white hover:bg-[#0b5cbe] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            Confirm
-          </button>
+            variant="secondary"
+          />
         </div>
       </div>
     </GlobalModal>

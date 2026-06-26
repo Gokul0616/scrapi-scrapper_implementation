@@ -5,6 +5,7 @@ import { useWorkspace } from '../../contexts/WorkspaceContext';
 import { Country, State, City } from 'country-state-city';
 import GlobalModal from '../GlobalModal';
 import CustomDropdown from '../CustomDropdown';
+import ActionButton from '../ui/ActionButton';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';
 
@@ -256,12 +257,17 @@ const EditBillingModal = ({ modalId, initialData, onSuccess }) => {
                     </div>
 
                     <div className="flex items-center justify-center gap-3 pt-6 pb-6">
-                        <button onClick={closeModal} className="px-5 py-2 text-[14px] font-semibold text-foreground hover:bg-muted/50 rounded-lg transition-colors">
-                            Cancel
-                        </button>
-                        <button onClick={handleSave} disabled={isSaving} className="px-5 py-2 text-[14px] font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50">
-                            {isSaving ? 'Saving...' : 'Save'}
-                        </button>
+                        <ActionButton
+                            label="Cancel"
+                            onClick={closeModal}
+                            variant="danger"
+                        />
+                        <ActionButton
+                            label={isSaving ? 'Saving...' : 'Save'}
+                            onClick={handleSave}
+                            disabled={isSaving}
+                            variant="secondary"
+                        />
                     </div>
                 </div>
 
