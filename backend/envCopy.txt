@@ -1,4 +1,44 @@
+# Database Configuration (Mandatory)
 MONGO_URL="mongodb://localhost:27017"
-DB_NAME="test_database"
+DB_NAME="scrapi"
+
+# Application & Network Environment
+APP_ENV="development"
 CORS_ORIGINS="*"
-GEMINI_API_KEY=your_gemini_key_here
+FRONTEND_URL="http://localhost:3000"
+JWT_SECRET_KEY="your-secret-key-change-in-production"
+
+# Redis & Broker Configuration
+REDIS_URL="redis://localhost:6379/0"
+CELERY_BROKER_URL="redis://localhost:6379/0"
+CELERY_RESULT_BACKEND="redis://localhost:6379/0"
+
+# AI / LLM Integration Keys
+OPENAI_API_KEY=""
+EMERGENT_LLM_KEY="sk-emergent-6C3E80a4b70B6A890D"
+GEMINI_API_KEY=""
+OPENROUTER_API_KEY=""
+
+# SMTP Email Configuration
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT=587
+SMTP_EMAIL="gokul.363you@gmail.com"
+SMTP_PASSWORD="ysxz whhu kzod exqh"
+
+# Payments (Stripe / PayPal Defaults)
+STRIPE_SECRET_KEY="sk_test_fake_key"
+STRIPE_STARTER_PRICE_ID="price_fake_test_123"
+PAYPAL_CLIENT_ID="fake_client_id"
+PAYPAL_CLIENT_SECRET="fake_secret"
+PAYPAL_MODE="sandbox"
+
+# OAuth Authentication (Google / GitHub)
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
+GOOGLE_REDIRECT_URI="http://localhost:8001/api/auth/google/callback"
+GITHUB_CLIENT_ID=""
+GITHUB_CLIENT_SECRET=""
+GITHUB_REDIRECT_URI="http://localhost:8001/api/auth/github/callback"
+
+# Executor Settings
+USE_DOCKER_EXECUTOR="false"
